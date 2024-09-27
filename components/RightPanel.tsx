@@ -6,7 +6,7 @@ import React from 'react';
 const Panel: React.FC = () => {
   return (
     <div style={{ width: '100%', height: '100vh' }}>
-      <h1>SDG Reporting Status</h1>
+      <h1>TEDxSDG Reporting Status</h1>
       <iframe 
         src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
         width="100%"
