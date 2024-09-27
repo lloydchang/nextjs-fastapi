@@ -1,0 +1,20 @@
+/* styles/globals.css */
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* Left panel is 3fr, middle is 1fr, right is 1fr */
+    width: 100wh; /* Full screen width */
+    height: 100vh; /* Full screen height */
+  }
+  
+  .left-panel {
+    background-color: #f0f0f0;
+  }
+  
+  .middle-panel {
+    background-color: #e9ecef;
+  }
+  
+  .right-panel {
+    background-color: #f0f0f0;
+  }
+  
