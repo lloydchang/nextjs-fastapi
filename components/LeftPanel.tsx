@@ -1,9 +1,9 @@
-// components/LeftPanel.tsx
+// src/components/LeftPanel.tsx
 "use client"; // Mark as a client component
 
 import React, { useState, useEffect } from 'react';
 
-const Panel: React.FC = () => {
+const LeftPanel: React.FC = () => {
   const [showImage, setShowImage] = useState(true);
 
   useEffect(() => {
@@ -39,4 +39,4 @@ const Panel: React.FC = () => {
   );
 };
 
-export default Panel;
+export default LeftPanel;
