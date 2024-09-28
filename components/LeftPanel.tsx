@@ -25,22 +25,16 @@ const LeftPanel: React.FC = () => {
     // Start the fade-out effect for the image
     const timer = setTimeout(() => {
       setFadeOut(true);
-    }, 500); // Start fading out after 500ms
+    }, 200); // Start fading out after 200ms
 
     // Trigger the fade-in effect for the text
     const fadeInTextTimer = setTimeout(() => {
       setFadeIn(true);
-    }, 1000); // Start fading in after the image starts to fade out
-
-    // Prevent image removal but allow for opacity adjustments
-    const retainImageTimer = setTimeout(() => {
-      setShowImage(true);
-    }, 1500);
+    }, 400); // Start fading in after the image starts to fade out
 
     return () => {
       clearTimeout(timer);
       clearTimeout(fadeInTextTimer);
-      clearTimeout(retainImageTimer);
     };
   }, []);
 
@@ -66,8 +60,6 @@ const LeftPanel: React.FC = () => {
         url += `&sdg_filter=${selectedSDGs.join(",")}`;
       }
 
-      console.log("Request URL:", url); // Debug: Log the request URL
-
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -75,7 +67,6 @@ const LeftPanel: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("Search Results:", data); // Debug: Log the response data
 
       if (Array.isArray(data)) {
         setResults(data);
@@ -83,7 +74,6 @@ const LeftPanel: React.FC = () => {
         setError("Unexpected response format.");
       }
     } catch (err) {
-      console.error("Failed to fetch search results:", err);
       setError("Failed to fetch search results. Please try again.");
     }
   };
@@ -99,8 +89,8 @@ const LeftPanel: React.FC = () => {
     <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '0px' }}>
       <h1
         style={{
-          transition: 'opacity 1.5s ease-in-out',
-          opacity: fadeIn ? 1 : 0, // Fade-in effect for the text
+          transition: 'opacity 0.5s ease-in-out',
+          opacity: fadeIn ? 1 : 0, // Faster fade-in effect for the text
           position: 'relative',
           zIndex: 1, // Ensure text appears above the image
         }}
@@ -117,15 +107,13 @@ const LeftPanel: React.FC = () => {
             width: 'auto',
             marginTop: '10px',
             maxWidth: '100%',
-            transition: 'opacity 1.5s ease-in-out',
-            opacity: fadeOut ? 0.2 : 1, // Lower opacity for background effect
+            transition: 'opacity 0.5s ease-in-out',
+            opacity: fadeOut ? 0.2 : 1, // Faster opacity transition for the image
             position: 'absolute',
             zIndex: 0, // Ensure image stays in the background
             top: 0,
             left: 0,
           }} 
-          onLoad={() => console.log("Image loaded successfully")}
-          onError={() => console.error("Failed to load the image")}
         />
       )}
 
@@ -155,9 +143,9 @@ const LeftPanel: React.FC = () => {
           placeholder="Enter a keyword (e.g., education, health)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{ padding: '10px', width: '300px', color: '#000', backgroundColor: '#fff' }}
+          style={{ padding: '8px', width: '250px', fontSize: '10px', color: '#000', backgroundColor: '#fff' }} // Smaller font size and reduced padding
         />
-        <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
+        <button onClick={handleSearch} style={{ padding: '8px 15px', marginLeft: '10px' }}>Search</button>
 
         {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
