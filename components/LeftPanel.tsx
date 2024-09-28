@@ -93,8 +93,27 @@ const LeftPanel: React.FC = () => {
           onError={() => console.error("Failed to load the image")}
         />
       ) : (
-        <div style={{ margin: '20px' }}>
-          <h2>Search TEDx Talks Aligned with SDGs</h2>
+        <div style={{ margin: '20px', width: '100%' }}>
+          {/* Search Results Section */}
+          <div style={{ marginTop: '20px' }}>
+            <h3>Results:</h3>
+            {results.length > 0 ? (
+              results.map((talk, index) => (
+                <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                  <h4>{talk.title}</h4>
+                  <p><strong>Presenter:</strong> {talk.presenter}</p>
+                  <p>{talk.description}</p>
+                  <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
+                  <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
+                </div>
+              ))
+            ) : (
+              <p>No results found</p>
+            )}
+          </div>
+
+          {/* Search Input and Filters Section */}
+          <h2 style={{ marginTop: '40px' }}>Search TEDx Talks Aligned with SDGs</h2>
           <input
             type="text"
             placeholder="Enter a keyword (e.g., education, health)"
@@ -106,6 +125,7 @@ const LeftPanel: React.FC = () => {
 
           {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
+          {/* SDG Filters Section */}
           <div style={{ marginTop: '20px' }}>
             <h3>Filter by SDGs:</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
@@ -121,23 +141,6 @@ const LeftPanel: React.FC = () => {
                 </label>
               ))}
             </div>
-          </div>
-
-          <div style={{ marginTop: '40px' }}>
-            <h3>Results:</h3>
-            {results.length > 0 ? (
-              results.map((talk, index) => (
-                <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                  <h4>{talk.title}</h4>
-                  <p><strong>Presenter:</strong> {talk.presenter}</p>
-                  <p>{talk.description}</p>
-                  <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
-                  <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
-                </div>
-              ))
-            ) : (
-              <p>No results found</p>
-            )}
           </div>
         </div>
       )}
