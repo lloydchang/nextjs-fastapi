@@ -1,2 +1,5 @@
 fastapi==0.115.0
-uvicorn[standard]==0.30.6
+nltk==3.9.1
+pandas==2.2.3
+sentence_transformers==3.1.1
+torch==2.4.0
