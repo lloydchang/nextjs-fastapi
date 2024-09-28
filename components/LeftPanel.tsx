@@ -8,6 +8,7 @@ interface Talk {
   description: string;
   presenter: string;
   sdg_tags: string[];
+  similarity_score: number;
   url: string;
 }
 
@@ -16,14 +17,15 @@ const LeftPanel: React.FC = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Talk[]>([]);
   const [selectedSDGs, setSelectedSDGs] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowImage(false);
-      console.log("Switched to iframe");
-    }, 1000); // Wait for 1 second
+      console.log("Switched to search panel");
+    }, 1000);
 
-    return () => clearTimeout(timer); // Cleanup timer on component unmount
+    return () => clearTimeout(timer);
   }, []);
 
   // List of SDGs to display as filters
@@ -39,14 +41,36 @@ const LeftPanel: React.FC = () => {
 
   // Function to handle search
   const handleSearch = async () => {
-    let url = `/api/py/search?query=${query}`;
-    if (selectedSDGs.length > 0) {
-      url += `&sdg_filter=${selectedSDGs.join(",")}`;
+    setError(null); // Clear previous error messages
+    setResults([]); // Clear previous results
+
+    try {
+      // Use the correct backend URL for your FastAPI server
+      let url = `http://127.0.0.1:8000/api/py/search?query=${query}`;
+      if (selectedSDGs.length > 0) {
+        url += `&sdg_filter=${selectedSDGs.join(",")}`;
+      }
+
+      console.log("Request URL:", url); // Debug: Log the request URL
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("Search Results:", data); // Debug: Log the response data
+
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else {
+        setError("Unexpected response format.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch search results:", err);
+      setError("Failed to fetch search results. Please try again.");
     }
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    setResults(data);
   };
 
   // Toggle selected SDGs
@@ -58,7 +82,6 @@ const LeftPanel: React.FC = () => {
 
   return (
     <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '20px' }}>
-      {/* Always show the banner */}
       <h1 style={{ marginBottom: '20px', fontSize: '2em', color: '#333' }}>Ideas Change Everything!</h1>
       
       {showImage ? (
@@ -80,6 +103,8 @@ const LeftPanel: React.FC = () => {
             style={{ padding: '10px', width: '300px' }}
           />
           <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
+
+          {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
           <div style={{ marginTop: '20px' }}>
             <h3>Filter by SDGs:</h3>
