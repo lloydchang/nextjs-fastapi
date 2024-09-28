@@ -118,7 +118,7 @@ const LeftPanel: React.FC = () => {
             marginTop: '10px',
             maxWidth: '100%',
             transition: 'opacity 1.5s ease-in-out',
-            opacity: fadeOut ? 0.3 : 1, // Lower opacity for background effect
+            opacity: fadeOut ? 0.2 : 1, // Lower opacity for background effect
             position: 'absolute',
             zIndex: 0, // Ensure image stays in the background
             top: 0,
