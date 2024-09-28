@@ -82,7 +82,7 @@ const LeftPanel: React.FC = () => {
 
   return (
     <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '20px' }}>
-      <h1 style={{ marginBottom: '20px', fontSize: '2em', color: '#333' }}>Ideas Change Everything!</h1>
+      <h1 style={{ marginBottom: '20px', fontSize: '2em', color: '#fff' }}>Ideas Change Everything!</h1> {/* Updated text color to white */}
       
       {showImage ? (
         <img 
@@ -100,49 +100,6 @@ const LeftPanel: React.FC = () => {
             placeholder="Enter a keyword (e.g., education, health)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            style={{ padding: '10px', width: '300px' }}
+            style={{ padding: '10px', width: '300px', color: '#000', backgroundColor: '#fff' }} // Updated styles for input text visibility
           />
-          <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
-
-          {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-
-          <div style={{ marginTop: '20px' }}>
-            <h3>Filter by SDGs:</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {sdgs.map(sdg => (
-                <label key={sdg} style={{ display: 'block', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    value={sdg}
-                    onChange={() => toggleSDG(sdg)}
-                    style={{ marginRight: '8px' }}
-                  />
-                  {sdg}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginTop: '40px' }}>
-            <h3>Results:</h3>
-            {results.length > 0 ? (
-              results.map((talk, index) => (
-                <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                  <h4>{talk.title}</h4>
-                  <p><strong>Presenter:</strong> {talk.presenter}</p>
-                  <p>{talk.description}</p>
-                  <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
-                  <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
-                </div>
-              ))
-            ) : (
-              <p>No results found</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default LeftPanel;
+          <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search
