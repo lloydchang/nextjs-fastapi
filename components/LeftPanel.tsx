@@ -9,9 +9,10 @@ const Panel: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowImage(false);
-    }, 1000); // Wait for 1 second (1000 milliseconds)
+      console.log("Switched to iframe");
+    }, 1000); // Wait for 1 second
 
-    return () => clearTimeout(timer); // Clear timeout on component unmount
+    return () => clearTimeout(timer); // Cleanup timer on component unmount
   }, []);
 
   return (
@@ -22,6 +23,8 @@ const Panel: React.FC = () => {
           src="TEDxSDG.jpg" 
           alt="TEDxSDG"
           style={{ height: '100vh', width: 'auto', marginTop: '10px', maxWidth: '100%' }} 
+          onLoad={() => console.log("Image loaded successfully")}
+          onError={() => console.error("Failed to load the image")}
         />
       ) : (
         <iframe
@@ -29,6 +32,7 @@ const Panel: React.FC = () => {
           width="100%"
           height="100%"
           style={{ border: 'none' }}
+          onLoad={() => console.log("Iframe loaded successfully")}
         />
       )}
     </div>
