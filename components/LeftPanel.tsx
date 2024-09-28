@@ -32,16 +32,15 @@ const LeftPanel: React.FC = () => {
       setFadeIn(true);
     }, 1000); // Start fading in after the image starts to fade out
 
-    // Switch to the search panel after both transitions are complete
-    const removeImageTimer = setTimeout(() => {
-      setShowImage(false);
-      console.log("Switched to search panel");
-    }, 1500); // Complete both animations in 1500ms
+    // Prevent image removal but allow for opacity adjustments
+    const retainImageTimer = setTimeout(() => {
+      setShowImage(true);
+    }, 1500);
 
     return () => {
       clearTimeout(timer);
       clearTimeout(fadeInTextTimer);
-      clearTimeout(removeImageTimer);
+      clearTimeout(retainImageTimer);
     };
   }, []);
 
@@ -100,14 +99,16 @@ const LeftPanel: React.FC = () => {
     <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '0px' }}>
       <h1
         style={{
-          transition: 'opacity 1s ease-in-out',
-          opacity: fadeIn ? 1 : 0 // Fade-in effect for the text
+          transition: 'opacity 1.5s ease-in-out',
+          opacity: fadeIn ? 1 : 0, // Fade-in effect for the text
+          position: 'relative',
+          zIndex: 1, // Ensure text appears above the image
         }}
       >
         Ideas Change Everything!
       </h1>
       
-      {showImage ? (
+      {showImage && (
         <img 
           src="TEDxSDG.jpg" 
           alt="TEDxSDG"
@@ -116,64 +117,68 @@ const LeftPanel: React.FC = () => {
             width: 'auto',
             marginTop: '10px',
             maxWidth: '100%',
-            transition: 'opacity 1s ease-in-out',
-            opacity: fadeOut ? 0 : 1 // Apply fade-out effect to the image
+            transition: 'opacity 1.5s ease-in-out',
+            opacity: fadeOut ? 0.3 : 1, // Lower opacity for background effect
+            position: 'absolute',
+            zIndex: 0, // Ensure image stays in the background
+            top: 0,
+            left: 0,
           }} 
           onLoad={() => console.log("Image loaded successfully")}
           onError={() => console.error("Failed to load the image")}
         />
-      ) : (
-        <div style={{ margin: '20px', width: '100%' }}>
-          {/* Search Results Section */}
-          <div style={{ marginTop: '20px' }}>
-            <h3>Results:</h3>
-            {results.length > 0 ? (
-              results.map((talk, index) => (
-                <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                  <h4>{talk.title}</h4>
-                  <p><strong>Presenter:</strong> {talk.presenter}</p>
-                  <p>{talk.description}</p>
-                  <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
-                  <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
-                </div>
-              ))
-            ) : (
-              <p>No results found</p>
-            )}
-          </div>
+      )}
 
-          {/* Search Input and Filters Section */}
-          <h2 style={{ marginTop: '40px' }}>Search TEDx Talks Aligned with SDGs</h2>
-          <input
-            type="text"
-            placeholder="Enter a keyword (e.g., education, health)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            style={{ padding: '10px', width: '300px', color: '#000', backgroundColor: '#fff' }}
-          />
-          <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
+      <div style={{ margin: '20px', width: '100%' }}>
+        {/* Search Results Section */}
+        <div style={{ marginTop: '20px' }}>
+          <h3>Results:</h3>
+          {results.length > 0 ? (
+            results.map((talk, index) => (
+              <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                <h4>{talk.title}</h4>
+                <p><strong>Presenter:</strong> {talk.presenter}</p>
+                <p>{talk.description}</p>
+                <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
+                <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
+              </div>
+            ))
+          ) : (
+            <p>No results found</p>
+          )}
+        </div>
 
-          {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+        {/* Search Input and Filters Section */}
+        <h2 style={{ marginTop: '40px' }}>Search TEDx Talks Aligned with SDGs</h2>
+        <input
+          type="text"
+          placeholder="Enter a keyword (e.g., education, health)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{ padding: '10px', width: '300px', color: '#000', backgroundColor: '#fff' }}
+        />
+        <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
 
-          {/* SDG Filters Section */}
-          <div style={{ marginTop: '20px' }}>
-            <h3>Filter by SDGs:</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-              {sdgs.map(sdg => (
-                <label key={sdg} style={{ display: 'block', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    value={sdg}
-                    onChange={() => toggleSDG(sdg)}
-                    style={{ marginRight: '8px' }}
-                  />
-                  {sdg}
-                </label>
-              ))}
-            </div>
+        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+
+        {/* SDG Filters Section */}
+        <div style={{ marginTop: '20px' }}>
+          <h3>Filter by SDGs:</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            {sdgs.map(sdg => (
+              <label key={sdg} style={{ display: 'block', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  value={sdg}
+                  onChange={() => toggleSDG(sdg)}
+                  style={{ marginRight: '8px' }}
+                />
+                {sdg}
+              </label>
+            ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
