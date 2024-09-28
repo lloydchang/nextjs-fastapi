@@ -15,25 +15,32 @@ interface Talk {
 const LeftPanel: React.FC = () => {
   const [showImage, setShowImage] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Talk[]>([]);
   const [selectedSDGs, setSelectedSDGs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Start fade-out effect
+    // Start the fade-out effect for the image
     const timer = setTimeout(() => {
       setFadeOut(true);
-    }, 500); // Delay to start fading out
+    }, 500); // Start fading out after 500ms
 
-    // Switch to the search panel after the fade-out is complete
+    // Trigger the fade-in effect for the text
+    const fadeInTextTimer = setTimeout(() => {
+      setFadeIn(true);
+    }, 1000); // Start fading in after the image starts to fade out
+
+    // Switch to the search panel after both transitions are complete
     const removeImageTimer = setTimeout(() => {
       setShowImage(false);
       console.log("Switched to search panel");
-    }, 1500); // Duration of the fade-out
+    }, 1500); // Complete both animations in 1500ms
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(fadeInTextTimer);
       clearTimeout(removeImageTimer);
     };
   }, []);
@@ -91,7 +98,14 @@ const LeftPanel: React.FC = () => {
 
   return (
     <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '0px' }}>
-      <h1>Ideas Change Everything!</h1>
+      <h1
+        style={{
+          transition: 'opacity 1s ease-in-out',
+          opacity: fadeIn ? 1 : 0 // Fade-in effect for the text
+        }}
+      >
+        Ideas Change Everything!
+      </h1>
       
       {showImage ? (
         <img 
@@ -103,7 +117,7 @@ const LeftPanel: React.FC = () => {
             marginTop: '10px',
             maxWidth: '100%',
             transition: 'opacity 1s ease-in-out',
-            opacity: fadeOut ? 0 : 1 // Apply fade-out effect
+            opacity: fadeOut ? 0 : 1 // Apply fade-out effect to the image
           }} 
           onLoad={() => console.log("Image loaded successfully")}
           onError={() => console.error("Failed to load the image")}
