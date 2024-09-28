@@ -81,7 +81,7 @@ const LeftPanel: React.FC = () => {
   };
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '20px' }}>
+    <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '0px' }}>
       <h1>Ideas Change Everything!</h1>
       
       {showImage ? (
