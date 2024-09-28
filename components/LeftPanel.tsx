@@ -16,7 +16,7 @@ const LeftPanel: React.FC = () => {
   const [showImage, setShowImage] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("climate"); // Default search query
   const [results, setResults] = useState<Talk[]>([]);
   const [selectedSDGs, setSelectedSDGs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +31,9 @@ const LeftPanel: React.FC = () => {
     const fadeInTextTimer = setTimeout(() => {
       setFadeIn(true);
     }, 400); // Start fading in after the image starts to fade out
+
+    // Trigger a default search on initial load
+    handleSearch();
 
     return () => {
       clearTimeout(timer);
@@ -86,13 +89,14 @@ const LeftPanel: React.FC = () => {
   };
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '0px' }}>
+    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
       <h1
         style={{
           transition: 'opacity 0.5s ease-in-out',
           opacity: fadeIn ? 1 : 0, // Faster fade-in effect for the text
           position: 'relative',
           zIndex: 1, // Ensure text appears above the image
+          fontSize: '14px',
         }}
       >
         Ideas Change Everything!
@@ -117,44 +121,44 @@ const LeftPanel: React.FC = () => {
         />
       )}
 
-      <div style={{ margin: '20px', width: '100%' }}>
+      <div style={{ margin: '20px', width: '100%', position: 'relative', zIndex: 2 }}>
         {/* Search Results Section */}
         <div style={{ marginTop: '20px' }}>
-          <h3>Results:</h3>
+          <h3 style={{ fontSize: '12px' }}>Results:</h3>
           {results.length > 0 ? (
             results.map((talk, index) => (
-              <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                <h4>{talk.title}</h4>
+              <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd', fontSize: '10px' }}>
+                <h4 style={{ fontSize: '12px' }}>{talk.title}</h4>
                 <p><strong>Presenter:</strong> {talk.presenter}</p>
                 <p>{talk.description}</p>
                 <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
-                <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
+                <a href={talk.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '10px' }}>Watch Talk</a>
               </div>
             ))
           ) : (
-            <p>No results found</p>
+            <p style={{ fontSize: '10px' }}>No results found</p>
           )}
         </div>
 
         {/* Search Input and Filters Section */}
-        <h2 style={{ marginTop: '40px' }}>Search TEDx Talks Aligned with SDGs</h2>
+        <h2 style={{ marginTop: '40px', fontSize: '12px' }}>Search TEDx Talks Aligned with SDGs</h2>
         <input
           type="text"
           placeholder="Enter a keyword (e.g., education, health)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{ padding: '8px', width: '250px', fontSize: '10px', color: '#000', backgroundColor: '#fff' }} // Smaller font size and reduced padding
+          style={{ padding: '6px', width: '200px', fontSize: '10px', color: '#000', backgroundColor: '#fff' }}
         />
-        <button onClick={handleSearch} style={{ padding: '8px 15px', marginLeft: '10px' }}>Search</button>
+        <button onClick={handleSearch} style={{ padding: '6px 12px', marginLeft: '10px', fontSize: '10px' }}>Search</button>
 
-        {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+        {error && <p style={{ color: 'red', marginTop: '10px', fontSize: '10px' }}>{error}</p>}
 
         {/* SDG Filters Section */}
         <div style={{ marginTop: '20px' }}>
-          <h3>Filter by SDGs:</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          <h3 style={{ fontSize: '12px' }}>Filter by SDGs:</h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {sdgs.map(sdg => (
-              <label key={sdg} style={{ display: 'block', cursor: 'pointer' }}>
+              <label key={sdg} style={{ display: 'block', cursor: 'pointer', fontSize: '10px' }}>
                 <input
                   type="checkbox"
                   value={sdg}
