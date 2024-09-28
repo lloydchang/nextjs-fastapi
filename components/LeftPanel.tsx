@@ -14,18 +14,28 @@ interface Talk {
 
 const LeftPanel: React.FC = () => {
   const [showImage, setShowImage] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Talk[]>([]);
   const [selectedSDGs, setSelectedSDGs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Start fade-out effect
     const timer = setTimeout(() => {
+      setFadeOut(true);
+    }, 500); // Delay to start fading out
+
+    // Switch to the search panel after the fade-out is complete
+    const removeImageTimer = setTimeout(() => {
       setShowImage(false);
       console.log("Switched to search panel");
-    }, 1000);
+    }, 1500); // Duration of the fade-out
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(removeImageTimer);
+    };
   }, []);
 
   // List of SDGs to display as filters
@@ -45,7 +55,6 @@ const LeftPanel: React.FC = () => {
     setResults([]); // Clear previous results
 
     try {
-      // Use the correct backend URL for your FastAPI server
       let url = `http://127.0.0.1:8000/api/py/search?query=${query}`;
       if (selectedSDGs.length > 0) {
         url += `&sdg_filter=${selectedSDGs.join(",")}`;
@@ -88,7 +97,14 @@ const LeftPanel: React.FC = () => {
         <img 
           src="TEDxSDG.jpg" 
           alt="TEDxSDG"
-          style={{ height: '100vh', width: 'auto', marginTop: '10px', maxWidth: '100%' }} 
+          style={{
+            height: '100vh',
+            width: 'auto',
+            marginTop: '10px',
+            maxWidth: '100%',
+            transition: 'opacity 1s ease-in-out',
+            opacity: fadeOut ? 0 : 1 // Apply fade-out effect
+          }} 
           onLoad={() => console.log("Image loaded successfully")}
           onError={() => console.error("Failed to load the image")}
         />
@@ -119,7 +135,7 @@ const LeftPanel: React.FC = () => {
             placeholder="Enter a keyword (e.g., education, health)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            style={{ padding: '10px', width: '300px', color: '#000', backgroundColor: '#fff' }} // Updated styles for input text visibility
+            style={{ padding: '10px', width: '300px', color: '#000', backgroundColor: '#fff' }}
           />
           <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
 
