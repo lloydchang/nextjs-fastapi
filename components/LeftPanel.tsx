@@ -82,7 +82,7 @@ const LeftPanel: React.FC = () => {
 
   return (
     <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '20px' }}>
-      <h1 style={{ marginBottom: '20px', fontSize: '2em', color: '#fff' }}>Ideas Change Everything!</h1> {/* Updated text color to white */}
+      <h1>Ideas Change Everything!</h1>
       
       {showImage ? (
         <img 
