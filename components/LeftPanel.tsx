@@ -1,119 +1,148 @@
-# Import necessary modules from FastAPI and other libraries
-from fastapi import FastAPI, Query
-from typing import List, Dict, Optional
-import pandas as pd
-import re
-from sentence_transformers import SentenceTransformer, util
-import nltk
-from nltk.corpus import wordnet
-import torch
+// src/components/LeftPanel.tsx
+"use client"; // Mark as a client component
 
-# Download WordNet data for expanding keywords
-nltk.download('wordnet')
-nltk.download('omw-1.4')
+import React, { useState, useEffect } from 'react';
 
-# Create a FastAPI instance with custom documentation and OpenAPI URLs
-app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
-
-# Step 1: Load the TEDx Dataset
-file_path = "./data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-data = pd.read_csv(file_path)
-
-# Step 2: Define the Initial SDG Keywords for All 17 SDGs
-sdg_keywords = {
-    'SDG 1 - No Poverty': ['poverty', 'income disparity', 'social protection', 'economic growth', 'vulnerable'],
-    'SDG 2 - Zero Hunger': ['hunger', 'food security', 'nutrition', 'agriculture', 'malnutrition'],
-    'SDG 3 - Good Health and Well-Being': ['health', 'medicine', 'well-being', 'healthcare', 'vaccines', 'disease'],
-    'SDG 4 - Quality Education': ['education', 'school', 'learning', 'literacy', 'skills development'],
-    'SDG 5 - Gender Equality': ['gender', 'equality', 'women', 'girls', 'empowerment', 'gender-based violence'],
-    'SDG 6 - Clean Water and Sanitation': ['water', 'sanitation', 'hygiene', 'safe water', 'drinking water'],
-    'SDG 7 - Affordable and Clean Energy': ['energy', 'clean energy', 'renewable', 'solar', 'wind'],
-    'SDG 8 - Decent Work and Economic Growth': ['employment', 'decent work', 'economic growth', 'job creation'],
-    'SDG 9 - Industry, Innovation, and Infrastructure': ['infrastructure', 'innovation', 'technology', 'industrialization'],
-    'SDG 10 - Reduced Inequalities': ['inequality', 'equal opportunities', 'income inequality', 'social inclusion'],
-    'SDG 11 - Sustainable Cities and Communities': ['cities', 'urban', 'housing', 'sustainable communities'],
-    'SDG 12 - Responsible Consumption and Production': ['consumption', 'production', 'waste management', 'recycling'],
-    'SDG 13 - Climate Action': ['climate change', 'global warming', 'carbon emissions', 'climate adaptation'],
-    'SDG 14 - Life Below Water': ['ocean', 'marine', 'sea', 'coastal ecosystems', 'pollution'],
-    'SDG 15 - Life on Land': ['biodiversity', 'ecosystems', 'deforestation', 'wildlife'],
-    'SDG 16 - Peace, Justice, and Strong Institutions': ['peace', 'justice', 'human rights', 'law', 'governance'],
-    'SDG 17 - Partnerships for the Goals': ['partnerships', 'collaboration', 'global partnerships']
+interface Talk {
+  title: string;
+  description: string;
+  presenter: string;
+  sdg_tags: string[];
+  similarity_score: number;
+  url: string;
 }
 
-# Step 3: Expand SDG Keywords Using Synonyms from WordNet
-def get_synonyms(word):
-    synonyms = set()
-    for syn in wordnet.synsets(word):
-        for lemma in syn.lemmas():
-            synonyms.add(lemma.name().replace('_', ' '))
-    return list(synonyms)
+const LeftPanel: React.FC = () => {
+  const [showImage, setShowImage] = useState(true);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Talk[]>([]);
+  const [selectedSDGs, setSelectedSDGs] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-# Expand each SDG keyword list with synonyms
-expanded_sdg_keywords = {}
-for sdg, keywords in sdg_keywords.items():
-    expanded_keywords = set(keywords)
-    for keyword in keywords:
-        synonyms = get_synonyms(keyword)
-        expanded_keywords.update(synonyms)
-    expanded_sdg_keywords[sdg] = list(expanded_keywords)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowImage(false);
+      console.log("Switched to search panel");
+    }, 1000);
 
-# Use the expanded SDG keywords for improved SDG mapping
-sdg_keywords = expanded_sdg_keywords
+    return () => clearTimeout(timer);
+  }, []);
 
-# Step 4: Enhance SDG Mapping with Additional NLP Processing
-def map_sdgs(description: str) -> List[str]:
-    sdg_tags = []
-    for sdg, keywords in sdg_keywords.items():
-        if any(re.search(r'\b' + keyword + r'\b', description, flags=re.IGNORECASE) for keyword in keywords):
-            sdg_tags.append(sdg)
-    return sdg_tags
+  // List of SDGs to display as filters
+  const sdgs = [
+    "SDG 1 - No Poverty", "SDG 2 - Zero Hunger", "SDG 3 - Good Health and Well-Being",
+    "SDG 4 - Quality Education", "SDG 5 - Gender Equality", "SDG 6 - Clean Water and Sanitation",
+    "SDG 7 - Affordable and Clean Energy", "SDG 8 - Decent Work and Economic Growth",
+    "SDG 9 - Industry, Innovation, and Infrastructure", "SDG 10 - Reduced Inequalities",
+    "SDG 11 - Sustainable Cities and Communities", "SDG 12 - Responsible Consumption and Production",
+    "SDG 13 - Climate Action", "SDG 14 - Life Below Water", "SDG 15 - Life on Land",
+    "SDG 16 - Peace, Justice, and Strong Institutions", "SDG 17 - Partnerships for the Goals"
+  ];
 
-# Step 5: Precompute SDG Tags for Each TEDx Talk
-data['sdg_tags'] = data['description'].apply(lambda x: map_sdgs(str(x)))
+  // Function to handle search
+  const handleSearch = async () => {
+    setError(null); // Clear previous error messages
+    setResults([]); // Clear previous results
 
-# Step 6: Load Sentence-BERT for Semantic Search
-model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+    try {
+      // Use the correct backend URL for your FastAPI server
+      let url = `http://127.0.0.1:8000/api/py/search?query=${query}`;
+      if (selectedSDGs.length > 0) {
+        url += `&sdg_filter=${selectedSDGs.join(",")}`;
+      }
 
-# Step 7: Precompute Embeddings for Each Description
-if 'description_vector' not in data.columns or not isinstance(data['description_vector'].iloc[0], torch.Tensor):
-    data['description_vector'] = data['description'].apply(lambda x: model.encode(x, convert_to_tensor=True))
+      console.log("Request URL:", url); // Debug: Log the request URL
 
-# Step 8: Create a Semantic Search Function
-def semantic_search(query: str, top_n: int = 5) -> List[Dict]:
-    query_vector = model.encode(query, convert_to_tensor=True)
-    data['similarity'] = data['description_vector'].apply(lambda x: util.pytorch_cos_sim(query_vector, x).item())
-    top_results = data.sort_values(by='similarity', ascending=False).head(top_n)
-    return [
-        {
-            'title': row['slug'].replace('_', ' '),
-            'description': row['description'],
-            'presenter': row['presenterDisplayName'],
-            'sdg_tags': row['sdg_tags'],
-            'similarity_score': row['similarity'],
-            'url': f"https://www.ted.com/talks/{row['slug']}"
-        }
-        for _, row in top_results.iterrows()
-    ]
+      const response = await fetch(url);
 
-# Step 9: Define a "Hello World" Endpoint for Testing
-@app.get("/api/py/helloFastApi")
-def hello_fast_api():
-    return {"message": "Hello from FastAPI"}
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
 
-# Step 10: Create a Search Endpoint for TEDx Talks
-@app.get("/api/py/search")
-def search(query: str = Query(..., min_length=1), sdg_filter: Optional[List[str]] = Query(None)) -> List[Dict]:
-    """
-    Search TEDx talks based on a query. Optionally filter results by specific SDGs.
-    
-    Parameters:
-        query (str): The search query keyword.
-        sdg_filter (List[str]): Optional list of SDGs to filter results by.
-    
-    Returns:
-        List[Dict]: List of matching TEDx talks with their SDG tags.
-    """
-    semantic_results = semantic_search(query)
-    if sdg_filter:
-        semantic_results = [result for result in semantic_results if any(sdg in result['sdg_tags'] for sdg in sdg_filter)]
-    return semantic_results
+      const data = await response.json();
+      console.log("Search Results:", data); // Debug: Log the response data
+
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else {
+        setError("Unexpected response format.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch search results:", err);
+      setError("Failed to fetch search results. Please try again.");
+    }
+  };
+
+  // Toggle selected SDGs
+  const toggleSDG = (sdg: string) => {
+    setSelectedSDGs(selectedSDGs.includes(sdg)
+      ? selectedSDGs.filter(s => s !== sdg)
+      : [...selectedSDGs, sdg]);
+  };
+
+  return (
+    <div style={{ width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', padding: '20px' }}>
+      <h1 style={{ marginBottom: '20px', fontSize: '2em', color: '#333' }}>Ideas Change Everything!</h1>
+      
+      {showImage ? (
+        <img 
+          src="TEDxSDG.jpg" 
+          alt="TEDxSDG"
+          style={{ height: '100vh', width: 'auto', marginTop: '10px', maxWidth: '100%' }} 
+          onLoad={() => console.log("Image loaded successfully")}
+          onError={() => console.error("Failed to load the image")}
+        />
+      ) : (
+        <div style={{ margin: '20px' }}>
+          <h2>Search TEDx Talks Aligned with SDGs</h2>
+          <input
+            type="text"
+            placeholder="Enter a keyword (e.g., education, health)"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ padding: '10px', width: '300px' }}
+          />
+          <button onClick={handleSearch} style={{ padding: '10px 20px', marginLeft: '10px' }}>Search</button>
+
+          {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+
+          <div style={{ marginTop: '20px' }}>
+            <h3>Filter by SDGs:</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {sdgs.map(sdg => (
+                <label key={sdg} style={{ display: 'block', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    value={sdg}
+                    onChange={() => toggleSDG(sdg)}
+                    style={{ marginRight: '8px' }}
+                  />
+                  {sdg}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '40px' }}>
+            <h3>Results:</h3>
+            {results.length > 0 ? (
+              results.map((talk, index) => (
+                <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                  <h4>{talk.title}</h4>
+                  <p><strong>Presenter:</strong> {talk.presenter}</p>
+                  <p>{talk.description}</p>
+                  <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
+                  <a href={talk.url} target="_blank" rel="noopener noreferrer">Watch Talk</a>
+                </div>
+              ))
+            ) : (
+              <p>No results found</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default LeftPanel;
