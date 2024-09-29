@@ -1,0 +1,32 @@
+/* src/components/ChatMessage.module.css */
+
+.messageContainer {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  
+  .user {
+    justify-content: flex-end;
+  }
+  
+  .bot {
+    justify-content: flex-start;
+  }
+  
+  .messageBubble {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 10px;
+    color: #ffffff; /* White text */
+    word-break: break-word;
+  }
+  
+  .user .messageBubble {
+    background-color: #E62B1E; /* User message background */
+  }
+  
+  .bot .messageBubble {
+    background-color: #333333; /* Bot message background */
+  }
+  
