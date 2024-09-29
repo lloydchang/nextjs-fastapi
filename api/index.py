@@ -92,7 +92,7 @@ else:
 
 # Step 11: Create a Semantic Search Function Using NumPy and Asynchronous Handling
 print("Step 11: Creating a semantic search function.")
-async def semantic_search(query: str, top_n: int = 5) -> List[Dict]:
+async def semantic_search(query: str, top_n: int = 10) -> List[Dict]:
     print(f"Step 11.1: Performing semantic search for the query: '{query}'.")
     if model is None or 'description_vector' not in data.columns:
         return [{"error": "Model or data not available."}]
