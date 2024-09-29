@@ -12,10 +12,11 @@ export const useChat = () => {
     setMessages((prev) => [...prev, { sender: 'user', text: input }]);
 
     try {
-      // Using the updated chat service function
-      const responseMessage = await sendMessageToChatbot(systemPrompt, input);
-      // Add bot response to chat
-      setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
+      // Stream the response messages
+      await sendMessageToChatbot(systemPrompt, input, (responseMessage) => {
+        // Add bot response to chat as it streams in
+        setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
+      });
     } catch (error) {
       console.error('Error sending message to chatbot:', error); // Log the error
       setMessages((prev) => [
