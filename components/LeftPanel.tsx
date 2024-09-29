@@ -100,15 +100,15 @@ const LeftPanel: React.FC = () => {
   };
 
   // Handle Picture-in-Picture (PiP) Changes
-  const handlePiPChange = useCallback(() => {
-    if (!document.pictureInPictureElement) {
-      setIsPiP(false);
-    } else {
-      setIsPiP(true);
-    }
-  }, []);
-
   useEffect(() => {
+    const handlePiPChange = () => {
+      if (!document.pictureInPictureElement) {
+        setIsPiP(false);
+      } else {
+        setIsPiP(true);
+      }
+    };
+
     document.addEventListener("enterpictureinpicture", handlePiPChange);
     document.addEventListener("leavepictureinpicture", handlePiPChange);
 
@@ -116,7 +116,7 @@ const LeftPanel: React.FC = () => {
       document.removeEventListener("enterpictureinpicture", handlePiPChange);
       document.removeEventListener("leavepictureinpicture", handlePiPChange);
     };
-  }, [handlePiPChange]);
+  }, []);
 
   // Cleanup on Unmount
   useEffect(() => {
@@ -140,7 +140,8 @@ const LeftPanel: React.FC = () => {
         </>
       )}
 
-      <VideoStream isCameraOn={isCameraOn} videoRef={videoRef} />
+      {/* Pass isPiP to VideoStream */}
+      <VideoStream isCameraOn={isCameraOn} isPiP={isPiP} videoRef={videoRef} />
 
       <div className={styles.content}>
         <h1 className={styles.title}>
