@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png'; // Import SDG Wheel for search loading indicator
+import styles from './MiddlePanel.module.css';
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
@@ -12,7 +13,7 @@ const MiddlePanel: React.FC = () => {
 
   const [query, setQuery] = useState<string>(initialKeyword.current);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false); // Search loading state
+  const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<any>(null);
 
@@ -21,8 +22,7 @@ const MiddlePanel: React.FC = () => {
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
+    setQuery(e.target.value);
   };
 
   const handleSearch = async () => {
@@ -33,8 +33,7 @@ const MiddlePanel: React.FC = () => {
     setSelectedTalk(null);
 
     try {
-      let url = `http://127.0.0.1:8000/api/py/search?query=${query}`;
-      const response = await fetch(url);
+      const response = await fetch(`http://127.0.0.1:8000/api/py/search?query=${query}`);
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
@@ -59,10 +58,7 @@ const MiddlePanel: React.FC = () => {
   const generateEmbedUrl = (url: string) => {
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
-    if (match) {
-      return `https://embed.ted.com/talks/${match[1]}`;
-    }
-    return url;
+    return match ? `https://embed.ted.com/talks/${match[1]}` : url;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -72,69 +68,58 @@ const MiddlePanel: React.FC = () => {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      {/* Search Input, Button, and Loading Indicator */}
-      <div style={{ display: 'flex', alignItems: 'center', marginTop: '0px' }}>
+    <div className={styles.middlePanel}>
+      {/* Search Section */}
+      <div className={styles.searchContainer}>
         <input
           type="text"
           placeholder="Enter a keyword"
           value={query}
           onChange={handleInputChange}
-          onKeyDown={handleKeyPress} // Add key press event listener
-          style={{ padding: '0px', width: '200px', fontSize: '14px', color: '#000', backgroundColor: '#fff' }}
+          onKeyDown={handleKeyPress}
+          className={styles.searchInput}
         />
-        <button 
-          onClick={handleSearch} 
-          style={{ padding: '6px 12px', marginLeft: '10px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#3498db', color: '#fff' }}
-        >
+        <button onClick={handleSearch} className={`${styles.button} ${styles.searchButton}`}>
           Search
         </button>
         {selectedTalk && (
           <button
             onClick={() => window.open(selectedTalk.url, '_blank')}
-            style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#EB0028', color: '#ffffff' }}
+            className={`${styles.button} ${styles.tedButton}`}
           >
             Play in New Tab
           </button>
         )}
-        {/* Search loading spinner */}
         {loading && (
-          <div style={{ marginLeft: '10px' }}>
-            <Image
-              src={SDGWheel}
-              alt="Loading..."
-              width={24}
-              height={24}
-              style={{ animation: 'spin 2s linear infinite' }}
-            />
+          <div className={styles.loadingSpinner}>
+            <Image src={SDGWheel} alt="Loading..." width={24} height={24} />
           </div>
         )}
       </div>
 
       {/* Now Playing Section */}
       {selectedTalk && (
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className={styles.nowPlaying}>
           <iframe
             src={generateEmbedUrl(selectedTalk.url)}
             width="100%"
             height="400px"
             allow="autoplay; fullscreen; encrypted-media"
-            style={{ border: 'none' }}
+            className={styles.videoFrame}
           />
         </div>
       )}
 
-      {/* Conditionally Render Search Results Section */}
+      {/* Search Results Section */}
       {searchInitiated && (
-        <div style={{ marginTop: '0px' }}>
+        <div className={styles.resultsContainer}>
           {talks.length > 0 ? (
             talks.map((talk, index) => (
-              <div key={index} style={{ padding: '0px', borderBottom: '1px solid #ddd', fontSize: '10px' }}>
+              <div key={index} className={styles.resultItem}>
                 <h3>
-                  <a 
-                    href="#" // Prevent default navigation
-                    rel="noopener noreferrer" 
-                    style={{ fontSize: '14px', color: '#EB0028', textDecoration: 'underline', cursor: 'pointer' }}
+                  <a
+                    href="#"
+                    className={styles.resultLink}
                     onClick={(e) => {
                       e.preventDefault();
                       setSelectedTalk(talk);
@@ -147,12 +132,12 @@ const MiddlePanel: React.FC = () => {
               </div>
             ))
           ) : (
-            <p></p>
+            <p>No results found.</p>
           )}
         </div>
       )}
 
-      {error && <p style={{ color: 'red', marginTop: '0px' }}>{error}</p>}
+      {error && <p className={styles.errorText}>{error}</p>}
     </div>
   );
 };
