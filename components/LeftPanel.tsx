@@ -69,6 +69,12 @@ const LeftPanel: React.FC = () => {
 
         // Attempt to start PiP mode automatically
         startPiP();
+
+        // If the microphone is not on, start it as well
+        if (!isMicrophoneOn) {
+          console.log("Microphone is off; starting microphone...");
+          await startMicrophone(); // Start the microphone if it's not already on
+        }
       }
     } catch (err) {
       console.error("Failed to start camera:", err);
@@ -118,7 +124,7 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Microphone Handlers moved to AudioStream component
+  // Microphone Handlers
   const startMicrophone = async () => {
     console.log("Attempting to start microphone...");
     try {
