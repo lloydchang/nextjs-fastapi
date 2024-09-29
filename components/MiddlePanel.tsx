@@ -79,8 +79,8 @@ const MiddlePanel: React.FC = () => {
           onKeyDown={handleKeyPress}
           className={styles.searchInput}
         />
-        <button onClick={handleSearch} className={`${styles.button} ${styles.searchButton}`}>
-          Search
+        <button onClick={handleSearch} className={`${styles.button} ${styles.searchButton}`} disabled={loading}>
+          {loading ? "Searching…" : "Search"}
         </button>
         {selectedTalk && (
           <button
