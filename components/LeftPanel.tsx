@@ -24,6 +24,7 @@ const LeftPanel: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null); // Ref for AudioStream
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null); // Reference to the scroll element
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
@@ -42,8 +43,8 @@ const LeftPanel: React.FC = () => {
 
   // Scroll chat to the bottom when messages update
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
@@ -170,6 +171,8 @@ const LeftPanel: React.FC = () => {
           <h3 className={styles.chatHeader}><b>Chat with TEDxSDG</b></h3>
 
           <ChatMessages messages={messages} />
+          {/* Auto-scroll reference element */}
+          <div ref={scrollRef} />
 
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} handleKeyDown={handleKeyDown} />
 
