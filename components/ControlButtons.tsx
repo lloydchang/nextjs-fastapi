@@ -36,7 +36,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   return (
     <div className={styles.container}>
       {/* Camera Toggle Button */}
-      <button onClick={handleCameraToggle} className={styles.button}>
+      <button
+        onClick={handleCameraToggle}
+        className={`${styles.button} ${!isCameraOn ? styles.startButton : ""}`}
+      >
         {isCameraOn ? "Stop Camera" : "Start Camera"}
       </button>
 
@@ -44,11 +47,17 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       {isCameraOn && (
         <>
           {!isPiP ? (
-            <button onClick={startPiP} className={styles.button}>
+            <button
+              onClick={startPiP}
+              className={`${styles.button} ${styles.startButton}`}
+            >
               Start PiP
             </button>
           ) : (
-            <button onClick={stopPiP} className={styles.button}>
+            <button
+              onClick={stopPiP}
+              className={styles.button}
+            >
               Stop PiP
             </button>
           )}
@@ -56,7 +65,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       )}
 
       {/* Microphone Toggle Button */}
-      <button onClick={toggleMicrophone} className={styles.button}>
+      <button
+        onClick={toggleMicrophone}
+        className={`${styles.button} ${!isMicrophoneOn ? styles.startButton : ""}`}
+      >
         {isMicrophoneOn ? "Stop Microphone" : "Start Microphone"}
       </button>
     </div>
