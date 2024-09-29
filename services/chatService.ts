@@ -17,19 +17,22 @@ export const sendMessageToChatbot = async (systemPrompt: string, input: string, 
   const reader = response.body?.getReader();
   const decoder = new TextDecoder('utf-8');
   let done = false;
+  let accumulatedResponse = ''; // To accumulate response text
 
   while (!done) {
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
-
+    
     try {
       const parsed = JSON.parse(chunk); // Parse the entire chunk directly
       if (parsed.response) {
-        onResponse(parsed.response); // Send the response to the chat user
+        accumulatedResponse += parsed.response; // Accumulate the response text
       }
       done = parsed.done || streamDone; // Update done status based on stream
     } catch (e) {
       console.error('Failed to parse chunk: ', chunk);
     }
   }
+
+  onResponse(accumulatedResponse.trim()); // Send the accumulated response to the chat user
 };
