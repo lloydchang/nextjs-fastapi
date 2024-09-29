@@ -22,9 +22,14 @@ export const sendMessageToChatbot = async (systemPrompt: string, input: string, 
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
 
-    // Send the response to the chat user
-    onResponse(chunk.trim());
-
-    done = streamDone;
+    try {
+      const parsed = JSON.parse(chunk); // Parse the entire chunk directly
+      if (parsed.response) {
+        onResponse(parsed.response); // Send the response to the chat user
+      }
+      done = parsed.done || streamDone; // Update done status based on stream
+    } catch (e) {
+      console.error('Failed to parse chunk: ', chunk);
+    }
   }
 };
