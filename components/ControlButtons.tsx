@@ -25,10 +25,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startPiP,
   stopPiP,
 }) => {
-  // useChat hook integration for speech-to-text hearing
   const { startHearing, stopHearing } = useChat();
 
-  // Camera button text based on state
   const cameraButtonText = isCameraOn ? (
     <>
       Stop Cam <span className={styles.emojiBackground}>🚫 📷</span>
@@ -39,7 +37,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     "Start Cam 📷 and Mic 🎤"
   );
 
-  // Microphone button text based on state
   const microphoneButtonText = isMicrophoneOn ? (
     <>
       Stop Mic <span className={styles.emojiBackground}>🚫 🎤</span>
@@ -48,7 +45,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     "Start Mic 🎤"
   );
 
-  // Picture-in-Picture button text based on state
   const startPiPButtonText = (
     <>
       Start PiP 📹
@@ -61,23 +57,20 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     </>
   );
 
-  // Toggle microphone state
   const handleMicrophoneToggle = () => {
-    toggleMicrophone(); // This will toggle the mic on/off
+    toggleMicrophone();
   };
 
-  // Synchronize hearing with microphone state automatically
   useEffect(() => {
     if (isMicrophoneOn) {
-      startHearing(); // Automatically start hearing when mic is on
+      startHearing();
     } else {
-      stopHearing(); // Automatically stop hearing when mic is off
+      stopHearing();
     }
   }, [isMicrophoneOn, startHearing, stopHearing]);
 
   return (
     <div className={styles.container}>
-      {/* Camera Toggle Button */}
       <button
         onClick={isCameraOn ? stopCamera : startCamera}
         className={`${styles.button} ${!isCameraOn ? styles.startButton : styles.stopButton}`}
@@ -85,7 +78,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {cameraButtonText}
       </button>
 
-      {/* PiP Control Buttons */}
       {isCameraOn && (
         <>
           {!isPiP ? (
@@ -106,7 +98,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         </>
       )}
 
-      {/* Microphone Toggle Button */}
       <button
         onClick={handleMicrophoneToggle}
         className={`${styles.button} ${!isMicrophoneOn ? styles.startButton : styles.stopButton}`}

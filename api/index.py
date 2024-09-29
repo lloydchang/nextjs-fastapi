@@ -79,7 +79,7 @@ def map_sdgs(description: str, threshold: float = 0.5) -> List[str]:
         max_similarity = torch.max(similarities).item()
 
         if max_similarity > threshold:
-            sdg_tags.append(f"SDG {sdg}")
+            sdg_tags.append(f"{sdg}")
 
     return sdg_tags if sdg_tags else [""]
 
