@@ -2,11 +2,14 @@
 export const sendMessageToChatbot = async (
   systemPrompt: string, 
   input: string, 
-  onResponse: (message: string) => void
+  context: string | null, // Accept context as a third argument
+  onResponse: (message: string, newContext: string | null) => void // Pass newContext to the callback
 ) => {
+  // Include context in the prompt if available
   const requestBody = {
     model: 'llama3.2',
-    prompt: `${systemPrompt}\nUser: ${input}\nAssistant:`,
+    // Include the full conversation context in the prompt
+    prompt: context ? `${systemPrompt}\n${context}\nUser: ${input}\nAssistant:` : `${systemPrompt}\nUser: ${input}\nAssistant:`,
     temperature: 2.0,
   };
 
@@ -43,7 +46,8 @@ export const sendMessageToChatbot = async (
             const completeSegment = buffer.trim(); // Trim the buffer to form a complete message
             buffer = ''; // Clear buffer for next segment
 
-            onResponse(completeSegment); // Send only the new segment
+            // Pass complete segment and the context to the callback
+            onResponse(completeSegment, parsed.context || null);
           }
         }
         done = parsed.done || streamDone; // Stop loop if stream is complete

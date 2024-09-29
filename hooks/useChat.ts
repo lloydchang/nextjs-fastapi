@@ -6,18 +6,31 @@ import { systemPrompt } from '../utils/systemPrompt'; // Import the system promp
 
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]); // Store chat messages
+  const [context, setContext] = useState<string | null>(null); // Store the context returned by the chatbot
 
   const sendActionToChatbot = async (input: string) => {
     // Add user message to chat
     setMessages((prev) => [...prev, { sender: 'user', text: input }]);
 
+    // Create a conversation context string by concatenating all previous messages
+    const conversationHistory = messages.map((msg) => `${msg.sender}: ${msg.text}`).join('\n');
+
     try {
-      // Stream the response messages
-      await sendMessageToChatbot(systemPrompt, input, (responseMessage) => {
-        console.log('Streaming response:', responseMessage); // Log each response message
-        // Add bot response to chat as it streams in
-        setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
-      });
+      // Stream the response messages along with full conversation history
+      await sendMessageToChatbot(
+        systemPrompt,
+        input,
+        `${conversationHistory}\nuser: ${input}`, // Include the full conversation history
+        (responseMessage, newContext) => {
+          console.log('Streaming response:', responseMessage); // Log each response message
+
+          // Update context if a new one is received
+          if (newContext) setContext(newContext);
+
+          // Add bot response to chat as it streams in
+          setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
+        }
+      );
     } catch (error) {
       console.error('Error sending message to chatbot:', error); // Log the error
       setMessages((prev) => [
@@ -37,5 +50,5 @@ export const useChat = () => {
     console.log('Hearing stopped');
   };
 
-  return { messages, sendActionToChatbot, startHearing, stopHearing };
+  return { messages, sendActionToChatbot, context, startHearing, stopHearing };
 };
