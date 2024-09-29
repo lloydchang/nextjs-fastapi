@@ -14,6 +14,7 @@ export const useChat = () => {
     try {
       // Stream the response messages
       await sendMessageToChatbot(systemPrompt, input, (responseMessage) => {
+        console.log('Streaming response:', responseMessage); // Log each response message
         // Add bot response to chat as it streams in
         setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
       });
