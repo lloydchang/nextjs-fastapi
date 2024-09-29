@@ -50,14 +50,13 @@ const LeftPanel: React.FC = () => {
   // Handle key presses in the chat input
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault(); // Prevent default behavior (like adding a newline)
+      event.preventDefault();
       handleChat();
     }
   };
 
   // Camera Handlers
   const startCamera = async () => {
-    console.log("Attempting to start camera...");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
@@ -65,14 +64,9 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         setIsCameraOn(true);
-        console.log("Video stream obtained:", stream);
-
-        // Attempt to start PiP mode automatically
         startPiP();
 
-        // If the microphone is not on, start it as well
         if (!isMicrophoneOn) {
-          console.log("Microphone is off; starting microphone...");
           await startMicrophone(); // Start the microphone if it's not already on
         }
       }
@@ -87,8 +81,6 @@ const LeftPanel: React.FC = () => {
       videoStreamRef.current.getTracks().forEach(track => track.stop());
       videoStreamRef.current = null;
       setIsCameraOn(false);
-      console.log("Camera stopped");
-
       if (isPiP) {
         document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
         setIsPiP(false);
@@ -96,13 +88,11 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Function to start PiP
   const startPiP = async () => {
     if (videoRef.current) {
       try {
         await videoRef.current.requestPictureInPicture();
         setIsPiP(true);
-        console.log("Entered Picture-in-Picture mode");
       } catch (err) {
         console.error("Failed to enter PiP:", err);
         alert("Unable to enter PiP mode.");
@@ -110,13 +100,11 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Function to stop PiP
   const stopPiP = async () => {
     if (document.pictureInPictureElement) {
       try {
         await document.exitPictureInPicture();
         setIsPiP(false);
-        console.log("Exited Picture-in-Picture mode");
       } catch (err) {
         console.error("Failed to exit PiP:", err);
         alert("Unable to exit PiP mode.");
@@ -126,7 +114,6 @@ const LeftPanel: React.FC = () => {
 
   // Microphone Handlers
   const startMicrophone = async () => {
-    console.log("Attempting to start microphone...");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (audioRef.current) {
@@ -134,7 +121,6 @@ const LeftPanel: React.FC = () => {
         audioStreamRef.current = stream;
         await audioRef.current.play();
         setIsMicrophoneOn(true);
-        console.log("Audio stream obtained:", stream);
       }
     } catch (err) {
       console.error("Failed to start microphone:", err);
@@ -147,7 +133,6 @@ const LeftPanel: React.FC = () => {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
       setIsMicrophoneOn(false);
-      console.log("Microphone stopped");
     }
   };
 
@@ -159,28 +144,6 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Handle Picture-in-Picture (PiP) Changes
-  useEffect(() => {
-    const handlePiPChange = () => {
-      if (!document.pictureInPictureElement) {
-        setIsPiP(false);
-        console.log("Exited Picture-in-Picture mode");
-      } else {
-        setIsPiP(true);
-        console.log("Entered Picture-in-Picture mode");
-      }
-    };
-
-    document.addEventListener("enterpictureinpicture", handlePiPChange);
-    document.addEventListener("leavepictureinpicture", handlePiPChange);
-
-    return () => {
-      document.removeEventListener("enterpictureinpicture", handlePiPChange);
-      document.removeEventListener("leavepictureinpicture", handlePiPChange);
-    };
-  }, []);
-
-  // Cleanup on Unmount
   useEffect(() => {
     return () => {
       stopCamera();
@@ -190,44 +153,25 @@ const LeftPanel: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {/* Background Image */}
       {showImage && (
         <>
-          <Image
-            src={BackgroundImage}
-            alt="Background"
-            fill
-            className={styles.backgroundImage}
-          />
+          <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
           <div className={styles.overlay} />
         </>
       )}
 
-      {/* Pass isPiP to VideoStream */}
       <VideoStream isCameraOn={isCameraOn} isPiP={isPiP} videoRef={videoRef} />
-
-      {/* AudioStream Component */}
       <AudioStream isMicrophoneOn={isMicrophoneOn} audioRef={audioRef} />
 
       <div className={styles.content}>
-        <h1 className={styles.title}>
-          <b>Ideas Change Everything!</b>
-        </h1>
+        <h1 className={styles.title}><b>Ideas Change Everything!</b></h1>
 
-        {/* Chat Interface */}
         <div className={styles.chatInterface} ref={chatContainerRef}>
-          <h3 className={styles.chatHeader}>
-            <b>Chat with TEDxSDG</b>
-          </h3>
+          <h3 className={styles.chatHeader}><b>Chat with TEDxSDG</b></h3>
 
           <ChatMessages messages={messages} />
 
-          <ChatInput
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            handleChat={handleChat}
-            handleKeyDown={handleKeyDown}
-          />
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} handleKeyDown={handleKeyDown} />
 
           <ControlButtons
             isCameraOn={isCameraOn}
@@ -236,8 +180,8 @@ const LeftPanel: React.FC = () => {
             startCamera={startCamera}
             stopCamera={stopCamera}
             isPiP={isPiP}
-            startPiP={startPiP} // Pass the startPiP function as a prop
-            stopPiP={stopPiP}   // Pass the stopPiP function as a prop
+            startPiP={startPiP}
+            stopPiP={stopPiP}
           />
         </div>
       </div>

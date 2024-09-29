@@ -37,3 +37,12 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+/* Emoji Background Styling */
+.emojiBackground {
+  background-color: #fff; /* White background for the emoji */
+  color: #e62b1e; /* Red text color for the emoji */
+  border-radius: 4px; /* Rounded corners */
+  padding: 2px; /* Padding around the emoji */
+  margin: 0 3px; /* Margin to separate the emoji from text */
+}
