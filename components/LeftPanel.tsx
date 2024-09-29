@@ -17,23 +17,21 @@ const LeftPanel: React.FC = () => {
 
   const [showImage, setShowImage] = useState<boolean>(true);
   const [chatInput, setChatInput] = useState<string>("");
-  const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
-  const [isMicrophoneOn, setIsMicrophoneOn] = useState<boolean>(false);
+  const [isCamOn, setIsCamOn] = useState<boolean>(false); // Use `isCamOn` instead of `isCameraOn`
+  const [isMicOn, setIsMicOn] = useState<boolean>(false); // Use `isMicOn` instead of `isMicrophoneOn`
   const [isPiP, setIsPiP] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null); // Ref for AudioStream
-  const chatContainerRef = useRef<HTMLDivElement>(null); // Reference for chat container
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
   // Handle sending chat messages
   const handleChat = useCallback(async () => {
-    console.log("Sending message:", chatInput);
     if (chatInput.trim() !== "") {
       try {
         await sendActionToChatbot(chatInput);
-        console.log("Message sent successfully");
         setChatInput("");
       } catch (error) {
         console.error("Error sending message:", error);
@@ -44,124 +42,101 @@ const LeftPanel: React.FC = () => {
 
   // Handle key presses in the chat input
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    console.log("Key pressed:", event.key);
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleChat();
     }
   };
 
-  // Camera Handlers
-  const startCamera = async () => {
-    console.log("Starting camera...");
+  // Cam Handlers
+  const startCam = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoStreamRef.current = stream;
         await videoRef.current.play();
-        setIsCameraOn(true);
-        console.log("Camera started successfully");
+        setIsCamOn(true);
         startPiP();
 
-        if (!isMicrophoneOn) {
-          console.log("Microphone is off, starting microphone...");
-          await startMicrophone(); // Start the microphone if it's not already on
+        if (!isMicOn) {
+          await startMic(); // Start Mic if it's not already on
         }
       }
     } catch (err) {
-      console.error("Failed to start camera:", err);
-      alert("Unable to access camera. Please check permissions.");
+      alert("Unable to access cam. Please check permissions.");
     }
   };
 
-  const stopCamera = () => {
-    console.log("Stopping camera...");
+  const stopCam = () => {
     if (videoStreamRef.current) {
       videoStreamRef.current.getTracks().forEach(track => track.stop());
       videoStreamRef.current = null;
-      setIsCameraOn(false);
-      console.log("Camera stopped");
+      setIsCamOn(false);
       if (isPiP) {
         document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
         setIsPiP(false);
-        console.log("Exited Picture-in-Picture mode");
       }
     }
   };
 
   const startPiP = async () => {
-    console.log("Starting Picture-in-Picture...");
     if (videoRef.current) {
       try {
         await videoRef.current.requestPictureInPicture();
         setIsPiP(true);
-        console.log("Entered Picture-in-Picture mode");
       } catch (err) {
-        console.error("Failed to enter PiP:", err);
         alert("Unable to enter PiP mode.");
       }
     }
   };
 
   const stopPiP = async () => {
-    console.log("Exiting Picture-in-Picture...");
     if (document.pictureInPictureElement) {
       try {
         await document.exitPictureInPicture();
         setIsPiP(false);
-        console.log("Exited Picture-in-Picture mode");
       } catch (err) {
-        console.error("Failed to exit PiP:", err);
         alert("Unable to exit PiP mode.");
       }
     }
   };
 
-  // Microphone Handlers
-  const startMicrophone = async () => {
-    console.log("Starting microphone...");
+  // Mic Handlers
+  const startMic = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (audioRef.current) {
         audioRef.current.srcObject = stream;
         audioStreamRef.current = stream;
         await audioRef.current.play();
-        setIsMicrophoneOn(true);
-        console.log("Microphone started successfully");
+        setIsMicOn(true);
       }
     } catch (err) {
-      console.error("Failed to start microphone:", err);
-      alert("Unable to access microphone. Please check permissions.");
+      alert("Unable to access mic. Please check permissions.");
     }
   };
 
-  const stopMicrophone = () => {
-    console.log("Stopping microphone...");
+  const stopMic = () => {
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
-      setIsMicrophoneOn(false);
-      console.log("Microphone stopped");
+      setIsMicOn(false);
     }
   };
 
-  const toggleMicrophone = () => {
-    console.log("Toggling microphone. Current state:", isMicrophoneOn);
-    if (isMicrophoneOn) {
-      stopMicrophone();
+  const toggleMic = () => {
+    if (isMicOn) {
+      stopMic();
     } else {
-      startMicrophone();
+      startMic();
     }
   };
 
   useEffect(() => {
-    console.log("LeftPanel component mounted");
     return () => {
-      console.log("Cleaning up resources before unmounting...");
-      stopCamera();
-      stopMicrophone();
-      console.log("Resources cleaned up successfully");
+      stopCam();
+      stopMic();
     };
   }, []);
 
@@ -174,8 +149,8 @@ const LeftPanel: React.FC = () => {
         </>
       )}
 
-      <VideoStream isCameraOn={isCameraOn} isPiP={isPiP} videoRef={videoRef} />
-      <AudioStream isMicrophoneOn={isMicrophoneOn} audioRef={audioRef} />
+      <VideoStream isCamOn={isCamOn} isPiP={isPiP} videoRef={videoRef} />
+      <AudioStream isMicOn={isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
         <h1 className={styles.title}><b>Ideas Change Everything!</b></h1>
@@ -188,11 +163,11 @@ const LeftPanel: React.FC = () => {
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} handleKeyDown={handleKeyDown} />
 
           <ControlButtons
-            isCameraOn={isCameraOn}
-            isMicrophoneOn={isMicrophoneOn}
-            toggleMicrophone={toggleMicrophone}
-            startCamera={startCamera}
-            stopCamera={stopCamera}
+            isCamOn={isCamOn}
+            isMicOn={isMicOn}
+            toggleMic={toggleMic}
+            startCam={startCam}
+            stopCam={stopCam}
             isPiP={isPiP}
             startPiP={startPiP}
             stopPiP={stopPiP}

@@ -5,7 +5,7 @@ import styles from "./ChatInput.module.css"; // Import CSS module for styling
 interface ChatInputProps {
   chatInput: string;
   setChatInput: React.Dispatch<React.SetStateAction<string>>;
-  handleChat: () => void;
+  handleChat: () => void; // Ensure handleChat is defined as a prop
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {

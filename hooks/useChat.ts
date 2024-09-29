@@ -17,27 +17,35 @@ const loadChatHistory = (): Message[] => {
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>(loadChatHistory()); // Load chat history on initialization
   const [context, setContext] = useState<string | null>(null); // Store the context returned by the chatbot
-  const [isMemoryEnabled, setIsMemoryEnabled] = useState<boolean>(true); // Memory enabled by default
+  const [isMemEnabled, setIsMemEnabled] = useState<boolean>(true); // Memory enabled by default
+  const [isCamOn, setIsCamOn] = useState<boolean>(true); // Cam enabled by default
+  const [isPiPOn, setIsPiPOn] = useState<boolean>(true); // Picture-in-Picture enabled by default
+  const [isMicOn, setIsMicOn] = useState<boolean>(true); // Mic enabled by default
 
   // Save chat history whenever messages change and memory is enabled
   useEffect(() => {
-    if (isMemoryEnabled) {
+    if (isMemEnabled) {
       saveChatHistory(messages);
     }
-  }, [messages, isMemoryEnabled]);
+  }, [messages, isMemEnabled]);
+
+  // Initialize Cam, PiP, and Mic when component mounts
+  useEffect(() => {
+    if (isCamOn) startCam();
+    if (isPiPOn) startPiP();
+    if (isMicOn) startMic();
+  }, [isCamOn, isPiPOn, isMicOn]);
 
   const sendActionToChatbot = async (input: string) => {
-    // Add user message to chat
     setMessages((prev) => [...prev, { sender: 'user', text: input }]);
 
-    // Create a conversation context string by concatenating all previous messages
     const conversationHistory = messages.map((msg) => `${msg.sender}: ${msg.text}`).join('\n');
 
     try {
       await sendMessageToChatbot(
         systemPrompt,
         input,
-        `${conversationHistory}\nuser: ${input}`, // Include the full conversation history
+        `${conversationHistory}\nuser: ${input}`,
         (responseMessage, newContext) => {
           if (newContext) setContext(newContext);
           setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
@@ -51,25 +59,41 @@ export const useChat = () => {
     }
   };
 
-  // Corrected Toggle memory function
-  const toggleMemory = () => {
-    setIsMemoryEnabled((prev) => {
-      const newMemoryState = !prev; // Get the new state value
-      if (!newMemoryState) {
-        localStorage.removeItem('chatHistory'); // Clear history if memory is disabled
+  const toggleMem = () => {
+    setIsMemEnabled((prev) => {
+      const newMemState = !prev;
+      if (!newMemState) {
+        localStorage.removeItem('chatHistory');
         setMessages([]);
       }
-      return newMemoryState;
+      return newMemState;
     });
   };
 
-  const startHearing = () => {
-    console.log('Hearing started');
-  };
+  const startMic = () => console.log('Mic started');
+  const stopMic = () => console.log('Mic stopped');
+  const startCam = () => console.log('Cam started');
+  const stopCam = () => console.log('Cam stopped');
+  const startPiP = () => console.log('Picture-in-Picture started');
+  const stopPiP = () => console.log('Picture-in-Picture stopped');
 
-  const stopHearing = () => {
-    console.log('Hearing stopped');
+  return {
+    messages,
+    sendActionToChatbot,
+    context,
+    isMemEnabled,
+    toggleMem,
+    isCamOn,
+    toggleCam: () => setIsCamOn((prev) => !prev),
+    isPiPOn,
+    togglePiP: () => setIsPiPOn((prev) => !prev),
+    isMicOn,
+    toggleMic: () => setIsMicOn((prev) => !prev),
+    startMic,
+    stopMic,
+    startCam,
+    stopCam,
+    startPiP,
+    stopPiP,
   };
-
-  return { messages, sendActionToChatbot, context, isMemoryEnabled, toggleMemory, startHearing, stopHearing };
 };

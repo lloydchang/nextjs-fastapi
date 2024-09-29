@@ -1,130 +1,54 @@
-// src/components/ControlButtons.tsx
-
+// components/ControlButtons.tsx
 import React, { useEffect } from "react";
 import styles from "./ControlButtons.module.css";
 import { useChat } from "../hooks/useChat";
 
 interface ControlButtonsProps {
-  isCameraOn: boolean;
-  isMicrophoneOn: boolean;
-  toggleMicrophone: () => void;
-  startCamera: () => void;
-  stopCamera: () => void;
+  isCamOn: boolean;
+  isMicOn: boolean;
+  toggleMic: () => void;
+  startCam: () => void;
+  stopCam: () => void;
   isPiP: boolean;
-  startPiP: () => void; // Function to start PiP
-  stopPiP: () => void;  // Function to stop PiP
+  startPiP: () => void;
+  stopPiP: () => void;
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
-  isCameraOn,
-  isMicrophoneOn,
-  toggleMicrophone,
-  startCamera,
-  stopCamera,
+  isCamOn,
+  isMicOn,
+  toggleMic,
+  startCam,
+  stopCam,
   isPiP,
   startPiP,
   stopPiP,
 }) => {
-  const { startHearing, stopHearing, isMemoryEnabled, toggleMemory } = useChat();
+  const { isMemEnabled, toggleMem, startMic, stopMic } = useChat();
 
-  const cameraButtonText = isCameraOn ? (
-    <>
-      Stop Cam <span className={styles.emojiBackground}>🚫 📷</span>
-    </>
-  ) : isMicrophoneOn ? (
-    "Start Cam 📷"
-  ) : (
-    "Start Cam 📷 and Mic 🎤"
-  );
-
-  const microphoneButtonText = isMicrophoneOn ? (
-    <>
-      Stop Mic <span className={styles.emojiBackground}>🚫 🎤</span>
-    </>
-  ) : (
-    "Start Mic 🎤"
-  );
-
-  const startPiPButtonText = (
-    <>
-      Start PiP 📹
-    </>
-  );
-
-  const stopPiPButtonText = (
-    <>
-      Stop PiP <span className={styles.emojiBackground}>🚫 📹</span>
-    </>
-  );
-
-  // Updated memory button text and className styling
-  const memoryButtonText = isMemoryEnabled ? (
-    <>
-      Stop Memory <span className={styles.emojiBackground}>🚫 🧠</span>
-    </>
-  ) : (
-    <>
-      Start Memory 🧠
-    </>
-  );
-
-  // Corrected className to reflect the state: If memory is enabled, show "Stop" style; otherwise, show "Start"
-  const memoryButtonClass = isMemoryEnabled ? styles.stopButton : styles.startButton;
-
-  const handleMicrophoneToggle = () => {
-    toggleMicrophone();
-  };
+  const camButtonText = isCamOn ? "Stop Cam 📷" : "Start Cam 📷";
+  const micButtonText = isMicOn ? "Stop Mic 🎤" : "Start Mic 🎤";
+  const memButtonText = isMemEnabled ? "Stop Mem 🧠" : "Start Mem 🧠";
 
   useEffect(() => {
-    if (isMicrophoneOn) {
-      startHearing();
-    } else {
-      stopHearing();
-    }
-  }, [isMicrophoneOn, startHearing, stopHearing]);
+    isMicOn ? startMic() : stopMic();
+  }, [isMicOn, startMic, stopMic]);
 
   return (
     <div className={styles.container}>
-      <button
-        onClick={isCameraOn ? stopCamera : startCamera}
-        className={`${styles.button} ${!isCameraOn ? styles.startButton : styles.stopButton}`}
-      >
-        {cameraButtonText}
+      <button onClick={isCamOn ? stopCam : startCam} className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}>
+        {camButtonText}
       </button>
-
-      {isCameraOn && (
-        <>
-          {!isPiP ? (
-            <button
-              onClick={startPiP}
-              className={`${styles.button} ${styles.startButton}`}
-            >
-              {startPiPButtonText}
-            </button>
-          ) : (
-            <button
-              onClick={stopPiP}
-              className={`${styles.button} ${styles.stopButton}`}
-            >
-              {stopPiPButtonText}
-            </button>
-          )}
-        </>
+      {isCamOn && (
+        <button onClick={isPiP ? stopPiP : startPiP} className={`${styles.button} ${isPiP ? styles.stopButton : styles.startButton}`}>
+          {isPiP ? "Stop PiP 📹" : "Start PiP 📹"}
+        </button>
       )}
-
-      <button
-        onClick={handleMicrophoneToggle}
-        className={`${styles.button} ${!isMicrophoneOn ? styles.startButton : styles.stopButton}`}
-      >
-        {microphoneButtonText}
+      <button onClick={toggleMic} className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}>
+        {micButtonText}
       </button>
-
-      {/* Corrected Memory Toggle Button */}
-      <button
-        onClick={toggleMemory}
-        className={`${styles.button} ${memoryButtonClass}`}
-      >
-        {memoryButtonText}
+      <button onClick={toggleMem} className={`${styles.button} ${isMemEnabled ? styles.stopButton : styles.startButton}`}>
+        {memButtonText}
       </button>
     </div>
   );
