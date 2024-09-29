@@ -16,14 +16,20 @@ export const useChat = () => {
   const [isRecognitionRunning, setIsRecognitionRunning] = useState(false); // Track if recognition is already running
   const recognitionRef = useRef<SpeechRecognition | null>(null); // Reference to the SpeechRecognition instance
 
+  // System prompt for the chatbot to set the context
+  const systemPrompt = "You are TEDxSDG, an AI assistant that helps users connect their ideas to sustainable development goals (SDGs) and provides guidance on actionable steps.";
+
   // Function to handle sending messages to the chatbot
   const sendActionToChatbot = async (input: string) => {
     // Append the user message to the chat
     setMessages((prev) => [...prev, { sender: "user", text: input }]);
 
     try {
-      // Prepare request to chatbot backend with specific model and prompt
-      const requestBody = { model: "llama3.2", prompt: input };
+      // Prepare request to chatbot backend with system prompt and user input
+      const requestBody = { 
+        model: "llama3.2", 
+        prompt: `${systemPrompt}\nUser: ${input}\nAssistant:` 
+      };
       const response = await fetch("http://localhost:11434/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
