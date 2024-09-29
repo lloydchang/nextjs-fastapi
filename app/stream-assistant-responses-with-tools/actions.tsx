@@ -8,8 +8,7 @@ import { searchEmails } from './function';
 import { Message } from './message';
 
 const openai = new OpenAI({
-  baseURL: 'http://localhost:11434/v1',
-  apiKey: 'ollama',
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 export interface ClientMessage {

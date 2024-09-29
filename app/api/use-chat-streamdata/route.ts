@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   data.append('initialized call');
 
   const result = await streamText({
-    model: openai('llama3.2'),
+    model: openai('gpt-4-turbo'),
     messages,
     onFinish() {
       data.append('call completed');
