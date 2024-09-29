@@ -1,4 +1,3 @@
-// src/components/MiddlePanel.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -17,8 +16,11 @@ const MiddlePanel: React.FC = () => {
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<any>(null);
 
+  // Ensure the initial API call is only made once
   useEffect(() => {
-    handleSearch(); // Trigger search on initial render
+    if (!searchInitiated) {
+      handleSearch();
+    }
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,7 +31,7 @@ const MiddlePanel: React.FC = () => {
     setError(null);
     setTalks([]);
     setLoading(true);
-    setSearchInitiated(true);
+    setSearchInitiated(true); // Mark the search as initiated
     setSelectedTalk(null);
 
     try {
@@ -128,7 +130,7 @@ const MiddlePanel: React.FC = () => {
                   {talk.title}
                 </a>
                 <p className={styles.sdgTags}>
-                {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
+                  {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
                 </p>
               </h3>
             </div>
