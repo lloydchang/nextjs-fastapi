@@ -102,6 +102,20 @@ const LeftPanel: React.FC = () => {
     }
   };
 
+  // Function to exit PiP
+  const exitPiP = async () => {
+    if (document.pictureInPictureElement) {
+      try {
+        await document.exitPictureInPicture();
+        setIsPiP(false);
+        console.log("Exited Picture-in-Picture mode");
+      } catch (err) {
+        console.error("Failed to exit PiP:", err);
+        alert("Unable to exit PiP mode.");
+      }
+    }
+  };
+
   // Microphone Handlers moved to AudioStream component
   const startMicrophone = async () => {
     console.log("Attempting to start microphone...");
@@ -214,6 +228,7 @@ const LeftPanel: React.FC = () => {
             startCamera={startCamera}
             stopCamera={stopCamera}
             isPiP={isPiP}
+            exitPiP={exitPiP} // Pass the exitPiP function as a prop
           />
         </div>
       </div>

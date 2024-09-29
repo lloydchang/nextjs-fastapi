@@ -10,6 +10,7 @@ interface ControlButtonsProps {
   startCamera: () => void;
   stopCamera: () => void;
   isPiP: boolean;
+  exitPiP: () => void; // Add exitPiP function as a prop
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -19,6 +20,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startCamera,
   stopCamera,
   isPiP,
+  exitPiP, // Destructure exitPiP from props
 }) => {
   // Handler for toggling the camera
   const handleCameraToggle = () => {
@@ -29,33 +31,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     }
   };
 
-  // Handler for toggling Picture-in-Picture
-  const handlePiPToggle = async () => {
-    const videoElement = document.querySelector("video") as HTMLVideoElement | null;
-    if (!videoElement) {
-      console.error("Video element not found for PiP toggle.");
-      return;
-    }
-
-    if (isPiP) {
-      try {
-        await document.exitPictureInPicture();
-      } catch (error) {
-        console.error("Failed to exit PiP:", error);
-      }
-    } else {
-      if (document.pictureInPictureEnabled) {
-        try {
-          await videoElement.requestPictureInPicture();
-        } catch (error) {
-          console.error("Failed to enter PiP:", error);
-        }
-      } else {
-        alert("Picture-in-Picture is not supported by your browser.");
-      }
-    }
-  };
-
   return (
     <div className={styles.container}>
       {/* Camera Toggle Button */}
@@ -63,17 +38,17 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {isCameraOn ? "Stop Camera" : "Start Camera"}
       </button>
 
+      {/* Exit PiP Button (only show if PiP is active) */}
+      {isPiP && (
+        <button onClick={exitPiP} className={styles.button}>
+          Exit PiP
+        </button>
+      )}
+
       {/* Microphone Toggle Button */}
       <button onClick={toggleMicrophone} className={styles.button}>
         {isMicrophoneOn ? "Mute Microphone" : "Unmute Microphone"}
       </button>
-
-      {/* PiP Toggle Button (only show if camera is on) */}
-      {isCameraOn && (
-        <button onClick={handlePiPToggle} className={styles.button}>
-          {isPiP ? "Exit PiP" : "Enter PiP"}
-        </button>
-      )}
     </div>
   );
 };
