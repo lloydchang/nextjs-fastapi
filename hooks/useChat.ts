@@ -50,12 +50,14 @@ export const useChat = () => {
   const startHearing = () => {
     // Logic to start hearing (e.g., enable microphone input)
     console.log('Hearing started');
+    // Implement the logic to capture user speech and convert to text
   };
 
   // Function to stop hearing
   const stopHearing = () => {
     // Logic to stop hearing (e.g., disable microphone input)
     console.log('Hearing stopped');
+    // Implement logic to stop capturing audio
   };
 
   return { messages, sendActionToChatbot, startHearing, stopHearing };
