@@ -10,7 +10,8 @@ interface ControlButtonsProps {
   startCamera: () => void;
   stopCamera: () => void;
   isPiP: boolean;
-  exitPiP: () => void; // Add exitPiP function as a prop
+  startPiP: () => void; // Function to start PiP
+  stopPiP: () => void;  // Function to stop PiP
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -20,7 +21,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startCamera,
   stopCamera,
   isPiP,
-  exitPiP, // Destructure exitPiP from props
+  startPiP,
+  stopPiP,
 }) => {
   // Handler for toggling the camera
   const handleCameraToggle = () => {
@@ -38,11 +40,19 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {isCameraOn ? "Stop Camera" : "Start Camera"}
       </button>
 
-      {/* Exit PiP Button (only show if PiP is active) */}
-      {isPiP && (
-        <button onClick={exitPiP} className={styles.button}>
-          Exit PiP
-        </button>
+      {/* PiP Control Buttons */}
+      {isCameraOn && (
+        <>
+          {!isPiP ? (
+            <button onClick={startPiP} className={styles.button}>
+              Start PiP
+            </button>
+          ) : (
+            <button onClick={stopPiP} className={styles.button}>
+              Stop PiP
+            </button>
+          )}
+        </>
       )}
 
       {/* Microphone Toggle Button */}

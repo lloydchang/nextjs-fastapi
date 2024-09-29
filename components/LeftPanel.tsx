@@ -66,21 +66,6 @@ const LeftPanel: React.FC = () => {
         await videoRef.current.play();
         setIsCameraOn(true);
         console.log("Video stream obtained:", stream);
-
-        // Attempt to enter Picture-in-Picture (PiP) mode
-        try {
-          if (videoRef.current.requestPictureInPicture) {
-            await videoRef.current.requestPictureInPicture();
-            setIsPiP(true);
-            console.log("Entered Picture-in-Picture mode");
-          } else {
-            console.warn("Picture-in-Picture is not supported by this browser.");
-            setIsPiP(false);
-          }
-        } catch (pipError) {
-          console.warn("Failed to enter Picture-in-Picture mode:", pipError);
-          setIsPiP(false);
-        }
       }
     } catch (err) {
       console.error("Failed to start camera:", err);
@@ -102,8 +87,22 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Function to exit PiP
-  const exitPiP = async () => {
+  // Function to start PiP
+  const startPiP = async () => {
+    if (videoRef.current) {
+      try {
+        await videoRef.current.requestPictureInPicture();
+        setIsPiP(true);
+        console.log("Entered Picture-in-Picture mode");
+      } catch (err) {
+        console.error("Failed to enter PiP:", err);
+        alert("Unable to enter PiP mode.");
+      }
+    }
+  };
+
+  // Function to stop PiP
+  const stopPiP = async () => {
     if (document.pictureInPictureElement) {
       try {
         await document.exitPictureInPicture();
@@ -228,7 +227,8 @@ const LeftPanel: React.FC = () => {
             startCamera={startCamera}
             stopCamera={stopCamera}
             isPiP={isPiP}
-            exitPiP={exitPiP} // Pass the exitPiP function as a prop
+            startPiP={startPiP} // Pass the startPiP function as a prop
+            stopPiP={stopPiP}   // Pass the stopPiP function as a prop
           />
         </div>
       </div>
