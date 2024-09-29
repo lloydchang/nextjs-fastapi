@@ -127,11 +127,8 @@ async def hello_fast_api():
 
 # Step 13: Create a Search Endpoint for TEDx Talks Using Asynchronous Search
 @app.get("/api/py/search")
-async def search(query: str = Query(..., min_length=1), sdg_filter: Optional[List[str]] = Query(None)) -> List[Dict]:
+async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     try:
-        semantic_results = await semantic_search(query)
-        if sdg_filter:
-            semantic_results = [result for result in semantic_results if any(sdg in result['sdg_tags'] for sdg in sdg_filter)]
-        return semantic_results
+        return await semantic_search(query)
     except Exception as e:
         return [{"error": str(e)}]
