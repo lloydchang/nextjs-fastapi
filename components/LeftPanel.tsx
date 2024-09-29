@@ -1,174 +1,175 @@
 // src/components/LeftPanel.tsx
 "use client"; // Mark as a client component
 
-import React, { useState, useEffect } from 'react';
-
-interface Talk {
-  title: string;
-  description: string;
-  presenter: string;
-  sdg_tags: string[];
-  similarity_score: number;
-  url: string;
-}
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
+import BackgroundImage from "../public/TEDxSDG.jpg"; // Import a background image
+import { useChat } from "../hooks/useChat"; // Custom hook for chat operations
+import VideoStream from "./VideoStream";
+import ChatInput from "./ChatInput";
+import ChatMessages from "./ChatMessages";
+import ControlButtons from "./ControlButtons";
+import styles from "./LeftPanel.module.css"; // Import CSS module for styling
 
 const LeftPanel: React.FC = () => {
-  const [showImage, setShowImage] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
-  const [fadeIn, setFadeIn] = useState(false);
-  const [query, setQuery] = useState("climate"); // Default search query
-  const [results, setResults] = useState<Talk[]>([]);
-  const [selectedSDGs, setSelectedSDGs] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { messages, sendActionToChatbot } = useChat();
 
+  const [showImage, setShowImage] = useState<boolean>(true);
+  const [chatInput, setChatInput] = useState<string>("");
+  const [isCameraOn, setIsCameraOn] = useState<boolean>(false);
+  const [isMicrophoneOn, setIsMicrophoneOn] = useState<boolean>(false);
+  const [isPiP, setIsPiP] = useState<boolean>(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  // Handle sending chat messages
+  const handleChat = useCallback(async () => {
+    if (chatInput.trim() !== "") {
+      try {
+        await sendActionToChatbot(chatInput);
+        setChatInput("");
+      } catch (error) {
+        console.error("Error sending message:", error);
+        alert("Failed to send message. Please try again.");
+      }
+    }
+  }, [chatInput, sendActionToChatbot]);
+
+  // Scroll chat to the bottom when messages update
   useEffect(() => {
-    // Start the fade-out effect for the image
-    const timer = setTimeout(() => {
-      setFadeOut(true);
-    }, 200); // Start fading out after 200ms
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-    // Trigger the fade-in effect for the text
-    const fadeInTextTimer = setTimeout(() => {
-      setFadeIn(true);
-    }, 400); // Start fading in after the image starts to fade out
-
-    // Trigger a default search on initial load
-    handleSearch();
-
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(fadeInTextTimer);
-    };
-  }, []);
-
-  // List of SDGs to display as filters
-  const sdgs = [
-    "SDG 1 - No Poverty", "SDG 2 - Zero Hunger", "SDG 3 - Good Health and Well-Being",
-    "SDG 4 - Quality Education", "SDG 5 - Gender Equality", "SDG 6 - Clean Water and Sanitation",
-    "SDG 7 - Affordable and Clean Energy", "SDG 8 - Decent Work and Economic Growth",
-    "SDG 9 - Industry, Innovation, and Infrastructure", "SDG 10 - Reduced Inequalities",
-    "SDG 11 - Sustainable Cities and Communities", "SDG 12 - Responsible Consumption and Production",
-    "SDG 13 - Climate Action", "SDG 14 - Life Below Water", "SDG 15 - Life on Land",
-    "SDG 16 - Peace, Justice, and Strong Institutions", "SDG 17 - Partnerships for the Goals"
-  ];
-
-  // Function to handle search
-  const handleSearch = async () => {
-    setError(null); // Clear previous error messages
-    setResults([]); // Clear previous results
-
-    try {
-      let url = `http://127.0.0.1:8000/api/py/search?query=${query}`;
-      if (selectedSDGs.length > 0) {
-        url += `&sdg_filter=${selectedSDGs.join(",")}`;
-      }
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (Array.isArray(data)) {
-        setResults(data);
-      } else {
-        setError("Unexpected response format.");
-      }
-    } catch (err) {
-      setError("Failed to fetch search results. Please try again.");
+  // Handle key presses in the chat input
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault(); // Prevent default behavior (like adding a newline)
+      handleChat();
     }
   };
 
-  // Toggle selected SDGs
-  const toggleSDG = (sdg: string) => {
-    setSelectedSDGs(selectedSDGs.includes(sdg)
-      ? selectedSDGs.filter(s => s !== sdg)
-      : [...selectedSDGs, sdg]);
+  // Camera and Microphone Handlers
+  const startCamera = async () => {
+    console.log("Attempting to start camera...");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        mediaStreamRef.current = stream;
+        await videoRef.current.play();
+        setIsCameraOn(true);
+        setIsMicrophoneOn(true);
+        if (document.pictureInPictureEnabled) {
+          await videoRef.current.requestPictureInPicture();
+          setIsPiP(true);
+        } else {
+          alert("Picture-in-Picture is not supported by your browser.");
+        }
+      }
+      console.log("Stream obtained:", stream);
+    } catch (err) {
+      console.error("Failed to start camera and microphone:", err);
+      alert("Unable to access camera and microphone. Please check permissions.");
+    }
   };
 
+  const stopCamera = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+      setIsCameraOn(false);
+      setIsMicrophoneOn(false);
+      if (isPiP) {
+        document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
+        setIsPiP(false);
+      }
+    }
+  };
+
+  const toggleMicrophone = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getAudioTracks().forEach(track => {
+        track.enabled = !track.enabled;
+      });
+      setIsMicrophoneOn(prev => !prev);
+    }
+  };
+
+  // Handle Picture-in-Picture (PiP) Changes
+  const handlePiPChange = useCallback(() => {
+    if (!document.pictureInPictureElement) {
+      setIsPiP(false);
+    } else {
+      setIsPiP(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("enterpictureinpicture", handlePiPChange);
+    document.addEventListener("leavepictureinpicture", handlePiPChange);
+
+    return () => {
+      document.removeEventListener("enterpictureinpicture", handlePiPChange);
+      document.removeEventListener("leavepictureinpicture", handlePiPChange);
+    };
+  }, [handlePiPChange]);
+
+  // Cleanup on Unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
   return (
-    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
-      <h1
-        style={{
-          transition: 'opacity 0.5s ease-in-out',
-          opacity: fadeIn ? 1 : 0, // Faster fade-in effect for the text
-          position: 'relative',
-          zIndex: 1, // Ensure text appears above the image
-          fontSize: '14px',
-        }}
-      >
-        Ideas Change Everything!
-      </h1>
-      
+    <div className={styles.container}>
+      {/* Background Image */}
       {showImage && (
-        <img 
-          src="TEDxSDG.jpg" 
-          alt="TEDxSDG"
-          style={{
-            height: '100vh',
-            width: 'auto',
-            marginTop: '10px',
-            maxWidth: '100%',
-            transition: 'opacity 0.5s ease-in-out',
-            opacity: fadeOut ? 0.2 : 1, // Faster opacity transition for the image
-            position: 'absolute',
-            zIndex: 0, // Ensure image stays in the background
-            top: 0,
-            left: 0,
-          }} 
-        />
+        <>
+          <Image
+            src={BackgroundImage}
+            alt="Background"
+            fill
+            className={styles.backgroundImage}
+          />
+          <div className={styles.overlay} />
+        </>
       )}
 
-      <div style={{ margin: '20px', width: '100%', position: 'relative', zIndex: 2 }}>
-        {/* Search Results Section */}
-        <div style={{ marginTop: '20px' }}>
-          <h3 style={{ fontSize: '12px' }}>Results:</h3>
-          {results.length > 0 ? (
-            results.map((talk, index) => (
-              <div key={index} style={{ padding: '10px', borderBottom: '1px solid #ddd', fontSize: '10px' }}>
-                <h4 style={{ fontSize: '12px' }}>{talk.title}</h4>
-                <p><strong>Presenter:</strong> {talk.presenter}</p>
-                <p>{talk.description}</p>
-                <p><strong>SDGs:</strong> {talk.sdg_tags.join(', ')}</p>
-                <a href={talk.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '10px' }}>Watch Talk</a>
-              </div>
-            ))
-          ) : (
-            <p style={{ fontSize: '10px' }}>No results found</p>
-          )}
-        </div>
+      <VideoStream isCameraOn={isCameraOn} videoRef={videoRef} />
 
-        {/* Search Input and Filters Section */}
-        <h2 style={{ marginTop: '40px', fontSize: '12px' }}>Search TEDx Talks Aligned with SDGs</h2>
-        <input
-          type="text"
-          placeholder="Enter a keyword (e.g., education, health)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          style={{ padding: '6px', width: '200px', fontSize: '10px', color: '#000', backgroundColor: '#fff' }}
-        />
-        <button onClick={handleSearch} style={{ padding: '6px 12px', marginLeft: '10px', fontSize: '10px' }}>Search</button>
+      <div className={styles.content}>
+        <h1 className={styles.title}>
+          <b>Ideas Change Everything!</b>
+        </h1>
 
-        {error && <p style={{ color: 'red', marginTop: '10px', fontSize: '10px' }}>{error}</p>}
+        {/* Chat Interface */}
+        <div className={styles.chatInterface} ref={chatContainerRef}>
+          <h3 className={styles.chatHeader}>
+            <b>Chat with TEDxSDG</b>
+          </h3>
 
-        {/* SDG Filters Section */}
-        <div style={{ marginTop: '20px' }}>
-          <h3 style={{ fontSize: '12px' }}>Filter by SDGs:</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {sdgs.map(sdg => (
-              <label key={sdg} style={{ display: 'block', cursor: 'pointer', fontSize: '10px' }}>
-                <input
-                  type="checkbox"
-                  value={sdg}
-                  onChange={() => toggleSDG(sdg)}
-                  style={{ marginRight: '8px' }}
-                />
-                {sdg}
-              </label>
-            ))}
-          </div>
+          <ChatMessages messages={messages} />
+
+          <ChatInput
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            handleChat={handleChat}
+            handleKeyDown={handleKeyDown}
+          />
+
+          <ControlButtons
+            isCameraOn={isCameraOn}
+            isMicrophoneOn={isMicrophoneOn}
+            toggleMicrophone={toggleMicrophone}
+            startCamera={startCamera}
+            stopCamera={stopCamera}
+            isPiP={isPiP}
+          />
         </div>
       </div>
     </div>
