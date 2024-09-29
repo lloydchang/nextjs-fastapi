@@ -57,7 +57,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 
       {/* Microphone Toggle Button */}
       <button onClick={toggleMicrophone} className={styles.button}>
-        {isMicrophoneOn ? "Mute Microphone" : "Unmute Microphone"}
+        {isMicrophoneOn ? "Stop Microphone" : "Start Microphone"}
       </button>
     </div>
   );
