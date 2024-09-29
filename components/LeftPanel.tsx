@@ -66,6 +66,21 @@ const LeftPanel: React.FC = () => {
         await videoRef.current.play();
         setIsCameraOn(true);
         console.log("Video stream obtained:", stream);
+
+        // Attempt to enter Picture-in-Picture (PiP) mode
+        try {
+          if (videoRef.current.requestPictureInPicture) {
+            await videoRef.current.requestPictureInPicture();
+            setIsPiP(true);
+            console.log("Entered Picture-in-Picture mode");
+          } else {
+            console.warn("Picture-in-Picture is not supported by this browser.");
+            setIsPiP(false);
+          }
+        } catch (pipError) {
+          console.warn("Failed to enter Picture-in-Picture mode:", pipError);
+          setIsPiP(false);
+        }
       }
     } catch (err) {
       console.error("Failed to start camera:", err);
@@ -78,6 +93,8 @@ const LeftPanel: React.FC = () => {
       videoStreamRef.current.getTracks().forEach(track => track.stop());
       videoStreamRef.current = null;
       setIsCameraOn(false);
+      console.log("Camera stopped");
+
       if (isPiP) {
         document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
         setIsPiP(false);
@@ -108,6 +125,7 @@ const LeftPanel: React.FC = () => {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
       setIsMicrophoneOn(false);
+      console.log("Microphone stopped");
     }
   };
 
@@ -124,8 +142,10 @@ const LeftPanel: React.FC = () => {
     const handlePiPChange = () => {
       if (!document.pictureInPictureElement) {
         setIsPiP(false);
+        console.log("Exited Picture-in-Picture mode");
       } else {
         setIsPiP(true);
+        console.log("Entered Picture-in-Picture mode");
       }
     };
 
