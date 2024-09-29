@@ -10,17 +10,19 @@ export const useChat = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false); // Track if processing is ongoing
 
   const processPendingInputs = async () => {
-    setIsProcessing(true); // Mark as processing
+    // Mark as processing
+    if (isProcessing) return; // Prevent re-entry if already processing
+    setIsProcessing(true); 
 
     while (pendingInputs.length > 0) {
       const input = pendingInputs.shift(); // Get the first input
       if (input) {
-        setMessages((prev) => [...prev, { sender: 'user', text: input }]);
-        
+        setMessages((prev) => [...prev, { sender: 'user', text: input }]); // Add user message to chat
+
         try {
           // Using the updated chat service function
           const responseMessage = await sendMessageToChatbot(systemPrompt, input);
-          setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
+          setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]); // Add response to chat
         } catch (error) {
           console.error('Error sending message to chatbot:', error); // Log the error
           setMessages((prev) => [
@@ -36,9 +38,7 @@ export const useChat = () => {
 
   const sendActionToChatbot = (input: string) => {
     setPendingInputs((prev) => [...prev, input]); // Add input to pending inputs
-    if (!isProcessing) {
-      processPendingInputs(); // Start processing if not already processing
-    }
+    processPendingInputs(); // Start processing the queue
   };
 
   // Function to start hearing (implementation details depend on your application)
