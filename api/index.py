@@ -69,7 +69,7 @@ from api.sdg_keywords import sdg_keywords
 
 # Step 8: Enhance SDG Mapping Using Sentence-BERT Embeddings
 print("Step 8: Enhancing SDG mapping function using Sentence-BERT for semantic similarity.")
-def map_sdgs(description: str, threshold: float = 0.5) -> List[str]:
+def map_sdgs(description: str, threshold: float = 0.2) -> List[str]:
     description_vector = model.encode(description, convert_to_tensor=True)
     sdg_tags = []
 
