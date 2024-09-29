@@ -1,20 +1,72 @@
 // components/RightPanel.tsx
 "use client"; // Mark as a client component
-
 import React from 'react';
+import { useChat } from 'ai/react';
 
-const Panel: React.FC = () => {
+const RightPanel: React.FC = () => {
+  const {
+    error,
+    input,
+    isLoading,
+    handleInputChange,
+    handleSubmit,
+    messages,
+    reload,
+    stop,
+  } = useChat({
+    keepLastMessageOnError: true,
+    onFinish(message, { usage, finishReason }) {
+      console.log('Usage', usage);
+      console.log('FinishReason', finishReason);
+    },
+  });
+
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      <h1>and SDGs</h1>
-      <iframe
-        src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
-        width="100%"
-        height="100%"
-        style={{ border: 'none' }}
-      />
+    <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      {messages.map((m) => (
+        <div key={m.id} className="whitespace-pre-wrap">
+          {m.role === "user" ? "User: " : "AI: "}
+          {m.content}
+        </div>
+      ))}
+
+      {isLoading && (
+        <div className="mt-4 text-gray-500">
+          <div>Loading...</div>
+          <button
+            type="button"
+            className="px-4 py-2 mt-4 text-blue-500 border border-blue-500 rounded-md"
+            onClick={stop}
+          >
+            Stop
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-4">
+          <div className="text-red-500">An error occurred.</div>
+          <button
+            type="button"
+            className="px-4 py-2 mt-4 text-blue-500 border border-blue-500 rounded-md"
+            onClick={() => reload()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl text-black placeholder-gray-500"
+          value={input}
+          placeholder="Say something..."
+          onChange={handleInputChange}
+          disabled={isLoading || error != null}
+        />
+      </form>
     </div>
   );
 };
 
-export default Panel;
+export default RightPanel;
