@@ -1,6 +1,7 @@
 // src/components/VideoStream.tsx
 import React, { useEffect } from "react";
 import styles from "./VideoStream.module.css"; // Import CSS module for styling
+import classNames from 'classnames'; // Optional: for easier class management
 
 interface VideoStreamProps {
   isCameraOn: boolean;
@@ -17,7 +18,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isCameraOn, videoRef }) => {
   return (
     <video
       ref={videoRef}
-      className={styles.video}
+      className={classNames(styles.video, { [styles.hidden]: !isCameraOn })}
       muted
       playsInline
     />
