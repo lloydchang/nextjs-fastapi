@@ -15,8 +15,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text }) => {
       className={`${styles.messageContainer} ${isUser ? styles.user : styles.bot}`}
     >
       <div className={styles.messageBubble}>
-        <strong>{isUser ? "You" : "TEDxSDG"}</strong>
-        <p>{text}</p>
+        <p>{text}</p> {/* Removed the <strong> element to avoid sender prefix */}
       </div>
     </div>
   );
