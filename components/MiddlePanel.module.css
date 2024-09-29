@@ -1,5 +1,3 @@
-/* src/components/MiddlePanel.module.css */
-
 .middlePanel {
   width: 100%;
   height: 100%;
@@ -77,4 +75,10 @@
 .errorText {
   color: red;
   margin-top: 10px;
+}
+
+.sdgTags {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #FFFFFF;
 }

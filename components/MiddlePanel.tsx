@@ -128,6 +128,9 @@ const MiddlePanel: React.FC = () => {
                   >
                     {talk.title}
                   </a>
+                  <p className={styles.sdgTags}>
+                  {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
+                  </p>
                 </h3>
               </div>
             ))
