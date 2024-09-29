@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
   // Call the language model
   const result = await streamText({
-    model: openai('llama3.2'),
+    model: openai('gpt-4o'),
     maxTokens: 256, // artificial limit for demo purposes
     maxSteps: 10,
     experimental_continueSteps: true,

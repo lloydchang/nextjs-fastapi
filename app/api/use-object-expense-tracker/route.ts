@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const { expense }: { expense: string } = await req.json();
 
   const result = await streamObject({
-    model: openai('llama3.2'),
+    model: openai('gpt-4-turbo'),
     system:
       'You categorize expenses into one of the following categories: ' +
       'TRAVEL, MEALS, ENTERTAINMENT, OFFICE SUPPLIES, OTHER.' +

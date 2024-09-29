@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   const { prompt } = await req.json();
 
   const result = await streamText({
-    model: openai('llama3.2'),
+    model: openai('gpt-4-turbo'),
     tools: {
       weather: tool({
         description: 'Get the weather in a location',
