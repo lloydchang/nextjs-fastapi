@@ -67,14 +67,24 @@ except Exception as e:
 print("Step 7: Importing the predefined list of SDG keywords for all 17 SDGs.")
 from api.sdg_keywords import sdg_keywords
 
-# Step 8: Enhance SDG Mapping with Additional NLP Processing
-print("Step 8: Enhancing SDG mapping function.")
-def map_sdgs(description: str) -> List[str]:
-    sdg_tags = [sdg for sdg, keywords in sdg_keywords.items() if any(re.search(r'\b' + keyword + r'\b', description, flags=re.IGNORECASE) for keyword in keywords)]
+# Step 8: Enhance SDG Mapping Using Sentence-BERT Embeddings
+print("Step 8: Enhancing SDG mapping function using Sentence-BERT for semantic similarity.")
+def map_sdgs(description: str, threshold: float = 0.5) -> List[str]:
+    description_vector = model.encode(description, convert_to_tensor=True)
+    sdg_tags = []
+
+    for sdg, keywords in sdg_keywords.items():
+        keyword_embeddings = model.encode(keywords, convert_to_tensor=True)
+        similarities = util.pytorch_cos_sim(description_vector, keyword_embeddings)
+        max_similarity = torch.max(similarities).item()
+
+        if max_similarity > threshold:
+            sdg_tags.append(f"SDG {sdg}")
+
     return sdg_tags if sdg_tags else [""]
 
-# Step 9: Precompute SDG Tags for Each TEDx Talk
-print("Step 9: Precomputing SDG tags for each TEDx talk.")
+# Step 9: Precompute SDG Tags for Each TEDx Talk Using Sentence-BERT
+print("Step 9: Precomputing SDG tags for each TEDx talk using Sentence-BERT similarity.")
 if not data.empty and 'description' in data.columns:
     data['sdg_tags'] = data['description'].apply(lambda x: map_sdgs(str(x)))
     data['sdg_tags_normalized'] = data['sdg_tags'].apply(lambda tags: [re.sub(r"SDG (\d+) -.*", r"SDG \1", tag) for tag in tags])
