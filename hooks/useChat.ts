@@ -6,12 +6,17 @@ import { systemPrompt } from '../utils/systemPrompt'; // Import the system promp
 
 // Utility functions to handle local storage operations for saving and loading chat history
 const saveChatHistory = (messages: Message[]) => {
-  localStorage.setItem('chatHistory', JSON.stringify(messages));
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('chatHistory', JSON.stringify(messages));
+  }
 };
 
 const loadChatHistory = (): Message[] => {
-  const history = localStorage.getItem('chatHistory');
-  return history ? JSON.parse(history) : [];
+  if (typeof window !== 'undefined') {
+    const history = localStorage.getItem('chatHistory');
+    return history ? JSON.parse(history) : [];
+  }
+  return [];
 };
 
 export const useChat = () => {
@@ -24,16 +29,18 @@ export const useChat = () => {
 
   // Save chat history whenever messages change and memory is enabled
   useEffect(() => {
-    if (isMemEnabled) {
+    if (typeof window !== 'undefined' && isMemEnabled) {
       saveChatHistory(messages);
     }
   }, [messages, isMemEnabled]);
 
   // Initialize Cam, PiP, and Mic when component mounts
   useEffect(() => {
-    if (isCamOn) startCam();
-    if (isPiPOn) startPiP();
-    if (isMicOn) startMic();
+    if (typeof window !== 'undefined') {
+      if (isCamOn) startCam();
+      if (isPiPOn) startPiP();
+      if (isMicOn) startMic();
+    }
   }, [isCamOn, isPiPOn, isMicOn]);
 
   const sendActionToChatbot = async (input: string) => {
@@ -62,7 +69,7 @@ export const useChat = () => {
   const toggleMem = () => {
     setIsMemEnabled((prev) => {
       const newMemState = !prev;
-      if (!newMemState) {
+      if (!newMemState && typeof window !== 'undefined') {
         localStorage.removeItem('chatHistory');
         setMessages([]);
       }
