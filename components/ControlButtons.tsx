@@ -24,23 +24,25 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startPiP,
   stopPiP,
 }) => {
-  // Handler for toggling the camera
-  const handleCameraToggle = () => {
-    if (isCameraOn) {
-      stopCamera();
-    } else {
-      startCamera();
-    }
-  };
+  // Determine button text for Camera/Microphone based on their states
+  const cameraButtonText = isCameraOn
+    ? "Stop Cam 🚫 📷"
+    : isMicrophoneOn
+    ? "Start Cam 📷"
+    : "Start Cam 📷 and Mic 🎤";
+
+  const microphoneButtonText = isMicrophoneOn
+    ? "Stop Mic 🚫 🎤"
+    : "Start Mic Only 🎤";
 
   return (
     <div className={styles.container}>
       {/* Camera Toggle Button */}
       <button
-        onClick={handleCameraToggle}
-        className={`${styles.button} ${!isCameraOn ? styles.startButton : ""}`}
+        onClick={isCameraOn ? stopCamera : startCamera}
+        className={`${styles.button} ${!isCameraOn ? styles.startButton : styles.stopButton}`}
       >
-        {isCameraOn ? "Stop Camera" : "Start Camera"}
+        {cameraButtonText}
       </button>
 
       {/* PiP Control Buttons */}
@@ -51,26 +53,28 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
               onClick={startPiP}
               className={`${styles.button} ${styles.startButton}`}
             >
-              Start PiP
+              Start PiP 📹
             </button>
           ) : (
             <button
               onClick={stopPiP}
-              className={styles.button}
+              className={`${styles.button} ${styles.stopButton}`}
             >
-              Stop PiP
+              Stop PiP 🚫 📹
             </button>
           )}
         </>
       )}
 
       {/* Microphone Toggle Button */}
-      <button
-        onClick={toggleMicrophone}
-        className={`${styles.button} ${!isMicrophoneOn ? styles.startButton : ""}`}
-      >
-        {isMicrophoneOn ? "Stop Microphone" : "Start Microphone"}
-      </button>
+      {!isCameraOn && (
+        <button
+          onClick={toggleMicrophone}
+          className={`${styles.button} ${!isMicrophoneOn ? styles.startButton : styles.stopButton}`}
+        >
+          {microphoneButtonText}
+        </button>
+      )}
     </div>
   );
 };
