@@ -6,24 +6,36 @@ interface ChatInputProps {
   chatInput: string;
   setChatInput: React.Dispatch<React.SetStateAction<string>>;
   handleChat: () => void;
-  handleKeyDown: (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat, handleKeyDown }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
   const isDisabled = chatInput.trim() === "";
+
+  // Function to handle sending the message and clearing the input
+  const sendMessage = () => {
+    if (chatInput.trim()) {
+      handleChat(); // Call the parent function to handle the chat
+      setChatInput(''); // Clear the input field after sending
+    }
+  };
 
   return (
     <div className={styles.container}>
       <textarea
         value={chatInput}
         onChange={(e) => setChatInput(e.target.value)}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent adding a new line
+            sendMessage(); // Call the function to send the message
+          }
+        }}
         placeholder="Type your message..."
         className={styles.textarea}
         rows={3} // Adjust rows as needed
       />
       <button
-        onClick={handleChat}
+        onClick={sendMessage} // Use the new sendMessage function
         disabled={isDisabled}
         className={`${styles.button} ${isDisabled ? styles.buttonDisabled : ""}`}
         aria-label="Send message"
