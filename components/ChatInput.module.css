@@ -1,40 +1,42 @@
 /* src/components/ChatInput.module.css */
 
 .container {
-    margin-top: 10px;
-  }
-  
-  .textarea {
-    width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    resize: none;
-    height: 60px;
-    box-sizing: border-box;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #ffffff; /* White text */
-    background-color: rgba(51, 51, 51, 0.9); /* Dark background */
-    caret-color: #ffffff; /* White caret */
-  }
-  
-  .textarea::placeholder {
-    color: #cccccc; /* Light gray placeholder */
-  }
-  
-  .button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: #E62B1E;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .buttonDisabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-  
+  display: flex;
+  align-items: flex-end; /* Align the button to the bottom of the textarea */
+  gap: 10px; /* Space between textarea and button */
+  margin-top: 10px;
+}
+
+.textarea {
+  flex: 1; /* Take up remaining horizontal space */
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  resize: none;
+  height: 60px; /* You can adjust this or remove if using flex */
+  box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ffffff; /* White text */
+  background-color: rgba(51, 51, 51, 0.9); /* Dark background */
+  caret-color: #ffffff; /* White caret */
+}
+
+.textarea::placeholder {
+  color: #cccccc; /* Light gray placeholder */
+}
+
+.button {
+  padding: 10px 20px;
+  background-color: #e62b1e;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap; /* Prevent button text from wrapping */
+}
+
+.buttonDisabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
