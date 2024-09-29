@@ -89,6 +89,15 @@ const MiddlePanel: React.FC = () => {
         >
           Search
         </button>
+        {/* Moved "Play in New Tab" button to top beside Search button */}
+        {selectedTalk && (
+          <button
+            onClick={() => window.open(selectedTalk.url, '_blank')}
+            style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#2ecc71', color: '#fff' }}
+          >
+            Play in New Tab
+          </button>
+        )}
         {/* Search loading spinner */}
         {loading && (
           <div style={{ marginLeft: '10px' }}>
@@ -106,17 +115,6 @@ const MiddlePanel: React.FC = () => {
       {/* Now Playing Section */}
       {selectedTalk && (
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-          {/* Moved Play in New Tab button to the top */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-            <button
-              onClick={() => window.open(selectedTalk.url, '_blank')}
-              style={{ cursor: 'pointer', backgroundColor: '#3498db', color: '#fff', padding: '8px 16px', border: 'none', fontSize: '12px' }}
-            >
-              Play in New Tab
-            </button>
-          </div>
-
-          {/* TED Talk Video Embed */}
           <iframe
             src={generateEmbedUrl(selectedTalk.url)}
             width="100%"
