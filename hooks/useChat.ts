@@ -19,16 +19,17 @@ export const useChat = () => {
     setMessages((prev) => [...prev, { sender: "user", text: input }]);
 
     try {
-      // Make an API call to the specified endpoint
-      const response = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
+      // Construct query parameters for the GET request
+      const url = new URL("http://localhost:11434/api/generate");
+      url.searchParams.append("model", "llama3.2");
+      url.searchParams.append("prompt", input);
+
+      // Make the GET request to the specified endpoint
+      const response = await fetch(url.toString(), {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "llama3.2",
-          prompt: input, // Send user's message as the prompt
-        }),
       });
 
       if (!response.ok) {
