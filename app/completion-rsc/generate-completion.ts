@@ -6,7 +6,7 @@ import { createStreamableValue } from 'ai/rsc';
 
 export async function generateCompletion(prompt: string) {
   const result = await streamText({
-    model: openai('gpt-4-turbo'),
+    model: openai('llama3.2'),
     maxTokens: 2000,
     prompt,
   });

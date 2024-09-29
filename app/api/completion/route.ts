@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   data.append('call started');
 
   const result = await streamText({
-    model: openai('gpt-3.5-turbo-instruct'),
+    model: openai('llama3.2'),
     maxTokens: 2000,
     prompt,
     onFinish: () => {

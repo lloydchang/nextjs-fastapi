@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const context = await req.json();
 
   const result = await streamObject({
-    model: openai('gpt-4-turbo'),
+    model: openai('llama3.2'),
     prompt: `Generate 3 notifications for a messages app in this context: ${context}`,
     schema: notificationSchema,
   });

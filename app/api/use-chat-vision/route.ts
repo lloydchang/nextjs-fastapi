@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   // Call the language model
   const result = await streamText({
-    model: openai('gpt-4-turbo'),
+    model: openai('llama3.2'),
     messages: [
       ...convertToCoreMessages(initialMessages),
       {
