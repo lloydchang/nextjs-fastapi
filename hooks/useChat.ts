@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// Define the interface for message structure
+// Define the interface for the message structure
 interface Message {
   sender: string;
   text: string;
@@ -16,13 +16,21 @@ export const useChat = () => {
   // Function to handle sending messages to the chatbot
   const sendActionToChatbot = async (input: string) => {
     // Add the user's message to the state
-    setMessages(prev => [...prev, { sender: "user", text: input }]);
+    setMessages((prev) => [...prev, { sender: "user", text: input }]);
 
-    // Placeholder for actual API call integration
-    const response = await mockChatbotResponse(input);
+    try {
+      // Placeholder for actual API call integration
+      const response = await mockChatbotResponse(input);
 
-    // Add the chatbot's response to the state
-    setMessages(prev => [...prev, { sender: "TEDxSDG", text: response }]);
+      // Add the chatbot's response to the state
+      setMessages((prev) => [...prev, { sender: "TEDxSDG", text: response }]);
+    } catch (error) {
+      // Handle error scenarios (e.g., API call failure)
+      setMessages((prev) => [
+        ...prev,
+        { sender: "TEDxSDG", text: "Sorry, something went wrong. Please try again." },
+      ]);
+    }
   };
 
   return { messages, sendActionToChatbot };
@@ -30,7 +38,7 @@ export const useChat = () => {
 
 // Simulated response function to be replaced by actual API integration
 const mockChatbotResponse = async (input: string): Promise<string> => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve(`You said: "${input}". This is a simulated response from TEDxSDG.`);
     }, 1000); // Delay of 1 second to mimic a real response time
