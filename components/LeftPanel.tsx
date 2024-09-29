@@ -29,9 +29,11 @@ const LeftPanel: React.FC = () => {
 
   // Handle sending chat messages
   const handleChat = useCallback(async () => {
+    console.log("Sending message:", chatInput);
     if (chatInput.trim() !== "") {
       try {
         await sendActionToChatbot(chatInput);
+        console.log("Message sent successfully");
         setChatInput("");
       } catch (error) {
         console.error("Error sending message:", error);
@@ -42,6 +44,7 @@ const LeftPanel: React.FC = () => {
 
   // Handle key presses in the chat input
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    console.log("Key pressed:", event.key);
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleChat();
@@ -50,6 +53,7 @@ const LeftPanel: React.FC = () => {
 
   // Camera Handlers
   const startCamera = async () => {
+    console.log("Starting camera...");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
@@ -57,9 +61,11 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         setIsCameraOn(true);
+        console.log("Camera started successfully");
         startPiP();
 
         if (!isMicrophoneOn) {
+          console.log("Microphone is off, starting microphone...");
           await startMicrophone(); // Start the microphone if it's not already on
         }
       }
@@ -70,22 +76,27 @@ const LeftPanel: React.FC = () => {
   };
 
   const stopCamera = () => {
+    console.log("Stopping camera...");
     if (videoStreamRef.current) {
       videoStreamRef.current.getTracks().forEach(track => track.stop());
       videoStreamRef.current = null;
       setIsCameraOn(false);
+      console.log("Camera stopped");
       if (isPiP) {
         document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
         setIsPiP(false);
+        console.log("Exited Picture-in-Picture mode");
       }
     }
   };
 
   const startPiP = async () => {
+    console.log("Starting Picture-in-Picture...");
     if (videoRef.current) {
       try {
         await videoRef.current.requestPictureInPicture();
         setIsPiP(true);
+        console.log("Entered Picture-in-Picture mode");
       } catch (err) {
         console.error("Failed to enter PiP:", err);
         alert("Unable to enter PiP mode.");
@@ -94,10 +105,12 @@ const LeftPanel: React.FC = () => {
   };
 
   const stopPiP = async () => {
+    console.log("Exiting Picture-in-Picture...");
     if (document.pictureInPictureElement) {
       try {
         await document.exitPictureInPicture();
         setIsPiP(false);
+        console.log("Exited Picture-in-Picture mode");
       } catch (err) {
         console.error("Failed to exit PiP:", err);
         alert("Unable to exit PiP mode.");
@@ -107,6 +120,7 @@ const LeftPanel: React.FC = () => {
 
   // Microphone Handlers
   const startMicrophone = async () => {
+    console.log("Starting microphone...");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (audioRef.current) {
@@ -114,6 +128,7 @@ const LeftPanel: React.FC = () => {
         audioStreamRef.current = stream;
         await audioRef.current.play();
         setIsMicrophoneOn(true);
+        console.log("Microphone started successfully");
       }
     } catch (err) {
       console.error("Failed to start microphone:", err);
@@ -122,14 +137,17 @@ const LeftPanel: React.FC = () => {
   };
 
   const stopMicrophone = () => {
+    console.log("Stopping microphone...");
     if (audioStreamRef.current) {
       audioStreamRef.current.getTracks().forEach(track => track.stop());
       audioStreamRef.current = null;
       setIsMicrophoneOn(false);
+      console.log("Microphone stopped");
     }
   };
 
   const toggleMicrophone = () => {
+    console.log("Toggling microphone. Current state:", isMicrophoneOn);
     if (isMicrophoneOn) {
       stopMicrophone();
     } else {
@@ -138,9 +156,12 @@ const LeftPanel: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("LeftPanel component mounted");
     return () => {
+      console.log("Cleaning up resources before unmounting...");
       stopCamera();
       stopMicrophone();
+      console.log("Resources cleaned up successfully");
     };
   }, []);
 
