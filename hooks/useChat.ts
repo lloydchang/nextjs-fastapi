@@ -6,12 +6,8 @@ import { systemPrompt } from '../utils/systemPrompt'; // Import the system promp
 
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]); // Store chat messages
-  const [isThrottled, setIsThrottled] = useState<boolean>(false); // Throttle state
 
   const sendActionToChatbot = async (input: string) => {
-    // Prevent sending if throttled
-    if (isThrottled) return;
-
     // Add user message to chat
     setMessages((prev) => [...prev, { sender: 'user', text: input }]);
 
@@ -20,12 +16,6 @@ export const useChat = () => {
       const responseMessage = await sendMessageToChatbot(systemPrompt, input);
       // Add bot response to chat
       setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
-
-      // Throttle the next response for 2 seconds (for example)
-      setIsThrottled(true);
-      setTimeout(() => {
-        setIsThrottled(false); // Reset throttle
-      }, 2000);
     } catch (error) {
       console.error('Error sending message to chatbot:', error); // Log the error
       setMessages((prev) => [
