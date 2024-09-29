@@ -113,30 +113,26 @@ const MiddlePanel: React.FC = () => {
       {/* Search Results Section */}
       {searchInitiated && (
         <div className={styles.resultsContainer}>
-          {talks.length > 0 ? (
-            talks.map((talk, index) => (
-              <div key={index} className={styles.resultItem}>
-                <h3>
-                  <a
-                    href="#"
-                    className={styles.resultLink}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setSelectedTalk(talk);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                  >
-                    {talk.title}
-                  </a>
-                  <p className={styles.sdgTags}>
-                  {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
-                  </p>
-                </h3>
-              </div>
-            ))
-          ) : (
-            <p>No results found.</p>
-          )}
+          {talks.map((talk, index) => (
+            <div key={index} className={styles.resultItem}>
+              <h3>
+                <a
+                  href="#"
+                  className={styles.resultLink}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedTalk(talk);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                >
+                  {talk.title}
+                </a>
+                <p className={styles.sdgTags}>
+                {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
+                </p>
+              </h3>
+            </div>
+          ))}
         </div>
       )}
 
