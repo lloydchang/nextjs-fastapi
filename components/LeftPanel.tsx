@@ -66,6 +66,9 @@ const LeftPanel: React.FC = () => {
         await videoRef.current.play();
         setIsCameraOn(true);
         console.log("Video stream obtained:", stream);
+
+        // Attempt to start PiP mode automatically
+        startPiP();
       }
     } catch (err) {
       console.error("Failed to start camera:", err);
