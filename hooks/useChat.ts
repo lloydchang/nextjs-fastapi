@@ -1,12 +1,30 @@
 // hooks/useChat.ts
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Message } from '../types/message'; // Ensure this path is correct
 import { sendMessageToChatbot } from '../services/chatService'; // Import chat service
 import { systemPrompt } from '../utils/systemPrompt'; // Import the system prompt
 
+// Utility functions to handle local storage operations for saving and loading chat history
+const saveChatHistory = (messages: Message[]) => {
+  localStorage.setItem('chatHistory', JSON.stringify(messages));
+};
+
+const loadChatHistory = (): Message[] => {
+  const history = localStorage.getItem('chatHistory');
+  return history ? JSON.parse(history) : [];
+};
+
 export const useChat = () => {
-  const [messages, setMessages] = useState<Message[]>([]); // Store chat messages
+  const [messages, setMessages] = useState<Message[]>(loadChatHistory()); // Load chat history on initialization
   const [context, setContext] = useState<string | null>(null); // Store the context returned by the chatbot
+  const [isMemoryEnabled, setIsMemoryEnabled] = useState<boolean>(true); // Memory enabled by default
+
+  // Save chat history whenever messages change and memory is enabled
+  useEffect(() => {
+    if (isMemoryEnabled) {
+      saveChatHistory(messages);
+    }
+  }, [messages, isMemoryEnabled]);
 
   const sendActionToChatbot = async (input: string) => {
     // Add user message to chat
@@ -16,23 +34,16 @@ export const useChat = () => {
     const conversationHistory = messages.map((msg) => `${msg.sender}: ${msg.text}`).join('\n');
 
     try {
-      // Stream the response messages along with full conversation history
       await sendMessageToChatbot(
         systemPrompt,
         input,
         `${conversationHistory}\nuser: ${input}`, // Include the full conversation history
         (responseMessage, newContext) => {
-          console.log('Streaming response:', responseMessage); // Log each response message
-
-          // Update context if a new one is received
           if (newContext) setContext(newContext);
-
-          // Add bot response to chat as it streams in
           setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
         }
       );
     } catch (error) {
-      console.error('Error sending message to chatbot:', error); // Log the error
       setMessages((prev) => [
         ...prev,
         { sender: 'TEDxSDG', text: 'Sorry, something went wrong. Please try again.' },
@@ -40,15 +51,25 @@ export const useChat = () => {
     }
   };
 
-  // Function to start hearing (implementation details depend on your application)
+  // Corrected Toggle memory function
+  const toggleMemory = () => {
+    setIsMemoryEnabled((prev) => {
+      const newMemoryState = !prev; // Get the new state value
+      if (!newMemoryState) {
+        localStorage.removeItem('chatHistory'); // Clear history if memory is disabled
+        setMessages([]);
+      }
+      return newMemoryState;
+    });
+  };
+
   const startHearing = () => {
     console.log('Hearing started');
   };
 
-  // Function to stop hearing
   const stopHearing = () => {
     console.log('Hearing stopped');
   };
 
-  return { messages, sendActionToChatbot, context, startHearing, stopHearing };
+  return { messages, sendActionToChatbot, context, isMemoryEnabled, toggleMemory, startHearing, stopHearing };
 };

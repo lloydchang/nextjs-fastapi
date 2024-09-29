@@ -57,16 +57,19 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     </>
   );
 
-  // Memory button text using the same formatting
+  // Updated memory button text and className styling
   const memoryButtonText = isMemoryEnabled ? (
     <>
-      Memory On 🧠
+      Stop Memory <span className={styles.emojiBackground}>🚫 🧠</span>
     </>
   ) : (
     <>
-      Memory Off <span className={styles.emojiBackground}>🚫 🧠</span>
+      Start Memory 🧠
     </>
   );
+
+  // Corrected className to reflect the state: If memory is enabled, show "Stop" style; otherwise, show "Start"
+  const memoryButtonClass = isMemoryEnabled ? styles.stopButton : styles.startButton;
 
   const handleMicrophoneToggle = () => {
     toggleMicrophone();
@@ -116,10 +119,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {microphoneButtonText}
       </button>
 
-      {/* Memory Toggle Button */}
+      {/* Corrected Memory Toggle Button */}
       <button
         onClick={toggleMemory}
-        className={`${styles.button} ${isMemoryEnabled ? styles.startButton : styles.stopButton}`}
+        className={`${styles.button} ${memoryButtonClass}`}
       >
         {memoryButtonText}
       </button>
