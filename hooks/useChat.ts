@@ -6,20 +6,38 @@ import { systemPrompt } from '../utils/systemPrompt'; // Import the system promp
 
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pendingInputs, setPendingInputs] = useState<string[]>([]); // Store pending inputs
+  const [isProcessing, setIsProcessing] = useState<boolean>(false); // Track if processing is ongoing
 
-  const sendActionToChatbot = async (input: string) => {
-    setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+  const processPendingInputs = async () => {
+    setIsProcessing(true); // Mark as processing
 
-    try {
-      // Using the updated chat service function
-      const responseMessage = await sendMessageToChatbot(systemPrompt, input);
-      setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
-    } catch (error) {
-      console.error('Error sending message to chatbot:', error); // Log the error
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'TEDxSDG', text: 'Sorry, something went wrong. Please try again.' },
-      ]);
+    while (pendingInputs.length > 0) {
+      const input = pendingInputs.shift(); // Get the first input
+      if (input) {
+        setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+        
+        try {
+          // Using the updated chat service function
+          const responseMessage = await sendMessageToChatbot(systemPrompt, input);
+          setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
+        } catch (error) {
+          console.error('Error sending message to chatbot:', error); // Log the error
+          setMessages((prev) => [
+            ...prev,
+            { sender: 'TEDxSDG', text: 'Sorry, something went wrong. Please try again.' },
+          ]);
+        }
+      }
+    }
+
+    setIsProcessing(false); // Mark processing as done
+  };
+
+  const sendActionToChatbot = (input: string) => {
+    setPendingInputs((prev) => [...prev, input]); // Add input to pending inputs
+    if (!isProcessing) {
+      processPendingInputs(); // Start processing if not already processing
     }
   };
 
