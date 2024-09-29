@@ -1,29 +1,14 @@
 // hooks/useChat.ts
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Message } from '../types/message'; // Ensure this path is correct
 import { sendMessageToChatbot } from '../services/chatService'; // Import chat service
 import { systemPrompt } from '../utils/systemPrompt'; // Import the system prompt
 
 export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [pendingInput, setPendingInput] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState<boolean>(false);
-
-  const debounceTimeout = 300; // Time in ms to wait before sending
-
-  useEffect(() => {
-    if (pendingInput && !isSending) {
-      const timer = setTimeout(() => {
-        sendActionToChatbot(pendingInput);
-        setPendingInput(null); // Clear the input after sending
-      }, debounceTimeout);
-      return () => clearTimeout(timer);
-    }
-  }, [pendingInput, isSending]);
 
   const sendActionToChatbot = async (input: string) => {
     setMessages((prev) => [...prev, { sender: 'user', text: input }]);
-    setIsSending(true); // Set sending state to true
 
     try {
       // Using the updated chat service function
@@ -35,14 +20,7 @@ export const useChat = () => {
         ...prev,
         { sender: 'TEDxSDG', text: 'Sorry, something went wrong. Please try again.' },
       ]);
-    } finally {
-      setIsSending(false); // Reset sending state
     }
-  };
-
-  // Function to handle user input
-  const handleUserInput = (input: string) => {
-    setPendingInput(input); // Set the input to be sent after debounce
   };
 
   // Function to start hearing (implementation details depend on your application)
@@ -57,5 +35,5 @@ export const useChat = () => {
     console.log('Hearing stopped');
   };
 
-  return { messages, handleUserInput, startHearing, stopHearing };
+  return { messages, sendActionToChatbot, startHearing, stopHearing };
 };
