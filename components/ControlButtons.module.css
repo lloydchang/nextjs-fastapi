@@ -8,27 +8,32 @@
 
 .button {
   padding: 8px 16px;
-  background-color: #E62B1E; /* Default red color */
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.button:hover {
-  background-color: #cc231a;
+/* Start Button (Green) */
+.startButton {
+  background-color: #28a745; /* Green */
+}
+
+.startButton:hover {
+  background-color: #218838; /* Darker green */
+}
+
+/* Stop Button (Red) */
+.stopButton {
+  background-color: #e62b1e; /* Red */
+}
+
+.stopButton:hover {
+  background-color: #cc231a; /* Darker red */
 }
 
 .button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
-}
-
-/* New Green Style for Start Buttons */
-.startButton {
-  background-color: #28a745; /* Green color for Start buttons */
-}
-
-.startButton:hover {
-  background-color: #218838; /* Darker green on hover */
 }
