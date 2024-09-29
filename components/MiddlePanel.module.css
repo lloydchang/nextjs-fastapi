@@ -1,3 +1,5 @@
+/* src/components/MiddlePanel.module.css or main CSS file */
+
 .middle-panel {
   position: relative;
   width: 100%;
@@ -35,4 +37,19 @@
 .layer-bottom {
   z-index: 1; /* Lower z-index to keep it behind the top layer */
   display: block;
+}
+
+/* Added CSS class for TED button */
+.ted-button {
+  background-color: #fff; /* White background */
+  color: #EB0028; /* TED red text color */
+  border: 1px solid #EB0028; /* TED red border */
+  padding: 6px 12px; /* Button padding */
+  cursor: pointer; /* Pointer cursor */
+  transition: 0.3s ease-in-out; /* Smooth transition */
+}
+
+.ted-button:hover {
+  background-color: #EB0028; /* TED red background on hover */
+  color: #fff; /* White text on hover */
 }
