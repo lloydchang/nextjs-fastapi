@@ -1,4 +1,4 @@
-/* src/components/MiddlePanel.module.css or main CSS file */
+/* src/components/MiddlePanel.module.css */
 
 .middle-panel {
   position: relative;
@@ -39,16 +39,34 @@
   display: block;
 }
 
-/* Added CSS class for TED button */
+/* General button styling */
+.button {
+  padding: 6px 12px; /* Padding for both buttons */
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px; /* Rounded corners */
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Search button specific styling */
+.search-button {
+  background-color: #3498db; /* Blue background */
+  color: #fff; /* White text */
+}
+
+/* Play in New Tab button with TED red theme */
 .ted-button {
   background-color: #fff; /* White background */
   color: #EB0028; /* TED red text color */
-  border: 1px solid #EB0028; /* TED red border */
-  padding: 6px 12px; /* Button padding */
-  cursor: pointer; /* Pointer cursor */
+  border: 2px solid #EB0028; /* TED red border */
+  margin-left: 10px;
   transition: 0.3s ease-in-out; /* Smooth transition */
 }
 
+/* Hover state for the TED button */
 .ted-button:hover {
   background-color: #EB0028; /* TED red background on hover */
   color: #fff; /* White text on hover */

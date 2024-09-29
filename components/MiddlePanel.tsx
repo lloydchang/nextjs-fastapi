@@ -5,7 +5,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png'; // Import SDG Wheel for search loading indicator
-import styles from './MiddlePanel.module.css'; // Import the CSS module
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
@@ -73,7 +72,7 @@ const MiddlePanel: React.FC = () => {
   };
 
   return (
-    <div className={styles.middlePanel}>
+    <div style={{ width: '100%', height: '100%' }}>
       {/* Search Input, Button, and Loading Indicator */}
       <div style={{ display: 'flex', alignItems: 'center', marginTop: '0px' }}>
         <input
@@ -90,11 +89,10 @@ const MiddlePanel: React.FC = () => {
         >
           Search
         </button>
-        {/* Moved "Play in New Tab" button to top beside Search button */}
         {selectedTalk && (
           <button
             onClick={() => window.open(selectedTalk.url, '_blank')}
-            className={styles.tedButton} // Applied TED button styles
+            style={{ marginLeft: '10px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer', backgroundColor: '#EB0028', color: '#ffffff' }}
           >
             Play in New Tab
           </button>
