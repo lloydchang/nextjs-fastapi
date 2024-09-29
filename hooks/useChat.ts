@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-// Define the interface for the message structure
+// Define the interface for message structure
 interface Message {
   sender: string;
   text: string;
@@ -19,13 +19,33 @@ export const useChat = () => {
     setMessages((prev) => [...prev, { sender: "user", text: input }]);
 
     try {
-      // Placeholder for actual API call integration
-      const response = await mockChatbotResponse(input);
+      // Make an API call to the specified endpoint
+      const response = await fetch("http://localhost:11434/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama3.2",
+          prompt: input,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      // Parse the response as JSON
+      const data = await response.json();
+
+      // Extract the chatbot's response text
+      const chatbotResponse = data?.result ?? "No response from the server.";
 
       // Add the chatbot's response to the state
-      setMessages((prev) => [...prev, { sender: "TEDxSDG", text: response }]);
+      setMessages((prev) => [...prev, { sender: "TEDxSDG", text: chatbotResponse }]);
     } catch (error) {
-      // Handle error scenarios (e.g., API call failure)
+      // Handle error scenarios (e.g., network or API issues)
       setMessages((prev) => [
         ...prev,
         { sender: "TEDxSDG", text: "Sorry, something went wrong. Please try again." },
@@ -34,13 +54,4 @@ export const useChat = () => {
   };
 
   return { messages, sendActionToChatbot };
-};
-
-// Simulated response function to be replaced by actual API integration
-const mockChatbotResponse = async (input: string): Promise<string> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(`You said: "${input}". This is a simulated response from TEDxSDG.`);
-    }, 1000); // Delay of 1 second to mimic a real response time
-  });
 };
