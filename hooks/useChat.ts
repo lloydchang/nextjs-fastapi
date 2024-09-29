@@ -1,5 +1,5 @@
 // hooks/useChat.ts
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Message } from '../types/message'; // Ensure this path is correct
 import { sendMessageToChatbot } from '../services/chatService'; // Import chat service
 import { systemPrompt } from '../utils/systemPrompt'; // Import the system prompt
@@ -10,10 +10,6 @@ export const useChat = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false); // Track if processing is ongoing
 
   const processPendingInputs = async () => {
-    // Mark as processing
-    if (isProcessing) return; // Prevent re-entry if already processing
-    setIsProcessing(true); 
-
     while (pendingInputs.length > 0) {
       const input = pendingInputs.shift(); // Get the first input
       if (input) {
@@ -32,14 +28,23 @@ export const useChat = () => {
         }
       }
     }
-
     setIsProcessing(false); // Mark processing as done
   };
 
   const sendActionToChatbot = (input: string) => {
     setPendingInputs((prev) => [...prev, input]); // Add input to pending inputs
-    processPendingInputs(); // Start processing the queue
+    if (!isProcessing) {
+      setIsProcessing(true); // Set processing state
+      processPendingInputs(); // Start processing the queue
+    }
   };
+
+  useEffect(() => {
+    // Automatically start processing when a new input is added
+    if (pendingInputs.length > 0 && !isProcessing) {
+      processPendingInputs();
+    }
+  }, [pendingInputs, isProcessing]);
 
   // Function to start hearing (implementation details depend on your application)
   const startHearing = () => {
