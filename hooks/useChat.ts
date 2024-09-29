@@ -1,6 +1,6 @@
 // src/hooks/useChat.ts
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
 // Define the interface for message structure
 interface Message {
@@ -12,61 +12,86 @@ interface Message {
 export const useChat = () => {
   // State to keep track of all chat messages
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isHearingOn, setIsHearingOn] = useState(false); // State to control the hearing status
-  const [isRecognitionRunning, setIsRecognitionRunning] = useState(false); // Track if recognition is already running
-  const recognitionRef = useRef<SpeechRecognition | null>(null); // Reference to the SpeechRecognition instance
 
   // Function to handle sending messages to the chatbot
   const sendActionToChatbot = async (input: string) => {
+    // Add the user's message to the state
     setMessages((prev) => [...prev, { sender: "user", text: input }]);
 
     try {
-      const requestBody = { model: "llama3.2", prompt: input };
+      // Create the request body to match the expected format
+      const requestBody = {
+        model: "llama3.2",
+        prompt: input,
+      };
+
+      // Make a POST request to the specified endpoint
       const response = await fetch("http://localhost:11434/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody), // Send the JSON request body
       });
 
-      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
 
+      // Initialize the chatbot's message in the state with an empty string to update in real-time
       let chatbotMessageIndex: number;
       setMessages((prev) => {
-        chatbotMessageIndex = prev.length;
-        return [...prev, { sender: "TEDxSDG", text: "" }];
+        chatbotMessageIndex = prev.length; // Capture the index of the new message
+        return [...prev, { sender: "TEDxSDG", text: "" }]; // Add an empty message for the bot's response
       });
 
+      // Read the response as a stream of data
       const reader = response.body?.getReader();
       const decoder = new TextDecoder("utf-8");
       let done = false;
 
+      // Process the response stream in real-time
       while (reader && !done) {
         const { value, done: streamDone } = await reader.read();
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n").filter(Boolean);
 
+        // Decode and parse the chunk of data received
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(Boolean); // Split by new lines and filter out empty lines
+
+        // Handle each line (could be partial or complete JSON objects)
         for (const line of lines) {
           try {
             const parsed = JSON.parse(line.trim());
+
             if (parsed.response) {
+              // Update the current chatbot message in real-time as chunks arrive
               setMessages((prev) => {
                 const updatedMessages = [...prev];
                 updatedMessages[chatbotMessageIndex] = {
                   ...updatedMessages[chatbotMessageIndex],
-                  text: (updatedMessages[chatbotMessageIndex].text + parsed.response).trim(),
+                  text: (updatedMessages[chatbotMessageIndex].text + parsed.response).trim(), // Concatenate the text
                 };
                 return updatedMessages;
               });
             }
-            if (parsed.done) done = true;
+
+            // Check if the stream is finished
+            if (parsed.done) {
+              done = true;
+              console.log("Full response received: ", parsed);
+            }
           } catch (e) {
             console.error("Failed to parse line: ", line);
           }
         }
+
+        // Exit loop if the stream is marked as done
         if (streamDone) break;
       }
     } catch (error) {
-      console.error("Error occurred: ", error);
+      console.error("Error occurred: ", error); // Log the actual error
+
+      // Handle error scenarios (e.g., network or API issues)
       setMessages((prev) => [
         ...prev,
         { sender: "TEDxSDG", text: "Sorry, something went wrong. Please try again." },
@@ -74,67 +99,5 @@ export const useChat = () => {
     }
   };
 
-  // Function to start hearing using the Web Speech API
-  const startHearing = () => {
-    if (recognitionRef.current && !isRecognitionRunning) {
-      recognitionRef.current.start();
-      setIsHearingOn(true);
-      setIsRecognitionRunning(true); // Set the recognition running flag
-    }
-  };
-
-  // Function to stop hearing
-  const stopHearing = () => {
-    if (recognitionRef.current && isRecognitionRunning) {
-      recognitionRef.current.stop();
-      setIsHearingOn(false);
-      setIsRecognitionRunning(false); // Reset the recognition running flag
-    }
-  };
-
-  // Set up the SpeechRecognition instance
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = "en-US";
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let interimTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            setMessages((prev) => [...prev, { sender: "user", text: event.results[i][0].transcript }]);
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-
-        if (interimTranscript) {
-          setMessages((prev) => [
-            ...prev.slice(0, -1),
-            { sender: "user", text: interimTranscript },
-          ]);
-        }
-      };
-
-      recognition.onend = () => {
-        setIsHearingOn(false);
-        setIsRecognitionRunning(false); // Reset the recognition running flag on end
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error("Speech recognition error:", event.error);
-        setIsHearingOn(false);
-        setIsRecognitionRunning(false); // Reset the flag on error
-      };
-    } else {
-      console.error("SpeechRecognition API is not supported in this browser.");
-    }
-  }, []);
-
-  return { messages, sendActionToChatbot, startHearing, stopHearing, isHearingOn };
+  return { messages, sendActionToChatbot };
 };
