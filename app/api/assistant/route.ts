@@ -3,7 +3,8 @@ import OpenAI from 'openai';
 
 // Create an OpenAI API client (that's edge friendly!)
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
+  baseURL: 'http://localhost:11434/v1',
+  apiKey: 'ollama',
 });
 
 // Allow streaming responses up to 30 seconds

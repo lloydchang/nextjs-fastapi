@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
   // Call the language model:
   const result = await streamText({
-    model: openai('gpt-4o'),
+    model: openai('llama3.2'),
     messages: convertToCoreMessages(messages),
     async onFinish({ text }) {
       // Cache the response text:
