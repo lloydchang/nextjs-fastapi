@@ -67,19 +67,27 @@ except Exception as e:
 print("Step 7: Importing the predefined list of SDG keywords for all 17 SDGs.")
 from api.sdg_keywords import sdg_keywords
 
-# Step 8: Enhance SDG Mapping Using Sentence-BERT Embeddings
+# Step 8: Enhancing SDG mapping function using Sentence-BERT for semantic similarity.
 print("Step 8: Enhancing SDG mapping function using Sentence-BERT for semantic similarity.")
-def map_sdgs(description: str, threshold: float = 0.1) -> List[str]:
+
+def map_sdgs(description: str, threshold: float = 0.5, top_n_fallback: int = 1) -> List[str]:
     description_vector = model.encode(description, convert_to_tensor=True)
     sdg_tags = []
+    sdg_scores = []
 
     for sdg, keywords in sdg_keywords.items():
         keyword_embeddings = model.encode(keywords, convert_to_tensor=True)
         similarities = util.pytorch_cos_sim(description_vector, keyword_embeddings)
         max_similarity = torch.max(similarities).item()
+        sdg_scores.append((sdg, max_similarity))
 
         if max_similarity > threshold:
             sdg_tags.append(f"{sdg}")
+
+    # If no SDGs are found above the threshold, pick the top N with highest scores
+    if not sdg_tags:
+        sorted_sdgs = sorted(sdg_scores, key=lambda x: x[1], reverse=True)
+        sdg_tags = [sdg for sdg, score in sorted_sdgs[:top_n_fallback]]
 
     return sdg_tags if sdg_tags else [""]
 
