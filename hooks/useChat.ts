@@ -27,8 +27,7 @@ export const useChat = () => {
         },
         body: JSON.stringify({
           model: "llama3.2",
-          prompt: input,
-          stream: false,
+          prompt: input, // Send user's message as the prompt
         }),
       });
 
