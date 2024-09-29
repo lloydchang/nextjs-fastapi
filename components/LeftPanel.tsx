@@ -6,6 +6,7 @@ import Image from "next/image";
 import BackgroundImage from "../public/TEDxSDG.jpg"; // Import a background image
 import { useChat } from "../hooks/useChat"; // Custom hook for chat operations
 import VideoStream from "./VideoStream";
+import AudioStream from "./AudioStream"; // Import the new AudioStream component
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 import ControlButtons from "./ControlButtons";
@@ -21,8 +22,10 @@ const LeftPanel: React.FC = () => {
   const [isPiP, setIsPiP] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null); // Ref for AudioStream
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const videoStreamRef = useRef<MediaStream | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
 
   // Handle sending chat messages
   const handleChat = useCallback(async () => {
@@ -52,37 +55,29 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Camera and Microphone Handlers
+  // Camera Handlers
   const startCamera = async () => {
     console.log("Attempting to start camera...");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        mediaStreamRef.current = stream;
+        videoStreamRef.current = stream;
         await videoRef.current.play();
         setIsCameraOn(true);
-        setIsMicrophoneOn(true);
-        if (document.pictureInPictureEnabled) {
-          await videoRef.current.requestPictureInPicture();
-          setIsPiP(true);
-        } else {
-          alert("Picture-in-Picture is not supported by your browser.");
-        }
+        console.log("Video stream obtained:", stream);
       }
-      console.log("Stream obtained:", stream);
     } catch (err) {
-      console.error("Failed to start camera and microphone:", err);
-      alert("Unable to access camera and microphone. Please check permissions.");
+      console.error("Failed to start camera:", err);
+      alert("Unable to access camera. Please check permissions.");
     }
   };
 
   const stopCamera = () => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
-      mediaStreamRef.current = null;
+    if (videoStreamRef.current) {
+      videoStreamRef.current.getTracks().forEach(track => track.stop());
+      videoStreamRef.current = null;
       setIsCameraOn(false);
-      setIsMicrophoneOn(false);
       if (isPiP) {
         document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
         setIsPiP(false);
@@ -90,12 +85,37 @@ const LeftPanel: React.FC = () => {
     }
   };
 
+  // Microphone Handlers moved to AudioStream component
+  const startMicrophone = async () => {
+    console.log("Attempting to start microphone...");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (audioRef.current) {
+        audioRef.current.srcObject = stream;
+        audioStreamRef.current = stream;
+        await audioRef.current.play();
+        setIsMicrophoneOn(true);
+        console.log("Audio stream obtained:", stream);
+      }
+    } catch (err) {
+      console.error("Failed to start microphone:", err);
+      alert("Unable to access microphone. Please check permissions.");
+    }
+  };
+
+  const stopMicrophone = () => {
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach(track => track.stop());
+      audioStreamRef.current = null;
+      setIsMicrophoneOn(false);
+    }
+  };
+
   const toggleMicrophone = () => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getAudioTracks().forEach(track => {
-        track.enabled = !track.enabled;
-      });
-      setIsMicrophoneOn(prev => !prev);
+    if (isMicrophoneOn) {
+      stopMicrophone();
+    } else {
+      startMicrophone();
     }
   };
 
@@ -122,6 +142,7 @@ const LeftPanel: React.FC = () => {
   useEffect(() => {
     return () => {
       stopCamera();
+      stopMicrophone();
     };
   }, []);
 
@@ -142,6 +163,9 @@ const LeftPanel: React.FC = () => {
 
       {/* Pass isPiP to VideoStream */}
       <VideoStream isCameraOn={isCameraOn} isPiP={isPiP} videoRef={videoRef} />
+
+      {/* AudioStream Component */}
+      <AudioStream isMicrophoneOn={isMicrophoneOn} audioRef={audioRef} />
 
       <div className={styles.content}>
         <h1 className={styles.title}>
