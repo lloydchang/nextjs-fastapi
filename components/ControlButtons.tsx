@@ -25,7 +25,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startPiP,
   stopPiP,
 }) => {
-  const { startHearing, stopHearing } = useChat();
+  const { startHearing, stopHearing, isMemoryEnabled, toggleMemory } = useChat();
 
   const cameraButtonText = isCameraOn ? (
     <>
@@ -54,6 +54,17 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   const stopPiPButtonText = (
     <>
       Stop PiP <span className={styles.emojiBackground}>🚫 📹</span>
+    </>
+  );
+
+  // Memory button text using the same formatting
+  const memoryButtonText = isMemoryEnabled ? (
+    <>
+      Memory On 🧠
+    </>
+  ) : (
+    <>
+      Memory Off <span className={styles.emojiBackground}>🚫 🧠</span>
     </>
   );
 
@@ -103,6 +114,14 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         className={`${styles.button} ${!isMicrophoneOn ? styles.startButton : styles.stopButton}`}
       >
         {microphoneButtonText}
+      </button>
+
+      {/* Memory Toggle Button */}
+      <button
+        onClick={toggleMemory}
+        className={`${styles.button} ${isMemoryEnabled ? styles.startButton : styles.stopButton}`}
+      >
+        {memoryButtonText}
       </button>
     </div>
   );
