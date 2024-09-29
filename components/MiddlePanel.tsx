@@ -106,15 +106,8 @@ const MiddlePanel: React.FC = () => {
       {/* Now Playing Section */}
       {selectedTalk && (
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-          <iframe
-            src={generateEmbedUrl(selectedTalk.url)}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            style={{ border: 'none' }}
-          />
-          {/* Always display Play in New Tab button */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0px' }}>
+          {/* Moved Play in New Tab button to the top */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
             <button
               onClick={() => window.open(selectedTalk.url, '_blank')}
               style={{ cursor: 'pointer', backgroundColor: '#3498db', color: '#fff', padding: '8px 16px', border: 'none', fontSize: '12px' }}
@@ -122,6 +115,15 @@ const MiddlePanel: React.FC = () => {
               Play in New Tab
             </button>
           </div>
+
+          {/* TED Talk Video Embed */}
+          <iframe
+            src={generateEmbedUrl(selectedTalk.url)}
+            width="100%"
+            height="400px"
+            allow="autoplay; fullscreen; encrypted-media"
+            style={{ border: 'none' }}
+          />
         </div>
       )}
 
