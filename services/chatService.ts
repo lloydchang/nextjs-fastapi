@@ -4,7 +4,6 @@ export const sendMessageToChatbot = async (
   input: string, 
   onResponse: (message: string) => void
 ) => {
-  // Construct request body
   const requestBody = {
     model: 'llama3.2',
     prompt: `${systemPrompt}\nUser: ${input}\nAssistant:`,
@@ -19,42 +18,41 @@ export const sendMessageToChatbot = async (
       body: JSON.stringify(requestBody),
     });
 
-    // Check if the response is OK
     if (!response.ok) {
       throw new Error(`Server responded with status: ${response.status} - ${response.statusText}`);
     }
 
-    // Obtain a reader from the response body
     const reader = response.body?.getReader();
     if (!reader) throw new Error('Failed to access the response body stream.');
 
     const decoder = new TextDecoder('utf-8');
     let done = false;
-    let cumulativeResponse = ''; // To store the progressively built response
+    let buffer = ''; // Buffer to hold text until a complete segment is received
 
-    // Read and parse the response stream
     while (!done) {
       const { value, done: streamDone } = await reader.read();
       const chunk = decoder.decode(value, { stream: true });
 
-      // Attempt to parse the chunk
       try {
-        const parsed = JSON.parse(chunk); // Parse the entire chunk as JSON
+        const parsed = JSON.parse(chunk);
         if (parsed.response) {
-          if (cumulativeResponse.length === 0) {
-            cumulativeResponse = parsed.response; // Start with the first message
-          } else {
-            cumulativeResponse += `, ${parsed.response}`; // Append subsequent messages
+          buffer += parsed.response; // Collect text in the buffer
+
+          // Check if buffer has a complete segment (ends with punctuation)
+          if (/[.!?]\s*$/.test(buffer)) {
+            const completeSegment = buffer.trim(); // Trim the buffer to form a complete message
+            buffer = ''; // Clear buffer for next segment
+
+            onResponse(completeSegment); // Send only the new segment
           }
-          onResponse(cumulativeResponse); // Update the response progressively
         }
-        done = parsed.done || streamDone; // End loop if complete
+        done = parsed.done || streamDone; // Stop loop if stream is complete
       } catch (e) {
         console.error('Error parsing chunk:', chunk, e);
       }
     }
   } catch (error) {
     console.error('Error sending message to chatbot:', error);
-    throw error; // Propagate the error to be handled by the caller
+    throw error;
   }
 };
