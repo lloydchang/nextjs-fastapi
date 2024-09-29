@@ -19,7 +19,7 @@ export const useChat = () => {
     setMessages((prev) => [...prev, { sender: "user", text: input }]);
 
     try {
-      // Create the request body to match the curl command format
+      // Create the request body to match the expected format
       const requestBody = {
         model: "llama3.2",
         prompt: input,
@@ -36,22 +36,51 @@ export const useChat = () => {
         body: JSON.stringify(requestBody), // Send the JSON request body
       });
 
-      console.log("Response Status: ", response.status); // Log the response status
-
       if (!response.ok) {
         throw new Error(`Error: ${response.statusText}`);
       }
 
-      // Parse the response as JSON
-      const data = await response.json();
+      // Read the response as a stream of data
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let fullResponse = "";
+      let done = false;
 
-      console.log("Response Data: ", data); // Log the full response data for inspection
+      // Process the response stream
+      while (reader && !done) {
+        const { value, done: streamDone } = await reader.read();
 
-      // Extract the chatbot's response text
-      const chatbotResponse = data?.result ?? "No response from the server.";
+        // Decode and parse the chunk of data received
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(Boolean);
 
-      // Add the chatbot's response to the state
-      setMessages((prev) => [...prev, { sender: "TEDxSDG", text: chatbotResponse }]);
+        // Handle each line (could be partial or complete JSON objects)
+        for (const line of lines) {
+          try {
+            const parsed = JSON.parse(line.trim());
+
+            if (parsed.response) {
+              // Accumulate response text from the stream
+              fullResponse += parsed.response;
+            }
+
+            // Check if the stream is finished
+            if (parsed.done) {
+              done = true;
+              // Add any final details or context if needed
+              console.log("Full response received: ", parsed);
+            }
+          } catch (e) {
+            console.error("Failed to parse line: ", line);
+          }
+        }
+
+        // Exit loop if the stream is marked as done
+        if (streamDone) break;
+      }
+
+      // Add the final accumulated response to the state
+      setMessages((prev) => [...prev, { sender: "TEDxSDG", text: fullResponse || "No response received." }]);
     } catch (error) {
       console.error("Error occurred: ", error); // Log the actual error
 
