@@ -27,8 +27,10 @@ const LeftPanel: React.FC = () => {
     audioRef,
     startCam,
     stopCam,
+    toggleCam,
     startMic,
     stopMic,
+    toggleMic,
     togglePip,
     toggleMem,
   } = useMedia();
@@ -190,8 +192,7 @@ const LeftPanel: React.FC = () => {
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
             toggleMic={toggleMicWithSpeechRecognition}
-            startCam={startCam}
-            stopCam={stopCam}
+            toggleCam={toggleCam}
             isPipOn={mediaState.isPipOn}
             togglePip={togglePip}
             isMemOn={mediaState.isMemOn}

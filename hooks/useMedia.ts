@@ -15,8 +15,10 @@ interface UseMediaReturn {
   audioRef: React.RefObject<HTMLAudioElement>;
   startCam: () => Promise<void>;
   stopCam: () => void;
+  toggleCam: () => void;
   startMic: () => Promise<void>;
   stopMic: () => void;
+  toggleMic: () => void;
   togglePip: () => Promise<void>;
   toggleMem: () => void;
 }
@@ -80,6 +82,11 @@ export const useMedia = (): UseMediaReturn => {
     console.log('Camera stopped.');
   }, []);
 
+  // Toggle Camera
+  const toggleCam = useCallback(() => {
+    mediaState.isCamOn ? stopCam() : startCam();
+  }, [mediaState.isCamOn, startCam, stopCam]);
+
   // Start Microphone
   const startMic = useCallback(async () => {
     if (isMicOnRef.current) {
@@ -121,6 +128,11 @@ export const useMedia = (): UseMediaReturn => {
     isMicOnRef.current = false; // Update the ref to track mic state
     console.log('Microphone stopped successfully.');
   }, []);
+
+  // Toggle Microphone
+  const toggleMic = useCallback(() => {
+    mediaState.isMicOn ? stopMic() : startMic();
+  }, [mediaState.isMicOn, startMic, stopMic]);
 
   // Toggle Picture-in-Picture
   const togglePip = useCallback(async () => {
@@ -171,8 +183,10 @@ export const useMedia = (): UseMediaReturn => {
     audioRef,
     startCam,
     stopCam,
+    toggleCam,
     startMic,
     stopMic,
+    toggleMic,
     togglePip,
     toggleMem,
   };

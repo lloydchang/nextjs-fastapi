@@ -7,24 +7,24 @@ interface ControlButtonsProps {
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
-  startCam: () => void;
-  stopCam: () => void;
+  toggleCam: () => void;
   isPipOn: boolean;
   togglePip: () => void;
   isMemOn: boolean;
   toggleMem: () => void;
+  eraseMemory: () => void; // New prop for Erase Memory
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
   isCamOn,
   isMicOn,
   toggleMic,
-  startCam,
-  stopCam,
+  toggleCam,
   isPipOn,
   togglePip,
   isMemOn,
   toggleMem,
+  eraseMemory,
 }) => {
   console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
 
@@ -32,13 +32,14 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   const micButtonText = isMicOn ? 'Stop Mic 🎤' : 'Start Mic 🎤';
   const pipButtonText = isPipOn ? 'Stop PiP 📹' : 'Start PiP 📹';
   const memButtonText = isMemOn ? 'Stop Memory 🧠' : 'Start Memory 🧠';
+  const eraseMemButtonText = 'Erase Memory 🗑️';
 
   return (
     <div className={styles.container}>
       {/* Camera Button */}
       <button
         type="button"
-        onClick={isCamOn ? stopCam : startCam}
+        onClick={toggleCam}
         className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
         aria-pressed={isCamOn}
         aria-label={camButtonText}
@@ -77,6 +78,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={memButtonText}
       >
         {memButtonText}
+      </button>
+
+      {/* Erase Memory Button */}
+      <button
+        type="button"
+        onClick={eraseMemory}
+        className={`${styles.button} ${styles.eraseButton}`}
+        aria-label={eraseMemButtonText}
+      >
+        {eraseMemButtonText}
       </button>
     </div>
   );
