@@ -80,8 +80,8 @@ const LeftPanel: React.FC = () => {
           updateMediaState("isPipOn", true); // Update state
         }
       } catch (err) {
-        console.error("Unable to enter PiP mode:", err);
-        alert("Unable to enter PiP mode.");
+        console.error("Unable to enter Pip mode:", err);
+        alert("Unable to enter Pip mode.");
       }
     }
   };
@@ -93,8 +93,8 @@ const LeftPanel: React.FC = () => {
         updateMediaState("isPipOn", false); // Update state to reflect PiP is off
       }
     } catch (err) {
-      console.error("Unable to exit PiP mode:", err);
-      alert("Unable to exit PiP mode.");
+      console.error("Unable to exit Pip mode:", err);
+      alert("Unable to exit Pip mode.");
     }
   };
 
@@ -174,10 +174,8 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      {/* Conditionally render VideoStream based on isPipOn */}
-      {!mediaState.isPipOn && (
-        <VideoStream isCamOn={mediaState.isCamOn} isPipOn={mediaState.isPipOn} videoRef={videoRef} />
-      )}
+      {/* VideoStream is always rendered to maintain its state */}
+      <VideoStream isCamOn={mediaState.isCamOn} isPipOn={mediaState.isPipOn} videoRef={videoRef} />
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
