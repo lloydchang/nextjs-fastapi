@@ -13,7 +13,7 @@ interface ControlButtonsProps {
   togglePip: () => void;
   isMemOn: boolean;
   toggleMem: () => void;
-  eraseMemory: () => void;
+  eraseMemory: () => void; // New Prop
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -86,7 +86,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       <button
         type="button"
         onClick={eraseMemory}
-        className={`${styles.button} ${styles.eraseButton}`}
+        className={`${styles.button} ${styles.eraseButton}`} // Add specific styling if needed
         aria-label={eraseMemButtonText}
       >
         {eraseMemButtonText}
