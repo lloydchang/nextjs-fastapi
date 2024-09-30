@@ -1,56 +1,36 @@
 // components/ChatInput.tsx
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import styles from '../styles/ChatInput.module.css';
 
 interface ChatInputProps {
   chatInput: string;
-  setChatInput: React.Dispatch<React.SetStateAction<string>>;
+  setChatInput: (input: string) => void;
   handleChat: () => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({
-  chatInput,
-  setChatInput,
-  handleChat,
-}) => {
-  const isDisabled = chatInput.trim() === '';
-
-  // Memoize sendMessage to prevent unnecessary re-creations
-  const sendMessage = useCallback(() => {
-    if (!isDisabled) {
+const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
       handleChat();
-      setChatInput(''); // Clear the input field after sending
     }
-  }, [isDisabled, handleChat, setChatInput]);
+  };
 
   return (
-    <div className={styles.container}>
-      <textarea
+    <div className={styles.inputContainer}>
+      <input
+        type="text"
         value={chatInput}
         onChange={(e) => setChatInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault(); // Prevent adding a new line
-            sendMessage();
-          }
-        }}
+        onKeyPress={handleKeyPress}
         placeholder="Type your message..."
-        className={styles.textarea}
-        rows={3}
-        aria-label="Chat input"
+        className={styles.input}
       />
-      <button
-        onClick={sendMessage}
-        disabled={isDisabled}
-        className={`${styles.button} ${isDisabled ? styles.buttonDisabled : ''}`}
-        aria-label="Send message"
-      >
+      <button type="button" onClick={handleChat} className={styles.sendButton}>
         Send
       </button>
     </div>
   );
 };
 
-// Export the memoized component to prevent unnecessary re-renders
 export default React.memo(ChatInput);

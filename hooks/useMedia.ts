@@ -15,12 +15,10 @@ interface UseMediaReturn {
   audioRef: React.RefObject<HTMLAudioElement>;
   startCam: () => Promise<void>;
   stopCam: () => void;
-  toggleCam: () => void;
-  startMic: () => Promise<void>;
-  stopMic: () => void;
   toggleMic: () => void;
   togglePip: () => Promise<void>;
   toggleMem: () => void;
+  eraseMemory: () => void;
 }
 
 export const useMedia = (): UseMediaReturn => {
@@ -43,6 +41,8 @@ export const useMedia = (): UseMediaReturn => {
   // Log state changes
   useEffect(() => {
     console.log('Media State Updated:', mediaState);
+    isMicOnRef.current = mediaState.isMicOn;
+    isPipOnRef.current = mediaState.isPipOn;
   }, [mediaState]);
 
   // Start Camera
@@ -82,10 +82,16 @@ export const useMedia = (): UseMediaReturn => {
     console.log('Camera stopped.');
   }, []);
 
-  // Toggle Camera
-  const toggleCam = useCallback(() => {
-    mediaState.isCamOn ? stopCam() : startCam();
-  }, [mediaState.isCamOn, startCam, stopCam]);
+  // Toggle Microphone and Speech Recognition
+  const toggleMic = useCallback(() => {
+    if (mediaState.isMicOn) {
+      console.log('Toggling microphone off.');
+      stopMic();
+    } else {
+      console.log('Toggling microphone on.');
+      startMic();
+    }
+  }, [mediaState.isMicOn, startMic, stopMic]);
 
   // Start Microphone
   const startMic = useCallback(async () => {
@@ -100,7 +106,6 @@ export const useMedia = (): UseMediaReturn => {
         audioRef.current.srcObject = stream;
         audioStreamRef.current = stream;
         setMediaState((prev) => ({ ...prev, isMicOn: true }));
-        isMicOnRef.current = true; // Update the ref to track mic state
         console.log('Microphone started successfully.');
       }
     } catch (err) {
@@ -125,14 +130,8 @@ export const useMedia = (): UseMediaReturn => {
       console.log('Microphone srcObject cleared.');
     }
     setMediaState((prev) => ({ ...prev, isMicOn: false }));
-    isMicOnRef.current = false; // Update the ref to track mic state
     console.log('Microphone stopped successfully.');
   }, []);
-
-  // Toggle Microphone
-  const toggleMic = useCallback(() => {
-    mediaState.isMicOn ? stopMic() : startMic();
-  }, [mediaState.isMicOn, startMic, stopMic]);
 
   // Toggle Picture-in-Picture
   const togglePip = useCallback(async () => {
@@ -142,13 +141,11 @@ export const useMedia = (): UseMediaReturn => {
           console.log('Entering Picture-in-Picture mode.');
           await videoRef.current.requestPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: true }));
-          isPipOnRef.current = true;
           console.log('Picture-in-Picture mode entered.');
         } else {
           console.log('Exiting Picture-in-Picture mode.');
           await document.exitPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: false }));
-          isPipOnRef.current = false;
           console.log('Picture-in-Picture mode exited.');
         }
       } catch (err) {
@@ -162,6 +159,12 @@ export const useMedia = (): UseMediaReturn => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
     console.log(`Memory toggled to: ${!mediaState.isMemOn}`);
   }, [mediaState.isMemOn]);
+
+  // Erase Memory
+  const eraseMemory = useCallback(() => {
+    setMediaState((prev) => ({ ...prev, isMemOn: false }));
+    console.log('Memory erased.');
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -183,11 +186,9 @@ export const useMedia = (): UseMediaReturn => {
     audioRef,
     startCam,
     stopCam,
-    toggleCam,
-    startMic,
-    stopMic,
     toggleMic,
     togglePip,
     toggleMem,
+    eraseMemory,
   };
 };
