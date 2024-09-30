@@ -38,7 +38,7 @@ const LeftPanel: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   
-  // Replace useState with useRef to avoid re-renders and prevent double messages
+  // UseRef to track the last final message to prevent duplicates
   const lastFinalMessageRef = useRef<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const manuallyStoppedRef = useRef<boolean>(false);
@@ -105,6 +105,7 @@ const LeftPanel: React.FC = () => {
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
 
+  // Start Microphone with Speech Recognition
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
       manuallyStoppedRef.current = false; // Reset manual stop tracking
@@ -118,6 +119,7 @@ const LeftPanel: React.FC = () => {
     }
   }, [startMic, startHearing]);
 
+  // Stop Microphone with Speech Recognition
   const stopMicWithSpeechRecognition = useCallback(() => {
     console.log('Stopping speech recognition and microphone.');
     manuallyStoppedRef.current = true; // Mark as manually stopped
@@ -126,13 +128,13 @@ const LeftPanel: React.FC = () => {
     console.log('Speech recognition and microphone stopped.');
   }, [stopHearing, stopMic]);
 
+  // Toggle Microphone with Speech Recognition
   const toggleMicWithSpeechRecognition = useCallback(() => {
     console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
     mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
-  // Temporarily comment out the following useEffect for debugging
-  /*
+  // Restart Mic if it's turned off unexpectedly
   useEffect(() => {
     console.log(`Mic state changed. Current state: ${mediaState.isMicOn}`);
     if (!mediaState.isMicOn && !manuallyStoppedRef.current) {
@@ -140,7 +142,6 @@ const LeftPanel: React.FC = () => {
       startMicWithSpeechRecognition();
     }
   }, [mediaState.isMicOn, startMicWithSpeechRecognition]);
-  */
 
   // Cleanup on unmount
   useEffect(() => {
@@ -202,4 +203,4 @@ const LeftPanel: React.FC = () => {
   );
 };
 
-export default LeftPanel; // Keep ControlButtons as a regular component for now
+export default React.memo(LeftPanel);

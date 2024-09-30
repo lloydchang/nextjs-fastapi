@@ -82,4 +82,4 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   );
 };
 
-export default ControlButtons; // Temporarily remove React.memo for debugging
+export default React.memo(ControlButtons);
