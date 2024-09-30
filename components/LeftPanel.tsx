@@ -1,4 +1,4 @@
-// src/components/LeftPanel.tsx
+// LeftPanel.tsx
 "use client"; // Mark as a client component
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -16,11 +16,12 @@ import styles from "./LeftPanel.module.css"; // Import CSS module for styling
 const LeftPanel: React.FC = () => {
   const { messages, setMessages, sendActionToChatbot } = useChat();
 
-  const [showImage, setShowImage] = useState<boolean>(true);
   const [chatInput, setChatInput] = useState<string>("");
-  const [isCamOn, setIsCamOn] = useState<boolean>(false); // Use `isCamOn` instead of `isCameraOn`
-  const [isMicOn, setIsMicOn] = useState<boolean>(false); // Use `isMicOn` instead of `isMicrophoneOn`
-  const [isPiP, setIsPiP] = useState<boolean>(false);
+  const [mediaState, setMediaState] = useState({
+    isCamOn: false,
+    isMicOn: false,
+    isPiP: false,
+  });
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -28,9 +29,13 @@ const LeftPanel: React.FC = () => {
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
+  const updateMediaState = (key: keyof typeof mediaState, value: boolean) => {
+    setMediaState((prev) => ({ ...prev, [key]: value }));
+  };
+
   // Handle sending chat messages
   const handleChat = useCallback(async () => {
-    if (chatInput.trim() !== "") {
+    if (chatInput.trim()) {
       try {
         await sendActionToChatbot(chatInput);
         setChatInput("");
@@ -41,17 +46,7 @@ const LeftPanel: React.FC = () => {
     }
   }, [chatInput, sendActionToChatbot]);
 
-  // Handle key presses in the chat input
-  const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleChat();
-    }
-  };
-
-  // Cam Handlers
+  // Handle cam and PiP toggling
   const startCam = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -59,12 +54,10 @@ const LeftPanel: React.FC = () => {
         videoRef.current.srcObject = stream;
         videoStreamRef.current = stream;
         await videoRef.current.play();
-        setIsCamOn(true);
+        updateMediaState("isCamOn", true);
         startPiP();
 
-        if (!isMicOn) {
-          await startMic(); // Start Mic if it's not already on
-        }
+        if (!mediaState.isMicOn) startMic();
       }
     } catch (err) {
       alert("Unable to access cam. Please check permissions.");
@@ -72,24 +65,17 @@ const LeftPanel: React.FC = () => {
   };
 
   const stopCam = () => {
-    if (videoStreamRef.current) {
-      videoStreamRef.current.getTracks().forEach((track) => track.stop());
-      videoStreamRef.current = null;
-      setIsCamOn(false);
-      if (isPiP) {
-        document.exitPictureInPicture().catch((err) =>
-          console.error("Failed to exit PiP:", err)
-        );
-        setIsPiP(false);
-      }
-    }
+    videoStreamRef.current?.getTracks().forEach((track) => track.stop());
+    videoStreamRef.current = null;
+    updateMediaState("isCamOn", false);
+    stopPiP();
   };
 
   const startPiP = async () => {
     if (videoRef.current) {
       try {
         await videoRef.current.requestPictureInPicture();
-        setIsPiP(true);
+        updateMediaState("isPiP", true);
       } catch (err) {
         alert("Unable to enter PiP mode.");
       }
@@ -100,14 +86,14 @@ const LeftPanel: React.FC = () => {
     if (document.pictureInPictureElement) {
       try {
         await document.exitPictureInPicture();
-        setIsPiP(false);
+        updateMediaState("isPiP", false);
       } catch (err) {
         alert("Unable to exit PiP mode.");
       }
     }
   };
 
-  // Mic Handlers
+  // Handle microphone operations
   const startMic = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -115,7 +101,7 @@ const LeftPanel: React.FC = () => {
         audioRef.current.srcObject = stream;
         audioStreamRef.current = stream;
         await audioRef.current.play();
-        setIsMicOn(true);
+        updateMediaState("isMicOn", true);
       }
     } catch (err) {
       alert("Unable to access mic. Please check permissions.");
@@ -123,20 +109,44 @@ const LeftPanel: React.FC = () => {
   };
 
   const stopMic = () => {
-    if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach((track) => track.stop());
-      audioStreamRef.current = null;
-      setIsMicOn(false);
-    }
+    audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+    audioStreamRef.current = null;
+    updateMediaState("isMicOn", false);
   };
 
-  const toggleMic = () => {
-    if (isMicOn) {
-      stopMic();
-    } else {
-      startMic();
+  const toggleMic = () => (mediaState.isMicOn ? stopMic() : startMic());
+
+  // Handle speech recognition results
+  const handleSpeechResult = useCallback(
+    (transcript: string, isFinal: boolean) => {
+      setMessages((prev) =>
+        isFinal
+          ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript })
+          : prev.concat({ sender: "user", text: transcript, isInterim: true })
+      );
+    },
+    [setMessages]
+  );
+
+  const { startHearing, stopHearing, isRecognitionRunning } = useSpeechRecognition(handleSpeechResult);
+
+  // Function to start both mic and speech recognition
+  const startMicWithSpeechRecognition = useCallback(async () => {
+    try {
+      await startMic();
+      startHearing();
+    } catch (err) {
+      alert("Unable to access mic. Please check permissions.");
     }
-  };
+  }, [startMic, startHearing]);
+
+  const stopMicWithSpeechRecognition = useCallback(() => {
+    stopHearing();
+    stopMic();
+  }, [stopHearing, stopMic]);
+
+  const toggleMicWithSpeechRecognition = () =>
+    mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
 
   useEffect(() => {
     return () => {
@@ -145,113 +155,34 @@ const LeftPanel: React.FC = () => {
     };
   }, []);
 
-  // Handle speech recognition results
-  const handleSpeechResult = useCallback(
-    (transcript: string, isFinal: boolean) => {
-      if (isFinal) {
-        // Remove interim message if it exists
-        setMessages((prevMessages) =>
-          prevMessages.filter((msg) => !msg.isInterim)
-        );
-        // Send the final transcript to the chatbot
-        sendActionToChatbot(transcript);
-      } else {
-        // Display interim transcript
-        setMessages((prevMessages) => {
-          // Remove previous interim messages
-          const messagesWithoutInterim = prevMessages.filter(
-            (msg) => !msg.isInterim
-          );
-          // Add new interim message
-          return [
-            ...messagesWithoutInterim,
-            { sender: "user", text: transcript, isInterim: true },
-          ];
-        });
-      }
-    },
-    [sendActionToChatbot, setMessages]
-  );
-
-  // Obtain speech recognition functions
-  const {
-    startHearing,
-    stopHearing,
-    isRecognitionRunning,
-  } = useSpeechRecognition(handleSpeechResult);
-
-  // Function to start both mic and speech recognition
-  const startMicWithSpeechRecognition = useCallback(async () => {
-    try {
-      await startMic(); // Ensure the mic is started
-      startHearing(); // Then start speech recognition
-    } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
-    }
-  }, [startMic, startHearing]);
-
-  // Function to stop both mic and speech recognition
-  const stopMicWithSpeechRecognition = useCallback(() => {
-    stopHearing();
-    stopMic();
-  }, [stopHearing, stopMic]);
-
-  // Function to toggle mic and speech recognition
-  const toggleMicWithSpeechRecognition = () => {
-    if (isMicOn) {
-      stopMicWithSpeechRecognition();
-    } else {
-      startMicWithSpeechRecognition();
-    }
-  };
-
   return (
     <div className={styles.container}>
-      {showImage && (
-        <>
-          <Image
-            src={BackgroundImage}
-            alt="Background"
-            fill
-            className={styles.backgroundImage}
-          />
-          <div className={styles.overlay} />
-        </>
-      )}
+      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
+      <div className={styles.overlay} />
 
-      <VideoStream isCamOn={isCamOn} isPiP={isPiP} videoRef={videoRef} />
-      <AudioStream isMicOn={isMicOn} audioRef={audioRef} />
+      <VideoStream isCamOn={mediaState.isCamOn} isPiP={mediaState.isPiP} videoRef={videoRef} />
+      <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
         <h1 className={styles.title}>
           <b>Ideas Change Everything!</b>
         </h1>
-
         <div className={styles.chatInterface} ref={chatContainerRef}>
           <h3 className={styles.chatHeader}>
             <b>Chat with TEDxSDG</b>
           </h3>
 
           <ChatMessages messages={messages} />
-
-          <ChatInput
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            handleChat={handleChat}
-            handleKeyDown={handleKeyDown}
-          />
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
 
           <ControlButtons
-            isCamOn={isCamOn}
-            isMicOn={isMicOn}
+            isCamOn={mediaState.isCamOn}
+            isMicOn={mediaState.isMicOn}
             toggleMic={toggleMicWithSpeechRecognition}
             startCam={startCam}
             stopCam={stopCam}
-            isPiP={isPiP}
             startPiP={startPiP}
             stopPiP={stopPiP}
-            startHearing={startHearing}
-            stopHearing={stopHearing}
             isRecognitionRunning={isRecognitionRunning}
           />
         </div>
