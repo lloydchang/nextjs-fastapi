@@ -1,7 +1,7 @@
 // components/AudioStream.tsx
 
 import React from 'react';
-import styles from './AudioStream.module.css';
+import styles from '../styles/AudioStream.module.css';
 
 interface AudioStreamProps {
   isMicOn: boolean;

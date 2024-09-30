@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
-import styles from './MiddlePanel.module.css';
+import styles from '../styles/MiddlePanel.module.css';
 import dynamic from 'next/dynamic';
 
 // If MiddlePanel is considered heavy, it can be lazy loaded in the main app

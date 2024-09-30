@@ -1,7 +1,7 @@
 // components/ChatMessage.tsx
 
 import React from 'react';
-import styles from './ChatMessage.module.css';
+import styles from '../styles/ChatMessage.module.css';
 import { Message } from '../hooks/useChat';
 
 interface ChatMessageProps {

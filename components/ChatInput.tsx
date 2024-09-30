@@ -1,7 +1,7 @@
 // components/ChatInput.tsx
 
 import React, { useCallback } from 'react';
-import styles from './ChatInput.module.css';
+import styles from '../styles/ChatInput.module.css';
 
 interface ChatInputProps {
   chatInput: string;

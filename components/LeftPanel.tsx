@@ -12,7 +12,7 @@ import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
 import ControlButtons from './ControlButtons';
-import styles from './LeftPanel.module.css';
+import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import dynamic from 'next/dynamic';
 
