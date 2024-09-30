@@ -1,3 +1,4 @@
+// components/MiddlePanel.tsx
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -16,17 +17,7 @@ const MiddlePanel: React.FC = () => {
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<any>(null);
 
-  // Ensure the initial API call is only made once
-  useEffect(() => {
-    if (!searchInitiated) {
-      handleSearch();
-    }
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  };
-
+  // Define handleSearch before useEffect
   const handleSearch = async () => {
     setError(null);
     setTalks([]);
@@ -55,6 +46,17 @@ const MiddlePanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Ensure the initial API call is only made once
+  useEffect(() => {
+    if (!searchInitiated) {
+      handleSearch();
+    }
+  }, [searchInitiated]); // Removed handleSearch from the dependency array
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
   };
 
   const generateEmbedUrl = (url: string) => {
