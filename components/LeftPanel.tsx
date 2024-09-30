@@ -23,7 +23,10 @@ const LeftPanel: React.FC = () => {
     Array<{ sender: string; text: string; isInterim: boolean }>
   >([]);
   const [chatInput, setChatInput] = useState<string>("");
-  const [lastFinalMessage, setLastFinalMessage] = useState<string | null>(null);
+
+  // Change lastFinalMessage to useRef
+  const lastFinalMessageRef = useRef<string | null>(null);
+
   const [mediaState, setMediaState] = useState({
     isCamOn: false,
     isMicOn: false,
@@ -145,7 +148,7 @@ const LeftPanel: React.FC = () => {
   };
 
   // Handle microphone operations
-  const startMic = async () => {
+  const startMic = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
@@ -158,16 +161,16 @@ const LeftPanel: React.FC = () => {
     } catch (err) {
       alert("Unable to access mic. Please check permissions.");
     }
-  };
+  }, [audioRef]);
 
-  const stopMic = () => {
+  const stopMic = useCallback(() => {
     if (audioRef.current && audioRef.current.srcObject) {
       const stream = audioRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
       audioRef.current.srcObject = null;
     }
     updateMediaState("isMicOn", false);
-  };
+  }, [audioRef]);
 
   const toggleMic = () => {
     mediaState.isMicOn ? stopMic() : startMic();
@@ -180,7 +183,7 @@ const LeftPanel: React.FC = () => {
         const existingInterimIndex = prev.findIndex((msg) => msg.isInterim);
 
         if (isFinal) {
-          if (transcript !== lastFinalMessage) {
+          if (transcript !== lastFinalMessageRef.current) {
             const updatedMessages =
               existingInterimIndex > -1
                 ? prev
@@ -202,7 +205,7 @@ const LeftPanel: React.FC = () => {
 
             console.log("Sending transcribed speech to chatbot:", transcript);
             handleChat(transcript);
-            setLastFinalMessage(transcript);
+            lastFinalMessageRef.current = transcript; // Update the ref
             return updatedMessages;
           } else {
             return prev;
@@ -223,7 +226,7 @@ const LeftPanel: React.FC = () => {
         }
       });
     },
-    [setMessages, mediaState.isMemOn, handleChat, lastFinalMessage]
+    [setMessages, mediaState.isMemOn, handleChat]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(
@@ -249,15 +252,14 @@ const LeftPanel: React.FC = () => {
       ? stopMicWithSpeechRecognition()
       : startMicWithSpeechRecognition();
 
-  const toggleMem = () =>
-    updateMediaState("isMemOn", !mediaState.isMemOn);
+  const toggleMem = () => updateMediaState("isMemOn", !mediaState.isMemOn);
 
   useEffect(() => {
     return () => {
       stopCam();
       stopMic();
     };
-  }, []);
+  }, [stopCam, stopMic]);
 
   return (
     <div className={styles.container}>
@@ -272,9 +274,7 @@ const LeftPanel: React.FC = () => {
       {/* VideoStream with conditional styles based on isPipOn */}
       <div
         className={
-          mediaState.isPipOn
-            ? styles.videoStreamHidden
-            : styles.videoStream
+          mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream
         }
       >
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
