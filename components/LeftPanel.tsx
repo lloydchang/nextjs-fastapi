@@ -76,10 +76,7 @@ const LeftPanel: React.FC = () => {
               prev.filter((msg) => !(msg.isInterim && msg.sender === 'user'))
             );
 
-            // Add the final message to chat
-            setMessages((prev) => [...prev, { sender: 'user', text: transcript.trim() }]);
-
-            // Send the transcript to the chatbot
+            // Send the transcript to the chatbot (which will add the user message)
             handleChat(transcript.trim());
           } else {
             console.warn(`Duplicate final message detected: "${transcript}"`);
@@ -145,8 +142,8 @@ const LeftPanel: React.FC = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('Cleaning up LeftPanel component.');
       manuallyStoppedRef.current = true; // Ensure cleanup respects manual stop
+      console.log('Cleaning up LeftPanel component.');
       stopCam();
       stopMic();
       if (mediaState.isPipOn) {

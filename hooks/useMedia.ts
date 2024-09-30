@@ -42,6 +42,7 @@ export const useMedia = (): UseMediaReturn => {
   const startCam = useCallback(async () => {
     if (mediaState.isCamOn) return;
     try {
+      console.log('Attempting to start camera.');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
