@@ -1,63 +1,64 @@
+// File: MiddlePanel.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
-import SDGWheel from '../public/SDGWheel.png'; // Import SDG Wheel for search loading indicator
+import SDGWheel from '../public/SDGWheel.png';
 import styles from './MiddlePanel.module.css';
+
+// TypeScript Types
+type Talk = {
+  title: string;
+  url: string;
+  sdg_tags: string[];
+};
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
-  const initialKeyword = useRef<string>("TED AI"); // Fixed initial keyword
+  const initialKeyword = useRef<string>("TED AI");
 
   const [query, setQuery] = useState<string>(initialKeyword.current);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
-  const [selectedTalk, setSelectedTalk] = useState<any>(null);
+  const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
 
-  // Ensure the initial API call is only made once
-  useEffect(() => {
-    if (!searchInitiated) {
-      handleSearch();
-    }
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  };
-
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setError(null);
     setTalks([]);
     setLoading(true);
-    setSearchInitiated(true); // Mark the search as initiated
+    setSearchInitiated(true);
     setSelectedTalk(null);
 
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/py/search?query=${query}`);
-
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
-
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setTalks(data);
-        if (data.length > 0) {
-          setSelectedTalk(data[0]); // Automatically set the first talk as "Now Playing"
-        }
-      } else {
-        setError("Unexpected response format.");
+      const data: Talk[] = await response.json();
+      setTalks(data);
+      if (data.length > 0) {
+        setSelectedTalk(data[0]);
       }
     } catch (err) {
       setError("Failed to fetch search results. Please check if the backend server is running.");
     } finally {
       setLoading(false);
     }
+  }, [query, setTalks]);
+
+  useEffect(() => {
+    if (!searchInitiated) {
+      handleSearch();
+    }
+  }, [searchInitiated, handleSearch]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
   };
 
-  const generateEmbedUrl = (url: string) => {
+  const generateEmbedUrl = (url: string): string => {
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
     return match ? `https://embed.ted.com/talks/${match[1]}` : url;
