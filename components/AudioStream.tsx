@@ -1,4 +1,4 @@
-// src/components/AudioStream.tsx
+// components/AudioStream.tsx
 
 import React, { useEffect } from "react";
 import styles from "./AudioStream.module.css"; // Import CSS module for styling
