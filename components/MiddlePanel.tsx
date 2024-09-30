@@ -9,12 +9,6 @@ import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import dynamic from 'next/dynamic';
 
-// Lazy load FetchIframeContent
-const FetchIframeContent = dynamic(() => import('./FetchIframeContent'), {
-  loading: () => <p>Loading additional content...</p>,
-  ssr: false,
-});
-
 // TypeScript Types
 type Talk = {
   title: string;
@@ -153,10 +147,6 @@ const MiddlePanel: React.FC = () => {
 
       {error && <p className={styles.errorText}>{error}</p>}
 
-      {/* Lazy Loaded Additional Content */}
-      <Suspense fallback={<p>Loading additional content...</p>}>
-        <FetchIframeContent />
-      </Suspense>
     </div>
   );
 };
