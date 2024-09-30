@@ -1,4 +1,4 @@
-// src/components/ActionButton.tsx
+// components/ActionButton.tsx
 import React, { CSSProperties } from 'react';
 
 type ActionButtonProps = {
