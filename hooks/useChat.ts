@@ -65,19 +65,31 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   // Send user message to the chatbot and receive a response
   const sendActionToChatbot = useCallback(
     async (input: string) => {
-      // Add user message to the conversation first
       setMessages((prev) => [...prev, { sender: 'user', text: input }]);
 
       try {
-        // Send the entire conversation to the chatbot for context-aware responses
-        const reply = await sendMessageToChatbot(input, getConversationContext());
+        console.log('Sending prompt to chatbot service:', input);
+        
+        // Send only the prompt to the chatbot service
+        const reply = await sendMessageToChatbot(input); // Only pass the prompt
+
         setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
       } catch (error) {
-        console.error('Error communicating with chatbot:', error);
-        setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
+        console.error('Error communicating with chatbot:', errorMessage);
+
+        // Send the error back to the chat window as a bot message
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: 'bot',
+            text: `Error: ${errorMessage}`, // Format the error message for display
+          },
+        ]);
       }
     },
-    [getConversationContext]
+    []
   );
 
   // Clear Chat History
