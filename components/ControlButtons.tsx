@@ -35,6 +35,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     <div className={styles.container}>
       {/* Camera Button */}
       <button
+        type="button"
         onClick={isCamOn ? stopCam : startCam}
         className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
         aria-pressed={isCamOn}
@@ -45,6 +46,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 
       {/* PiP Button */}
       <button
+        type="button"
         onClick={togglePip}
         className={`${styles.button} ${!isPipOn ? styles.startButton : styles.stopButton}`}
         aria-pressed={isPipOn}
@@ -55,6 +57,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 
       {/* Microphone Button */}
       <button
+        type="button"
         onClick={toggleMic}
         className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
         aria-pressed={isMicOn}
@@ -65,6 +68,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 
       {/* Memory Button */}
       <button
+        type="button"
         onClick={toggleMem}
         className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
         aria-pressed={isMemOn}
