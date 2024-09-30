@@ -1,9 +1,8 @@
 // components/ChatMessages.tsx
-
 import React, { useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
 import styles from './ChatMessages.module.css';
-import { Message } from '../hooks/useChat';
+import { Message } from '../types/message';
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -27,9 +26,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
         messages.map((msg, index) => (
           <ChatMessage
             key={index}
-            sender={msg.sender}
-            text={msg.text}
-            isInterim={msg.isInterim}
+            sender={msg.sender} // Correctly pass the sender prop
+            text={msg.text}     // Pass the text prop
+            isInterim={msg.isInterim} // Pass the isInterim prop
           />
         ))
       )}

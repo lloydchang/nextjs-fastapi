@@ -1,14 +1,15 @@
-"use client";
+// components/MiddlePanel.tsx
+'use client'; // Mark as a client component
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
-import SDGWheel from '../public/SDGWheel.png'; // Import SDG Wheel for search loading indicator
+import SDGWheel from '../public/SDGWheel.png';
 import styles from './MiddlePanel.module.css';
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
-  const initialKeyword = useRef<string>("TED AI"); // Fixed initial keyword
+  const initialKeyword = useRef<string>("TED AI");
 
   const [query, setQuery] = useState<string>(initialKeyword.current);
   const [error, setError] = useState<string | null>(null);
@@ -16,22 +17,12 @@ const MiddlePanel: React.FC = () => {
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<any>(null);
 
-  // Ensure the initial API call is only made once
-  useEffect(() => {
-    if (!searchInitiated) {
-      handleSearch();
-    }
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-  };
-
-  const handleSearch = async () => {
+  // Handle search logic
+  const handleSearch = useCallback(async () => {
     setError(null);
     setTalks([]);
     setLoading(true);
-    setSearchInitiated(true); // Mark the search as initiated
+    setSearchInitiated(true);
     setSelectedTalk(null);
 
     try {
@@ -45,7 +36,7 @@ const MiddlePanel: React.FC = () => {
       if (Array.isArray(data)) {
         setTalks(data);
         if (data.length > 0) {
-          setSelectedTalk(data[0]); // Automatically set the first talk as "Now Playing"
+          setSelectedTalk(data[0]);
         }
       } else {
         setError("Unexpected response format.");
@@ -55,88 +46,33 @@ const MiddlePanel: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, setTalks]);
 
-  const generateEmbedUrl = (url: string) => {
-    const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
-    const match = url.match(tedRegex);
-    return match ? `https://embed.ted.com/talks/${match[1]}` : url;
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  useEffect(() => {
+    if (!searchInitiated) {
       handleSearch();
     }
+  }, [searchInitiated, handleSearch]); // Add `handleSearch` as a dependency
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
   };
 
   return (
     <div className={styles.middlePanel}>
-      {/* Search Section */}
+      {/* Search Container */}
       <div className={styles.searchContainer}>
         <input
           type="text"
           placeholder="Enter a keyword"
           value={query}
           onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
           className={styles.searchInput}
         />
         <button onClick={handleSearch} className={`${styles.button} ${styles.searchButton}`} disabled={loading}>
           {loading ? "Searching…" : "Search"}
         </button>
-        {selectedTalk && (
-          <button
-            onClick={() => window.open(selectedTalk.url, '_blank')}
-            className={`${styles.button} ${styles.tedButton}`}
-          >
-            Play in New Tab
-          </button>
-        )}
-        {loading && (
-          <div className={styles.loadingSpinner}>
-            <Image src={SDGWheel} alt="Loading..." width={24} height={24} />
-          </div>
-        )}
       </div>
-
-      {/* Now Playing Section */}
-      {selectedTalk && (
-        <div className={styles.nowPlaying}>
-          <iframe
-            src={generateEmbedUrl(selectedTalk.url)}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            className={styles.videoFrame}
-          />
-        </div>
-      )}
-
-      {/* Search Results Section */}
-      {searchInitiated && (
-        <div className={styles.resultsContainer}>
-          {talks.map((talk, index) => (
-            <div key={index} className={styles.resultItem}>
-              <h3>
-                <a
-                  href="#"
-                  className={styles.resultLink}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSelectedTalk(talk);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                >
-                  {talk.title}
-                </a>
-                <p className={styles.sdgTags}>
-                  {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
-                </p>
-              </h3>
-            </div>
-          ))}
-        </div>
-      )}
 
       {error && <p className={styles.errorText}>{error}</p>}
     </div>

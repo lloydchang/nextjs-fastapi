@@ -1,90 +1,101 @@
 // hooks/useSpeechRecognition.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
-type SpeechRecognitionResultCallback = (transcript: string, isFinal: boolean) => void;
+// Define the SpeechRecognition type manually if it does not exist
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+  }
+
+  interface SpeechRecognitionEvent extends Event {
+    readonly resultIndex: number;
+    readonly results: SpeechRecognitionResultList;
+  }
+
+  interface SpeechRecognitionResult {
+    readonly isFinal: boolean;
+    readonly length: number;
+    item(index: number): SpeechRecognitionAlternative;
+    [index: number]: SpeechRecognitionAlternative;
+  }
+
+  interface SpeechRecognitionResultList {
+    readonly length: number;
+    item(index: number): SpeechRecognitionResult;
+    [index: number]: SpeechRecognitionResult;
+  }
+
+  interface SpeechRecognitionAlternative {
+    readonly confidence: number;
+    readonly transcript: string;
+  }
+}
+
+type SpeechRecognition =
+  | typeof window.SpeechRecognition
+  | typeof window.webkitSpeechRecognition;
 
 interface SpeechRecognitionHook {
+  isRecognitionRunning: boolean;
   startHearing: () => void;
   stopHearing: () => void;
-  isRecognitionRunning: boolean;
 }
 
 export const useSpeechRecognition = (
-  onResult: SpeechRecognitionResultCallback
+  onResult: (transcript: string, isFinal: boolean) => void
 ): SpeechRecognitionHook => {
   const [isRecognitionRunning, setIsRecognitionRunning] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const finalTranscriptRef = useRef<string>(''); // Keep track of the last confirmed transcript
   const interimTranscriptCacheRef = useRef<string>(''); // Maintain interim transcripts during speech
 
+  // Setup the speech recognition on mount
   useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.error('Browser does not support SpeechRecognition');
+    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+      console.error('Speech Recognition API not supported in this browser.');
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = true; // Capture interim results for live feedback
-    recognition.continuous = true; // Keep listening until manually stopped
+    // Use webkitSpeechRecognition for cross-browser support
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognitionClass();
 
-    // Handle speech results
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
       let interimTranscript = '';
-      let finalTranscript = '';
-
-      // Iterate through speech results
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript; // Collect final transcripts
+          finalTranscriptRef.current += transcript;
+          onResult(finalTranscriptRef.current, true);
         } else {
-          interimTranscript += transcript; // Collect interim transcripts
+          interimTranscript += transcript;
         }
       }
-
-      if (finalTranscript) {
-        finalTranscriptRef.current = finalTranscript;
-        interimTranscriptCacheRef.current = ''; // Clear interim cache on final transcript
-        onResult(finalTranscript, true);
-      } else if (interimTranscript) {
-        interimTranscriptCacheRef.current = interimTranscript; // Update interim cache
-        onResult(interimTranscript, false);
-      }
+      interimTranscriptCacheRef.current = interimTranscript;
+      onResult(interimTranscriptCacheRef.current, false);
     };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-    };
-
-    recognition.onend = () => {
-      setIsRecognitionRunning(false);
-    };
-
-    recognitionRef.current = recognition;
   }, [onResult]);
 
   // Start speech recognition
-  const startHearing = useCallback(() => {
-    if (recognitionRef.current && !isRecognitionRunning) {
-      recognitionRef.current.start();
+  const startHearing = () => {
+    if (recognitionRef.current) {
       setIsRecognitionRunning(true);
+      recognitionRef.current.start();
     }
-  }, [isRecognitionRunning]);
+  };
 
   // Stop speech recognition
-  const stopHearing = useCallback(() => {
-    if (recognitionRef.current && isRecognitionRunning) {
-      recognitionRef.current.stop();
+  const stopHearing = () => {
+    if (recognitionRef.current) {
       setIsRecognitionRunning(false);
+      recognitionRef.current.stop();
     }
-  }, [isRecognitionRunning]);
+  };
 
   return {
+    isRecognitionRunning,
     startHearing,
     stopHearing,
-    isRecognitionRunning,
   };
 };
