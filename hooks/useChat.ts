@@ -1,192 +1,53 @@
 // hooks/useChat.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Message } from '../types/message'; // Ensure this path is correct
-import { sendMessageToChatbot } from '../services/chatService'; // Import chat service
-import { systemPrompt } from '../utils/systemPrompt'; // Import the system prompt
 
-// Utility functions to handle local storage operations for saving and loading chat history
-const saveChatHistory = (messages: Message[]) => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('chatHistory', JSON.stringify(messages));
-  }
-};
+import { useState, useCallback } from 'react';
 
-const loadChatHistory = (): Message[] => {
-  if (typeof window !== 'undefined') {
-    const history = localStorage.getItem('chatHistory');
-    return history ? JSON.parse(history) : [];
-  }
-  return [];
-};
+interface Message {
+  sender: string;
+  text: string;
+  isInterim: boolean;
+}
 
 export const useChat = () => {
-  // Initialize messages with an empty array to avoid hydration errors
   const [messages, setMessages] = useState<Message[]>([]);
-  const [context, setContext] = useState<string | null>(null); // Store the context returned by the chatbot
-  const [isMemEnabled, setIsMemEnabled] = useState<boolean>(true); // Memory enabled by default
-  const [isCamOn, setIsCamOn] = useState<boolean>(true); // Cam enabled by default
-  const [isPiPOn, setIsPiPOn] = useState<boolean>(true); // Picture-in-Picture enabled by default
-  const [isMicOn, setIsMicOn] = useState<boolean>(true); // Mic enabled by default
-
-  // Ref to keep track of the latest messages state
-  const messagesRef = useRef<Message[]>(messages);
-
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
-  // Load chat history after the component has mounted
-  useEffect(() => {
-    if (isMemEnabled) {
-      const loadedMessages = loadChatHistory();
-      setMessages(loadedMessages);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMemEnabled]);
-
-  // Save chat history whenever messages change and memory is enabled
-  useEffect(() => {
-    if (isMemEnabled) {
-      saveChatHistory(messages);
-    }
-  }, [messages, isMemEnabled]);
-
-  // Handle Mic state changes
-  useEffect(() => {
-    if (isMicOn) {
-      startMic();
-    } else {
-      stopMic();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMicOn]);
-
-  // Handle Cam state changes
-  useEffect(() => {
-    if (isCamOn) {
-      startCam();
-    } else {
-      stopCam();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCamOn]);
-
-  // Handle PiP state changes
-  useEffect(() => {
-    if (isPiPOn) {
-      startPiP();
-    } else {
-      stopPiP();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPiPOn]);
 
   const sendActionToChatbot = useCallback(
     async (input: string) => {
-      // Update messages state and ref
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages, { sender: 'user', text: input }];
-        messagesRef.current = updatedMessages;
-        return updatedMessages;
-      });
-
-      // Use messagesRef to get the latest messages
-      const conversationHistory = messagesRef.current
-        .map((msg) => `${msg.sender}: ${msg.text}`)
-        .join('\n');
+      // Add user's message to messages state
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'user', text: input, isInterim: false },
+      ]);
 
       try {
-        await sendMessageToChatbot(
-          systemPrompt,
-          input,
-          conversationHistory,
-          (responseMessage, newContext) => {
-            if (newContext) setContext(newContext);
-            setMessages((prev) => [...prev, { sender: 'TEDxSDG', text: responseMessage }]);
-          }
-        );
-      } catch (error) {
-        console.error('Error sending message to chatbot:', error);
+        // Send message to chatbot API
+        // Replace this with your actual API call
+        const botResponse = await fakeChatbotAPI(input);
+
+        // Add bot's response to messages state
         setMessages((prev) => [
           ...prev,
-          { sender: 'TEDxSDG', text: 'Sorry, something went wrong. Please try again.' },
+          { sender: 'bot', text: botResponse, isInterim: false },
         ]);
+      } catch (error) {
+        console.error('Error communicating with chatbot:', error);
+        // Optionally, you can add an error message to the chat
       }
     },
-    [setMessages, setContext]
+    [setMessages]
   );
-
-  const toggleMem = useCallback(() => {
-    setIsMemEnabled((prev) => {
-      const newMemState = !prev;
-      if (!newMemState && typeof window !== 'undefined') {
-        localStorage.removeItem('chatHistory');
-        setMessages([]);
-      }
-      return newMemState;
-    });
-  }, [setMessages]);
-
-  const startMic = useCallback(() => {
-    console.log('Mic started');
-    // Add your logic to start the microphone
-  }, []);
-
-  const stopMic = useCallback(() => {
-    console.log('Mic stopped');
-    // Add your logic to stop the microphone
-  }, []);
-
-  const startCam = useCallback(() => {
-    console.log('Cam started');
-    // Add your logic to start the camera
-  }, []);
-
-  const stopCam = useCallback(() => {
-    console.log('Cam stopped');
-    // Add your logic to stop the camera
-  }, []);
-
-  const startPiP = useCallback(() => {
-    console.log('Picture-in-Picture started');
-    // Add your logic to start PiP mode
-  }, []);
-
-  const stopPiP = useCallback(() => {
-    console.log('Picture-in-Picture stopped');
-    // Add your logic to stop PiP mode
-  }, []);
-
-  const toggleCam = useCallback(() => {
-    setIsCamOn((prev) => !prev);
-  }, []);
-
-  const togglePiP = useCallback(() => {
-    setIsPiPOn((prev) => !prev);
-  }, []);
-
-  const toggleMic = useCallback(() => {
-    setIsMicOn((prev) => !prev);
-  }, []);
 
   return {
     messages,
-    setMessages, // Expose setMessages to be used externally
     sendActionToChatbot,
-    context,
-    isMemEnabled,
-    toggleMem,
-    isCamOn,
-    toggleCam,
-    isPiPOn,
-    togglePiP,
-    isMicOn,
-    toggleMic,
-    startMic,
-    stopMic,
-    startCam,
-    stopCam,
-    startPiP,
-    stopPiP,
   };
+};
+
+// Mock chatbot API function
+const fakeChatbotAPI = async (input: string): Promise<string> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(`Echo: ${input}`);
+    }, 1000);
+  });
 };

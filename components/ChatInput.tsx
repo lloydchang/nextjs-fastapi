@@ -1,20 +1,23 @@
 // components/ChatInput.tsx
-import React from "react";
-import styles from "./ChatInput.module.css"; // Import CSS module for styling
+import React from 'react';
+import styles from './ChatInput.module.css';
 
 interface ChatInputProps {
   chatInput: string;
   setChatInput: React.Dispatch<React.SetStateAction<string>>;
-  handleChat: () => void; // Ensure handleChat is defined as a prop
+  handleChat: () => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
-  const isDisabled = chatInput.trim() === "";
+const ChatInput: React.FC<ChatInputProps> = ({
+  chatInput,
+  setChatInput,
+  handleChat,
+}) => {
+  const isDisabled = chatInput.trim() === '';
 
-  // Function to handle sending the message and clearing the input
   const sendMessage = () => {
-    if (chatInput.trim()) {
-      handleChat(); // Call the parent function to handle the chat
+    if (!isDisabled) {
+      handleChat();
       setChatInput(''); // Clear the input field after sending
     }
   };
@@ -27,17 +30,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault(); // Prevent adding a new line
-            sendMessage(); // Call the function to send the message
+            sendMessage();
           }
         }}
         placeholder="Type your message..."
         className={styles.textarea}
-        rows={3} // Adjust rows as needed
+        rows={3}
       />
       <button
-        onClick={sendMessage} // Use the new sendMessage function
+        onClick={sendMessage}
         disabled={isDisabled}
-        className={`${styles.button} ${isDisabled ? styles.buttonDisabled : ""}`}
+        className={`${styles.button} ${isDisabled ? styles.buttonDisabled : ''}`}
         aria-label="Send message"
       >
         Send

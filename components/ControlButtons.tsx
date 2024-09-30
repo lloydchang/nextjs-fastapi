@@ -1,6 +1,6 @@
 // components/ControlButtons.tsx
-import React from "react";
-import styles from "./ControlButtons.module.css";
+import React from 'react';
+import styles from './ControlButtons.module.css';
 
 interface ControlButtonsProps {
   isCamOn: boolean;
@@ -8,11 +8,11 @@ interface ControlButtonsProps {
   toggleMic: () => void;
   startCam: () => void;
   stopCam: () => void;
-  isPipOn: boolean; // Updated variable name
-  startPip: () => void; // Updated to new function name
-  stopPip: () => void; // Updated to new function name
-  isMemOn: boolean; // Memory state prop
-  toggleMem: () => void; // Toggle function for memory
+  isPipOn: boolean;
+  startPip: () => void;
+  stopPip: () => void;
+  isMemOn: boolean;
+  toggleMem: () => void;
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -21,32 +21,36 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   toggleMic,
   startCam,
   stopCam,
-  isPipOn, // Updated variable name
-  startPip, // Updated to new function name
-  stopPip, // Updated to new function name
+  isPipOn,
+  startPip,
+  stopPip,
   isMemOn,
-  toggleMem, // Receive toggle function for memory
+  toggleMem,
 }) => {
-  const camButtonText = isCamOn ? "Stop Cam 📷" : "Start Cam 📷";
-  const micButtonText = isMicOn ? "Stop Mic 🎤" : "Start Mic 🎤";
-  const pipButtonText = isPipOn ? "Stop Pip 📹" : "Start Pip 📹"; // Updated variable name
-  const memButtonText = isMemOn ? "Stop Memory 🧠" : "Start Memory 🧠"; // Memory button text
+  const camButtonText = isCamOn ? 'Stop Cam 📷' : 'Start Cam 📷';
+  const micButtonText = isMicOn ? 'Stop Mic 🎤' : 'Start Mic 🎤';
+  const pipButtonText = isPipOn ? 'Stop PiP 📹' : 'Start PiP 📹';
+  const memButtonText = isMemOn ? 'Stop Memory 🧠' : 'Start Memory 🧠';
 
   return (
     <div className={styles.container}>
       {/* Camera button */}
       <button
         onClick={isCamOn ? stopCam : startCam}
-        className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
+        className={`${styles.button} ${
+          !isCamOn ? styles.startButton : styles.stopButton
+        }`}
       >
         {camButtonText}
       </button>
 
-      {/* Pip button, only visible when camera is on */}
+      {/* PiP button, only visible when camera is on */}
       {isCamOn && (
         <button
           onClick={isPipOn ? stopPip : startPip}
-          className={`${styles.button} ${isPipOn ? styles.stopButton : styles.startButton}`}
+          className={`${styles.button} ${
+            isPipOn ? styles.stopButton : styles.startButton
+          }`}
         >
           {pipButtonText}
         </button>
@@ -55,15 +59,19 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       {/* Microphone button */}
       <button
         onClick={toggleMic}
-        className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
+        className={`${styles.button} ${
+          !isMicOn ? styles.startButton : styles.stopButton
+        }`}
       >
         {micButtonText}
       </button>
 
       {/* Memory button */}
       <button
-        onClick={toggleMem} // Use the toggle function for memory
-        className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
+        onClick={toggleMem}
+        className={`${styles.button} ${
+          isMemOn ? styles.stopButton : styles.startButton
+        }`}
       >
         {memButtonText}
       </button>
