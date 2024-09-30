@@ -110,8 +110,10 @@ const LeftPanel: React.FC = () => {
 
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
+      console.log('Starting microphone and speech recognition.');
       await startMic();
       startHearing();
+      console.log('Microphone and speech recognition started.');
     } catch (err) {
       console.error('Unable to access mic with speech recognition.', err);
       setError('Unable to access microphone.');
@@ -119,11 +121,14 @@ const LeftPanel: React.FC = () => {
   }, [startMic, startHearing]);
 
   const stopMicWithSpeechRecognition = useCallback(() => {
+    console.log('Stopping speech recognition and microphone.');
     stopHearing();
     stopMic();
+    console.log('Speech recognition and microphone stopped.');
   }, [stopHearing, stopMic]);
 
   const toggleMicWithSpeechRecognition = useCallback(() => {
+    console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
     mediaState.isMicOn
       ? stopMicWithSpeechRecognition()
       : startMicWithSpeechRecognition();
@@ -131,7 +136,7 @@ const LeftPanel: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      // Cleanup on component unmount
+      console.log('Cleaning up LeftPanel component.');
       stopCam();
       stopMic();
       if (mediaState.isPipOn) {

@@ -14,6 +14,7 @@ import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { TalkProvider } from '../context/TalkContext'; // Import the TalkProvider
 import '../styles/globals.css'; // Ensure global styles are applied
+import ErrorBoundary from '../components/ErrorBoundary';
 
 // Lazy load all panels
 
@@ -37,13 +38,19 @@ const Home: React.FC = () => {
     <TalkProvider>
       <div className="container">
       <Suspense fallback={<p>Loading Left Panel...</p>}>
-          <LeftPanel />
+          <ErrorBoundary>
+              <LeftPanel />
+          </ErrorBoundary>
       </Suspense>
       <Suspense fallback={<p>Loading Middle Panel...</p>}>
-          <MiddlePanel />
+          <ErrorBoundary>
+              <MiddlePanel />
+          </ErrorBoundary>
         </Suspense>
         <Suspense fallback={<p>Loading Right Panel...</p>}>
-          <RightPanel />
+          <ErrorBoundary>
+              <RightPanel />
+          </ErrorBoundary>
         </Suspense>
       </div>
     </TalkProvider>
