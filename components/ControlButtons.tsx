@@ -1,7 +1,7 @@
 // components/ControlButtons.tsx
 
 import React from 'react';
-import styles from './ControlButtons.module.css';
+import styles from '../styles/ControlButtons.module.css';
 
 interface ControlButtonsProps {
   isCamOn: boolean;
