@@ -21,5 +21,5 @@ const AudioStream: React.FC<AudioStreamProps> = ({ isMicOn, audioRef }) => {
   );
 };
 
-// Memoize to prevent unnecessary re-renders
+// Memoize the component to prevent unnecessary re-renders
 export default React.memo(AudioStream);
