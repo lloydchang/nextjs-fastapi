@@ -20,7 +20,8 @@ const loadChatHistory = (): Message[] => {
 };
 
 export const useChat = () => {
-  const [messages, setMessages] = useState<Message[]>(loadChatHistory()); // Load chat history on initialization
+  // Initialize messages with an empty array to avoid hydration errors
+  const [messages, setMessages] = useState<Message[]>([]);
   const [context, setContext] = useState<string | null>(null); // Store the context returned by the chatbot
   const [isMemEnabled, setIsMemEnabled] = useState<boolean>(true); // Memory enabled by default
   const [isCamOn, setIsCamOn] = useState<boolean>(true); // Cam enabled by default
@@ -33,6 +34,15 @@ export const useChat = () => {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  // Load chat history after the component has mounted
+  useEffect(() => {
+    if (isMemEnabled) {
+      const loadedMessages = loadChatHistory();
+      setMessages(loadedMessages);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMemEnabled]);
 
   // Save chat history whenever messages change and memory is enabled
   useEffect(() => {
@@ -48,6 +58,7 @@ export const useChat = () => {
     } else {
       stopMic();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMicOn]);
 
   // Handle Cam state changes
@@ -57,6 +68,7 @@ export const useChat = () => {
     } else {
       stopCam();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCamOn]);
 
   // Handle PiP state changes
@@ -66,6 +78,7 @@ export const useChat = () => {
     } else {
       stopPiP();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPiPOn]);
 
   const sendActionToChatbot = useCallback(
@@ -112,7 +125,7 @@ export const useChat = () => {
       }
       return newMemState;
     });
-  }, [setIsMemEnabled, setMessages]);
+  }, [setMessages]);
 
   const startMic = useCallback(() => {
     console.log('Mic started');
