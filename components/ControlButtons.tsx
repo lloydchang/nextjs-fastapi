@@ -76,5 +76,5 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   );
 };
 
-// Memoize to prevent unnecessary re-renders
+// Memoize the component to prevent unnecessary re-renders
 export default React.memo(ControlButtons);

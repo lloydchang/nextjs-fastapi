@@ -37,5 +37,5 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   );
 };
 
-// Memoize to prevent unnecessary re-renders
+// Memoize the component to prevent unnecessary re-renders
 export default React.memo(ChatMessages);

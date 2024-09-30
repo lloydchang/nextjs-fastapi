@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
@@ -14,14 +14,6 @@ import ChatMessages from './ChatMessages';
 import ControlButtons from './ControlButtons';
 import styles from './LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
-import dynamic from 'next/dynamic';
-
-// Lazy load any heavy components if necessary
-// Example: if there was a HeavyComponent, we could lazy load it
-// const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
-//   loading: () => <p>Loading Heavy Component...</p>,
-//   ssr: false,
-// });
 
 const LeftPanel: React.FC = () => {
   const {
@@ -80,6 +72,8 @@ const LeftPanel: React.FC = () => {
 
             // Send the transcript to the chatbot
             handleChat(transcript.trim());
+
+            // Saving to memory is handled by useChat
           }
         } else {
           console.log('Interim transcript:', transcript.trim());
@@ -196,5 +190,5 @@ const LeftPanel: React.FC = () => {
   );
 };
 
-// Memoize LeftPanel to prevent unnecessary re-renders
+// Memoize the component to prevent unnecessary re-renders
 export default React.memo(LeftPanel);

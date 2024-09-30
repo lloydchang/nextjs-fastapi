@@ -2,7 +2,7 @@
 
 'use client'; // Mark this file as a Client Component
 
-import React, { createContext, useState, ReactNode, useContext, useMemo } from 'react';
+import React, { createContext, useState, ReactNode, useContext } from 'react';
 
 interface Talk {
   title: string;
@@ -23,11 +23,8 @@ const TalkContext = createContext<TalkContextType | undefined>(undefined);
 export const TalkProvider = ({ children }: { children: ReactNode }) => {
   const [talks, setTalks] = useState<Talk[]>([]);
 
-  // Memoize the context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({ talks, setTalks }), [talks, setTalks]);
-
   return (
-    <TalkContext.Provider value={value}>
+    <TalkContext.Provider value={{ talks, setTalks }}>
       {children}
     </TalkContext.Provider>
   );
