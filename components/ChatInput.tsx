@@ -5,7 +5,7 @@ import styles from "./ChatInput.module.css"; // Import CSS module for styling
 interface ChatInputProps {
   chatInput: string;
   setChatInput: React.Dispatch<React.SetStateAction<string>>;
-  handleChat: (input: string) => void; // Updated to accept a string parameter
+  handleChat: () => void; // Ensure handleChat is defined as a prop
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
@@ -14,7 +14,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
   // Function to handle sending the message and clearing the input
   const sendMessage = () => {
     if (chatInput.trim()) {
-      handleChat(chatInput); // Pass the chatInput value to handleChat
+      handleChat(); // Call the parent function to handle the chat
       setChatInput(''); // Clear the input field after sending
     }
   };
@@ -35,7 +35,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
         rows={3} // Adjust rows as needed
       />
       <button
-        onClick={sendMessage} // Use the sendMessage function
+        onClick={sendMessage} // Use the new sendMessage function
         disabled={isDisabled}
         className={`${styles.button} ${isDisabled ? styles.buttonDisabled : ""}`}
         aria-label="Send message"
