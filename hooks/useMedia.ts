@@ -33,6 +33,8 @@ export const useMedia = (): UseMediaReturn => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
+  const permissionStatusRef = useRef<PermissionStatus | null>(null);
+  const handlePermissionChangeRef = useRef<() => void>(() => {});
 
   // Start Camera
   const startCam = useCallback(async () => {
@@ -153,23 +155,59 @@ export const useMedia = (): UseMediaReturn => {
 
   // Monitor Microphone Permissions
   useEffect(() => {
-    const handlePermissionChange = async () => {
+    const checkAndMonitorMicPermissions = async () => {
+      if (!navigator.permissions) {
+        console.warn('Permissions API is not supported in this browser.');
+        return;
+      }
+
       try {
         const status = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        permissionStatusRef.current = status;
+
+        // Initial check
         if (status.state === 'denied') {
           console.warn('Microphone access denied.');
           stopMic();
           alert('Microphone access has been denied. Please enable it in your browser settings.');
+        }
+
+        // Define the handler
+        const handlePermissionChange = () => {
+          console.log(`Microphone permission changed to ${status.state}.`);
+          if (status.state === 'denied') {
+            stopMic();
+            alert('Microphone access has been denied. Please enable it in your browser settings.');
+          }
+        };
+
+        // Store the handler in ref for cleanup
+        handlePermissionChangeRef.current = handlePermissionChange;
+
+        // Attach event listener to PermissionStatus
+        if (typeof status.addEventListener === 'function') {
+          status.addEventListener('change', handlePermissionChange);
+        } else if (typeof status.onchange === 'function') {
+          status.onchange = handlePermissionChange;
         }
       } catch (err) {
         console.error('Error querying microphone permissions.', err);
       }
     };
 
-    navigator.permissions.addEventListener('change', handlePermissionChange);
+    checkAndMonitorMicPermissions();
 
     return () => {
-      navigator.permissions.removeEventListener('change', handlePermissionChange);
+      if (permissionStatusRef.current && handlePermissionChangeRef.current) {
+        const status = permissionStatusRef.current;
+        const handlePermissionChange = handlePermissionChangeRef.current;
+
+        if (typeof status.removeEventListener === 'function') {
+          status.removeEventListener('change', handlePermissionChange);
+        } else if (typeof status.onchange === 'function') {
+          status.onchange = null;
+        }
+      }
     };
   }, [stopMic]);
 

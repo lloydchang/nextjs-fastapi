@@ -13,11 +13,14 @@ export const useSpeechRecognition = (
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognitionConstructor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionConstructor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognitionConstructor) {
       const recog = new SpeechRecognitionConstructor();
       recog.continuous = true;
       recog.interimResults = true;
+      recog.lang = 'en-US'; // Set the language as needed
+
       recog.onresult = (event: SpeechRecognitionEvent) => {
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
@@ -25,10 +28,12 @@ export const useSpeechRecognition = (
           onResult(transcript, isFinal);
         }
       };
+
       recog.onerror = (event: any) => {
         console.error('Speech recognition error', event);
         // Optionally, handle errors without stopping the microphone
       };
+
       setRecognition(recog);
     } else {
       console.warn('SpeechRecognition not supported in this browser.');
