@@ -26,6 +26,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isMemOn,
   toggleMem,
 }) => {
+  console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
+
   const camButtonText = isCamOn ? 'Stop Cam 📷' : 'Start Cam 📷';
   const micButtonText = isMicOn ? 'Stop Mic 🎤' : 'Start Mic 🎤';
   const pipButtonText = isPipOn ? 'Stop PiP 📹' : 'Start PiP 📹';
@@ -80,4 +82,4 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   );
 };
 
-export default React.memo(ControlButtons);
+export default ControlButtons; // Temporarily remove React.memo for debugging

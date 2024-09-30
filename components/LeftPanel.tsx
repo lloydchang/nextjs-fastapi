@@ -131,6 +131,8 @@ const LeftPanel: React.FC = () => {
     mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
+  // Temporarily comment out the following useEffect for debugging
+  /*
   useEffect(() => {
     console.log(`Mic state changed. Current state: ${mediaState.isMicOn}`);
     if (!mediaState.isMicOn && !manuallyStoppedRef.current) {
@@ -138,6 +140,7 @@ const LeftPanel: React.FC = () => {
       startMicWithSpeechRecognition();
     }
   }, [mediaState.isMicOn, startMicWithSpeechRecognition]);
+  */
 
   // Cleanup on unmount
   useEffect(() => {
@@ -199,4 +202,4 @@ const LeftPanel: React.FC = () => {
   );
 };
 
-export default React.memo(LeftPanel);
+export default LeftPanel; // Keep ControlButtons as a regular component for now
