@@ -1,15 +1,25 @@
 /* styles/globals.css */
 
-body, html, #__next {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  font-family: Arial, sans-serif;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .container {
-  display: flex;
-  flex-direction: row;
-  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* Left panel is 3fr, middle is 1fr, right is 1fr */
+  width: 100vw; /* Full screen width */
+  height: 100vh; /* Full screen height */
+}
+
+.left-panel {
+  background-color: #f0f0f0;
+}
+
+.middle-panel {
+  background-color: #e9ecef;
+}
+
+.right-panel {
+  background-color: #f0f0f0;
 }
