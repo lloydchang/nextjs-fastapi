@@ -80,16 +80,16 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     [getConversationContext]
   );
 
-  // Erase Memory: Clear chat history from state and localStorage
-  const eraseMemory = useCallback(() => {
+  // Clear Chat History
+  const clearChatHistory = useCallback(() => {
     setMessages([]);
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      console.log('Chat history erased from memory.');
+      console.log('Chat history cleared from memory.');
     } catch (error) {
-      console.error('Failed to erase chat history from memory:', error);
+      console.error('Failed to clear chat history from memory:', error);
     }
   }, []);
 
-  return { messages, setMessages, sendActionToChatbot, eraseMemory };
+  return { messages, setMessages, sendActionToChatbot, clearChatHistory };
 };
