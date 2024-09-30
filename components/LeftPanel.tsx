@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import BackgroundImage from "../public/TEDxSDG.jpg"; // Import a background image
+import BackgroundImage from "../public/TEDxSDG.jpg"; // Adjust the path to your background image
 // Import your custom hooks and components
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import VideoStream from "./VideoStream";
