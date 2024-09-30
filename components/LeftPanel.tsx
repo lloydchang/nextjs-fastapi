@@ -1,4 +1,4 @@
-// LeftPanel.tsx
+// components/LeftPanel.tsx
 "use client"; // Mark as a client component
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -99,7 +99,6 @@ const LeftPanel: React.FC = () => {
     }
   };
 
-  // Handle microphone operations
   const startMic = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -122,21 +121,20 @@ const LeftPanel: React.FC = () => {
 
   const toggleMic = () => (mediaState.isMicOn ? stopMic() : startMic());
 
-  // Handle speech recognition results
+  // Updated handleSpeechResult function
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
       setMessages((prev) =>
         isFinal
-          ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript })
-          : prev.concat({ sender: "user", text: transcript, isInterim: true })
+          ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false })
+          : prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: true })
       );
     },
     [setMessages]
   );
 
-  const { startHearing, stopHearing, isRecognitionRunning } = useSpeechRecognition(handleSpeechResult);
+  const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
 
-  // Function to start both mic and speech recognition
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
       await startMic();
@@ -190,7 +188,6 @@ const LeftPanel: React.FC = () => {
             startPiP={startPiP}
             stopPiP={stopPiP}
             isPiP={mediaState.isPiP}
-            isRecognitionRunning={isRecognitionRunning}
           />
         </div>
       </div>
