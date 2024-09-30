@@ -18,6 +18,7 @@ interface UseMediaReturn {
   toggleMic: () => void;
   togglePip: () => Promise<void>;
   toggleMem: () => void;
+  eraseMemory: () => void;
 }
 
 export const useMedia = (): UseMediaReturn => {
@@ -121,10 +122,13 @@ export const useMedia = (): UseMediaReturn => {
     console.log('Microphone stopped successfully.');
   }, []);
 
-  // Toggle Microphone
+  // Toggle Microphone (Start/Stop)
   const toggleMic = useCallback(() => {
-    console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
-    mediaState.isMicOn ? stopMic() : startMic();
+    if (mediaState.isMicOn) {
+      stopMic();
+    } else {
+      startMic();
+    }
   }, [mediaState.isMicOn, startMic, stopMic]);
 
   // Toggle Picture-in-Picture
@@ -156,6 +160,13 @@ export const useMedia = (): UseMediaReturn => {
     console.log(`Memory toggled to: ${!mediaState.isMemOn}`);
   }, [mediaState.isMemOn]);
 
+  // Erase Memory
+  const eraseMemory = useCallback(() => {
+    setMediaState((prev) => ({ ...prev, isMemOn: false }));
+    localStorage.removeItem('chatMemory'); // Assuming 'chatMemory' is the key used
+    console.log('Memory erased.');
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -179,5 +190,6 @@ export const useMedia = (): UseMediaReturn => {
     toggleMic,
     togglePip,
     toggleMem,
+    eraseMemory,
   };
 };
