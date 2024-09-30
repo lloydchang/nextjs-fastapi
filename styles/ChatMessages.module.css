@@ -1,0 +1,18 @@
+/* styles/ChatMessages.module.css */
+
+.container {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+  
+  .placeholder {
+    color: #cccccc;
+    text-align: center;
+  }
+  
+  .errorText {
+    color: #f44336;
+    text-align: center;
+  }
+  

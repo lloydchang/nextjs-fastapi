@@ -1,0 +1,32 @@
+/* styles/ChatInput.module.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    resize: none;
+    margin-bottom: 10px;
+  }
+  
+  .button {
+    align-self: flex-end;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #2196f3;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .buttonDisabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
