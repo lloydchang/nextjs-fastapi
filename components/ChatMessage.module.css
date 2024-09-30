@@ -30,3 +30,7 @@
     background-color: #333333; /* Bot message background */
   }
   
+  .interim {
+    opacity: 0.6; /* Reduced opacity for interim messages */
+    font-style: italic; /* Italic text for interim messages */
+  }

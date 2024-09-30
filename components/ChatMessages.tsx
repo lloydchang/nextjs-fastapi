@@ -1,10 +1,12 @@
-// src/components/ChatMessages.tsx
+// components/ChatMessages.tsx
+
 import React, { useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
 import styles from "./ChatMessages.module.css"; // Import CSS module for styling
+import { Message } from "../types/message"; // Ensure correct path
 
 interface ChatMessagesProps {
-  messages: { sender: string; text: string }[];
+  messages: Message[];
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
@@ -23,7 +25,12 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
         <p className={styles.placeholder}>No messages yet.</p>
       ) : (
         messages.map((msg, index) => (
-          <ChatMessage key={index} sender={msg.sender} text={msg.text} />
+          <ChatMessage
+            key={index}
+            sender={msg.sender}
+            text={msg.text}
+            isInterim={msg.isInterim} // Pass the isInterim property
+          />
         ))
       )}
     </div>
