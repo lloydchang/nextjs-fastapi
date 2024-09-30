@@ -6,6 +6,8 @@
 // app/page.tsx
 // because of Next.js 14
 
+// pages/index.tsx
+
 'use client'; // Mark as Client Component
 
 import React, { Suspense } from 'react';
