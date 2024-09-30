@@ -20,7 +20,7 @@ interface TalkContextType {
 
 const TalkContext = createContext<TalkContextType | undefined>(undefined);
 
-export const TalkProvider = ({ children }: { children: ReactNode }) => {
+export const TalkProvider: React.FC<{ children: ReactNode }> = React.memo(({ children }) => {
   const [talks, setTalks] = useState<Talk[]>([]);
 
   return (
@@ -28,9 +28,9 @@ export const TalkProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </TalkContext.Provider>
   );
-};
+});
 
-export const useTalkContext = () => {
+export const useTalkContext = (): TalkContextType => {
   const context = useContext(TalkContext);
   if (!context) {
     throw new Error("useTalkContext must be used within a TalkProvider");

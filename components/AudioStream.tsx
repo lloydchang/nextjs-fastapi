@@ -8,17 +8,16 @@ interface AudioStreamProps {
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
-const AudioStream: React.FC<AudioStreamProps> = ({ isMicOn, audioRef }) => {
+const AudioStream: React.FC<AudioStreamProps> = React.memo(({ isMicOn, audioRef }) => {
   return (
     <audio
       ref={audioRef}
       className={styles.audio}
       muted
       autoPlay
-      // Optionally, you can hide the audio element when the microphone is off
       style={{ display: isMicOn ? 'block' : 'none' }}
     />
   );
-};
+});
 
-export default React.memo(AudioStream);
+export default AudioStream;

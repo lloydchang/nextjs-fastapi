@@ -1,6 +1,6 @@
 // components/ChatInput.tsx
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import styles from './ChatInput.module.css';
 
 interface ChatInputProps {
@@ -16,12 +16,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const isDisabled = chatInput.trim() === '';
 
-  const sendMessage = () => {
+  // Memoize sendMessage to prevent unnecessary re-creations
+  const sendMessage = useCallback(() => {
     if (!isDisabled) {
       handleChat();
       setChatInput(''); // Clear the input field after sending
     }
-  };
+  }, [isDisabled, handleChat, setChatInput]);
 
   return (
     <div className={styles.container}>
@@ -37,6 +38,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         placeholder="Type your message..."
         className={styles.textarea}
         rows={3}
+        aria-label="Chat input"
       />
       <button
         onClick={sendMessage}
@@ -50,4 +52,5 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
+// Export the memoized component to prevent unnecessary re-renders
 export default React.memo(ChatInput);

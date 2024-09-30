@@ -8,7 +8,7 @@ interface VideoStreamProps {
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
-const VideoStream: React.FC<VideoStreamProps> = ({ isCamOn, videoRef }) => {
+const VideoStream: React.FC<VideoStreamProps> = React.memo(({ isCamOn, videoRef }) => {
   return (
     <video
       ref={videoRef}
@@ -16,10 +16,9 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isCamOn, videoRef }) => {
       muted
       playsInline
       autoPlay
-      // Optionally, you can hide the video element when the camera is off
       style={{ display: isCamOn ? 'block' : 'none' }}
     />
   );
-};
+});
 
-export default React.memo(VideoStream);
+export default VideoStream;
