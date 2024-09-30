@@ -1,4 +1,4 @@
-/* src/components/LeftPanel.module.css */
+/* components/LeftPanel.module.css */
 
 .container {
   width: 100%;
@@ -62,4 +62,13 @@
 .chatHeader {
   color: #E62B1E;
   text-align: left;
+}
+
+.videoStream {
+  position: relative; /* Keep it in the normal flow */
+  z-index: 4; /* Above the overlay */
+}
+
+.videoStreamHidden {
+  display: none; /* Hide when in PiP mode */
 }

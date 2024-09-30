@@ -174,8 +174,13 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      {/* VideoStream is always rendered to maintain its state */}
-      <VideoStream isCamOn={mediaState.isCamOn} isPipOn={mediaState.isPipOn} videoRef={videoRef} />
+      {/* VideoStream with conditional styles based on isPipOn */}
+      <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
+        <VideoStream
+          isCamOn={mediaState.isCamOn}
+          videoRef={videoRef}
+        />
+      </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
@@ -196,11 +201,11 @@ const LeftPanel: React.FC = () => {
             toggleMic={toggleMicWithSpeechRecognition}
             startCam={startCam}
             stopCam={stopCam}
-            startPip={startPip} // Updated to new function name
-            stopPip={stopPip} // Updated to new function name
-            isPipOn={mediaState.isPipOn} // Updated variable name
-            isMemOn={mediaState.isMemOn} // Pass memory state
-            toggleMem={toggleMem} // Pass toggle function for memory
+            startPip={startPip}
+            stopPip={stopPip}
+            isPipOn={mediaState.isPipOn}
+            isMemOn={mediaState.isMemOn}
+            toggleMem={toggleMem}
           />
         </div>
       </div>
