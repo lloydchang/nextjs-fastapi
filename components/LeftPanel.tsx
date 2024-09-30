@@ -1,4 +1,3 @@
-// components/LeftPanel.tsx
 "use client"; // Mark as a client component
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -20,7 +19,8 @@ const LeftPanel: React.FC = () => {
   const [mediaState, setMediaState] = useState({
     isCamOn: false,
     isMicOn: false,
-    isPiP: false,
+    isPipOn: false, // Updated variable name
+    isMemOn: false, // Memory state
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,7 +46,7 @@ const LeftPanel: React.FC = () => {
     }
   }, [chatInput, sendActionToChatbot]);
 
-  // Handle cam and PiP toggling
+  // Handle cam and Pip toggling
   const startCam = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -55,7 +55,7 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
-        startPiP();
+        startPip(); // Updated to new function name
 
         if (!mediaState.isMicOn) startMic();
       }
@@ -68,37 +68,38 @@ const LeftPanel: React.FC = () => {
     videoStreamRef.current?.getTracks().forEach((track) => track.stop());
     videoStreamRef.current = null;
     updateMediaState("isCamOn", false);
-    stopPiP();
+    stopPip(); // Updated to new function name
   };
 
-  const startPiP = async () => {
+  const startPip = async () => { // Updated function name
     if (videoRef.current) {
       try {
         if (document.pictureInPictureElement !== videoRef.current) {
           await videoRef.current.requestPictureInPicture();
-          updateMediaState("isPiP", true);
+          updateMediaState("isPipOn", true); // Updated variable name
         }
       } catch (err) {
-        console.error("Unable to enter PiP mode:", err);
-        alert("Unable to enter PiP mode.");
+        console.error("Unable to enter Pip mode:", err);
+        alert("Unable to enter Pip mode.");
       }
     }
   };
 
-  const stopPiP = async () => {
+  const stopPip = async () => { // Updated function name
     if (document.pictureInPictureElement) {
       try {
         if (document.pictureInPictureElement === videoRef.current) {
           await document.exitPictureInPicture();
-          updateMediaState("isPiP", false);
+          updateMediaState("isPipOn", false); // Updated variable name
         }
       } catch (err) {
-        console.error("Unable to exit PiP mode:", err);
-        alert("Unable to exit PiP mode.");
+        console.error("Unable to exit Pip mode:", err);
+        alert("Unable to exit Pip mode.");
       }
     }
   };
 
+  // Handle microphone operations
   const startMic = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -124,13 +125,21 @@ const LeftPanel: React.FC = () => {
   // Updated handleSpeechResult function
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
-      setMessages((prev) =>
-        isFinal
+      setMessages((prev) => {
+        const updatedMessages = isFinal
           ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false })
-          : prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: true })
-      );
+          : prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: true });
+
+        // If memory is enabled, save the final result to local storage
+        if (mediaState.isMemOn && isFinal) {
+          const memory = localStorage.getItem("speechMemory") || "";
+          localStorage.setItem("speechMemory", memory + transcript + " ");
+        }
+
+        return updatedMessages;
+      });
     },
-    [setMessages]
+    [setMessages, mediaState.isMemOn]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
@@ -152,6 +161,8 @@ const LeftPanel: React.FC = () => {
   const toggleMicWithSpeechRecognition = () =>
     mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
 
+  const toggleMem = () => updateMediaState("isMemOn", !mediaState.isMemOn); // Toggle memory state
+
   useEffect(() => {
     return () => {
       stopCam();
@@ -164,7 +175,7 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      <VideoStream isCamOn={mediaState.isCamOn} isPiP={mediaState.isPiP} videoRef={videoRef} />
+      <VideoStream isCamOn={mediaState.isCamOn} isPipOn={mediaState.isPipOn} videoRef={videoRef} />
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
@@ -185,9 +196,11 @@ const LeftPanel: React.FC = () => {
             toggleMic={toggleMicWithSpeechRecognition}
             startCam={startCam}
             stopCam={stopCam}
-            startPiP={startPiP}
-            stopPiP={stopPiP}
-            isPiP={mediaState.isPiP}
+            startPip={startPip} // Updated to new function name
+            stopPip={stopPip} // Updated to new function name
+            isPipOn={mediaState.isPipOn} // Updated variable name
+            isMemOn={mediaState.isMemOn} // Pass memory state
+            toggleMem={toggleMem} // Pass toggle function for memory
           />
         </div>
       </div>
