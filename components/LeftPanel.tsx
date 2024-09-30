@@ -18,9 +18,9 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>("");
   const [mediaState, setMediaState] = useState({
-    isCamOn: false,
-    isMicOn: false,
-    isPiP: false,
+    isCamOn: true, // Enable camera by default
+    isMicOn: true, // Enable microphone by default
+    isPiP: true,  // Enable PiP by default
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -158,13 +158,16 @@ const LeftPanel: React.FC = () => {
   const toggleMicWithSpeechRecognition = () =>
     mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
 
+  // Automatically enable camera, microphone, and PiP when the component mounts
   useEffect(() => {
+    startCam();
+    startMicWithSpeechRecognition();
     return () => {
       stopCam();
       stopMic();
       setMessages([]); // Clean up messages state on unmount
     };
-  }, []);
+  }, [startMicWithSpeechRecognition]);
 
   return (
     <div className={styles.container}>
