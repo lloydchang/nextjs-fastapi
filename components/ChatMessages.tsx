@@ -8,6 +8,9 @@ interface ChatMessagesProps {
   messages: Message[];
 }
 
+// Removed
+//         <span className={styles.sender}>{msg.sender === 'user' ? 'You' : 'Bot'}:</span>
+
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   return (
     <div className={styles.messagesContainer}>
@@ -18,7 +21,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
             msg.sender === 'user' ? styles.userMessage : styles.botMessage
           }`}
         >
-          <span className={styles.sender}>{msg.sender === 'user' ? 'You' : 'Bot'}:</span>
           <span className={styles.text}>{msg.text}</span>
         </div>
       ))}

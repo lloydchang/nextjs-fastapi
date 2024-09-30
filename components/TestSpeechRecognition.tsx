@@ -22,7 +22,6 @@ const TestSpeechRecognition: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h2>Test Speech Recognition</h2>
       <div className={styles.transcriptContainer}>
         <p>
           <strong>Transcript:</strong> {transcript}
