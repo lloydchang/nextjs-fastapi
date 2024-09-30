@@ -5,15 +5,16 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import BackgroundImage from "../public/TEDxSDG.jpg"; // Import a background image
 import { useChat } from "../hooks/useChat"; // Custom hook for chat operations
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition"; // Import speech recognition hook
 import VideoStream from "./VideoStream";
-import AudioStream from "./AudioStream"; // Import the new AudioStream component
+import AudioStream from "./AudioStream"; // Import the AudioStream component
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 import ControlButtons from "./ControlButtons";
 import styles from "./LeftPanel.module.css"; // Import CSS module for styling
 
 const LeftPanel: React.FC = () => {
-  const { messages, sendActionToChatbot } = useChat();
+  const { messages, setMessages, sendActionToChatbot } = useChat();
 
   const [showImage, setShowImage] = useState<boolean>(true);
   const [chatInput, setChatInput] = useState<string>("");
@@ -41,7 +42,9 @@ const LeftPanel: React.FC = () => {
   }, [chatInput, sendActionToChatbot]);
 
   // Handle key presses in the chat input
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleChat();
@@ -70,11 +73,13 @@ const LeftPanel: React.FC = () => {
 
   const stopCam = () => {
     if (videoStreamRef.current) {
-      videoStreamRef.current.getTracks().forEach(track => track.stop());
+      videoStreamRef.current.getTracks().forEach((track) => track.stop());
       videoStreamRef.current = null;
       setIsCamOn(false);
       if (isPiP) {
-        document.exitPictureInPicture().catch(err => console.error("Failed to exit PiP:", err));
+        document.exitPictureInPicture().catch((err) =>
+          console.error("Failed to exit PiP:", err)
+        );
         setIsPiP(false);
       }
     }
@@ -119,7 +124,7 @@ const LeftPanel: React.FC = () => {
 
   const stopMic = () => {
     if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach(track => track.stop());
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
       setIsMicOn(false);
     }
@@ -140,11 +145,76 @@ const LeftPanel: React.FC = () => {
     };
   }, []);
 
+  // Handle speech recognition results
+  const handleSpeechResult = useCallback(
+    (transcript: string, isFinal: boolean) => {
+      if (isFinal) {
+        // Remove interim message if it exists
+        setMessages((prevMessages) =>
+          prevMessages.filter((msg) => !msg.isInterim)
+        );
+        // Send the final transcript to the chatbot
+        sendActionToChatbot(transcript);
+      } else {
+        // Display interim transcript
+        setMessages((prevMessages) => {
+          // Remove previous interim messages
+          const messagesWithoutInterim = prevMessages.filter(
+            (msg) => !msg.isInterim
+          );
+          // Add new interim message
+          return [
+            ...messagesWithoutInterim,
+            { sender: "user", text: transcript, isInterim: true },
+          ];
+        });
+      }
+    },
+    [sendActionToChatbot, setMessages]
+  );
+
+  // Obtain speech recognition functions
+  const {
+    startHearing,
+    stopHearing,
+    isRecognitionRunning,
+  } = useSpeechRecognition(handleSpeechResult);
+
+  // Function to start both mic and speech recognition
+  const startMicWithSpeechRecognition = useCallback(async () => {
+    try {
+      await startMic(); // Ensure the mic is started
+      startHearing(); // Then start speech recognition
+    } catch (err) {
+      alert("Unable to access mic. Please check permissions.");
+    }
+  }, [startMic, startHearing]);
+
+  // Function to stop both mic and speech recognition
+  const stopMicWithSpeechRecognition = useCallback(() => {
+    stopHearing();
+    stopMic();
+  }, [stopHearing, stopMic]);
+
+  // Function to toggle mic and speech recognition
+  const toggleMicWithSpeechRecognition = () => {
+    if (isMicOn) {
+      stopMicWithSpeechRecognition();
+    } else {
+      startMicWithSpeechRecognition();
+    }
+  };
+
   return (
     <div className={styles.container}>
       {showImage && (
         <>
-          <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
+          <Image
+            src={BackgroundImage}
+            alt="Background"
+            fill
+            className={styles.backgroundImage}
+          />
           <div className={styles.overlay} />
         </>
       )}
@@ -153,24 +223,36 @@ const LeftPanel: React.FC = () => {
       <AudioStream isMicOn={isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
-        <h1 className={styles.title}><b>Ideas Change Everything!</b></h1>
+        <h1 className={styles.title}>
+          <b>Ideas Change Everything!</b>
+        </h1>
 
         <div className={styles.chatInterface} ref={chatContainerRef}>
-          <h3 className={styles.chatHeader}><b>Chat with TEDxSDG</b></h3>
+          <h3 className={styles.chatHeader}>
+            <b>Chat with TEDxSDG</b>
+          </h3>
 
           <ChatMessages messages={messages} />
 
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} handleKeyDown={handleKeyDown} />
+          <ChatInput
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            handleChat={handleChat}
+            handleKeyDown={handleKeyDown}
+          />
 
           <ControlButtons
             isCamOn={isCamOn}
             isMicOn={isMicOn}
-            toggleMic={toggleMic}
+            toggleMic={toggleMicWithSpeechRecognition}
             startCam={startCam}
             stopCam={stopCam}
             isPiP={isPiP}
             startPiP={startPiP}
             stopPiP={stopPiP}
+            startHearing={startHearing}
+            stopHearing={stopHearing}
+            isRecognitionRunning={isRecognitionRunning}
           />
         </div>
       </div>
