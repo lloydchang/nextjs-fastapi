@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-type SpeechRecognitionResultCallback = (transcript: string, isFinal: boolean) => void;
+type SpeechRecognitionResultCallback = (
+  transcript: string,
+  isFinal: boolean
+) => void;
 
 interface SpeechRecognitionHook {
   startHearing: () => void;

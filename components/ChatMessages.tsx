@@ -1,16 +1,16 @@
 // components/ChatMessages.tsx
 
-import React, { useEffect, useRef } from "react";
-import ChatMessage from "./ChatMessage";
-import styles from "./ChatMessages.module.css"; // Import CSS module for styling
-import { Message } from "../types/message"; // Ensure correct path
+import React, { useEffect, useRef } from 'react';
+import ChatMessage from './ChatMessage';
+import styles from './ChatMessages.module.css';
+import { Message } from '../hooks/useChat';
 
 interface ChatMessagesProps {
   messages: Message[];
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
-  const containerRef = useRef<HTMLDivElement>(null); // Ref to the chat container
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages are updated
   useEffect(() => {
@@ -29,7 +29,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
             key={index}
             sender={msg.sender}
             text={msg.text}
-            isInterim={msg.isInterim} // Pass the isInterim property
+            isInterim={msg.isInterim}
           />
         ))
       )}

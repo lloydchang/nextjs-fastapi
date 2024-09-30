@@ -1,29 +1,21 @@
 // components/AudioStream.tsx
 
-import React, { useEffect } from "react";
-import styles from "./AudioStream.module.css"; // Import CSS module for styling
-import classNames from 'classnames'; // Optional: for easier class management
+import React, { useEffect } from 'react';
+import styles from './AudioStream.module.css';
 
 interface AudioStreamProps {
-  isMicrophoneOn: boolean;
+  isMicOn: boolean;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
-const AudioStream: React.FC<AudioStreamProps> = ({ isMicrophoneOn, audioRef }) => {
+const AudioStream: React.FC<AudioStreamProps> = ({ isMicOn, audioRef }) => {
   useEffect(() => {
-    if (!isMicrophoneOn && audioRef.current) {
+    if (!isMicOn && audioRef.current) {
       audioRef.current.srcObject = null;
     }
-  }, [isMicrophoneOn, audioRef]);
+  }, [isMicOn, audioRef]);
 
-  return (
-    <audio
-      ref={audioRef}
-      className={classNames(styles.audio, { [styles.hidden]: !isMicrophoneOn })}
-      muted
-      autoPlay
-    />
-  );
+  return <audio ref={audioRef} className={styles.audio} muted autoPlay />;
 };
 
 export default AudioStream;

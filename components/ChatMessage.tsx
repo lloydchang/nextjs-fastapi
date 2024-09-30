@@ -1,7 +1,7 @@
 // components/ChatMessage.tsx
 
-import React from "react";
-import styles from "./ChatMessage.module.css"; // Import CSS module for styling
+import React from 'react';
+import styles from './ChatMessage.module.css';
 
 interface ChatMessageProps {
   sender: string;
@@ -10,13 +10,13 @@ interface ChatMessageProps {
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
-  const isUser = sender.toLowerCase() === "user";
+  const isUser = sender.toLowerCase() === 'user';
 
   return (
     <div
       className={`${styles.messageContainer} ${
         isUser ? styles.user : styles.bot
-      } ${isInterim ? styles.interim : ""}`} // Apply interim style if isInterim is true
+      } ${isInterim ? styles.interim : ''}`}
     >
       <div className={styles.messageBubble}>
         <p>{text}</p>
