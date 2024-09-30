@@ -1,7 +1,7 @@
 // components/ControlButtons.tsx
 
 import React from 'react';
-import styles from '../styles/ControlButtons.module.css';
+import styles from './ControlButtons.module.css';
 
 interface ControlButtonsProps {
   isCamOn: boolean;
@@ -15,7 +15,7 @@ interface ControlButtonsProps {
   toggleMem: () => void;
 }
 
-const ControlButtons: React.FC<ControlButtonsProps> = ({
+const ControlButtons: React.FC<ControlButtonsProps> = React.memo(({
   isCamOn,
   isMicOn,
   toggleMic,
@@ -74,7 +74,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       </button>
     </div>
   );
-};
+});
 
-// Memoize to prevent unnecessary re-renders
-export default React.memo(ControlButtons);
+export default ControlButtons;

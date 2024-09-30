@@ -9,7 +9,7 @@
   width: 100%;
   padding: 10px;
   border-radius: 5px;
-  border: 1px solid #ccc;
+  border: none;
   resize: none;
   margin-bottom: 10px;
 }
@@ -23,11 +23,6 @@
   color: white;
   cursor: pointer;
   font-weight: bold;
-  transition: background-color 0.3s ease;
-}
-
-.button:hover {
-  background-color: #1976d2;
 }
 
 .buttonDisabled {

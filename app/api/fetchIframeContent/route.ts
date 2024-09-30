@@ -6,21 +6,18 @@
 // app/api/fetchIframeContent/route.ts
 // because of Next.js 14
 
+// pages/api/fetchIframeContent.ts
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-interface IframeContentResponse {
-  links: string[];
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse<IframeContentResponse | { error: string }>) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     try {
-      // Replace with actual logic to fetch iframe content or related links
-      // For demonstration, returning a static list
+      // Example: Fetch links from an external source or database
       const links = [
-        'https://www.example.com',
-        'https://www.anotherexample.com',
-        'https://www.yetanotherexample.com',
+        'https://www.example.com/link1',
+        'https://www.example.com/link2',
+        'https://www.example.com/link3',
       ];
 
       res.status(200).json({ links });

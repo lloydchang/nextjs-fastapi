@@ -56,14 +56,14 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       console.error('Error communicating with chatbot:', error);
       setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
     }
-  }, [messages]);
+  }, []);
 
   // Helper function to construct conversation context
-  const getConversationContext = useCallback(() => {
+  const getConversationContext = () => {
     return messages
       .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
       .join('\n');
-  }, [messages]);
+  };
 
   return { messages, setMessages, sendActionToChatbot };
 };

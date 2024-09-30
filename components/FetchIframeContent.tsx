@@ -1,31 +1,30 @@
 // components/FetchIframeContent.tsx
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './FetchIframeContent.module.css';
 
-const FetchIframeContent: React.FC = () => {
+const FetchIframeContent: React.FC = React.memo(() => {
   const [links, setLinks] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchLinks = useCallback(async () => {
-    try {
-      const response = await fetch('/api/fetchIframeContent'); // Use your API route
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setLinks(data.links || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch links:', err);
-      setError('Failed to fetch links.');
-    }
-  }, []);
-
   useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const response = await fetch('/api/fetchIframeContent'); // Use your API route
+        const data = await response.json();
+
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setLinks(data.links || []);
+        }
+      } catch (err) {
+        setError('Failed to fetch links.');
+      }
+    };
+
     fetchLinks();
-  }, [fetchLinks]);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -41,11 +40,10 @@ const FetchIframeContent: React.FC = () => {
           ))}
         </ul>
       ) : (
-        !error && <p className={styles.loading}>Loading links...</p>
+        <p className={styles.loading}>Loading links...</p>
       )}
     </div>
   );
-};
+});
 
-// Memoize to prevent unnecessary re-renders
-export default React.memo(FetchIframeContent);
+export default FetchIframeContent;

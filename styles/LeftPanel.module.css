@@ -2,8 +2,9 @@
 
 .container {
   position: relative;
-  width: 100%;
+  width: 30%;
   height: 100vh;
+  overflow: hidden;
 }
 
 .backgroundImage {
@@ -46,12 +47,12 @@
   position: absolute;
   top: 50px;
   left: 50px;
-  width: 40%;
+  width: 90%;
   color: white;
 }
 
 .title {
-  font-size: 2em;
+  font-size: 1.5em;
   margin-bottom: 20px;
 }
 
