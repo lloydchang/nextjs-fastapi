@@ -8,7 +8,7 @@ interface AudioStreamProps {
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
-const AudioStream: React.FC<AudioStreamProps> = React.memo(({ isMicOn, audioRef }) => {
+const AudioStream: React.FC<AudioStreamProps> = ({ isMicOn, audioRef }) => {
   return (
     <audio
       ref={audioRef}
@@ -19,6 +19,7 @@ const AudioStream: React.FC<AudioStreamProps> = React.memo(({ isMicOn, audioRef 
       style={{ display: isMicOn ? 'block' : 'none' }}
     />
   );
-});
+};
 
-export default AudioStream;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(AudioStream);

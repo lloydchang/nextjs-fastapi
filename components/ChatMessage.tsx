@@ -2,6 +2,7 @@
 
 import React from 'react';
 import styles from './ChatMessage.module.css';
+import { Message } from '../hooks/useChat';
 
 interface ChatMessageProps {
   sender: string;
@@ -9,7 +10,7 @@ interface ChatMessageProps {
   isInterim?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ sender, text, isInterim }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
   const isUser = sender.toLowerCase() === 'user';
 
   return (
@@ -23,6 +24,7 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ sender, text, isIn
       </div>
     </div>
   );
-});
+};
 
-export default ChatMessage;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(ChatMessage);

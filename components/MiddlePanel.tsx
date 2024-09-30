@@ -1,16 +1,22 @@
 // components/MiddlePanel.tsx
 
-'use client';
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
-import dynamic from 'next/dynamic';
 import styles from './MiddlePanel.module.css';
+import dynamic from 'next/dynamic';
 
-// Lazy load components if necessary (e.g., if MiddlePanel had heavy components)
-const MiddlePanelContent = React.memo(() => {
+// If MiddlePanel is considered heavy, it can be lazy loaded in the main app
+// But since this is the component itself, we'll optimize it
+
+type Talk = {
+  title: string;
+  url: string;
+  sdg_tags: string[];
+};
+
+const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
   const initialKeyword = useRef<string>("TED AI");
 
@@ -50,21 +56,21 @@ const MiddlePanelContent = React.memo(() => {
     }
   }, [searchInitiated, handleSearch]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
-  };
+  }, []);
 
-  const generateEmbedUrl = (url: string): string => {
+  const generateEmbedUrl = useCallback((url: string): string => {
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
     return match ? `https://embed.ted.com/talks/${match[1]}` : url;
-  };
+  }, []);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
+  }, [handleSearch]);
 
   return (
     <div className={styles.middlePanel}>
@@ -77,9 +83,13 @@ const MiddlePanelContent = React.memo(() => {
           onChange={handleInputChange}
           onKeyDown={handleKeyPress}
           className={styles.searchInput}
-          aria-label="Search talks"
         />
-        <button onClick={handleSearch} className={`${styles.button} ${styles.searchButton}`} disabled={loading}>
+        <button
+          onClick={handleSearch}
+          className={`${styles.button} ${styles.searchButton}`}
+          disabled={loading}
+          aria-label={loading ? 'Searching' : 'Search'}
+        >
           {loading ? "Searching…" : "Search"}
         </button>
         {selectedTalk && (
@@ -107,7 +117,8 @@ const MiddlePanelContent = React.memo(() => {
             height="400px"
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
-            title="Talk Video"
+            title={selectedTalk.title}
+            loading="lazy" // Lazy load the iframe
           />
         </div>
       )}
@@ -141,9 +152,7 @@ const MiddlePanelContent = React.memo(() => {
       {error && <p className={styles.errorText}>{error}</p>}
     </div>
   );
-});
+};
 
-export default dynamic(() => Promise.resolve(MiddlePanelContent), {
-  loading: () => <p>Loading middle panel...</p>,
-  ssr: false,
-});
+// Memoize MiddlePanel to prevent unnecessary re-renders
+export default React.memo(MiddlePanel);

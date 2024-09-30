@@ -10,14 +10,19 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+interface IframeContentResponse {
+  links: string[];
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse<IframeContentResponse | { error: string }>) {
   if (req.method === 'GET') {
     try {
-      // Example: Fetch links from an external source or database
+      // Replace with actual logic to fetch iframe content or related links
+      // For demonstration, returning a static list
       const links = [
-        'https://www.example.com/link1',
-        'https://www.example.com/link2',
-        'https://www.example.com/link3',
+        'https://www.example.com',
+        'https://www.anotherexample.com',
+        'https://www.yetanotherexample.com',
       ];
 
       res.status(200).json({ links });

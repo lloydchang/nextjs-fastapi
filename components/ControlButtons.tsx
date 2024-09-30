@@ -15,7 +15,7 @@ interface ControlButtonsProps {
   toggleMem: () => void;
 }
 
-const ControlButtons: React.FC<ControlButtonsProps> = React.memo(({
+const ControlButtons: React.FC<ControlButtonsProps> = ({
   isCamOn,
   isMicOn,
   toggleMic,
@@ -74,6 +74,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = React.memo(({
       </button>
     </div>
   );
-});
+};
 
-export default ControlButtons;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(ControlButtons);
