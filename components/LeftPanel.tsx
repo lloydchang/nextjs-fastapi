@@ -1,6 +1,6 @@
 // components/LeftPanel.tsx
 
-'use client';
+'use client'; // Ensure this directive is present
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -22,23 +22,17 @@ const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
 });
 
 const LeftPanel: React.FC = () => {
-  const {
-    mediaState,
-    videoRef,
-    audioRef,
-    startCam,
-    stopCam,
-    toggleMic,
-    togglePip,
-    toggleMem,
-  } = useMedia();
+  // Use Media State
+  const { mediaState, videoRef, audioRef, startCam, stopCam, toggleMic, togglePip, toggleMem } = useMedia();
 
-  const { messages, setMessages, sendActionToChatbot, eraseMemory } = useChat({ isMemOn: mediaState.isMemOn });
+  // Use Chat State with isMemOn based on mediaState
+  const { messages, setMessages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
 
-  const [chatInput, setChatInput] = useState<string>('');
+  // Initialize chat input state
+  const [chatInput, setChatInput] = useState<string>(''); // Ensure this is outside any conditionals
   const [error, setError] = useState<string | null>(null);
 
-  // UseRef to track the last final message to prevent duplicates
+  // Refs for tracking final messages and user action
   const lastFinalMessageRef = useRef<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const manuallyStoppedRef = useRef<boolean>(false);
@@ -60,90 +54,7 @@ const LeftPanel: React.FC = () => {
     [sendActionToChatbot]
   );
 
-  // Handle speech recognition results
-  const handleSpeechResult = useCallback(
-    (transcript: string, isFinal: boolean) => {
-      console.log(`Processing speech result: "${transcript}", isFinal: ${isFinal}`);
-      if (transcript && transcript.trim()) {
-        if (isFinal) {
-          // Prevent duplicate processing of the same final message
-          if (transcript !== lastFinalMessageRef.current) {
-            lastFinalMessageRef.current = transcript; // Update ref instead of state
-            console.log('Final transcript:', transcript.trim());
-
-            // Remove interim message
-            setMessages((prev) =>
-              prev.filter((msg) => !(msg.isInterim && msg.sender === 'user'))
-            );
-
-            // Send the transcript to the chatbot (which will add the user message)
-            handleChat(transcript.trim());
-          } else {
-            console.warn(`Duplicate final message detected: "${transcript}"`);
-          }
-        } else {
-          // Handle interim results
-          setMessages((prev) => {
-            const existingInterimIndex = prev.findIndex(
-              (msg) => msg.isInterim && msg.sender === 'user'
-            );
-            if (existingInterimIndex > -1) {
-              return prev.map((msg, index) =>
-                index === existingInterimIndex
-                  ? { sender: 'user', text: transcript.trim(), isInterim: true }
-                  : msg
-              );
-            } else {
-              return [...prev, { sender: 'user', text: transcript.trim(), isInterim: true }];
-            }
-          });
-        }
-      }
-    },
-    [handleChat, setMessages]
-  );
-
-  const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
-
-  // Start Microphone with Speech Recognition
-  const startMicWithSpeechRecognition = useCallback(async () => {
-    try {
-      manuallyStoppedRef.current = false; // Reset manual stop tracking
-      console.log('Starting microphone and speech recognition.');
-      toggleMic(); // Toggle mic on
-      startHearing();
-      console.log('Microphone and speech recognition started.');
-    } catch (err) {
-      console.error('Unable to access mic with speech recognition.', err);
-      setError('Unable to access microphone.');
-    }
-  }, [toggleMic, startHearing]);
-
-  // Stop Microphone with Speech Recognition
-  const stopMicWithSpeechRecognition = useCallback(() => {
-    console.log('Stopping speech recognition and microphone.');
-    manuallyStoppedRef.current = true; // Mark as manually stopped
-    stopHearing();
-    toggleMic(); // Toggle mic off
-    console.log('Speech recognition and microphone stopped.');
-  }, [stopHearing, toggleMic]);
-
-  // Toggle Microphone with Speech Recognition
-  const toggleMicWithSpeechRecognition = useCallback(() => {
-    console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
-    mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
-  }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
-
-  // Restart Mic if it's turned off unexpectedly
-  useEffect(() => {
-    console.log(`Mic state changed. Current state: ${mediaState.isMicOn}`);
-    if (!mediaState.isMicOn && !manuallyStoppedRef.current) {
-      console.log('Microphone turned off unexpectedly, restarting...');
-      startMicWithSpeechRecognition();
-    }
-  }, [mediaState.isMicOn, startMicWithSpeechRecognition]);
-
-  // Cleanup on unmount
+  // Clean up on unmount
   useEffect(() => {
     return () => {
       manuallyStoppedRef.current = true; // Ensure cleanup respects manual stop
@@ -155,9 +66,8 @@ const LeftPanel: React.FC = () => {
           console.error('Error exiting PiP on cleanup.', err);
         });
       }
-      stopHearing();
     };
-  }, [stopCam, toggleMic, mediaState.isPipOn, stopHearing]);
+  }, [stopCam, toggleMic, mediaState.isPipOn]);
 
   return (
     <div className={styles.container}>
@@ -189,14 +99,14 @@ const LeftPanel: React.FC = () => {
           <ControlButtons
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
-            toggleMic={toggleMicWithSpeechRecognition}
+            toggleMic={toggleMic}
             startCam={startCam}
             stopCam={stopCam}
             isPipOn={mediaState.isPipOn}
             togglePip={togglePip}
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
-            eraseMemory={eraseMemory} // Pass eraseMemory function
+            eraseMemory={clearChatHistory} // Pass eraseMemory function
           />
 
           {/* Test Speech Recognition Component */}

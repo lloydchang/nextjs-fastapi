@@ -6,39 +6,31 @@
 // api/chatbots/route.ts
 // because of Next.js 14
 
-// pages/api/chatbot.ts
+// app/api/chatbots/route.ts
 
-// pages/api/chatbot.ts
-
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { sendMessageToChatbot } from '../../../services/chatService';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { message, conversation } = req.body;
+export async function POST(req: NextRequest) {
+  try {
+    const { prompt } = await req.json(); // Only `prompt` is sent in the request body
 
-    if (!message) {
-      res.status(400).json({ error: 'Message is required.' });
-      return;
+    if (!prompt) {
+      return NextResponse.json({ error: 'The "prompt" field is required.' }, { status: 400 });
     }
 
-    try {
-      // Initialize response
-      let reply = '';
+    // Call the chat service with the provided prompt
+    const reply = await sendMessageToChatbot(prompt);
 
-      // Send message to chatbot service
-      await sendMessageToChatbot(message, conversation, (responseMessage, newContext) => {
-        reply = responseMessage;
-        // Optionally, handle newContext if needed
-      });
-
-      res.status(200).json({ reply });
-    } catch (error) {
-      console.error('Error processing chatbot request:', error);
-      res.status(500).json({ error: 'Failed to process chatbot request.' });
-    }
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    // Return the chatbot's reply
+    return NextResponse.json({ reply }, { status: 200 });
+  } catch (error) {
+    console.error('Error processing chatbot request:', error);
+    return NextResponse.json({ error: 'Failed to process chatbot request.' }, { status: 500 });
   }
 }
+
+// Configuration to indicate this is an edge runtime
+export const config = {
+  runtime: 'experimental-edge',
+};
