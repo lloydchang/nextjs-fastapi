@@ -4,7 +4,7 @@
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
 
-interface Talk {
+export interface Talk {
   title: string;
   description: string;
   presenter: string;

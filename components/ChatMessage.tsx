@@ -17,7 +17,6 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ sender, text, isIn
       className={`${styles.messageContainer} ${
         isUser ? styles.user : styles.bot
       } ${isInterim ? styles.interim : ''}`}
-      aria-live="polite"
     >
       <div className={styles.messageBubble}>
         <p>{text}</p>
