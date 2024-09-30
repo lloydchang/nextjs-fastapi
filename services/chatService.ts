@@ -1,8 +1,9 @@
 // services/chatService.ts
+import { systemPrompt } from '../utils/systemPrompt'; // Import systemPrompt
+
 export const sendMessageToChatbot = async (
-  systemPrompt: string, 
   input: string, 
-  context: string | null, // Accept context as a third argument
+  context: string | null, // Accept context as a second argument
   onResponse: (message: string, newContext: string | null) => void // Pass newContext to the callback
 ) => {
   // Include context in the prompt if available

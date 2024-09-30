@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import BackgroundImage from '../public/TEDxSDG.jpg'; // Adjust the path to your background image
-import { useChat, Message } from '../hooks/useChat'; // Custom hook for chat operations
+import BackgroundImage from '../public/TEDxSDG.jpg';
+import { useChat } from '../hooks/useChat'; // Custom hook for chat operations
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'; // Import speech recognition hook
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
@@ -121,7 +121,7 @@ const LeftPanel: React.FC = () => {
       if (input.trim()) {
         try {
           console.log('Sending message to chatbot:', input);
-          await sendActionToChatbot(input);
+          await sendActionToChatbot(input); // Call sendActionToChatbot directly
           setChatInput(''); // Clear the chat input after sending
         } catch (error) {
           console.error('Error sending message:', error);
@@ -134,30 +134,41 @@ const LeftPanel: React.FC = () => {
   // Handle speech recognition results
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
-      if (isFinal) {
-        if (transcript !== lastFinalMessageRef.current) {
-          lastFinalMessageRef.current = transcript;
-          console.log('Final transcript:', transcript);
-          handleChat(transcript);
-        }
-      } else {
-        console.log('Interim transcript:', transcript);
-        // Update interim message in messages
-        setMessages((prev) => {
-          const existingInterimIndex = prev.findIndex((msg) => msg.isInterim);
-          if (existingInterimIndex > -1) {
-            return prev.map((msg, index) =>
-              index === existingInterimIndex
-                ? { sender: 'user', text: transcript, isInterim: true }
-                : msg
+      if (transcript && transcript.trim()) {
+        if (isFinal) {
+          if (transcript !== lastFinalMessageRef.current) {
+            lastFinalMessageRef.current = transcript;
+            console.log('Final transcript:', transcript.trim());
+
+            // Remove interim message
+            setMessages((prev) =>
+              prev.filter((msg) => !(msg.isInterim && msg.sender === 'user'))
             );
-          } else {
-            return [
-              ...prev,
-              { sender: 'user', text: transcript, isInterim: true },
-            ];
+
+            // Send the transcript to the chatbot
+            handleChat(transcript.trim());
           }
-        });
+        } else {
+          console.log('Interim transcript:', transcript.trim());
+          // Update interim message in messages
+          setMessages((prev) => {
+            const existingInterimIndex = prev.findIndex(
+              (msg) => msg.isInterim && msg.sender === 'user'
+            );
+            if (existingInterimIndex > -1) {
+              return prev.map((msg, index) =>
+                index === existingInterimIndex
+                  ? { sender: 'user', text: transcript.trim(), isInterim: true }
+                  : msg
+              );
+            } else {
+              return [
+                ...prev,
+                { sender: 'user', text: transcript.trim(), isInterim: true },
+              ];
+            }
+          });
+        }
       }
     },
     [handleChat, setMessages]
