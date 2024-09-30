@@ -1,72 +1,69 @@
 // hooks/useChat.ts
-import { useState, useCallback, useRef } from 'react';
-import { sendMessageToChatbot } from '../services/chatService'; // Ensure correct path
-import { Message } from '../types/message'; // Define your message type here
 
-export const useChat = () => {
+import { useState, useEffect } from 'react';
+import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
+
+export interface Message {
+  sender: string;
+  text: string;
+  isInterim?: boolean;
+}
+
+interface UseChatProps {
+  isMemOn: boolean;
+}
+
+export const useChat = ({ isMemOn }: UseChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [conversationContext, setConversationContext] = useState<string | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const sendActionToChatbot = useCallback(
-    async (input: string) => {
-      setMessages((prev) => [
-        ...prev.filter((msg) => !msg.isInterim),
-        { sender: 'user', text: input, isInterim: false },
-      ]);
-
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-
+  // Load messages from localStorage when memory is enabled and component mounts
+  useEffect(() => {
+    if (isMemOn) {
       try {
-        await sendMessageToChatbot(
-          input, // Only pass input now
-          conversationContext,
-          (botResponse: string, newContext: string | null) => {
-            if (newContext !== null) {
-              setConversationContext(newContext);
-            }
-
-            // Split the bot's response into sentences
-            const sentences = botResponse
-              .split(/(?<=[.!?])(?=[^\s])/g) // Split after punctuation if followed by a non-space character
-              .map((sentence) => sentence.trim())
-              .filter((sentence) => sentence.length > 0);
-
-            setMessages((prev) => [
-              ...prev,
-              ...sentences.map((sentence) => ({
-                sender: 'bot',
-                text: sentence,
-                isInterim: false,
-              })),
-            ]);
-          },
-          abortController.signal
-        );
+        const storedMessages = localStorage.getItem('chatMemory');
+        if (storedMessages) {
+          setMessages(JSON.parse(storedMessages));
+          console.log('Chat history loaded from memory.');
+        }
       } catch (error) {
-        console.error('Error communicating with chatbot:', error);
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: 'bot',
-            text: 'Sorry, I could not process your request.',
-            isInterim: false,
-          },
-        ]);
-      } finally {
-        abortControllerRef.current = null;
+        console.error('Failed to load chat history from memory:', error);
       }
-    },
-    [conversationContext, setMessages]
-  );
+    } else {
+      setMessages([]); // Clear messages if memory is turned off
+    }
+  }, [isMemOn]);
 
-  return {
-    messages,
-    setMessages,
-    sendActionToChatbot,
+  // Save messages to localStorage whenever they change and memory is enabled
+  useEffect(() => {
+    if (isMemOn) {
+      try {
+        localStorage.setItem('chatMemory', JSON.stringify(messages));
+        console.log('Chat history saved to memory.');
+      } catch (error) {
+        console.error('Failed to save chat history to memory:', error);
+      }
+    }
+  }, [messages, isMemOn]);
+
+  const sendActionToChatbot = async (input: string) => {
+    try {
+      // Send the entire conversation to the chatbot for context-aware responses
+      await sendMessageToChatbot(input, getConversationContext(), (reply, newContext) => {
+        setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
+        // Optionally, update the context if needed
+      });
+    } catch (error) {
+      console.error('Error communicating with chatbot:', error);
+      setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
+    }
   };
+
+  // Helper function to construct conversation context
+  const getConversationContext = () => {
+    return messages
+      .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
+      .join('\n');
+  };
+
+  return { messages, setMessages, sendActionToChatbot };
 };

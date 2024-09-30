@@ -1,4 +1,5 @@
 // components/ControlButtons.tsx
+
 import React from 'react';
 import styles from './ControlButtons.module.css';
 
@@ -28,46 +29,46 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   const camButtonText = isCamOn ? 'Stop Cam 📷' : 'Start Cam 📷';
   const micButtonText = isMicOn ? 'Stop Mic 🎤' : 'Start Mic 🎤';
   const pipButtonText = isPipOn ? 'Stop PiP 📹' : 'Start PiP 📹';
-  const memButtonText = isMemOn ? 'Stop Memory 🧠' : 'Start Memory 🧠';
+  const memButtonText = isMemOn ? 'Disable Memory 🧠' : 'Enable Memory 🧠';
 
   return (
     <div className={styles.container}>
-      {/* Camera button */}
+      {/* Camera Button */}
       <button
         onClick={isCamOn ? stopCam : startCam}
-        className={`${styles.button} ${
-          !isCamOn ? styles.startButton : styles.stopButton
-        }`}
+        className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
+        aria-pressed={isCamOn}
+        aria-label={camButtonText}
       >
         {camButtonText}
       </button>
 
-      {/* PiP button */}
+      {/* PiP Button */}
       <button
         onClick={togglePip}
-        className={`${styles.button} ${
-          !isPipOn ? styles.startButton : styles.stopButton
-        }`}
+        className={`${styles.button} ${!isPipOn ? styles.startButton : styles.stopButton}`}
+        aria-pressed={isPipOn}
+        aria-label={pipButtonText}
       >
         {pipButtonText}
       </button>
 
-      {/* Microphone button */}
+      {/* Microphone Button */}
       <button
         onClick={toggleMic}
-        className={`${styles.button} ${
-          !isMicOn ? styles.startButton : styles.stopButton
-        }`}
+        className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
+        aria-pressed={isMicOn}
+        aria-label={micButtonText}
       >
         {micButtonText}
       </button>
 
-      {/* Memory button */}
+      {/* Memory Button */}
       <button
         onClick={toggleMem}
-        className={`${styles.button} ${
-          isMemOn ? styles.stopButton : styles.startButton
-        }`}
+        className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
+        aria-pressed={isMemOn}
+        aria-label={memButtonText}
       >
         {memButtonText}
       </button>

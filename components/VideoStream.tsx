@@ -1,5 +1,6 @@
 // components/VideoStream.tsx
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import styles from './VideoStream.module.css';
 
 interface VideoStreamProps {
@@ -8,13 +9,17 @@ interface VideoStreamProps {
 }
 
 const VideoStream: React.FC<VideoStreamProps> = ({ isCamOn, videoRef }) => {
-  useEffect(() => {
-    if (!isCamOn && videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  }, [isCamOn, videoRef]);
-
-  return <video ref={videoRef} className={styles.video} muted playsInline />;
+  return (
+    <video
+      ref={videoRef}
+      className={styles.video}
+      muted
+      playsInline
+      autoPlay
+      // Optionally, you can hide the video element when the camera is off
+      style={{ display: isCamOn ? 'block' : 'none' }}
+    />
+  );
 };
 
 export default VideoStream;

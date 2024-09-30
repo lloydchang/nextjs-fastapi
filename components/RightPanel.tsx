@@ -1,9 +1,10 @@
 // components/RightPanel.tsx
-"use client"; // Mark as a client component
+
+'use client'; // Mark as a client component
 
 import React from 'react';
 
-const Panel: React.FC = () => {
+const RightPanel: React.FC = () => {
   return (
     <div style={{ width: '100%', height: '100vh' }}>
       <h1>and SDGs</h1>
@@ -17,4 +18,4 @@ const Panel: React.FC = () => {
   );
 };
 
-export default Panel;
+export default RightPanel;
