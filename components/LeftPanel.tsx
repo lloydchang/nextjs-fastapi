@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg'; // Adjust the path to your background image
-import { useChat } from '../hooks/useChat'; // Custom hook for chat operations
+import { useChat, Message } from '../hooks/useChat'; // Custom hook for chat operations
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'; // Import speech recognition hook
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
@@ -14,16 +14,17 @@ import ControlButtons from './ControlButtons';
 import styles from './LeftPanel.module.css';
 
 const LeftPanel: React.FC = () => {
-  const { messages, sendActionToChatbot } = useChat();
+  const { messages, setMessages, sendActionToChatbot } = useChat();
 
   const [chatInput, setChatInput] = useState<string>('');
   const lastFinalMessageRef = useRef<string | null>(null);
 
+  // Initialize mediaState with camera, mic, pip, and memory on by default
   const [mediaState, setMediaState] = useState({
-    isCamOn: false,
-    isMicOn: false,
-    isPipOn: false,
-    isMemOn: false,
+    isCamOn: true,
+    isMicOn: true,
+    isPipOn: true,
+    isMemOn: true,
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -49,13 +50,15 @@ const LeftPanel: React.FC = () => {
     } catch (err) {
       console.error('Unable to access mic. Please check permissions.', err);
     }
-  }, [audioRef, updateMediaState]);
+  }, [audioRef]);
 
   const stopMic = useCallback(() => {
-    audioStreamRef.current?.getTracks().forEach((track) => track.stop());
-    audioStreamRef.current = null;
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
     updateMediaState('isMicOn', false);
-  }, [audioStreamRef, updateMediaState]);
+  }, []);
 
   // Handle Picture-in-Picture (PiP) operations
   const startPip = useCallback(async () => {
@@ -69,7 +72,7 @@ const LeftPanel: React.FC = () => {
         console.error('Unable to enter PiP mode:', err);
       }
     }
-  }, [videoRef, updateMediaState]);
+  }, [videoRef]);
 
   const stopPip = useCallback(async () => {
     try {
@@ -80,7 +83,7 @@ const LeftPanel: React.FC = () => {
     } catch (err) {
       console.error('Unable to exit PiP mode:', err);
     }
-  }, [updateMediaState]);
+  }, []);
 
   // Handle camera operations
   const startCam = useCallback(async () => {
@@ -91,21 +94,26 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState('isCamOn', true);
-        await startPip();
+
+        if (mediaState.isPipOn) {
+          await startPip();
+        }
 
         if (!mediaState.isMicOn) await startMic();
       }
     } catch (err) {
       console.error('Unable to access cam. Please check permissions.', err);
     }
-  }, [mediaState.isMicOn, startMic, startPip, updateMediaState, videoRef]);
+  }, [mediaState.isMicOn, mediaState.isPipOn, startMic, startPip, videoRef]);
 
   const stopCam = useCallback(() => {
-    videoStreamRef.current?.getTracks().forEach((track) => track.stop());
-    videoStreamRef.current = null;
+    if (videoStreamRef.current) {
+      videoStreamRef.current.getTracks().forEach((track) => track.stop());
+      videoStreamRef.current = null;
+    }
     updateMediaState('isCamOn', false);
     stopPip();
-  }, [stopPip, updateMediaState]);
+  }, [stopPip]);
 
   // Handle sending chat messages
   const handleChat = useCallback(
@@ -134,10 +142,25 @@ const LeftPanel: React.FC = () => {
         }
       } else {
         console.log('Interim transcript:', transcript);
-        // Optionally handle interim results
+        // Update interim message in messages
+        setMessages((prev) => {
+          const existingInterimIndex = prev.findIndex((msg) => msg.isInterim);
+          if (existingInterimIndex > -1) {
+            return prev.map((msg, index) =>
+              index === existingInterimIndex
+                ? { sender: 'user', text: transcript, isInterim: true }
+                : msg
+            );
+          } else {
+            return [
+              ...prev,
+              { sender: 'user', text: transcript, isInterim: true },
+            ];
+          }
+        });
       }
     },
-    [handleChat]
+    [handleChat, setMessages]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
@@ -160,14 +183,21 @@ const LeftPanel: React.FC = () => {
     mediaState.isMicOn
       ? stopMicWithSpeechRecognition()
       : startMicWithSpeechRecognition();
-  }, [
-    mediaState.isMicOn,
-    startMicWithSpeechRecognition,
-    stopMicWithSpeechRecognition,
-  ]);
+  }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
   const toggleMem = () =>
     updateMediaState('isMemOn', !mediaState.isMemOn); // Toggle memory state
+
+  const togglePip = useCallback(() => {
+    mediaState.isPipOn ? stopPip() : startPip();
+  }, [mediaState.isPipOn, startPip, stopPip]);
+
+  useEffect(() => {
+    // Start camera, mic, pip, and memory by default
+    startCam();
+    startMicWithSpeechRecognition();
+    updateMediaState('isMemOn', true);
+  }, [startCam, startMicWithSpeechRecognition]);
 
   useEffect(() => {
     return () => {
@@ -218,9 +248,8 @@ const LeftPanel: React.FC = () => {
             toggleMic={toggleMicWithSpeechRecognition}
             startCam={startCam}
             stopCam={stopCam}
-            startPip={startPip}
-            stopPip={stopPip}
             isPipOn={mediaState.isPipOn}
+            togglePip={togglePip}
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
           />
