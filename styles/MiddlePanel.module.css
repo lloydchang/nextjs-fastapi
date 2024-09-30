@@ -1,10 +1,12 @@
 /* styles/MiddlePanel.module.css */
 
 .middlePanel {
-  flex: 1;
+  width: 40%;
+  height: 100vh;
   padding: 20px;
-  background-color: #f9f9f9;
+  box-sizing: border-box;
   overflow-y: auto;
+  background-color: #f5f5f5;
 }
 
 .searchContainer {
@@ -18,7 +20,7 @@
   flex: 1;
   padding: 10px;
   border-radius: 5px;
-  border: 1px solid #ccc;
+  border: 1px solid #cccccc;
 }
 
 .button {
@@ -31,22 +33,13 @@
 }
 
 .searchButton {
-  background-color: #2196f3;
+  background-color: #2196f3; /* Blue */
   color: white;
-}
-
-.searchButton:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
 }
 
 .tedButton {
-  background-color: #e91e63;
+  background-color: #e91e63; /* Pink */
   color: white;
-}
-
-.tedButton:hover {
-  background-color: #c2185b;
 }
 
 .loadingSpinner {
@@ -69,14 +62,9 @@
 
 .resultItem {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #cccccc;
   border-radius: 5px;
-  background-color: #fff;
-  transition: background-color 0.3s ease;
-}
-
-.resultItem:hover {
-  background-color: #f1f1f1;
+  background-color: white;
 }
 
 .resultLink {

@@ -1,8 +1,7 @@
 // components/ChatMessage.tsx
 
 import React from 'react';
-import styles from '../styles/ChatMessage.module.css';
-import { Message } from '../hooks/useChat';
+import styles from './ChatMessage.module.css';
 
 interface ChatMessageProps {
   sender: string;
@@ -10,7 +9,7 @@ interface ChatMessageProps {
   isInterim?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
+const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ sender, text, isInterim }) => {
   const isUser = sender.toLowerCase() === 'user';
 
   return (
@@ -18,13 +17,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) =>
       className={`${styles.messageContainer} ${
         isUser ? styles.user : styles.bot
       } ${isInterim ? styles.interim : ''}`}
+      aria-live="polite"
     >
       <div className={styles.messageBubble}>
         <p>{text}</p>
       </div>
     </div>
   );
-};
+});
 
-// Memoize to prevent unnecessary re-renders
-export default React.memo(ChatMessage);
+export default ChatMessage;

@@ -1,15 +1,10 @@
 /* styles/RightPanel.module.css */
 
 .rightPanel {
-    flex: 1;
-    padding: 20px;
-    background-color: #ffffff;
-    overflow-y: auto;
-  }
-  
-  .iframe {
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  
+  width: 30%;
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: #ffffff;
+}

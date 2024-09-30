@@ -7,13 +7,10 @@ interface UseSpeechRecognitionReturn {
   stopHearing: () => void;
 }
 
-export const useSpeechRecognition = (
-  onResult: (transcript: string, isFinal: boolean) => void
-): UseSpeechRecognitionReturn => {
+export const useSpeechRecognition = (onResult: (transcript: string, isFinal: boolean) => void): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    // Check for browser support
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       console.error('Speech Recognition API not supported in this browser.');
       return;
@@ -53,13 +50,6 @@ export const useSpeechRecognition = (
     };
 
     setRecognition(recog);
-
-    // Cleanup on unmount
-    return () => {
-      if (recog) {
-        recog.stop();
-      }
-    };
   }, [onResult]);
 
   const startHearing = useCallback(() => {

@@ -2,26 +2,36 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
-import VideoStream from './VideoStream';
-import AudioStream from './AudioStream';
-import ChatInput from './ChatInput';
-import ChatMessages from './ChatMessages';
-import ControlButtons from './ControlButtons';
-import styles from '../styles/LeftPanel.module.css';
-import { useMedia } from '../hooks/useMedia';
 import dynamic from 'next/dynamic';
+import styles from './LeftPanel.module.css';
+import { useMedia } from '../hooks/useMedia';
 
-// Lazy load any heavy components if necessary
-// Example: if there was a HeavyComponent, we could lazy load it
-// const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
-//   loading: () => <p>Loading Heavy Component...</p>,
-//   ssr: false,
-// });
+// Lazy load heavy components
+const VideoStream = dynamic(() => import('./VideoStream'), {
+  loading: () => <p>Loading video...</p>,
+  ssr: false,
+});
+const AudioStream = dynamic(() => import('./AudioStream'), {
+  loading: () => <p>Loading audio...</p>,
+  ssr: false,
+});
+const ChatMessages = dynamic(() => import('./ChatMessages'), {
+  loading: () => <p>Loading messages...</p>,
+  ssr: false,
+});
+const ChatInput = dynamic(() => import('./ChatInput'), {
+  loading: () => <p>Loading input...</p>,
+  ssr: false,
+});
+const ControlButtons = dynamic(() => import('./ControlButtons'), {
+  loading: () => <p>Loading controls...</p>,
+  ssr: false,
+});
 
 const LeftPanel: React.FC = () => {
   const {
@@ -154,7 +164,13 @@ const LeftPanel: React.FC = () => {
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
-      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} priority />
+      <Image 
+        src={BackgroundImage} 
+        alt="Background" 
+        fill 
+        className={styles.backgroundImage} 
+        priority // Ensures the image is loaded promptly
+      />
       <div className={styles.overlay} />
 
       {/* VideoStream with conditional styles based on isPipOn */}
@@ -196,5 +212,4 @@ const LeftPanel: React.FC = () => {
   );
 };
 
-// Memoize LeftPanel to prevent unnecessary re-renders
 export default React.memo(LeftPanel);

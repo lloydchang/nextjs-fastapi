@@ -2,14 +2,14 @@
 
 import React, { useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
-import styles from '../styles/ChatMessages.module.css';
+import styles from './ChatMessages.module.css';
 import { Message } from '../hooks/useChat';
 
 interface ChatMessagesProps {
   messages: Message[];
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
+const ChatMessages: React.FC<ChatMessagesProps> = React.memo(({ messages }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages are updated
@@ -35,7 +35,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
       )}
     </div>
   );
-};
+});
 
-// Memoize to prevent unnecessary re-renders
-export default React.memo(ChatMessages);
+export default ChatMessages;

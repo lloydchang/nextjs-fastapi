@@ -1,13 +1,11 @@
 // components/RightPanel.tsx
 
+'use client'; // Mark as a client component
+
 import React from 'react';
-import styles from '../styles/RightPanel.module.css';
-import dynamic from 'next/dynamic';
+import styles from './RightPanel.module.css';
 
-// If RightPanel is considered heavy, it can be lazy loaded in the main app
-// But since this is already being lazy loaded in the main app, optimize here
-
-const RightPanel: React.FC = () => {
+const RightPanel: React.FC = React.memo(() => {
   return (
     <div className={styles.rightPanel}>
       <h1>and SDGs</h1>
@@ -15,13 +13,12 @@ const RightPanel: React.FC = () => {
         src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
         width="100%"
         height="100%"
-        className={styles.iframe}
+        style={{ border: 'none' }}
         title="SDG Reporting Status"
-        loading="lazy" // Lazy load the iframe
+        loading="lazy" // Lazy load iframe for performance
       />
     </div>
   );
-};
+});
 
-// Memoize to prevent unnecessary re-renders
-export default React.memo(RightPanel);
+export default RightPanel;
