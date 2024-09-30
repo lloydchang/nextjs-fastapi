@@ -1,6 +1,7 @@
 // types/message.ts
+
 export interface Message {
-  sender: 'user' | 'bot'; // Restrict sender to 'user' or 'bot'
+  sender: string;
   text: string;
   isInterim: boolean;
 }
