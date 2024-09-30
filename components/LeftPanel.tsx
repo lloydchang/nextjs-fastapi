@@ -126,12 +126,14 @@ const LeftPanel: React.FC = () => {
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
       setMessages((prev) => {
-        // Check if there's an existing interim message
-        const existingInterim = prev.find(msg => msg.isInterim && msg.text === transcript);
+        // Check for an existing interim message
+        const existingInterimIndex = prev.findIndex(msg => msg.isInterim);
 
         if (isFinal) {
-          // Clear existing interim messages and add the final message
-          const updatedMessages = prev.filter(msg => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false });
+          // If it's final, remove any existing interim messages and add the final message
+          const updatedMessages = existingInterimIndex > -1 
+            ? prev.filter((_, index) => index !== existingInterimIndex).concat({ sender: "user", text: transcript, isInterim: false })
+            : [...prev, { sender: "user", text: transcript, isInterim: false }];
 
           // If memory is enabled, save the final result to local storage
           if (mediaState.isMemOn) {
@@ -143,12 +145,17 @@ const LeftPanel: React.FC = () => {
           console.log("Sending transcribed speech to chatbot:", transcript);
           handleChat(transcript); // Send the final transcript to the chatbot
           return updatedMessages;
-        } else if (!existingInterim) { 
-          // If interim and not a duplicate, append it
-          return [...prev, { sender: "user", text: transcript, isInterim: true }];
+        } else {
+          // If interim and replace the interim message
+          if (existingInterimIndex > -1) {
+            return prev.map((msg, index) =>
+              index === existingInterimIndex ? { sender: "user", text: transcript, isInterim: true } : msg
+            );
+          } else {
+            // If no interim message exists, add it
+            return [...prev, { sender: "user", text: transcript, isInterim: true }];
+          }
         }
-
-        return prev; // Return previous state if no updates are needed
       });
     },
     [setMessages, mediaState.isMemOn, handleChat]
