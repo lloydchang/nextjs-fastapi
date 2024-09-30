@@ -1,6 +1,10 @@
-/* styles/AudioStream.module.css */
+/* src/components/AudioStream.module.css */
 
 .audio {
-    display: none; /* Hide the audio element */
+    display: none; /* Audio element is hidden */
+  }
+  
+  .hidden {
+    display: none;
   }
   
