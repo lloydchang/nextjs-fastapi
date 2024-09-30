@@ -10,9 +10,9 @@
 }
 
 .backgroundImage {
-  width: 100%; /* Stretch image to fill entire width */
-  height: 100%; /* Stretch image to fill entire height */
-  object-fit: fill; /* Force the image to fill without maintaining aspect ratio */
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
   transition: opacity 1.5s ease-in-out;
   opacity: 1.0;
   position: absolute;
@@ -48,15 +48,17 @@
   text-align: left;
 }
 
+/* Stretch the chatInterface to fill the space without expanding on new messages */
 .chatInterface {
-  flex: 1;
+  flex: 1; /* Ensure it fills the remaining space in .content */
   display: flex;
   flex-direction: column;
-  margin-top: 0px;
-  padding: 20px;
-  background-color: rgba(51, 51, 51, 0.8); /* Dark background for contrast */
+  margin: 0; /* Remove extra margin */
+  padding: 20px; /* Internal padding */
+  background-color: rgba(51, 51, 51, 0.8); /* Background styling */
   border-radius: 20px;
-  overflow-y: auto;
+  overflow-y: auto; /* Enable scrolling */
+  height: auto; /* Allow it to use flex instead of fixed height */
 }
 
 .chatHeader {
@@ -65,10 +67,36 @@
 }
 
 .videoStream {
-  position: relative; /* Keep it in the normal flow */
-  z-index: 4; /* Above the overlay */
+  position: relative;
+  z-index: 4;
 }
 
 .videoStreamHidden {
-  display: none; /* Hide when in PiP mode */
+  display: none;
+}
+
+/* New styles for buttons */
+.controlButtons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: absolute;
+  bottom: 20px; /* Stick to the bottom */
+  left: 20px; /* Left-aligned */
+  right: 20px; /* Right-aligned */
+  z-index: 5;
+}
+
+.button {
+  background-color: #E62B1E;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #c8241c;
 }
