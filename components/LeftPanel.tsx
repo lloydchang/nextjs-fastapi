@@ -54,11 +54,10 @@ const LeftPanel: React.FC = () => {
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
         await startPiP();
-
-        if (!mediaState.isMicOn) await startMic();
       }
     } catch (err) {
       console.error("Unable to access camera:", err);
+      updateMediaState("isCamOn", false); // Disable camera if it fails to start
     }
   };
 
@@ -78,6 +77,7 @@ const LeftPanel: React.FC = () => {
         }
       } catch (err) {
         console.error("Unable to enter PiP mode:", err);
+        updateMediaState("isPiP", false); // Disable PiP if it fails
       }
     }
   };
@@ -107,6 +107,7 @@ const LeftPanel: React.FC = () => {
       }
     } catch (err) {
       console.error("Unable to access microphone:", err);
+      updateMediaState("isMicOn", false); // Disable microphone if it fails
     }
   };
 
@@ -143,6 +144,7 @@ const LeftPanel: React.FC = () => {
       startHearing();
     } catch (err) {
       console.error("Unable to start microphone and speech recognition:", err);
+      updateMediaState("isMicOn", false); // Disable microphone if it fails
     }
   }, [startMic, startHearing, setMessages]);
 
