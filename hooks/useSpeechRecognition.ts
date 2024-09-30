@@ -11,6 +11,7 @@ export const useSpeechRecognition = (
   onResult: (transcript: string, isFinal: boolean) => void
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [isRecognizing, setIsRecognizing] = useState(false); // Track recognition state
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -25,13 +26,20 @@ export const useSpeechRecognition = (
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
           const isFinal = event.results[i].isFinal;
+          console.log(`Speech result: "${transcript}", isFinal: ${isFinal}`);
           onResult(transcript, isFinal);
         }
       };
 
       recog.onerror = (event: any) => {
         console.error('Speech recognition error', event);
-        // Optionally, handle errors without stopping the microphone
+        setIsRecognizing(false); // Set recognizing state to false on error
+        console.warn('Speech recognition encountered an error: ', event.error);
+      };
+
+      recog.onend = () => {
+        console.log('Speech recognition ended.');
+        setIsRecognizing(false); // Update state when recognition ends
       };
 
       setRecognition(recog);
@@ -41,22 +49,24 @@ export const useSpeechRecognition = (
   }, [onResult]);
 
   const startHearing = useCallback(() => {
-    if (recognition) {
+    if (recognition && !isRecognizing) {
       try {
         recognition.start();
+        setIsRecognizing(true); // Track that recognition is active
         console.log('Speech recognition started.');
       } catch (err) {
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, [recognition]);
+  }, [recognition, isRecognizing]);
 
   const stopHearing = useCallback(() => {
-    if (recognition) {
+    if (recognition && isRecognizing) {
       recognition.stop();
+      setIsRecognizing(false); // Reset recognizing state
       console.log('Speech recognition stopped.');
     }
-  }, [recognition]);
+  }, [recognition, isRecognizing]);
 
   return { startHearing, stopHearing };
 };

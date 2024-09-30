@@ -1,6 +1,6 @@
 // hooks/useChat.ts
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
 
 export interface Message {
@@ -17,13 +17,22 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // Ref to hold the latest messages for context
+  const messagesRef = useRef<Message[]>([]);
+
+  // Update messagesRef whenever messages change
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   // Load messages from localStorage when memory is enabled and component mounts
   useEffect(() => {
     if (isMemOn) {
       try {
         const storedMessages = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (storedMessages) {
-          setMessages(JSON.parse(storedMessages));
+          const parsedMessages = JSON.parse(storedMessages);
+          setMessages(parsedMessages);
           console.log('Chat history loaded from memory.');
         }
       } catch (error) {
@@ -46,6 +55,13 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, [messages, isMemOn]);
 
+  // Helper function to construct conversation context
+  const getConversationContext = useCallback((): string => {
+    return messagesRef.current
+      .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
+      .join('\n');
+  }, []);
+
   // Send user message to the chatbot and receive a response
   const sendActionToChatbot = useCallback(
     async (input: string) => {
@@ -63,15 +79,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
       }
     },
-    [messages] // Add messages as a dependency to capture the current state
+    [getConversationContext]
   );
-
-  // Helper function to construct conversation context
-  const getConversationContext = useCallback((): string => {
-    return messages
-      .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
-      .join('\n');
-  }, [messages]);
 
   return { messages, setMessages, sendActionToChatbot };
 };
