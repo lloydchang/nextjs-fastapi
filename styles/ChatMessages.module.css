@@ -4,7 +4,8 @@
   max-height: 300px;
   overflow-y: auto;
   padding: 10px;
-  background-color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.0); /* Set translucent black background */
+  ;
   border: 1px solid #ddd;
   border-radius: 5px;
   margin-bottom: 10px;
@@ -30,7 +31,8 @@
 }
 
 .text {
-  background-color: #f1f0f0;
+  background-color: black;
+  color: white;
   padding: 8px 12px;
   border-radius: 15px;
   max-width: 70%;

@@ -29,12 +29,12 @@
 
 .videoStream {
   position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 200px;
-  height: 150px;
-  background-color: #000;
-  border-radius: 8px;
+  top: 0px;
+  right: 0px;
+  width: 600px;
+  height: 600px;
+  background-color: rgba(0, 0, 0, 0.0);
+  border-radius: 0px;
   overflow: hidden;
 }
 
@@ -53,10 +53,11 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: #eb0028;
 }
 
 .title {
+  color: white;
   font-size: 2rem;
   margin-bottom: 20px;
   text-align: center;
