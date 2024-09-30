@@ -66,7 +66,8 @@ const LeftPanel: React.FC = () => {
           await sendActionToChatbot(input);
         } catch (error) {
           console.error("Error sending message:", error);
-          alert("Failed to send message. Please try again.");
+          // Removed alert
+          // alert("Failed to send message. Please try again.");
         }
       } else {
         console.warn("Input is empty or invalid");
@@ -106,7 +107,8 @@ const LeftPanel: React.FC = () => {
         if (!mediaState.isMicOn) await startMic();
       }
     } catch (err) {
-      alert("Unable to access cam. Please check permissions.");
+      // Disabled alert and logging error instead
+      console.error("Unable to access cam. Please check permissions.", err);
     }
   };
 
@@ -130,7 +132,8 @@ const LeftPanel: React.FC = () => {
         }
       } catch (err) {
         console.error("Unable to enter PiP mode:", err);
-        alert("Unable to enter PiP mode.");
+        // Disabled alert
+        // alert("Unable to enter PiP mode.");
       }
     }
   };
@@ -143,7 +146,8 @@ const LeftPanel: React.FC = () => {
       }
     } catch (err) {
       console.error("Unable to exit PiP mode:", err);
-      alert("Unable to exit PiP mode.");
+      // Disabled alert
+      // alert("Unable to exit PiP mode.");
     }
   };
 
@@ -159,7 +163,8 @@ const LeftPanel: React.FC = () => {
         updateMediaState("isMicOn", true);
       }
     } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
+      // Disabled alert and logging error instead
+      console.error("Unable to access mic. Please check permissions.", err);
     }
   }, [audioRef]);
 
@@ -238,7 +243,8 @@ const LeftPanel: React.FC = () => {
       await startMic();
       startHearing();
     } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
+      // Disabled alert and logging error instead
+      console.error("Unable to access mic with speech recognition.", err);
     }
   }, [startMic, startHearing]);
 
