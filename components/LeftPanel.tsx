@@ -126,23 +126,28 @@ const LeftPanel: React.FC = () => {
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
       setMessages((prev) => {
-        const updatedMessages = isFinal
-          ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false })
-          : prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: true });
+        const existingInterim = prev.find(msg => msg.isInterim && msg.text === transcript);
 
-        // If memory is enabled, save the final result to local storage
-        if (mediaState.isMemOn && isFinal) {
-          const memory = localStorage.getItem("speechMemory") || "";
-          localStorage.setItem("speechMemory", memory + transcript + " ");
-        }
-
-        // Automatically send the message to the chatbot if the speech result is final
+        // If it's final, clear out interim messages and add the final message
         if (isFinal) {
+          const updatedMessages = prev.filter(msg => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false });
+
+          // If memory is enabled, save the final result to local storage
+          if (mediaState.isMemOn) {
+            const memory = localStorage.getItem("speechMemory") || "";
+            localStorage.setItem("speechMemory", memory + transcript + " ");
+          }
+
+          // Automatically send the message to the chatbot
           console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
           handleChat(transcript); // Directly send the transcript to the chatbot
+          return updatedMessages;
+        } else if (!existingInterim) { 
+          // If interim and not a duplicate, append to messages
+          return [...prev, { sender: "user", text: transcript, isInterim: true }];
         }
 
-        return updatedMessages;
+        return prev; // Return previous state if no updates are needed
       });
     },
     [setMessages, mediaState.isMemOn, handleChat]
