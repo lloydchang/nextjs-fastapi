@@ -8,7 +8,6 @@ import { useChat } from "../hooks/useChat"; // Custom hook for chat operations
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition"; // Import speech recognition hook
 import VideoStream from "./VideoStream";
 import AudioStream from "./AudioStream"; // Import the AudioStream component
-import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 import ControlButtons from "./ControlButtons";
 import styles from "./LeftPanel.module.css"; // Import CSS module for styling
@@ -16,12 +15,11 @@ import styles from "./LeftPanel.module.css"; // Import CSS module for styling
 const LeftPanel: React.FC = () => {
   const { messages, setMessages, sendActionToChatbot } = useChat();
 
-  const [chatInput, setChatInput] = useState<string>("");
   const [mediaState, setMediaState] = useState({
     isCamOn: false,
     isMicOn: false,
-    isPipOn: false, // Updated variable name
-    isMemOn: false, // Memory state
+    isPipOn: false,
+    isMemOn: false,
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -35,18 +33,17 @@ const LeftPanel: React.FC = () => {
   };
 
   // Handle sending chat messages
-  const handleChat = useCallback(async () => {
-    if (chatInput.trim()) {
+  const handleChat = useCallback(async (input: string) => {
+    if (input.trim()) {
       try {
-        console.log("Sending message to chatbot:", chatInput); // Log the message being sent
-        await sendActionToChatbot(chatInput);
-        setChatInput("");
+        console.log("Sending message to chatbot:", input); // Log the message being sent
+        await sendActionToChatbot(input);
       } catch (error) {
         console.error("Error sending message:", error);
         alert("Failed to send message. Please try again.");
       }
     }
-  }, [chatInput, sendActionToChatbot]);
+  }, [sendActionToChatbot]);
 
   // Handle cam and Pip toggling
   const startCam = async () => {
@@ -57,7 +54,7 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
-        startPip(); // Start PiP after the camera is on
+        startPip();
 
         if (!mediaState.isMicOn) startMic();
       }
@@ -70,7 +67,7 @@ const LeftPanel: React.FC = () => {
     videoStreamRef.current?.getTracks().forEach((track) => track.stop());
     videoStreamRef.current = null;
     updateMediaState("isCamOn", false);
-    stopPip(); // Ensure PiP is stopped when camera is off
+    stopPip();
   };
 
   const startPip = async () => {
@@ -78,7 +75,7 @@ const LeftPanel: React.FC = () => {
       try {
         if (document.pictureInPictureElement !== videoRef.current) {
           await videoRef.current.requestPictureInPicture();
-          updateMediaState("isPipOn", true); // Update state
+          updateMediaState("isPipOn", true);
         }
       } catch (err) {
         console.error("Unable to enter Pip mode:", err);
@@ -91,7 +88,7 @@ const LeftPanel: React.FC = () => {
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
-        updateMediaState("isPipOn", false); // Update state to reflect PiP is off
+        updateMediaState("isPipOn", false);
       }
     } catch (err) {
       console.error("Unable to exit Pip mode:", err);
@@ -125,28 +122,12 @@ const LeftPanel: React.FC = () => {
   // Updated handleSpeechResult function
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
-      setMessages((prev) => {
-        const updatedMessages = isFinal
-          ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false })
-          : prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: true });
-
-        // If memory is enabled, save the final result to local storage
-        if (mediaState.isMemOn && isFinal) {
-          const memory = localStorage.getItem("speechMemory") || "";
-          localStorage.setItem("speechMemory", memory + transcript + " ");
-        }
-
-        // Automatically send the message to the chatbot if the speech result is final
-        if (isFinal) {
-          console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
-          setChatInput(transcript); // Set chat input to the transcript
-          handleChat(); // Call the handleChat function to send the message
-        }
-
-        return updatedMessages;
-      });
+      if (isFinal) {
+        console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
+        handleChat(transcript); // Send the transcribed text to the chatbot
+      }
     },
-    [setMessages, mediaState.isMemOn, handleChat]
+    [handleChat]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
@@ -182,12 +163,8 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      {/* VideoStream with conditional styles based on isPipOn */}
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
-        <VideoStream
-          isCamOn={mediaState.isCamOn}
-          videoRef={videoRef}
-        />
+        <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
@@ -201,8 +178,7 @@ const LeftPanel: React.FC = () => {
           </h3>
 
           <ChatMessages messages={messages} />
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
-
+          {/* Removed chatInput and setChatInput, since you're directly sending transcribed speech */}
           <ControlButtons
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
