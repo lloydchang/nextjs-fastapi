@@ -16,7 +16,7 @@ export const sendMessageToChatbot = async (
 
   try {
     // Send POST request to the chatbot API
-    const response = await fetch('http://localhost:11434/api/generate', {
+    const response = await fetch(process.env.NEXT_PUBLIC_CHATBOT_API_URL || 'http://localhost:11434/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),

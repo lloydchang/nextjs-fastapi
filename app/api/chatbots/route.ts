@@ -1,5 +1,11 @@
 // api/chatbots/route.ts
 
+// moved from
+// pages/api/chatbot.ts
+// to
+// api/chatbots/route.ts
+// because of Next.js 14
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sendMessageToChatbot } from '../../services/chatService';
 

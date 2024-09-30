@@ -1,17 +1,17 @@
-/* src/components/ChatMessages.module.css */
+/* styles/ChatMessages.module.css */
 
 .container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
-    margin-bottom: 10px;
-    border-radius: 5px;
-  }
-  
-  .placeholder {
-    color: #ffffff;
-    text-align: center;
-    text-align: left;
-  }
-  
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.placeholder {
+  color: #cccccc;
+  text-align: center;
+}
+
+.errorText {
+  color: #f44336;
+  text-align: center;
+}

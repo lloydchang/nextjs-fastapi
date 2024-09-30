@@ -1,7 +1,7 @@
 // components/AudioStream.tsx
 
 import React from 'react';
-import styles from '../styles/AudioStream.module.css';
+import styles from './AudioStream.module.css';
 
 interface AudioStreamProps {
   isMicOn: boolean;
@@ -15,10 +15,11 @@ const AudioStream: React.FC<AudioStreamProps> = ({ isMicOn, audioRef }) => {
       className={styles.audio}
       muted
       autoPlay
-      // Optionally, you can hide the audio element when the microphone is off
+      // Hide the audio element when the microphone is off
       style={{ display: isMicOn ? 'block' : 'none' }}
     />
   );
 };
 
-export default AudioStream;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(AudioStream);

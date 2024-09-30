@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
-import styles from '../styles/ChatMessages.module.css';
+import styles from './ChatMessages.module.css';
 import { Message } from '../hooks/useChat';
 
 interface ChatMessagesProps {
@@ -37,4 +37,5 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   );
 };
 
-export default ChatMessages;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(ChatMessages);

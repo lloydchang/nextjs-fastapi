@@ -1,48 +1,31 @@
-/* src/components/ControlButtons.module.css */
+/* styles/ControlButtons.module.css */
 
 .container {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .button {
-  padding: 8px 16px;
-  color: #fff;
+  padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
   transition: background-color 0.3s ease;
 }
 
-/* Start Button (Green) */
 .startButton {
-  background-color: #28a745; /* Green */
+  background-color: #4caf50; /* Green */
+  color: white;
 }
 
-.startButton:hover {
-  background-color: #218838; /* Darker green */
-}
-
-/* Stop Button (Red) */
 .stopButton {
-  background-color: #e62b1e; /* Red */
-}
-
-.stopButton:hover {
-  background-color: #cc231a; /* Darker red */
+  background-color: #f44336; /* Red */
+  color: white;
 }
 
 .button:disabled {
-  background-color: #ccc;
+  background-color: #cccccc;
   cursor: not-allowed;
-}
-
-/* Emoji Background Styling */
-.emojiBackground {
-  background-color: #fff; /* White background for the emoji */
-  color: #e62b1e; /* Red text color for the emoji */
-  border-radius: 4px; /* Rounded corners */
-  padding: 2px; /* Padding around the emoji */
-  margin: 0 3px; /* Margin to separate the emoji from text */
 }
