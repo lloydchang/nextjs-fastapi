@@ -1,4 +1,4 @@
-// pages/api/chatbot.ts
+// api/chatbots/route.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sendMessageToChatbot } from '../../services/chatService';
