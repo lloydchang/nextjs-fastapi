@@ -37,7 +37,6 @@ const ChatInput: React.FC<ChatInputProps> = React.memo(({
         placeholder="Type your message..."
         className={styles.textarea}
         rows={3}
-        aria-label="Chat input"
       />
       <button
         onClick={sendMessage}
