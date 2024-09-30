@@ -2,29 +2,23 @@
 
 'use client'; // Mark as a client component
 
-import React from 'react';
-import Image from 'next/image';
-import SDGWheel from '../public/SDGWheel.png';
-import styles from '../styles/RightPanel.module.css';
+// components/TestSpeechRecognition.tsx
+import React, { useCallback } from 'react';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
-const RightPanel: React.FC = () => {
+const TestSpeechRecognition: React.FC = () => {
+  const handleResult = useCallback((transcript: string, isFinal: boolean) => {
+    console.log(`Test Speech Result: "${transcript}", isFinal: ${isFinal}`);
+  }, []);
+
+  const { startHearing, stopHearing } = useSpeechRecognition(handleResult);
+
   return (
-    <div className={styles.rightPanel}>
-      <h1>and SDGs</h1>
-      <iframe
-        src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
-        width="100%"
-        height="100%"
-        style={{ border: 'none' }}
-        loading="lazy"
-        title="SDG Reporting Status"
-      />
-      <div className={styles.footer}>
-        <Image src={SDGWheel} alt="SDG Wheel" width={50} height={50} />
-        <p>Powered by Sustainable Development Goals</p>
-      </div>
+    <div>
+      <button onClick={startHearing}>Start Hearing</button>
+      <button onClick={stopHearing}>Stop Hearing</button>
     </div>
   );
 };
 
-export default React.memo(RightPanel);
+export default TestSpeechRecognition;
