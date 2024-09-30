@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
@@ -16,13 +16,14 @@ import styles from './LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import dynamic from 'next/dynamic';
 
-// Lazy load HeavyComponent if exists
+// Lazy load any heavy components if necessary
+// Example: if there was a HeavyComponent, we could lazy load it
 // const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
-//   loading: () => <p>Loading...</p>,
+//   loading: () => <p>Loading Heavy Component...</p>,
 //   ssr: false,
 // });
 
-const LeftPanel: React.FC = React.memo(() => {
+const LeftPanel: React.FC = () => {
   const {
     mediaState,
     videoRef,
@@ -191,11 +192,9 @@ const LeftPanel: React.FC = React.memo(() => {
           />
         </div>
       </div>
-
-      {/* Example of Lazy Loaded Heavy Component */}
-      {/* <HeavyComponent /> */}
     </div>
   );
-});
+};
 
-export default LeftPanel;
+// Memoize LeftPanel to prevent unnecessary re-renders
+export default React.memo(LeftPanel);

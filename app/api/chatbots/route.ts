@@ -8,6 +8,8 @@
 
 // pages/api/chatbot.ts
 
+// pages/api/chatbot.ts
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { sendMessageToChatbot } from '../../services/chatService';
 
@@ -25,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       let reply = '';
 
       // Send message to chatbot service
-      await sendMessageToChatbot(message, getConversationContext(conversation), (responseMessage, newContext) => {
+      await sendMessageToChatbot(message, conversation, (responseMessage, newContext) => {
         reply = responseMessage;
         // Optionally, handle newContext if needed
       });
@@ -40,10 +42,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-
-// Helper function to construct conversation context
-const getConversationContext = (conversation: any[]): string => {
-  return conversation
-    .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
-    .join('\n');
-};

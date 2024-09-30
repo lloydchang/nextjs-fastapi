@@ -8,7 +8,7 @@ interface VideoStreamProps {
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
-const VideoStream: React.FC<VideoStreamProps> = React.memo(({ isCamOn, videoRef }) => {
+const VideoStream: React.FC<VideoStreamProps> = ({ isCamOn, videoRef }) => {
   return (
     <video
       ref={videoRef}
@@ -20,6 +20,7 @@ const VideoStream: React.FC<VideoStreamProps> = React.memo(({ isCamOn, videoRef 
       style={{ display: isCamOn ? 'block' : 'none' }}
     />
   );
-});
+};
 
-export default VideoStream;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(VideoStream);
