@@ -38,6 +38,7 @@ const LeftPanel: React.FC = () => {
   const handleChat = useCallback(async () => {
     if (chatInput.trim()) {
       try {
+        console.log("Sending message to chatbot:", chatInput); // Log the message being sent
         await sendActionToChatbot(chatInput);
         setChatInput("");
       } catch (error) {
