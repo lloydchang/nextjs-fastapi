@@ -4,8 +4,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
-import { useChat } from '../hooks/useChat'; // Custom hook for chat operations
-import { useSpeechRecognition } from '../hooks/useSpeechRecognition'; // Import speech recognition hook
+import { useChat } from '../hooks/useChat';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
@@ -121,7 +121,7 @@ const LeftPanel: React.FC = () => {
       if (input.trim()) {
         try {
           console.log('Sending message to chatbot:', input);
-          await sendActionToChatbot(input); // Call sendActionToChatbot directly
+          await sendActionToChatbot(input);
           setChatInput(''); // Clear the chat input after sending
         } catch (error) {
           console.error('Error sending message:', error);
@@ -196,8 +196,7 @@ const LeftPanel: React.FC = () => {
       : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
-  const toggleMem = () =>
-    updateMediaState('isMemOn', !mediaState.isMemOn); // Toggle memory state
+  const toggleMem = () => updateMediaState('isMemOn', !mediaState.isMemOn);
 
   const togglePip = useCallback(() => {
     mediaState.isPipOn ? stopPip() : startPip();
@@ -228,11 +227,7 @@ const LeftPanel: React.FC = () => {
       <div className={styles.overlay} />
 
       {/* VideoStream with conditional styles based on isPipOn */}
-      <div
-        className={
-          mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream
-        }
-      >
+      <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
