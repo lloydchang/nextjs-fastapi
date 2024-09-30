@@ -13,9 +13,9 @@ const VideoStream: React.FC<VideoStreamProps> = React.memo(({ isCamOn, videoRef 
     <video
       ref={videoRef}
       className={styles.video}
-      muted
-      playsInline
       autoPlay
+      playsInline
+      muted
       style={{ display: isCamOn ? 'block' : 'none' }}
     />
   );

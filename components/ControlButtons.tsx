@@ -7,19 +7,21 @@ interface ControlButtonsProps {
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
-  toggleCam: () => void;
+  startCam: () => void;
+  stopCam: () => void;
   isPipOn: boolean;
   togglePip: () => void;
   isMemOn: boolean;
   toggleMem: () => void;
-  eraseMemory: () => void; // New prop for Erase Memory
+  eraseMemory: () => void; // New Prop
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
   isCamOn,
   isMicOn,
   toggleMic,
-  toggleCam,
+  startCam,
+  stopCam,
   isPipOn,
   togglePip,
   isMemOn,
@@ -39,7 +41,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       {/* Camera Button */}
       <button
         type="button"
-        onClick={toggleCam}
+        onClick={isCamOn ? stopCam : startCam}
         className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
         aria-pressed={isCamOn}
         aria-label={camButtonText}
@@ -84,7 +86,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       <button
         type="button"
         onClick={eraseMemory}
-        className={`${styles.button} ${styles.eraseButton}`}
+        className={`${styles.button} ${styles.eraseButton}`} // Add specific styling if needed
         aria-label={eraseMemButtonText}
       >
         {eraseMemButtonText}

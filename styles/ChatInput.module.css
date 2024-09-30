@@ -1,51 +1,28 @@
 /* styles/ChatInput.module.css */
 
-.container {
+.inputContainer {
   display: flex;
-  flex-direction: column;
+  gap: 10px;
   margin-top: 10px;
 }
 
-.textarea {
-  width: 100%;
-  padding: 10px;
+.input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
   border-radius: 5px;
-  border: 1px solid #ccc; /* Added border for better visibility */
-  resize: none;
-  margin-bottom: 10px;
-  font-size: 1em;
-  outline: none;
-  color: #333; /* Changed text color to dark gray */
-  background-color: #f9f9f9; /* Changed background to light gray */
 }
 
-.textarea::placeholder {
-  color: #999; /* Placeholder text color for better contrast */
-}
-
-.button {
-  align-self: flex-end;
-  padding: 8px 16px;
+.sendButton {
+  padding: 8px 12px;
+  background-color: #0070f3;
+  color: white;
   border: none;
   border-radius: 5px;
-  background-color: #2196f3; /* Blue background */
-  color: white; /* White text */
   cursor: pointer;
-  font-weight: bold;
   transition: background-color 0.3s ease;
 }
 
-.button:hover:not(:disabled),
-.button:focus:not(:disabled) {
-  background-color: #1976d2; /* Darker blue on hover/focus */
-}
-
-.buttonDisabled {
-  background-color: #cccccc; /* Gray background when disabled */
-  cursor: not-allowed;
-}
-
-.button:disabled:hover,
-.button:disabled:focus {
-  background-color: #cccccc; /* Maintain gray background when disabled */
+.sendButton:hover {
+  background-color: #005bb5;
 }

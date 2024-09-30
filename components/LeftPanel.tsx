@@ -12,6 +12,7 @@ import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
 import ControlButtons from './ControlButtons';
+import TestSpeechRecognition from './TestSpeechRecognition'; // New Component
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 
@@ -27,15 +28,13 @@ const LeftPanel: React.FC = () => {
     audioRef,
     startCam,
     stopCam,
-    toggleCam,
-    startMic,
-    stopMic,
     toggleMic,
     togglePip,
     toggleMem,
+    eraseMemory,
   } = useMedia();
 
-  const { messages, setMessages, sendActionToChatbot } = useChat({ isMemOn: mediaState.isMemOn });
+  const { messages, setMessages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -112,23 +111,23 @@ const LeftPanel: React.FC = () => {
     try {
       manuallyStoppedRef.current = false; // Reset manual stop tracking
       console.log('Starting microphone and speech recognition.');
-      await startMic();
+      toggleMic(); // Toggles both mic and hearing
       startHearing();
       console.log('Microphone and speech recognition started.');
     } catch (err) {
       console.error('Unable to access mic with speech recognition.', err);
       setError('Unable to access microphone.');
     }
-  }, [startMic, startHearing]);
+  }, [toggleMic, startHearing]);
 
   // Stop Microphone with Speech Recognition
   const stopMicWithSpeechRecognition = useCallback(() => {
     console.log('Stopping speech recognition and microphone.');
     manuallyStoppedRef.current = true; // Mark as manually stopped
     stopHearing();
-    stopMic();
+    toggleMic(); // Toggles both mic and hearing
     console.log('Speech recognition and microphone stopped.');
-  }, [stopHearing, stopMic]);
+  }, [toggleMic, stopHearing]);
 
   // Toggle Microphone with Speech Recognition
   const toggleMicWithSpeechRecognition = useCallback(() => {
@@ -151,7 +150,7 @@ const LeftPanel: React.FC = () => {
       manuallyStoppedRef.current = true; // Ensure cleanup respects manual stop
       console.log('Cleaning up LeftPanel component.');
       stopCam();
-      stopMic();
+      toggleMic(); // Ensure microphone is turned off
       if (mediaState.isPipOn) {
         document.exitPictureInPicture().catch((err) => {
           console.error('Error exiting PiP on cleanup.', err);
@@ -159,7 +158,14 @@ const LeftPanel: React.FC = () => {
       }
       stopHearing();
     };
-  }, [stopCam, stopMic, mediaState.isPipOn, stopHearing]);
+  }, [stopCam, toggleMic, mediaState.isPipOn, stopHearing]);
+
+  // Handle Erase Memory
+  const handleEraseMemory = useCallback(() => {
+    console.log('Erasing memory.');
+    eraseMemory();
+    clearChatHistory();
+  }, [eraseMemory, clearChatHistory]);
 
   return (
     <div className={styles.container}>
@@ -192,12 +198,17 @@ const LeftPanel: React.FC = () => {
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
             toggleMic={toggleMicWithSpeechRecognition}
-            toggleCam={toggleCam}
+            startCam={startCam}
+            stopCam={stopCam}
             isPipOn={mediaState.isPipOn}
             togglePip={togglePip}
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
+            eraseMemory={handleEraseMemory} // Pass the eraseMemory handler
           />
+
+          {/* Test Speech Recognition Component */}
+          <TestSpeechRecognition />
         </div>
       </div>
     </div>

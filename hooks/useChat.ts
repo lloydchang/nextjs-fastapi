@@ -70,10 +70,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
       try {
         // Send the entire conversation to the chatbot for context-aware responses
-        await sendMessageToChatbot(input, getConversationContext(), (reply, newContext) => {
-          setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
-          // Optionally, handle newContext if needed
-        });
+        const reply = await sendMessageToChatbot(input, getConversationContext());
+        setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
       } catch (error) {
         console.error('Error communicating with chatbot:', error);
         setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
@@ -82,16 +80,16 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     [getConversationContext]
   );
 
-  // Function to erase memory (clear chat history)
-  const eraseMemory = useCallback(() => {
+  // Clear Chat History
+  const clearChatHistory = useCallback(() => {
     setMessages([]);
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      console.log('Chat history erased from memory.');
+      console.log('Chat history cleared from memory.');
     } catch (error) {
-      console.error('Failed to erase chat history from memory:', error);
+      console.error('Failed to clear chat history from memory:', error);
     }
   }, []);
 
-  return { messages, setMessages, sendActionToChatbot, eraseMemory };
+  return { messages, setMessages, sendActionToChatbot, clearChatHistory };
 };
