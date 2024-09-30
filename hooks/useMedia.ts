@@ -24,7 +24,7 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: true, // Start with mic on by default
+    isMicOn: false, // Initialize mic as off
     isPipOn: false,
     isMemOn: true,
   });
@@ -38,9 +38,17 @@ export const useMedia = (): UseMediaReturn => {
   const isMicOnRef = useRef(mediaState.isMicOn);
   const isPipOnRef = useRef(mediaState.isPipOn);
 
+  // Log state changes
+  useEffect(() => {
+    console.log('Media State Updated:', mediaState);
+  }, [mediaState]);
+
   // Start Camera
   const startCam = useCallback(async () => {
-    if (mediaState.isCamOn) return;
+    if (mediaState.isCamOn) {
+      console.log('Camera is already on.');
+      return;
+    }
     try {
       console.log('Attempting to start camera.');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -69,6 +77,7 @@ export const useMedia = (): UseMediaReturn => {
       console.log('Camera srcObject cleared.');
     }
     setMediaState((prev) => ({ ...prev, isCamOn: false }));
+    console.log('Camera stopped.');
   }, []);
 
   // Start Microphone
@@ -117,7 +126,7 @@ export const useMedia = (): UseMediaReturn => {
   const togglePip = useCallback(async () => {
     if (videoRef.current) {
       try {
-        if (!mediaState.isPipOn) {
+        if (!isPipOnRef.current) {
           console.log('Entering Picture-in-Picture mode.');
           await videoRef.current.requestPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: true }));
@@ -134,7 +143,7 @@ export const useMedia = (): UseMediaReturn => {
         console.error('Unable to toggle PiP mode.', err);
       }
     }
-  }, [mediaState.isPipOn]);
+  }, []);
 
   // Toggle Memory
   const toggleMem = useCallback(() => {
