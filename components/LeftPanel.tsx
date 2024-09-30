@@ -33,7 +33,7 @@ const LeftPanel: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null); // Define chatContainerRef
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Mock sendActionToChatbot function
   const sendActionToChatbot = useCallback(async (input: string) => {
@@ -59,11 +59,6 @@ const LeftPanel: React.FC = () => {
       if (typeof input === "string" && input.trim()) {
         try {
           console.log("Sending message to chatbot:", input);
-          // Update the messages state with the new message
-          setMessages((prev) => [
-            ...prev,
-            { sender: "user", text: input, isInterim: false },
-          ]);
           setChatInput(""); // Clear input after sending
           await sendActionToChatbot(input);
         } catch (error) {
@@ -75,6 +70,22 @@ const LeftPanel: React.FC = () => {
       }
     },
     [sendActionToChatbot]
+  );
+
+  // New function to handle chat input submission
+  const handleChatInputSubmit = useCallback(
+    (input: string) => {
+      if (typeof input === "string" && input.trim()) {
+        // Update the messages state with the new message
+        setMessages((prev) => [
+          ...prev,
+          { sender: "user", text: input, isInterim: false },
+        ]);
+        setChatInput(""); // Clear input after sending
+        handleChat(input);
+      }
+    },
+    [handleChat]
   );
 
   // Handle camera operations
@@ -283,7 +294,7 @@ const LeftPanel: React.FC = () => {
           <ChatInput
             chatInput={chatInput}
             setChatInput={setChatInput}
-            handleChat={handleChat}
+            handleChat={handleChatInputSubmit}
           />
 
           <ControlButtons
