@@ -125,11 +125,14 @@ const LeftPanel: React.FC = () => {
   // Handle speech recognition results
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
-      setMessages((prev) =>
-        isFinal
+      setMessages((prev) => {
+        if (!isFinal && prev.some((msg) => msg.text === transcript && msg.isInterim)) {
+          return prev; // Prevent duplicates if similar interim message exists
+        }
+        return isFinal
           ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript })
-          : prev.concat({ sender: "user", text: transcript, isInterim: true })
-      );
+          : [...prev.filter((msg) => msg.isInterim), { sender: "user", text: transcript, isInterim: true }];
+      });
     },
     [setMessages]
   );
@@ -139,12 +142,13 @@ const LeftPanel: React.FC = () => {
   // Function to start both mic and speech recognition
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
+      setMessages([]); // Clear previous messages to avoid overlap
       await startMic();
       startHearing();
     } catch (err) {
       alert("Unable to access mic. Please check permissions.");
     }
-  }, [startMic, startHearing]);
+  }, [startMic, startHearing, setMessages]);
 
   const stopMicWithSpeechRecognition = useCallback(() => {
     stopHearing();
@@ -158,6 +162,7 @@ const LeftPanel: React.FC = () => {
     return () => {
       stopCam();
       stopMic();
+      setMessages([]); // Clean up messages state on unmount
     };
   }, []);
 
