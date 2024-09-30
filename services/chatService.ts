@@ -42,7 +42,8 @@ export const sendMessageToChatbot = async (
           buffer += parsed.response; // Collect text in the buffer
 
           // Check if buffer has a complete segment (ends with allowed punctuation)
-          if (/[^0-9]\.\s*$|[!?:]\s*$/.test(buffer)) {
+          // Period if not followed by a digit
+          if (/[^0-9]\.\s*$|[!?]\s*$/.test(buffer)) {
             const completeSegment = buffer.trim(); // Trim the buffer to form a complete message
             buffer = ''; // Clear buffer for next segment
 
