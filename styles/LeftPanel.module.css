@@ -1,19 +1,24 @@
 /* styles/LeftPanel.module.css */
 
 .container {
-  position: relative;
   width: 100%;
   height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .backgroundImage {
+  width: 100%; /* Stretch image to fill entire width */
+  height: 100%; /* Stretch image to fill entire height */
+  object-fit: fill; /* Force the image to fill without maintaining aspect ratio */
+  transition: opacity 1.5s ease-in-out;
+  opacity: 1.0;
   position: absolute;
+  z-index: 0;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -2;
 }
 
 .overlay {
@@ -23,56 +28,47 @@
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: -1;
-}
-
-.videoStream {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 300px;
-  height: 200px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  overflow: hidden;
   z-index: 1;
-}
-
-.videoStreamHidden {
-  display: none;
+  pointer-events: none;
 }
 
 .content {
-  position: absolute;
-  top: 50px;
-  left: 50px;
-  width: 40%;
-  color: white;
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .title {
-  font-size: 2em;
+  color: #ffffff;
   margin-bottom: 20px;
+  text-align: left;
 }
 
 .chatInterface {
-  background-color: rgba(255, 255, 255, 0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0px;
   padding: 20px;
-  border-radius: 10px;
-  max-height: 60vh;
+  background-color: rgba(51, 51, 51, 0.8); /* Dark background for contrast */
+  border-radius: 20px;
   overflow-y: auto;
 }
 
 .chatHeader {
-  margin-bottom: 10px;
+  color: #E62B1E;
+  text-align: left;
 }
 
-.error {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: #f44336;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
+.videoStream {
+  position: relative; /* Keep it in the normal flow */
+  z-index: 4; /* Above the overlay */
+}
+
+.videoStreamHidden {
+  display: none; /* Hide when in PiP mode */
 }
