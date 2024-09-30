@@ -8,6 +8,7 @@ import { useChat } from "../hooks/useChat"; // Custom hook for chat operations
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition"; // Import speech recognition hook
 import VideoStream from "./VideoStream";
 import AudioStream from "./AudioStream"; // Import the AudioStream component
+import ChatInput from "./ChatInput"; // Import the ChatInput component
 import ChatMessages from "./ChatMessages";
 import ControlButtons from "./ControlButtons";
 import styles from "./LeftPanel.module.css"; // Import CSS module for styling
@@ -15,6 +16,7 @@ import styles from "./LeftPanel.module.css"; // Import CSS module for styling
 const LeftPanel: React.FC = () => {
   const { messages, setMessages, sendActionToChatbot } = useChat();
 
+  const [chatInput, setChatInput] = useState<string>(""); // Maintain chat input state
   const [mediaState, setMediaState] = useState({
     isCamOn: false,
     isMicOn: false,
@@ -33,17 +35,18 @@ const LeftPanel: React.FC = () => {
   };
 
   // Handle sending chat messages
-  const handleChat = useCallback(async (input: string) => {
-    if (input.trim()) {
+  const handleChat = useCallback(async () => {
+    if (chatInput.trim()) {
       try {
-        console.log("Sending message to chatbot:", input); // Log the message being sent
-        await sendActionToChatbot(input);
+        console.log("Sending message to chatbot:", chatInput); // Log the message being sent
+        await sendActionToChatbot(chatInput);
+        setChatInput(""); // Clear the chat input after sending
       } catch (error) {
         console.error("Error sending message:", error);
         alert("Failed to send message. Please try again.");
       }
     }
-  }, [sendActionToChatbot]);
+  }, [chatInput, sendActionToChatbot]);
 
   // Handle cam and Pip toggling
   const startCam = async () => {
@@ -54,7 +57,7 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
-        startPip();
+        startPip(); // Start PiP after the camera is on
 
         if (!mediaState.isMicOn) startMic();
       }
@@ -67,7 +70,7 @@ const LeftPanel: React.FC = () => {
     videoStreamRef.current?.getTracks().forEach((track) => track.stop());
     videoStreamRef.current = null;
     updateMediaState("isCamOn", false);
-    stopPip();
+    stopPip(); // Ensure PiP is stopped when camera is off
   };
 
   const startPip = async () => {
@@ -75,7 +78,7 @@ const LeftPanel: React.FC = () => {
       try {
         if (document.pictureInPictureElement !== videoRef.current) {
           await videoRef.current.requestPictureInPicture();
-          updateMediaState("isPipOn", true);
+          updateMediaState("isPipOn", true); // Update state
         }
       } catch (err) {
         console.error("Unable to enter Pip mode:", err);
@@ -88,7 +91,7 @@ const LeftPanel: React.FC = () => {
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
-        updateMediaState("isPipOn", false);
+        updateMediaState("isPipOn", false); // Update state to reflect PiP is off
       }
     } catch (err) {
       console.error("Unable to exit Pip mode:", err);
@@ -124,7 +127,8 @@ const LeftPanel: React.FC = () => {
     (transcript: string, isFinal: boolean) => {
       if (isFinal) {
         console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
-        handleChat(transcript); // Send the transcribed text to the chatbot
+        setChatInput(transcript); // Set chat input to the transcript
+        handleChat(); // Call the handleChat function to send the message
       }
     },
     [handleChat]
@@ -163,6 +167,7 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
+      {/* VideoStream with conditional styles based on isPipOn */}
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
@@ -178,7 +183,8 @@ const LeftPanel: React.FC = () => {
           </h3>
 
           <ChatMessages messages={messages} />
-          {/* Removed chatInput and setChatInput, since you're directly sending transcribed speech */}
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
+
           <ControlButtons
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
