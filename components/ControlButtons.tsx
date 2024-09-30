@@ -7,9 +7,11 @@ interface ControlButtonsProps {
   toggleMic: () => void;
   startCam: () => void;
   stopCam: () => void;
-  isPiP: boolean;
-  startPiP: () => void;
-  stopPiP: () => void;
+  isPipOn: boolean; // Updated variable name
+  startPip: () => void; // Updated to new function name
+  stopPip: () => void; // Updated to new function name
+  isMemOn: boolean; // Memory state prop
+  toggleMem: () => void; // Toggle function for memory
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -18,14 +20,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   toggleMic,
   startCam,
   stopCam,
-  isPiP,
-  startPiP,
-  stopPiP,
+  isPipOn, // Updated variable name
+  startPip, // Updated to new function name
+  stopPip, // Updated to new function name
+  isMemOn,
+  toggleMem, // Receive toggle function for memory
 }) => {
-  // Button text logic based on props state
   const camButtonText = isCamOn ? "Stop Cam 📷" : "Start Cam 📷";
   const micButtonText = isMicOn ? "Stop Mic 🎤" : "Start Mic 🎤";
-  const pipButtonText = isPiP ? "Stop PiP 📹" : "Start PiP 📹";
+  const pipButtonText = isPipOn ? "Stop Pip 📹" : "Start Pip 📹"; // Updated variable name
+  const memButtonText = isMemOn ? "Stop Memory 🧠" : "Start Memory 🧠"; // Memory button text
 
   return (
     <div className={styles.container}>
@@ -37,11 +41,11 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {camButtonText}
       </button>
 
-      {/* PiP button, only visible when camera is on */}
+      {/* Pip button, only visible when camera is on */}
       {isCamOn && (
         <button
-          onClick={isPiP ? stopPiP : startPiP}
-          className={`${styles.button} ${isPiP ? styles.stopButton : styles.startButton}`}
+          onClick={isPipOn ? stopPip : startPip}
+          className={`${styles.button} ${isPipOn ? styles.stopButton : styles.startButton}`}
         >
           {pipButtonText}
         </button>
@@ -53,6 +57,14 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
       >
         {micButtonText}
+      </button>
+
+      {/* Memory button */}
+      <button
+        onClick={toggleMem} // Use the toggle function for memory
+        className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
+      >
+        {memButtonText}
       </button>
     </div>
   );
