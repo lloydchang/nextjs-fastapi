@@ -1,7 +1,7 @@
 // components/RightPanel.tsx
 
 import React from 'react';
-import styles from './RightPanel.module.css';
+import styles from '../styles/RightPanel.module.css';
 import dynamic from 'next/dynamic';
 
 // If RightPanel is considered heavy, it can be lazy loaded in the main app
