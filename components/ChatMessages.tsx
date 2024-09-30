@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import ChatMessage from './ChatMessage';
-import styles from './ChatMessages.module.css';
+import styles from '../styles/ChatMessages.module.css';
 import { Message } from '../hooks/useChat';
 
 interface ChatMessagesProps {

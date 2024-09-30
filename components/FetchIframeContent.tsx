@@ -1,18 +1,12 @@
 // components/FetchIframeContent.tsx
 
 import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import styles from './FetchIframeContent.module.css';
-
-// Lazy load the iframe component
-const DynamicIframe = dynamic(() => import('./DynamicIframe'), {
-  loading: () => <p>Loading iframe...</p>,
-  ssr: false,
-});
+import styles from '../styles/FetchIframeContent.module.css';
 
 const FetchIframeContent: React.FC = () => {
   const [links, setLinks] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchLinks = async () => {
@@ -27,6 +21,8 @@ const FetchIframeContent: React.FC = () => {
         }
       } catch (err) {
         setError('Failed to fetch links.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -35,23 +31,22 @@ const FetchIframeContent: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      {error && <p className={styles.error}>Error: {error}</p>}
-      {links.length > 0 ? (
-        <ul className={styles.linkList}>
+      {error && <p className={styles.error}>{error}</p>}
+      {loading ? (
+        <p className={styles.loading}>Loading links...</p>
+      ) : (
+        <ul className={styles.linksList}>
           {links.map((link, index) => (
-            <li key={index}>
+            <li key={index} className={styles.linkItem}>
               <a href={link} target="_blank" rel="noopener noreferrer" className={styles.link}>
                 {link}
               </a>
             </li>
           ))}
         </ul>
-      ) : (
-        !error && <p className={styles.loading}>Loading links...</p>
       )}
     </div>
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
 export default React.memo(FetchIframeContent);
