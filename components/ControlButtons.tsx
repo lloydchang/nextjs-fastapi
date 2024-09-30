@@ -1,3 +1,4 @@
+// components/ControlButtons.tsx
 import React from "react";
 import styles from "./ControlButtons.module.css";
 
