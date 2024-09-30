@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
-import styles from './MiddlePanel.module.css';
+import styles from '../styles/MiddlePanel.module.css';
 
 // TypeScript Types
 type Talk = {
