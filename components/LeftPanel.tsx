@@ -125,27 +125,12 @@ const LeftPanel: React.FC = () => {
   // Updated handleSpeechResult function
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
-      setMessages((prev) => {
-        const updatedMessages = isFinal
-          ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false })
-          : prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: true });
-
-        // If memory is enabled, save the final result to local storage
-        if (mediaState.isMemOn && isFinal) {
-          const memory = localStorage.getItem("speechMemory") || "";
-          localStorage.setItem("speechMemory", memory + transcript + " ");
-        }
-
-        // Automatically send the message to the chatbot if the speech result is final
-        if (isFinal) {
-          console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
-          handleChat(transcript); // Directly send the transcript to the chatbot
-        }
-
-        return updatedMessages;
-      });
+      if (isFinal) {
+        console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
+        handleChat(transcript); // Directly send the transcript to the chatbot
+      }
     },
-    [setMessages, mediaState.isMemOn, handleChat]
+    [handleChat]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
