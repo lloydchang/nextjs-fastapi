@@ -16,11 +16,10 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isCamOn, videoRef }) => {
       muted
       playsInline
       autoPlay
-      // Hide the video element when the camera is off
+      // Optionally, you can hide the video element when the camera is off
       style={{ display: isCamOn ? 'block' : 'none' }}
     />
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
 export default React.memo(VideoStream);

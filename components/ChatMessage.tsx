@@ -25,5 +25,4 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) =>
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
 export default React.memo(ChatMessage);
