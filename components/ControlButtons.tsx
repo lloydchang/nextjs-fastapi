@@ -1,7 +1,5 @@
-// components/ControlButtons.tsx
-import React, { useEffect } from "react";
+import React from "react";
 import styles from "./ControlButtons.module.css";
-import { useChat } from "../hooks/useChat";
 
 interface ControlButtonsProps {
   isCamOn: boolean;
@@ -24,18 +22,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startPiP,
   stopPiP,
 }) => {
-  const { isMemEnabled, toggleMem, startMic, stopMic } = useChat();
-
   // Button text logic based on props state
   const camButtonText = isCamOn ? "Stop Cam 📷" : "Start Cam 📷";
   const micButtonText = isMicOn ? "Stop Mic 🎤" : "Start Mic 🎤";
   const pipButtonText = isPiP ? "Stop PiP 📹" : "Start PiP 📹";
-  const memButtonText = isMemEnabled ? "Stop Mem 🧠" : "Start Mem 🧠";
-
-  useEffect(() => {
-    // Ensure microphone state is synced
-    isMicOn ? startMic() : stopMic();
-  }, [isMicOn, startMic, stopMic]);
 
   return (
     <div className={styles.container}>
@@ -63,14 +53,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
       >
         {micButtonText}
-      </button>
-
-      {/* Memory button */}
-      <button
-        onClick={toggleMem}
-        className={`${styles.button} ${isMemEnabled ? styles.stopButton : styles.startButton}`}
-      >
-        {memButtonText}
       </button>
     </div>
   );
