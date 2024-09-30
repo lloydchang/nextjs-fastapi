@@ -29,7 +29,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   const camButtonText = isCamOn ? 'Stop Cam 📷' : 'Start Cam 📷';
   const micButtonText = isMicOn ? 'Stop Mic 🎤' : 'Start Mic 🎤';
   const pipButtonText = isPipOn ? 'Stop PiP 📹' : 'Start PiP 📹';
-  const memButtonText = isMemOn ? 'Disable Memory 🧠' : 'Enable Memory 🧠';
+  const memButtonText = isMemOn ? 'Stop Memory 🧠' : 'Start Memory 🧠';
 
   return (
     <div className={styles.container}>
