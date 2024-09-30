@@ -11,7 +11,7 @@
 // pages/api/chatbot.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { sendMessageToChatbot } from '../../services/chatService';
+import { sendMessageToChatbot } from '../../../services/chatService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
