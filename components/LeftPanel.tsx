@@ -7,7 +7,7 @@ import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
-import dynamic from 'next/dynamic'; // For dynamic imports
+import dynamic from 'next/dynamic';
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
@@ -17,7 +17,7 @@ import { useMedia } from '../hooks/useMedia';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
-  ssr: false, // Disable server-side rendering for this component
+  ssr: false,
 });
 
 const LeftPanel: React.FC = () => {
@@ -38,8 +38,9 @@ const LeftPanel: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const lastFinalMessageRef = useRef<string | null>(null);
-
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const manuallyStoppedRef = useRef<boolean>(false);
 
   // Handle sending chat messages
   const handleChat = useCallback(
@@ -65,22 +66,16 @@ const LeftPanel: React.FC = () => {
         if (isFinal) {
           if (transcript !== lastFinalMessageRef.current) {
             lastFinalMessageRef.current = transcript;
-            console.log('Final transcript:', transcript.trim());
 
-            // Remove interim message
             setMessages((prev) =>
               prev.filter((msg) => !(msg.isInterim && msg.sender === 'user'))
             );
 
-            // Add the final message to chat
             setMessages((prev) => [...prev, { sender: 'user', text: transcript.trim() }]);
 
-            // Send the transcript to the chatbot
             handleChat(transcript.trim());
           }
         } else {
-          console.log('Interim transcript:', transcript.trim());
-          // Update interim message in messages
           setMessages((prev) => {
             const existingInterimIndex = prev.findIndex(
               (msg) => msg.isInterim && msg.sender === 'user'
@@ -92,10 +87,7 @@ const LeftPanel: React.FC = () => {
                   : msg
               );
             } else {
-              return [
-                ...prev,
-                { sender: 'user', text: transcript.trim(), isInterim: true },
-              ];
+              return [...prev, { sender: 'user', text: transcript.trim(), isInterim: true }];
             }
           });
         }
@@ -109,6 +101,7 @@ const LeftPanel: React.FC = () => {
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
       console.log('Starting microphone and speech recognition.');
+      manuallyStoppedRef.current = false;
       await startMic();
       startHearing();
       console.log('Microphone and speech recognition started.');
@@ -120,6 +113,7 @@ const LeftPanel: React.FC = () => {
 
   const stopMicWithSpeechRecognition = useCallback(() => {
     console.log('Stopping speech recognition and microphone.');
+    manuallyStoppedRef.current = true;
     stopHearing();
     stopMic();
     console.log('Speech recognition and microphone stopped.');
@@ -127,22 +121,22 @@ const LeftPanel: React.FC = () => {
 
   const toggleMicWithSpeechRecognition = useCallback(() => {
     console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
-    mediaState.isMicOn
-      ? stopMicWithSpeechRecognition()
-      : startMicWithSpeechRecognition();
+    mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
   // Prevent mic from turning off after sending a message
   useEffect(() => {
-    if (!mediaState.isMicOn && mediaState.isPipOn) {
+    if (!mediaState.isMicOn && !manuallyStoppedRef.current) {
       console.log('Microphone turned off unexpectedly, restarting...');
       startMicWithSpeechRecognition();
     }
-  }, [mediaState.isMicOn, mediaState.isPipOn, startMicWithSpeechRecognition]);
+  }, [mediaState.isMicOn, startMicWithSpeechRecognition]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       console.log('Cleaning up LeftPanel component.');
+      manuallyStoppedRef.current = true; // Ensure cleanup respects manual stop
       stopCam();
       stopMic();
       if (mediaState.isPipOn) {
@@ -160,7 +154,6 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      {/* VideoStream with conditional styles based on isPipOn */}
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
