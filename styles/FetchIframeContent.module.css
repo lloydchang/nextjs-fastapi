@@ -1,0 +1,31 @@
+/* styles/FetchIframeContent.module.css */
+
+.container {
+    padding: 20px;
+  }
+  
+  .error {
+    color: #f44336;
+  }
+  
+  .linkList {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .linkItem {
+    margin-bottom: 10px;
+  }
+  
+  .link {
+    color: #2196f3;
+    text-decoration: none;
+  }
+  
+  .link:hover {
+    text-decoration: underline;
+  }
+  
+  .loading {
+    color: #757
+  
