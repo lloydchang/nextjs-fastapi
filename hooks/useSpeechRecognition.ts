@@ -1,90 +1,68 @@
 // hooks/useSpeechRecognition.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
 
-type SpeechRecognitionResultCallback = (transcript: string, isFinal: boolean) => void;
+import { useState, useEffect, useCallback } from 'react';
 
-interface SpeechRecognitionHook {
+interface UseSpeechRecognitionReturn {
   startHearing: () => void;
   stopHearing: () => void;
-  isRecognitionRunning: boolean;
 }
 
-export const useSpeechRecognition = (
-  onResult: SpeechRecognitionResultCallback
-): SpeechRecognitionHook => {
-  const [isRecognitionRunning, setIsRecognitionRunning] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const finalTranscriptRef = useRef<string>(''); // Keep track of the last confirmed transcript
-  const interimTranscriptCacheRef = useRef<string>(''); // Maintain interim transcripts during speech
+export const useSpeechRecognition = (onResult: (transcript: string, isFinal: boolean) => void): UseSpeechRecognitionReturn => {
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.error('Browser does not support SpeechRecognition');
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.error('Speech Recognition API not supported in this browser.');
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = true; // Capture interim results for live feedback
-    recognition.continuous = true; // Keep listening until manually stopped
+    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recog = new SpeechRecognitionClass();
 
-    // Handle speech results
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = 'en-US';
+
+    recog.onresult = (event: SpeechRecognitionEvent) => {
       let interimTranscript = '';
       let finalTranscript = '';
 
-      // Iterate through speech results
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript; // Collect final transcripts
+          finalTranscript += transcript;
         } else {
-          interimTranscript += transcript; // Collect interim transcripts
+          interimTranscript += transcript;
         }
       }
 
       if (finalTranscript) {
-        finalTranscriptRef.current = finalTranscript;
-        interimTranscriptCacheRef.current = ''; // Clear interim cache on final transcript
         onResult(finalTranscript, true);
-      } else if (interimTranscript) {
-        interimTranscriptCacheRef.current = interimTranscript; // Update interim cache
+      }
+
+      if (interimTranscript) {
         onResult(interimTranscript, false);
       }
     };
 
-    recognition.onerror = (event) => {
+    recog.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
     };
 
-    recognition.onend = () => {
-      setIsRecognitionRunning(false);
-    };
-
-    recognitionRef.current = recognition;
+    setRecognition(recog);
   }, [onResult]);
 
-  // Start speech recognition
   const startHearing = useCallback(() => {
-    if (recognitionRef.current && !isRecognitionRunning) {
-      recognitionRef.current.start();
-      setIsRecognitionRunning(true);
+    if (recognition) {
+      recognition.start();
     }
-  }, [isRecognitionRunning]);
+  }, [recognition]);
 
-  // Stop speech recognition
   const stopHearing = useCallback(() => {
-    if (recognitionRef.current && isRecognitionRunning) {
-      recognitionRef.current.stop();
-      setIsRecognitionRunning(false);
+    if (recognition) {
+      recognition.stop();
     }
-  }, [isRecognitionRunning]);
+  }, [recognition]);
 
-  return {
-    startHearing,
-    stopHearing,
-    isRecognitionRunning,
-  };
+  return { startHearing, stopHearing };
 };

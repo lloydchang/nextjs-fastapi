@@ -1,5 +1,6 @@
-// File: MiddlePanel.tsx
-"use client";
+// components/MiddlePanel.tsx
+
+'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
@@ -32,7 +33,7 @@ const MiddlePanel: React.FC = () => {
     setSelectedTalk(null);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/py/search?query=${query}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SEARCH_API_URL}?query=${encodeURIComponent(query)}`);
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }

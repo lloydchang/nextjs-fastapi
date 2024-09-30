@@ -1,5 +1,6 @@
 // components/LeftPanel.tsx
-'use client'; // Mark as a client component
+
+'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -12,109 +13,28 @@ import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
 import ControlButtons from './ControlButtons';
 import styles from './LeftPanel.module.css';
+import { useMedia } from '../hooks/useMedia';
 
 const LeftPanel: React.FC = () => {
-  const { messages, setMessages, sendActionToChatbot } = useChat();
+  const {
+    mediaState,
+    videoRef,
+    audioRef,
+    startCam,
+    stopCam,
+    startMic,
+    stopMic,
+    togglePip,
+    toggleMem,
+  } = useMedia();
+
+  const { messages, setMessages, sendActionToChatbot } = useChat({ isMemOn: mediaState.isMemOn });
 
   const [chatInput, setChatInput] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const lastFinalMessageRef = useRef<string | null>(null);
 
-  // Initialize mediaState with camera, mic, pip, and memory on by default
-  const [mediaState, setMediaState] = useState({
-    isCamOn: true,
-    isMicOn: true,
-    isPipOn: true,
-    isMemOn: true,
-  });
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const videoStreamRef = useRef<MediaStream | null>(null);
-  const audioStreamRef = useRef<MediaStream | null>(null);
-
-  // Memoize updateMediaState to ensure stable reference
-  const updateMediaState = useCallback((key: keyof typeof mediaState, value: boolean) => {
-    setMediaState((prev) => ({ ...prev, [key]: value }));
-  }, []);
-
-  // Handle microphone operations
-  const startMic = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (audioRef.current) {
-        audioRef.current.srcObject = stream;
-        audioStreamRef.current = stream;
-        await audioRef.current.play();
-        updateMediaState('isMicOn', true);
-      }
-    } catch (err) {
-      console.error('Unable to access mic. Please check permissions.', err);
-    }
-  }, [audioRef, updateMediaState]);
-
-  const stopMic = useCallback(() => {
-    if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach((track) => track.stop());
-      audioStreamRef.current = null;
-    }
-    updateMediaState('isMicOn', false);
-  }, [updateMediaState]);
-
-  // Handle Picture-in-Picture (PiP) operations
-  const startPip = useCallback(async () => {
-    if (videoRef.current) {
-      try {
-        if (document.pictureInPictureElement !== videoRef.current) {
-          await videoRef.current.requestPictureInPicture();
-          updateMediaState('isPipOn', true);
-        }
-      } catch (err) {
-        console.error('Unable to enter PiP mode:', err);
-      }
-    }
-  }, [videoRef, updateMediaState]);
-
-  const stopPip = useCallback(async () => {
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-        updateMediaState('isPipOn', false);
-      }
-    } catch (err) {
-      console.error('Unable to exit PiP mode:', err);
-    }
-  }, [updateMediaState]);
-
-  // Handle camera operations
-  const startCam = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoStreamRef.current = stream;
-        await videoRef.current.play();
-        updateMediaState('isCamOn', true);
-
-        if (mediaState.isPipOn) {
-          await startPip();
-        }
-
-        if (!mediaState.isMicOn) await startMic();
-      }
-    } catch (err) {
-      console.error('Unable to access cam. Please check permissions.', err);
-    }
-  }, [mediaState.isMicOn, mediaState.isPipOn, startMic, startPip, videoRef, updateMediaState]);
-
-  const stopCam = useCallback(() => {
-    if (videoStreamRef.current) {
-      videoStreamRef.current.getTracks().forEach((track) => track.stop());
-      videoStreamRef.current = null;
-    }
-    updateMediaState('isCamOn', false);
-    stopPip();
-  }, [stopPip, updateMediaState]);
 
   // Handle sending chat messages
   const handleChat = useCallback(
@@ -126,6 +46,7 @@ const LeftPanel: React.FC = () => {
           setChatInput(''); // Clear the chat input after sending
         } catch (error) {
           console.error('Error sending message:', error);
+          setError('Failed to send message.');
         }
       }
     },
@@ -146,8 +67,13 @@ const LeftPanel: React.FC = () => {
               prev.filter((msg) => !(msg.isInterim && msg.sender === 'user'))
             );
 
+            // Add the final message to chat
+            setMessages((prev) => [...prev, { sender: 'user', text: transcript.trim() }]);
+
             // Send the transcript to the chatbot
             handleChat(transcript.trim());
+
+            // Save to memory if enabled (handled by useChat)
           }
         } else {
           console.log('Interim transcript:', transcript.trim());
@@ -183,6 +109,7 @@ const LeftPanel: React.FC = () => {
       startHearing();
     } catch (err) {
       console.error('Unable to access mic with speech recognition.', err);
+      setError('Unable to access microphone.');
     }
   }, [startMic, startHearing]);
 
@@ -197,27 +124,30 @@ const LeftPanel: React.FC = () => {
       : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
-  const toggleMem = () => updateMediaState('isMemOn', !mediaState.isMemOn);
-
-  const togglePip = useCallback(() => {
-    mediaState.isPipOn ? stopPip() : startPip();
-  }, [mediaState.isPipOn, startPip, stopPip]);
-
   useEffect(() => {
+    // Start camera and microphone with speech recognition on component mount
     startCam();
     startMicWithSpeechRecognition();
-    updateMediaState('isMemOn', true);
-  }, [startCam, startMicWithSpeechRecognition, updateMediaState]);
+    // Memory is toggled based on initial state; if you want it enabled by default, ensure isMemOn is true
+  }, [startCam, startMicWithSpeechRecognition]);
 
   useEffect(() => {
     return () => {
+      // Cleanup on component unmount
       stopCam();
       stopMic();
+      if (mediaState.isPipOn) {
+        document.exitPictureInPicture().catch((err) => {
+          console.error('Error exiting PiP on cleanup.', err);
+        });
+      }
+      stopHearing();
     };
-  }, [stopCam, stopMic]);
+  }, [stopCam, stopMic, mediaState.isPipOn, stopHearing]);
 
   return (
     <div className={styles.container}>
+      {error && <div className={styles.error}>{error}</div>}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
