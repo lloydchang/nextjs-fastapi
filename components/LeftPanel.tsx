@@ -37,9 +37,10 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  
+  // Replace useState with useRef to avoid re-renders and prevent double messages
   const lastFinalMessageRef = useRef<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
   const manuallyStoppedRef = useRef<boolean>(false);
 
   // Handle sending chat messages
@@ -65,7 +66,8 @@ const LeftPanel: React.FC = () => {
       if (transcript && transcript.trim()) {
         if (isFinal) {
           if (transcript !== lastFinalMessageRef.current) {
-            lastFinalMessageRef.current = transcript;
+            lastFinalMessageRef.current = transcript; // Update ref instead of state
+            console.log('Final transcript:', transcript.trim());
 
             setMessages((prev) =>
               prev.filter((msg) => !(msg.isInterim && msg.sender === 'user'))
@@ -100,11 +102,9 @@ const LeftPanel: React.FC = () => {
 
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
-      console.log('Starting microphone and speech recognition.');
-      manuallyStoppedRef.current = false;
+      manuallyStoppedRef.current = false; // Reset manual stop tracking
       await startMic();
       startHearing();
-      console.log('Microphone and speech recognition started.');
     } catch (err) {
       console.error('Unable to access mic with speech recognition.', err);
       setError('Unable to access microphone.');
@@ -112,22 +112,17 @@ const LeftPanel: React.FC = () => {
   }, [startMic, startHearing]);
 
   const stopMicWithSpeechRecognition = useCallback(() => {
-    console.log('Stopping speech recognition and microphone.');
-    manuallyStoppedRef.current = true;
+    manuallyStoppedRef.current = true; // Mark as manually stopped
     stopHearing();
     stopMic();
-    console.log('Speech recognition and microphone stopped.');
   }, [stopHearing, stopMic]);
 
   const toggleMicWithSpeechRecognition = useCallback(() => {
-    console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
     mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
 
-  // Prevent mic from turning off after sending a message
   useEffect(() => {
     if (!mediaState.isMicOn && !manuallyStoppedRef.current) {
-      console.log('Microphone turned off unexpectedly, restarting...');
       startMicWithSpeechRecognition();
     }
   }, [mediaState.isMicOn, startMicWithSpeechRecognition]);
@@ -135,7 +130,6 @@ const LeftPanel: React.FC = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      console.log('Cleaning up LeftPanel component.');
       manuallyStoppedRef.current = true; // Ensure cleanup respects manual stop
       stopCam();
       stopMic();
