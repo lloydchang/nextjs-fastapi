@@ -1,6 +1,8 @@
 // services/chatService.ts
 
-let previousContext: number[] | null = null;
+import { systemPrompt } from '../utils/systemPrompt'; // Import systemPrompt from utils/systemPrompt.ts
+
+let previousContext: number[] | null = null; // Global context tracking
 
 export const sendMessageToChatbot = async (prompt: string): Promise<string> => {
   const model = 'llama3.2'; // Hardcoded model value
@@ -11,12 +13,12 @@ export const sendMessageToChatbot = async (prompt: string): Promise<string> => {
     console.log('Prompt:', prompt);
     console.log('Context:', previousContext);
 
-    // Construct the JSON body string with context if available
+    // Construct the JSON body with the systemPrompt, user prompt, and context
     const requestBody = JSON.stringify({
       model,
-      prompt,
-      context: previousContext,
-      stream: true, // Enable streaming
+      prompt: `${systemPrompt}\nUser: ${prompt}`, // Include system prompt and user message
+      context: previousContext, // Pass the current context parameter if available
+      stream: true, // Enable streaming for a real-time response
     });
 
     console.log('Formatted JSON body:', requestBody);
@@ -25,6 +27,9 @@ export const sendMessageToChatbot = async (prompt: string): Promise<string> => {
     const response = await fetch('http://localhost:11434/api/generate', {
       method: 'POST',
       body: requestBody, // Include the context in the body
+      headers: {
+        'Content-Type': 'application/json', // Use JSON Content-Type header
+      },
     });
 
     console.log('Received raw response from server:', response);
@@ -42,6 +47,7 @@ export const sendMessageToChatbot = async (prompt: string): Promise<string> => {
     let finalResponse = '';
     let buffer = '';
 
+    // Process the streaming response line by line
     while (!done) {
       const { value, done: streamDone } = await reader.read();
       if (value) {
