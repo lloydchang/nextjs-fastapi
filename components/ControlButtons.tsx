@@ -26,28 +26,50 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 }) => {
   const { isMemEnabled, toggleMem, startMic, stopMic } = useChat();
 
+  // Button text logic based on props state
   const camButtonText = isCamOn ? "Stop Cam 📷" : "Start Cam 📷";
   const micButtonText = isMicOn ? "Stop Mic 🎤" : "Start Mic 🎤";
+  const pipButtonText = isPiP ? "Stop PiP 📹" : "Start PiP 📹";
   const memButtonText = isMemEnabled ? "Stop Mem 🧠" : "Start Mem 🧠";
 
   useEffect(() => {
+    // Ensure microphone state is synced
     isMicOn ? startMic() : stopMic();
   }, [isMicOn, startMic, stopMic]);
 
   return (
     <div className={styles.container}>
-      <button onClick={isCamOn ? stopCam : startCam} className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}>
+      {/* Camera button */}
+      <button
+        onClick={isCamOn ? stopCam : startCam}
+        className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
+      >
         {camButtonText}
       </button>
+
+      {/* PiP button, only visible when camera is on */}
       {isCamOn && (
-        <button onClick={isPiP ? stopPiP : startPiP} className={`${styles.button} ${isPiP ? styles.stopButton : styles.startButton}`}>
-          {isPiP ? "Stop PiP 📹" : "Start PiP 📹"}
+        <button
+          onClick={isPiP ? stopPiP : startPiP}
+          className={`${styles.button} ${isPiP ? styles.stopButton : styles.startButton}`}
+        >
+          {pipButtonText}
         </button>
       )}
-      <button onClick={toggleMic} className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}>
+
+      {/* Microphone button */}
+      <button
+        onClick={toggleMic}
+        className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
+      >
         {micButtonText}
       </button>
-      <button onClick={toggleMem} className={`${styles.button} ${isMemEnabled ? styles.stopButton : styles.startButton}`}>
+
+      {/* Memory button */}
+      <button
+        onClick={toggleMem}
+        className={`${styles.button} ${isMemEnabled ? styles.stopButton : styles.startButton}`}
+      >
         {memButtonText}
       </button>
     </div>

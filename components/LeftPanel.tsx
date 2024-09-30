@@ -74,9 +74,12 @@ const LeftPanel: React.FC = () => {
   const startPiP = async () => {
     if (videoRef.current) {
       try {
-        await videoRef.current.requestPictureInPicture();
-        updateMediaState("isPiP", true);
+        if (document.pictureInPictureElement !== videoRef.current) {
+          await videoRef.current.requestPictureInPicture();
+          updateMediaState("isPiP", true);
+        }
       } catch (err) {
+        console.error("Unable to enter PiP mode:", err);
         alert("Unable to enter PiP mode.");
       }
     }
@@ -85,9 +88,12 @@ const LeftPanel: React.FC = () => {
   const stopPiP = async () => {
     if (document.pictureInPictureElement) {
       try {
-        await document.exitPictureInPicture();
-        updateMediaState("isPiP", false);
+        if (document.pictureInPictureElement === videoRef.current) {
+          await document.exitPictureInPicture();
+          updateMediaState("isPiP", false);
+        }
       } catch (err) {
+        console.error("Unable to exit PiP mode:", err);
         alert("Unable to exit PiP mode.");
       }
     }
@@ -183,6 +189,7 @@ const LeftPanel: React.FC = () => {
             stopCam={stopCam}
             startPiP={startPiP}
             stopPiP={stopPiP}
+            isPiP={mediaState.isPiP}
             isRecognitionRunning={isRecognitionRunning}
           />
         </div>
