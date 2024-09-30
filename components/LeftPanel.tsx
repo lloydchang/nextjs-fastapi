@@ -33,9 +33,10 @@ const LeftPanel: React.FC = () => {
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
-  const updateMediaState = (key: keyof typeof mediaState, value: boolean) => {
+  // Memoize updateMediaState to ensure stable reference
+  const updateMediaState = useCallback((key: keyof typeof mediaState, value: boolean) => {
     setMediaState((prev) => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
   // Handle microphone operations
   const startMic = useCallback(async () => {
@@ -50,7 +51,7 @@ const LeftPanel: React.FC = () => {
     } catch (err) {
       console.error('Unable to access mic. Please check permissions.', err);
     }
-  }, [audioRef]);
+  }, [audioRef, updateMediaState]);
 
   const stopMic = useCallback(() => {
     if (audioStreamRef.current) {
@@ -58,7 +59,7 @@ const LeftPanel: React.FC = () => {
       audioStreamRef.current = null;
     }
     updateMediaState('isMicOn', false);
-  }, []);
+  }, [updateMediaState]);
 
   // Handle Picture-in-Picture (PiP) operations
   const startPip = useCallback(async () => {
@@ -72,7 +73,7 @@ const LeftPanel: React.FC = () => {
         console.error('Unable to enter PiP mode:', err);
       }
     }
-  }, [videoRef]);
+  }, [videoRef, updateMediaState]);
 
   const stopPip = useCallback(async () => {
     try {
@@ -83,7 +84,7 @@ const LeftPanel: React.FC = () => {
     } catch (err) {
       console.error('Unable to exit PiP mode:', err);
     }
-  }, []);
+  }, [updateMediaState]);
 
   // Handle camera operations
   const startCam = useCallback(async () => {
@@ -104,7 +105,7 @@ const LeftPanel: React.FC = () => {
     } catch (err) {
       console.error('Unable to access cam. Please check permissions.', err);
     }
-  }, [mediaState.isMicOn, mediaState.isPipOn, startMic, startPip, videoRef]);
+  }, [mediaState.isMicOn, mediaState.isPipOn, startMic, startPip, videoRef, updateMediaState]);
 
   const stopCam = useCallback(() => {
     if (videoStreamRef.current) {
@@ -113,7 +114,7 @@ const LeftPanel: React.FC = () => {
     }
     updateMediaState('isCamOn', false);
     stopPip();
-  }, [stopPip]);
+  }, [stopPip, updateMediaState]);
 
   // Handle sending chat messages
   const handleChat = useCallback(
@@ -203,11 +204,10 @@ const LeftPanel: React.FC = () => {
   }, [mediaState.isPipOn, startPip, stopPip]);
 
   useEffect(() => {
-    // Start camera, mic, pip, and memory by default
     startCam();
     startMicWithSpeechRecognition();
     updateMediaState('isMemOn', true);
-  }, [startCam, startMicWithSpeechRecognition]);
+  }, [startCam, startMicWithSpeechRecognition, updateMediaState]);
 
   useEffect(() => {
     return () => {
@@ -218,12 +218,7 @@ const LeftPanel: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <Image
-        src={BackgroundImage}
-        alt="Background"
-        fill
-        className={styles.backgroundImage}
-      />
+      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
       {/* VideoStream with conditional styles based on isPipOn */}
