@@ -13,7 +13,7 @@ import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
 import ChatMessages from './ChatMessages';
 import ControlButtons from './ControlButtons';
-import styles from './LeftPanel.module.css';
+import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 
 // Dynamically import heavy components (if any). Assuming ChatMessages is heavy.
@@ -128,13 +128,6 @@ const LeftPanel: React.FC = () => {
       ? stopMicWithSpeechRecognition()
       : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
-
-  useEffect(() => {
-    // Start camera and microphone with speech recognition on component mount
-    startCam();
-    startMicWithSpeechRecognition();
-    // Memory is toggled based on initial state; if you want it enabled by default, ensure isMemOn is true
-  }, [startCam, startMicWithSpeechRecognition]);
 
   useEffect(() => {
     return () => {
