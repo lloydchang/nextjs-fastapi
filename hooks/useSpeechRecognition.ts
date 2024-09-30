@@ -7,60 +7,49 @@ interface UseSpeechRecognitionReturn {
   stopHearing: () => void;
 }
 
-export const useSpeechRecognition = (onResult: (transcript: string, isFinal: boolean) => void): UseSpeechRecognitionReturn => {
+export const useSpeechRecognition = (
+  onResult: (transcript: string, isFinal: boolean) => void
+): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.error('Speech Recognition API not supported in this browser.');
-      return;
-    }
-
-    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recog = new SpeechRecognitionClass();
-
-    recog.continuous = true;
-    recog.interimResults = true;
-    recog.lang = 'en-US';
-
-    recog.onresult = (event: SpeechRecognitionEvent) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
+    const SpeechRecognitionConstructor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognitionConstructor) {
+      const recog = new SpeechRecognitionConstructor();
+      recog.continuous = true;
+      recog.interimResults = true;
+      recog.onresult = (event: SpeechRecognitionEvent) => {
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          const isFinal = event.results[i].isFinal;
+          onResult(transcript, isFinal);
         }
-      }
-
-      if (finalTranscript) {
-        onResult(finalTranscript, true);
-      }
-
-      if (interimTranscript) {
-        onResult(interimTranscript, false);
-      }
-    };
-
-    recog.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-    };
-
-    setRecognition(recog);
+      };
+      recog.onerror = (event: any) => {
+        console.error('Speech recognition error', event);
+        // Optionally, handle errors without stopping the microphone
+      };
+      setRecognition(recog);
+    } else {
+      console.warn('SpeechRecognition not supported in this browser.');
+    }
   }, [onResult]);
 
   const startHearing = useCallback(() => {
     if (recognition) {
-      recognition.start();
+      try {
+        recognition.start();
+        console.log('Speech recognition started.');
+      } catch (err) {
+        console.error('Error starting speech recognition:', err);
+      }
     }
   }, [recognition]);
 
   const stopHearing = useCallback(() => {
     if (recognition) {
       recognition.stop();
+      console.log('Speech recognition stopped.');
     }
   }, [recognition]);
 

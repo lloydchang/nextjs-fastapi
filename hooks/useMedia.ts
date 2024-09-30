@@ -36,23 +36,32 @@ export const useMedia = (): UseMediaReturn => {
 
   // Start Camera
   const startCam = useCallback(async () => {
+    if (mediaState.isCamOn) {
+      console.warn('Camera is already on.');
+      return;
+    }
     try {
+      console.log('Attempting to start camera.');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoStreamRef.current = stream;
         await videoRef.current.play();
-        setMediaState((prev) => ({ ...prev, isCamOn: true }));
+        setMediaState((prev) => {
+          console.log('Camera started.');
+          return { ...prev, isCamOn: true };
+        });
       }
     } catch (err) {
       console.error('Unable to access camera. Please check permissions.', err);
       alert('Unable to access camera. Please check permissions.');
     }
-  }, []);
+  }, [mediaState.isCamOn]);
 
   // Stop Camera
   const stopCam = useCallback(() => {
     if (videoStreamRef.current) {
+      console.log('Stopping camera.');
       videoStreamRef.current.getTracks().forEach((track) => track.stop());
       videoStreamRef.current = null;
     }
@@ -64,23 +73,32 @@ export const useMedia = (): UseMediaReturn => {
 
   // Start Microphone
   const startMic = useCallback(async () => {
+    if (mediaState.isMicOn) {
+      console.warn('Microphone is already on.');
+      return;
+    }
     try {
+      console.log('Attempting to start microphone.');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (audioRef.current) {
         audioRef.current.srcObject = stream;
         audioStreamRef.current = stream;
-        await audioRef.current.play();
-        setMediaState((prev) => ({ ...prev, isMicOn: true }));
+        // Removed play() as it's unnecessary for microphone streams
+        setMediaState((prev) => {
+          console.log('Microphone started.');
+          return { ...prev, isMicOn: true };
+        });
       }
     } catch (err) {
       console.error('Unable to access microphone. Please check permissions.', err);
       alert('Unable to access microphone. Please check permissions.');
     }
-  }, []);
+  }, [mediaState.isMicOn]);
 
   // Stop Microphone
   const stopMic = useCallback(() => {
     if (audioStreamRef.current) {
+      console.log('Stopping microphone.');
       audioStreamRef.current.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
     }
@@ -92,24 +110,25 @@ export const useMedia = (): UseMediaReturn => {
 
   // Toggle Picture-in-Picture
   const togglePip = useCallback(async () => {
-    if (!mediaState.isPipOn) {
-      if (videoRef.current) {
-        try {
+    if (videoRef.current) {
+      try {
+        if (!mediaState.isPipOn) {
+          console.log('Entering Picture-in-Picture mode.');
           await videoRef.current.requestPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: true }));
-        } catch (err) {
-          console.error('Unable to enter PiP mode.', err);
-          alert('Unable to enter PiP mode.');
+        } else {
+          console.log('Exiting Picture-in-Picture mode.');
+          await document.exitPictureInPicture();
+          setMediaState((prev) => ({ ...prev, isPipOn: false }));
         }
+      } catch (err) {
+        console.error('Unable to toggle PiP mode.', err);
+        alert('Unable to toggle PiP mode.');
+        // Optionally, revert the state if PiP action fails
+        setMediaState((prev) => ({ ...prev, isPipOn: false }));
       }
     } else {
-      try {
-        await document.exitPictureInPicture();
-        setMediaState((prev) => ({ ...prev, isPipOn: false }));
-      } catch (err) {
-        console.error('Unable to exit PiP mode.', err);
-        alert('Unable to exit PiP mode.');
-      }
+      console.warn('Video element is not available for PiP.');
     }
   }, [mediaState.isPipOn]);
 
@@ -121,6 +140,7 @@ export const useMedia = (): UseMediaReturn => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      console.log('Cleaning up media streams and PiP mode.');
       stopCam();
       stopMic();
       if (mediaState.isPipOn) {
@@ -129,8 +149,29 @@ export const useMedia = (): UseMediaReturn => {
         });
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mediaState.isPipOn, stopCam, stopMic]);
+
+  // Monitor Microphone Permissions
+  useEffect(() => {
+    const handlePermissionChange = async () => {
+      try {
+        const status = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        if (status.state === 'denied') {
+          console.warn('Microphone access denied.');
+          stopMic();
+          alert('Microphone access has been denied. Please enable it in your browser settings.');
+        }
+      } catch (err) {
+        console.error('Error querying microphone permissions.', err);
+      }
+    };
+
+    navigator.permissions.addEventListener('change', handlePermissionChange);
+
+    return () => {
+      navigator.permissions.removeEventListener('change', handlePermissionChange);
+    };
+  }, [stopMic]);
 
   return {
     mediaState,
