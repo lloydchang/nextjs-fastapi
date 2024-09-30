@@ -1,15 +1,19 @@
 // services/chatService.ts
+
 export const sendMessageToChatbot = async (
-  systemPrompt: string, 
-  input: string, 
-  context: string | null, // Accept context as a third argument
-  onResponse: (message: string, newContext: string | null) => void // Pass newContext to the callback
+  systemPrompt: string,
+  input: string,
+  context: string | null,
+  onResponse: (message: string, newContext: string | null) => void,
+  signal: AbortSignal // Accept an AbortSignal to handle cancellation
 ) => {
   // Include context in the prompt if available
   const requestBody = {
     model: 'llama3.2',
     // Include the full conversation context in the prompt
-    prompt: context ? `${systemPrompt}\n${context}\nUser: ${input}\nAssistant:` : `${systemPrompt}\nUser: ${input}\nAssistant:`,
+    prompt: context
+      ? `${systemPrompt}\n${context}\nUser: ${input}\nAssistant:`
+      : `${systemPrompt}\nUser: ${input}\nAssistant:`,
     temperature: 2.0,
   };
 
@@ -19,6 +23,7 @@ export const sendMessageToChatbot = async (
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
+      signal, // Pass the AbortSignal to fetch
     });
 
     if (!response.ok) {
@@ -42,7 +47,6 @@ export const sendMessageToChatbot = async (
           buffer += parsed.response; // Collect text in the buffer
 
           // Check if buffer has a complete segment (ends with allowed punctuation)
-          // Period if not followed by a digit
           if (/[^0-9]\.\s*$|[!?]\s*$/.test(buffer)) {
             const completeSegment = buffer.trim(); // Trim the buffer to form a complete message
             buffer = ''; // Clear buffer for next segment
@@ -57,7 +61,11 @@ export const sendMessageToChatbot = async (
       }
     }
   } catch (error) {
-    console.error('Error sending message to chatbot:', error);
-    throw error;
+    if (error.name === 'AbortError') {
+      console.log('Fetch aborted');
+    } else {
+      console.error('Error sending message to chatbot:', error);
+      throw error;
+    }
   }
 };

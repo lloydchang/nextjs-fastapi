@@ -9,8 +9,7 @@ interface ControlButtonsProps {
   startCam: () => void;
   stopCam: () => void;
   isPipOn: boolean;
-  startPip: () => void;
-  stopPip: () => void;
+  togglePip: () => void;
   isMemOn: boolean;
   toggleMem: () => void;
 }
@@ -22,8 +21,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   startCam,
   stopCam,
   isPipOn,
-  startPip,
-  stopPip,
+  togglePip,
   isMemOn,
   toggleMem,
 }) => {
@@ -44,17 +42,15 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {camButtonText}
       </button>
 
-      {/* PiP button, only visible when camera is on */}
-      {isCamOn && (
-        <button
-          onClick={isPipOn ? stopPip : startPip}
-          className={`${styles.button} ${
-            isPipOn ? styles.stopButton : styles.startButton
-          }`}
-        >
-          {pipButtonText}
-        </button>
-      )}
+      {/* PiP button */}
+      <button
+        onClick={togglePip}
+        className={`${styles.button} ${
+          !isPipOn ? styles.startButton : styles.stopButton
+        }`}
+      >
+        {pipButtonText}
+      </button>
 
       {/* Microphone button */}
       <button
