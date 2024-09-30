@@ -14,13 +14,14 @@ interface UseChatProps {
 }
 
 export const useChat = ({ isMemOn }: UseChatProps) => {
+  const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
   const [messages, setMessages] = useState<Message[]>([]);
 
   // Load messages from localStorage when memory is enabled and component mounts
   useEffect(() => {
     if (isMemOn) {
       try {
-        const storedMessages = localStorage.getItem('chatMemory');
+        const storedMessages = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (storedMessages) {
           setMessages(JSON.parse(storedMessages));
           console.log('Chat history loaded from memory.');
@@ -35,9 +36,9 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
   // Save messages to localStorage whenever they change and memory is enabled
   useEffect(() => {
-    if (isMemOn) {
+    if (isMemOn && messages.length > 0) {
       try {
-        localStorage.setItem('chatMemory', JSON.stringify(messages));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
         console.log('Chat history saved to memory.');
       } catch (error) {
         console.error('Failed to save chat history to memory:', error);
@@ -45,8 +46,12 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, [messages, isMemOn]);
 
+  // Send user message to the chatbot and receive a response
   const sendActionToChatbot = useCallback(
     async (input: string) => {
+      // Add user message to the conversation first
+      setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+
       try {
         // Send the entire conversation to the chatbot for context-aware responses
         await sendMessageToChatbot(input, getConversationContext(), (reply, newContext) => {
@@ -58,7 +63,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
       }
     },
-    []
+    [messages] // Add messages as a dependency to capture the current state
   );
 
   // Helper function to construct conversation context
