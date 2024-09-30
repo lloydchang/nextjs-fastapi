@@ -1,27 +1,41 @@
 // app/page.tsx
-'use client'; // Add this directive to make the component a Client Component
 
-import React, { useEffect } from 'react';
+// moved from
+// pages/index.tsx
+// to
+// app/page.tsx
+// because of Next.js 14
+
+'use client'; // Mark as Client Component
+
+import React, { Suspense } from 'react';
 import LeftPanel from '../components/LeftPanel';
-import MiddlePanel from '../components/MiddlePanel';
-import RightPanel from '../components/RightPanel';
+import dynamic from 'next/dynamic';
 import { TalkProvider } from '../context/TalkContext'; // Import the TalkProvider
-import '../styles/globals.css'; // Make sure global styles are applied
+import '../styles/globals.css'; // Ensure global styles are applied
+
+// Lazy load MiddlePanel and RightPanel
+const MiddlePanel = dynamic(() => import('../components/MiddlePanel'), {
+  loading: () => <p>Loading Middle Panel...</p>,
+  ssr: false,
+});
+
+const RightPanel = dynamic(() => import('../components/RightPanel'), {
+  loading: () => <p>Loading Right Panel...</p>,
+  ssr: false,
+});
 
 const Home: React.FC = () => {
-  console.log('Home component rendered'); // This will log every time the component re-renders
-
-  useEffect(() => {
-    console.log('Home component mounted'); // This will log once when the component mounts
-  }, []);
-
   return (
     <TalkProvider>
       <div className="container">
-        {console.log('Rendering container with panels')} {/* Logs during render */}
         <LeftPanel />
-        <MiddlePanel />
-        <RightPanel />
+        <Suspense fallback={<p>Loading Middle Panel...</p>}>
+          <MiddlePanel />
+        </Suspense>
+        <Suspense fallback={<p>Loading Right Panel...</p>}>
+          <RightPanel />
+        </Suspense>
       </div>
     </TalkProvider>
   );

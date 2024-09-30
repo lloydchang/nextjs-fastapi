@@ -1,7 +1,7 @@
 // components/VideoStream.tsx
 
 import React from 'react';
-import styles from '../styles/VideoStream.module.css';
+import styles from './VideoStream.module.css';
 
 interface VideoStreamProps {
   isCamOn: boolean;
@@ -16,10 +16,11 @@ const VideoStream: React.FC<VideoStreamProps> = ({ isCamOn, videoRef }) => {
       muted
       playsInline
       autoPlay
-      // Optionally, you can hide the video element when the camera is off
+      // Hide the video element when the camera is off
       style={{ display: isCamOn ? 'block' : 'none' }}
     />
   );
 };
 
-export default VideoStream;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(VideoStream);

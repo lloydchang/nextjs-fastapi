@@ -1,7 +1,8 @@
 // components/ChatMessage.tsx
 
 import React from 'react';
-import styles from '../styles/ChatMessage.module.css';
+import styles from './ChatMessage.module.css';
+import { Message } from '../hooks/useChat';
 
 interface ChatMessageProps {
   sender: string;
@@ -25,4 +26,5 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) =>
   );
 };
 
-export default ChatMessage;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(ChatMessage);

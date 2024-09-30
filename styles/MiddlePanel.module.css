@@ -1,96 +1,100 @@
-/* MiddlePanel.module.css */
+/* styles/MiddlePanel.module.css */
+
 .middlePanel {
-  width: 100%;
-  height: 100%;
+  flex: 1;
+  padding: 20px;
+  background-color: #f9f9f9;
+  overflow-y: auto;
 }
 
 .searchContainer {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .searchInput {
-  padding: 6px;
-  width: 200px;
-  font-size: 14px;
-  color: #000;
-  background-color: #fff;
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
 
 .button {
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  border-radius: 4px;
+  padding: 10px 15px;
   border: none;
-  margin-left: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 .searchButton {
-  background-color: #3498db;
-  color: #fff;
+  background-color: #2196f3;
+  color: white;
+}
+
+.searchButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .tedButton {
-  background-color: #fff;
-  color: #EB0028;
-  border: 2px solid #EB0028;
-  transition: 0.3s ease-in-out;
+  background-color: #e91e63;
+  color: white;
 }
 
 .tedButton:hover {
-  background-color: #EB0028;
-  color: #fff;
+  background-color: #c2185b;
 }
 
 .loadingSpinner {
   margin-left: 10px;
-  display: inline-block;
-  animation: spin 1s linear infinite; /* Apply spinning animation */
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }
 
 .nowPlaying {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .videoFrame {
-  border: none;
+  border-radius: 10px;
 }
 
 .resultsContainer {
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .resultItem {
-  padding: 10px 0;
-  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  transition: background-color 0.3s ease;
+}
+
+.resultItem:hover {
+  background-color: #f1f1f1;
 }
 
 .resultLink {
-  font-size: 14px;
-  color: #EB0028;
-  text-decoration: underline;
-  cursor: pointer;
+  color: #2196f3;
+  text-decoration: none;
+  font-weight: bold;
 }
 
-.errorText {
-  color: red;
-  margin-top: 10px;
+.resultLink:hover {
+  text-decoration: underline;
 }
 
 .sdgTags {
-  margin-top: 4px;
-  font-size: 14px;
-  color: #FFFFFF;
+  color: #757575;
+  font-size: 0.9em;
+}
+
+.errorText {
+  color: #f44336;
+  text-align: center;
 }

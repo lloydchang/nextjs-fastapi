@@ -1,7 +1,7 @@
 // components/ChatInput.tsx
 
-import React from 'react';
-import styles from '../styles/ChatInput.module.css';
+import React, { useCallback } from 'react';
+import styles from './ChatInput.module.css';
 
 interface ChatInputProps {
   chatInput: string;
@@ -16,24 +16,30 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const isDisabled = chatInput.trim() === '';
 
-  const sendMessage = () => {
+  const sendMessage = useCallback(() => {
     if (!isDisabled) {
       handleChat();
       setChatInput(''); // Clear the input field after sending
     }
-  };
+  }, [isDisabled, handleChat, setChatInput]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent adding a new line
+      sendMessage();
+    }
+  }, [sendMessage]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setChatInput(e.target.value);
+  }, [setChatInput]);
 
   return (
     <div className={styles.container}>
       <textarea
         value={chatInput}
-        onChange={(e) => setChatInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault(); // Prevent adding a new line
-            sendMessage();
-          }
-        }}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder="Type your message..."
         className={styles.textarea}
         rows={3}
@@ -50,4 +56,5 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-export default ChatInput;
+// Memoize to prevent unnecessary re-renders
+export default React.memo(ChatInput);
