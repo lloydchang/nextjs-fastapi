@@ -7,6 +7,7 @@ import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import dynamic from 'next/dynamic'; // For dynamic imports
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
@@ -14,6 +15,12 @@ import ChatMessages from './ChatMessages';
 import ControlButtons from './ControlButtons';
 import styles from './LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
+
+// Dynamically import heavy components (if any). Assuming ChatMessages is heavy.
+const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
+  loading: () => <p>Loading messages...</p>,
+  ssr: false, // Disable server-side rendering for this component
+});
 
 const LeftPanel: React.FC = () => {
   const {
@@ -72,8 +79,6 @@ const LeftPanel: React.FC = () => {
 
             // Send the transcript to the chatbot
             handleChat(transcript.trim());
-
-            // Saving to memory is handled by useChat
           }
         } else {
           console.log('Interim transcript:', transcript.trim());
@@ -148,7 +153,7 @@ const LeftPanel: React.FC = () => {
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
-      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} priority />
+      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
       {/* VideoStream with conditional styles based on isPipOn */}
@@ -166,7 +171,7 @@ const LeftPanel: React.FC = () => {
             <b>Chat with TEDxSDG</b>
           </h3>
 
-          <ChatMessages messages={messages} />
+          <HeavyChatMessages messages={messages} />
           <ChatInput
             chatInput={chatInput}
             setChatInput={setChatInput}
@@ -190,5 +195,4 @@ const LeftPanel: React.FC = () => {
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
 export default React.memo(LeftPanel);

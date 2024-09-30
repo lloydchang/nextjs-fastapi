@@ -37,7 +37,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
         placeholder="Type your message..."
         className={styles.textarea}
         rows={3}
-        aria-label="Chat input"
       />
       <button
         onClick={sendMessage}
@@ -51,5 +50,4 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-// Memoize the component to prevent unnecessary re-renders
 export default React.memo(ChatInput);

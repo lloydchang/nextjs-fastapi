@@ -1,6 +1,6 @@
 // hooks/useChat.ts
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
 
 export interface Message {
@@ -45,25 +45,28 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, [messages, isMemOn]);
 
-  const sendActionToChatbot = async (input: string) => {
-    try {
-      // Send the entire conversation to the chatbot for context-aware responses
-      await sendMessageToChatbot(input, getConversationContext(), (reply, newContext) => {
-        setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
-        // Optionally, handle newContext if needed
-      });
-    } catch (error) {
-      console.error('Error communicating with chatbot:', error);
-      setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
-    }
-  };
+  const sendActionToChatbot = useCallback(
+    async (input: string) => {
+      try {
+        // Send the entire conversation to the chatbot for context-aware responses
+        await sendMessageToChatbot(input, getConversationContext(), (reply, newContext) => {
+          setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
+          // Optionally, handle newContext if needed
+        });
+      } catch (error) {
+        console.error('Error communicating with chatbot:', error);
+        setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
+      }
+    },
+    []
+  );
 
   // Helper function to construct conversation context
-  const getConversationContext = () => {
+  const getConversationContext = useCallback((): string => {
     return messages
       .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
       .join('\n');
-  };
+  }, [messages]);
 
   return { messages, setMessages, sendActionToChatbot };
 };
