@@ -24,7 +24,7 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: false,
+    isMicOn: true,
     isPipOn: false,
     isMemOn: true,
   });
