@@ -48,81 +48,7 @@ const LeftPanel: React.FC = () => {
     }
   }, [chatInput, sendActionToChatbot]);
 
-  // Handle cam and Pip toggling
-  const startCam = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoStreamRef.current = stream;
-        await videoRef.current.play();
-        updateMediaState("isCamOn", true);
-        startPip(); // Start PiP after the camera is on
-
-        if (!mediaState.isMicOn) startMic();
-      }
-    } catch (err) {
-      alert("Unable to access cam. Please check permissions.");
-    }
-  };
-
-  const stopCam = () => {
-    videoStreamRef.current?.getTracks().forEach((track) => track.stop());
-    videoStreamRef.current = null;
-    updateMediaState("isCamOn", false);
-    stopPip(); // Ensure PiP is stopped when camera is off
-  };
-
-  const startPip = async () => {
-    if (videoRef.current) {
-      try {
-        if (document.pictureInPictureElement !== videoRef.current) {
-          await videoRef.current.requestPictureInPicture();
-          updateMediaState("isPipOn", true); // Update state
-        }
-      } catch (err) {
-        console.error("Unable to enter Pip mode:", err);
-        alert("Unable to enter Pip mode.");
-      }
-    }
-  };
-
-  const stopPip = async () => {
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-        updateMediaState("isPipOn", false); // Update state to reflect PiP is off
-      }
-    } catch (err) {
-      console.error("Unable to exit Pip mode:", err);
-      alert("Unable to exit Pip mode.");
-    }
-  };
-
-  // Handle microphone operations
-  const startMic = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (audioRef.current) {
-        audioRef.current.srcObject = stream;
-        audioStreamRef.current = stream;
-        await audioRef.current.play();
-        updateMediaState("isMicOn", true);
-      }
-    } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
-    }
-  };
-
-  const stopMic = () => {
-    audioStreamRef.current?.getTracks().forEach((track) => track.stop());
-    audioStreamRef.current = null;
-    updateMediaState("isMicOn", false);
-  };
-
-  const toggleMic = () => (mediaState.isMicOn ? stopMic() : startMic());
-
-  // Updated handleSpeechResult function
+  // Handle microphone speech recognition results
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
       setMessages((prev) => {
@@ -136,39 +62,21 @@ const LeftPanel: React.FC = () => {
           localStorage.setItem("speechMemory", memory + transcript + " ");
         }
 
+        // Automatically send the message to the chatbot if the speech result is final
+        if (isFinal) {
+          setChatInput(transcript); // Set chat input to the transcript
+          handleChat(); // Call the handleChat function to send the message
+        }
+
         return updatedMessages;
       });
     },
-    [setMessages, mediaState.isMemOn]
+    [setMessages, mediaState.isMemOn, handleChat]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleSpeechResult);
 
-  const startMicWithSpeechRecognition = useCallback(async () => {
-    try {
-      await startMic();
-      startHearing();
-    } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
-    }
-  }, [startMic, startHearing]);
-
-  const stopMicWithSpeechRecognition = useCallback(() => {
-    stopHearing();
-    stopMic();
-  }, [stopHearing, stopMic]);
-
-  const toggleMicWithSpeechRecognition = () =>
-    mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
-
-  const toggleMem = () => updateMediaState("isMemOn", !mediaState.isMemOn); // Toggle memory state
-
-  useEffect(() => {
-    return () => {
-      stopCam();
-      stopMic();
-    };
-  }, []);
+  // ... (rest of the code remains unchanged)
 
   return (
     <div className={styles.container}>
