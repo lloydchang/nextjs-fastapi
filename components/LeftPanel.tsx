@@ -1,4 +1,3 @@
-// LeftPanel.tsx
 "use client"; // Mark as a client component
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -41,7 +40,6 @@ const LeftPanel: React.FC = () => {
         setChatInput("");
       } catch (error) {
         console.error("Error sending message:", error);
-        alert("Failed to send message. Please try again.");
       }
     }
   }, [chatInput, sendActionToChatbot]);
@@ -55,12 +53,12 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
-        startPiP();
+        await startPiP();
 
-        if (!mediaState.isMicOn) startMic();
+        if (!mediaState.isMicOn) await startMic();
       }
     } catch (err) {
-      alert("Unable to access cam. Please check permissions.");
+      console.error("Unable to access camera:", err);
     }
   };
 
@@ -80,7 +78,6 @@ const LeftPanel: React.FC = () => {
         }
       } catch (err) {
         console.error("Unable to enter PiP mode:", err);
-        alert("Unable to enter PiP mode.");
       }
     }
   };
@@ -94,7 +91,6 @@ const LeftPanel: React.FC = () => {
         }
       } catch (err) {
         console.error("Unable to exit PiP mode:", err);
-        alert("Unable to exit PiP mode.");
       }
     }
   };
@@ -110,7 +106,7 @@ const LeftPanel: React.FC = () => {
         updateMediaState("isMicOn", true);
       }
     } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
+      console.error("Unable to access microphone:", err);
     }
   };
 
@@ -146,7 +142,7 @@ const LeftPanel: React.FC = () => {
       await startMic();
       startHearing();
     } catch (err) {
-      alert("Unable to access mic. Please check permissions.");
+      console.error("Unable to start microphone and speech recognition:", err);
     }
   }, [startMic, startHearing, setMessages]);
 
