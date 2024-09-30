@@ -11,12 +11,10 @@ import dynamic from 'next/dynamic'; // For dynamic imports
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
 import ChatInput from './ChatInput';
-import ChatMessages from './ChatMessages';
 import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 
-// Dynamically import heavy components (if any). Assuming ChatMessages is heavy.
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
   ssr: false, // Disable server-side rendering for this component
@@ -133,6 +131,14 @@ const LeftPanel: React.FC = () => {
       ? stopMicWithSpeechRecognition()
       : startMicWithSpeechRecognition();
   }, [mediaState.isMicOn, startMicWithSpeechRecognition, stopMicWithSpeechRecognition]);
+
+  // Prevent mic from turning off after sending a message
+  useEffect(() => {
+    if (!mediaState.isMicOn && mediaState.isPipOn) {
+      console.log('Microphone turned off unexpectedly, restarting...');
+      startMicWithSpeechRecognition();
+    }
+  }, [mediaState.isMicOn, mediaState.isPipOn, startMicWithSpeechRecognition]);
 
   useEffect(() => {
     return () => {
