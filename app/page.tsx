@@ -18,6 +18,7 @@ const Home: React.FC = () => {
   return (
     <TalkProvider>
       <div className="container">
+        {console.log('Rendering container with panels')} {/* Logs during render */}
         <LeftPanel />
         <MiddlePanel />
         <RightPanel />
