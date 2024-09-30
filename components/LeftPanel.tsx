@@ -1,3 +1,4 @@
+// LeftPanel.tsx
 "use client"; // Mark as a client component
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -17,9 +18,9 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>("");
   const [mediaState, setMediaState] = useState({
-    isCamOn: true, // Enable camera by default
-    isMicOn: true, // Enable microphone by default
-    isPiP: true,  // Enable PiP by default
+    isCamOn: false,
+    isMicOn: false,
+    isPiP: false,
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -40,6 +41,7 @@ const LeftPanel: React.FC = () => {
         setChatInput("");
       } catch (error) {
         console.error("Error sending message:", error);
+        alert("Failed to send message. Please try again.");
       }
     }
   }, [chatInput, sendActionToChatbot]);
@@ -53,11 +55,12 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
-        await startPiP();
+        startPiP();
+
+        if (!mediaState.isMicOn) startMic();
       }
     } catch (err) {
-      console.error("Unable to access camera:", err);
-      updateMediaState("isCamOn", false); // Disable camera if it fails to start
+      alert("Unable to access cam. Please check permissions.");
     }
   };
 
@@ -77,7 +80,7 @@ const LeftPanel: React.FC = () => {
         }
       } catch (err) {
         console.error("Unable to enter PiP mode:", err);
-        updateMediaState("isPiP", false); // Disable PiP if it fails
+        alert("Unable to enter PiP mode.");
       }
     }
   };
@@ -91,6 +94,7 @@ const LeftPanel: React.FC = () => {
         }
       } catch (err) {
         console.error("Unable to exit PiP mode:", err);
+        alert("Unable to exit PiP mode.");
       }
     }
   };
@@ -106,8 +110,7 @@ const LeftPanel: React.FC = () => {
         updateMediaState("isMicOn", true);
       }
     } catch (err) {
-      console.error("Unable to access microphone:", err);
-      updateMediaState("isMicOn", false); // Disable microphone if it fails
+      alert("Unable to access mic. Please check permissions.");
     }
   };
 
@@ -122,14 +125,11 @@ const LeftPanel: React.FC = () => {
   // Handle speech recognition results
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
-      setMessages((prev) => {
-        if (!isFinal && prev.some((msg) => msg.text === transcript && msg.isInterim)) {
-          return prev; // Prevent duplicates if similar interim message exists
-        }
-        return isFinal
+      setMessages((prev) =>
+        isFinal
           ? prev.filter((msg) => !msg.isInterim).concat({ sender: "user", text: transcript })
-          : [...prev.filter((msg) => msg.isInterim), { sender: "user", text: transcript, isInterim: true }];
-      });
+          : prev.concat({ sender: "user", text: transcript, isInterim: true })
+      );
     },
     [setMessages]
   );
@@ -139,14 +139,12 @@ const LeftPanel: React.FC = () => {
   // Function to start both mic and speech recognition
   const startMicWithSpeechRecognition = useCallback(async () => {
     try {
-      setMessages([]); // Clear previous messages to avoid overlap
       await startMic();
       startHearing();
     } catch (err) {
-      console.error("Unable to start microphone and speech recognition:", err);
-      updateMediaState("isMicOn", false); // Disable microphone if it fails
+      alert("Unable to access mic. Please check permissions.");
     }
-  }, [startMic, startHearing, setMessages]);
+  }, [startMic, startHearing]);
 
   const stopMicWithSpeechRecognition = useCallback(() => {
     stopHearing();
@@ -156,16 +154,12 @@ const LeftPanel: React.FC = () => {
   const toggleMicWithSpeechRecognition = () =>
     mediaState.isMicOn ? stopMicWithSpeechRecognition() : startMicWithSpeechRecognition();
 
-  // Automatically enable camera, microphone, and PiP when the component mounts
   useEffect(() => {
-    startCam();
-    startMicWithSpeechRecognition();
     return () => {
       stopCam();
       stopMic();
-      setMessages([]); // Clean up messages state on unmount
     };
-  }, [startMicWithSpeechRecognition]);
+  }, []);
 
   return (
     <div className={styles.container}>
