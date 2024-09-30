@@ -16,7 +16,7 @@ import styles from "./LeftPanel.module.css"; // Import CSS module for styling
 const LeftPanel: React.FC = () => {
   const { messages, setMessages, sendActionToChatbot } = useChat();
 
-  const [chatInput, setChatInput] = useState<string>(""); // Keep chatInput state
+  const [chatInput, setChatInput] = useState<string>(""); // Maintain chat input state
   const [mediaState, setMediaState] = useState({
     isCamOn: false,
     isMicOn: false,
@@ -35,18 +35,18 @@ const LeftPanel: React.FC = () => {
   };
 
   // Handle sending chat messages
-  const handleChat = useCallback(async (input: string) => {
-    if (input.trim()) {
+  const handleChat = useCallback(async () => {
+    if (chatInput.trim()) {
       try {
-        console.log("Sending message to chatbot:", input); // Log the message being sent
-        await sendActionToChatbot(input);
-        setChatInput(""); // Clear input after sending
+        console.log("Sending message to chatbot:", chatInput); // Log the message being sent
+        await sendActionToChatbot(chatInput);
+        setChatInput(""); // Clear the chat input after sending
       } catch (error) {
         console.error("Error sending message:", error);
         alert("Failed to send message. Please try again.");
       }
     }
-  }, [sendActionToChatbot]);
+  }, [chatInput, sendActionToChatbot]);
 
   // Handle cam and Pip toggling
   const startCam = async () => {
@@ -127,7 +127,8 @@ const LeftPanel: React.FC = () => {
     (transcript: string, isFinal: boolean) => {
       if (isFinal) {
         console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
-        handleChat(transcript); // Directly send the transcript to the chatbot
+        setChatInput(transcript); // Set chat input to the transcript
+        handleChat(); // Call the handleChat function to send the message
       }
     },
     [handleChat]
