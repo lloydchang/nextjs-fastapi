@@ -26,7 +26,7 @@ export const useMedia = (): UseMediaReturn => {
     isCamOn: false,
     isMicOn: false,
     isPipOn: false,
-    isMemOn: false,
+    isMemOn: true,
   });
 
   const videoRef = useRef<HTMLVideoElement>(null);
