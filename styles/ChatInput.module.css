@@ -10,11 +10,17 @@
   width: 100%;
   padding: 10px;
   border-radius: 5px;
-  border: none;
+  border: 1px solid #ccc; /* Added border for better visibility */
   resize: none;
   margin-bottom: 10px;
   font-size: 1em;
   outline: none;
+  color: #333; /* Changed text color to dark gray */
+  background-color: #f9f9f9; /* Changed background to light gray */
+}
+
+.textarea::placeholder {
+  color: #999; /* Placeholder text color for better contrast */
 }
 
 .button {
@@ -22,18 +28,24 @@
   padding: 8px 16px;
   border: none;
   border-radius: 5px;
-  background-color: #2196f3;
-  color: white;
+  background-color: #2196f3; /* Blue background */
+  color: white; /* White text */
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.3s ease;
 }
 
-.button:hover:not(:disabled) {
-  background-color: #1976d2;
+.button:hover:not(:disabled),
+.button:focus:not(:disabled) {
+  background-color: #1976d2; /* Darker blue on hover/focus */
 }
 
 .buttonDisabled {
-  background-color: #cccccc;
+  background-color: #cccccc; /* Gray background when disabled */
   cursor: not-allowed;
+}
+
+.button:disabled:hover,
+.button:disabled:focus {
+  background-color: #cccccc; /* Maintain gray background when disabled */
 }
