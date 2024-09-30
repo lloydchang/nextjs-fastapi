@@ -126,10 +126,11 @@ const LeftPanel: React.FC = () => {
   const handleSpeechResult = useCallback(
     (transcript: string, isFinal: boolean) => {
       setMessages((prev) => {
+        // Check if there's an existing interim message
         const existingInterim = prev.find(msg => msg.isInterim && msg.text === transcript);
 
-        // If it's final, clear out interim messages and add the final message
         if (isFinal) {
+          // Clear existing interim messages and add the final message
           const updatedMessages = prev.filter(msg => !msg.isInterim).concat({ sender: "user", text: transcript, isInterim: false });
 
           // If memory is enabled, save the final result to local storage
@@ -139,11 +140,11 @@ const LeftPanel: React.FC = () => {
           }
 
           // Automatically send the message to the chatbot
-          console.log("Sending transcribed speech to chatbot:", transcript); // Log the transcribed speech
-          handleChat(transcript); // Directly send the transcript to the chatbot
+          console.log("Sending transcribed speech to chatbot:", transcript);
+          handleChat(transcript); // Send the final transcript to the chatbot
           return updatedMessages;
         } else if (!existingInterim) { 
-          // If interim and not a duplicate, append to messages
+          // If interim and not a duplicate, append it
           return [...prev, { sender: "user", text: transcript, isInterim: true }];
         }
 
@@ -188,7 +189,10 @@ const LeftPanel: React.FC = () => {
 
       {/* VideoStream with conditional styles based on isPipOn */}
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
-        <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
+        <VideoStream
+          isCamOn={mediaState.isCamOn}
+          videoRef={videoRef}
+        />
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
