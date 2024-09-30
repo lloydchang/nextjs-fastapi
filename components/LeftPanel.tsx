@@ -56,7 +56,7 @@ const LeftPanel: React.FC = () => {
         videoStreamRef.current = stream;
         await videoRef.current.play();
         updateMediaState("isCamOn", true);
-        startPip(); // Updated to new function name
+        startPip(); // Start PiP after the camera is on
 
         if (!mediaState.isMicOn) startMic();
       }
@@ -69,34 +69,32 @@ const LeftPanel: React.FC = () => {
     videoStreamRef.current?.getTracks().forEach((track) => track.stop());
     videoStreamRef.current = null;
     updateMediaState("isCamOn", false);
-    stopPip(); // Updated to new function name
+    stopPip(); // Ensure PiP is stopped when camera is off
   };
 
-  const startPip = async () => { // Updated function name
+  const startPip = async () => {
     if (videoRef.current) {
       try {
         if (document.pictureInPictureElement !== videoRef.current) {
           await videoRef.current.requestPictureInPicture();
-          updateMediaState("isPipOn", true); // Updated variable name
+          updateMediaState("isPipOn", true); // Update state
         }
       } catch (err) {
-        console.error("Unable to enter Pip mode:", err);
-        alert("Unable to enter Pip mode.");
+        console.error("Unable to enter PiP mode:", err);
+        alert("Unable to enter PiP mode.");
       }
     }
   };
 
-  const stopPip = async () => { // Updated function name
-    if (document.pictureInPictureElement) {
-      try {
-        if (document.pictureInPictureElement === videoRef.current) {
-          await document.exitPictureInPicture();
-          updateMediaState("isPipOn", false); // Updated variable name
-        }
-      } catch (err) {
-        console.error("Unable to exit Pip mode:", err);
-        alert("Unable to exit Pip mode.");
+  const stopPip = async () => {
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        updateMediaState("isPipOn", false); // Update state to reflect PiP is off
       }
+    } catch (err) {
+      console.error("Unable to exit PiP mode:", err);
+      alert("Unable to exit PiP mode.");
     }
   };
 
@@ -176,7 +174,10 @@ const LeftPanel: React.FC = () => {
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      <VideoStream isCamOn={mediaState.isCamOn} isPipOn={mediaState.isPipOn} videoRef={videoRef} />
+      {/* Conditionally render VideoStream based on isPipOn */}
+      {!mediaState.isPipOn && (
+        <VideoStream isCamOn={mediaState.isCamOn} isPipOn={mediaState.isPipOn} videoRef={videoRef} />
+      )}
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
       <div className={styles.content}>
