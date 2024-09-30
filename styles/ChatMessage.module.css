@@ -1,7 +1,8 @@
-/* styles/ChatMessage.module.css */
+/* src/components/ChatMessage.module.css */
 
 .messageContainer {
     display: flex;
+    align-items: flex-start;
     margin-bottom: 10px;
   }
   
@@ -17,21 +18,19 @@
     max-width: 70%;
     padding: 10px;
     border-radius: 10px;
-    background-color: #ffffff;
-    color: #000000;
+    color: #ffffff; /* White text */
+    word-break: break-word;
   }
   
   .user .messageBubble {
-    background-color: #4caf50;
-    color: white;
+    background-color: #E62B1E; /* User message background */
   }
   
   .bot .messageBubble {
-    background-color: #f1f0f0;
-    color: #000000;
+    background-color: #333333; /* Bot message background */
   }
   
   .interim {
-    opacity: 0.6;
+    opacity: 0.6; /* Reduced opacity for interim messages */
+    font-style: italic; /* Italic text for interim messages */
   }
-  
