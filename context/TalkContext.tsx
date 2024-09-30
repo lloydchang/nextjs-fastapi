@@ -1,4 +1,4 @@
-// src/context/TalkContext.tsx
+// context/TalkContext.tsx
 "use client"; // Mark this file as a Client Component
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
