@@ -16,15 +16,12 @@ export const updateInterimResult = (newResult: string) => {
   return true; // Unique interim result
 };
 
-// Utility function to trim overlapping words between last interim and new input
 export const trimOverlap = (current: string, previous: string) => {
   if (!previous || !current) return current;
 
-  // Split both strings into arrays of words
   const previousWords = previous.trim().split(/\s+/);
   const currentWords = current.trim().split(/\s+/);
 
-  // Find the overlap and trim it from the current message
   let overlapIndex = 0;
   for (let i = 0; i < previousWords.length; i++) {
     if (currentWords[i] === previousWords[i]) {
@@ -34,19 +31,16 @@ export const trimOverlap = (current: string, previous: string) => {
     }
   }
 
-  // Remove overlapping words from the beginning of the current message
   const trimmedMessage = currentWords.slice(overlapIndex).join(' ');
   return trimmedMessage.trim();
 };
 
-// Helper function to check for repeated fragments
 const isFragmentRepeated = (current: string, previous: string) => {
   const minLength = Math.min(current.length, previous.length);
   const commonPrefix = getCommonPrefixLength(current, previous);
   return minLength >= 5 && commonPrefix / minLength >= 0.8;
 };
 
-// Helper function to get common prefix length
 const getCommonPrefixLength = (s1: string, s2: string): number => {
   let n = 0;
   while (n < s1.length && n < s2.length && s1[n] === s2[n]) n++;

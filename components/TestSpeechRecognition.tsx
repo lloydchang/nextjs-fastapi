@@ -6,7 +6,7 @@ import styles from '../styles/TestSpeechRecognition.module.css';
 interface TestSpeechRecognitionProps {
   isMicOn: boolean; // Prop to control mic state
   onSpeechResult: (finalResults: string) => void; // Callback for final results
-  onInterimUpdate: (interimResult: string) => void; // Callback for interim results (real-time to chatbots)
+  onInterimUpdate: (interimResult: string) => void; // Callback for interim results
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
@@ -20,17 +20,15 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
 
   useEffect(() => {
-    // Initialize the SpeechRecognition API
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognitionConstructor) {
       const recognition = new SpeechRecognitionConstructor();
-      recognition.continuous = true; // Keep listening until explicitly stopped
+      recognition.continuous = true; // Continuous listening mode
       recognition.interimResults = true; // Capture interim results
       recognition.lang = 'en-US';
 
-      // Handle speech recognition results
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interimTranscript = '';
         let finalTranscript = '';
@@ -45,24 +43,22 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         }
 
         if (finalTranscript) {
-          setResults(finalTranscript.trim()); // Update the final result state
-          onSpeechResult(finalTranscript.trim()); // Send final results to parent via prop
-          setInterimResults(''); // Clear interim results after final results are captured
+          setResults(finalTranscript.trim());
+          onSpeechResult(finalTranscript.trim());
+          setInterimResults('');
         }
 
         if (interimTranscript) {
-          setInterimResults(interimTranscript.trim()); // Store interim results for display
-          onInterimUpdate(interimTranscript.trim()); // Send interim results to parent
+          setInterimResults(interimTranscript.trim());
+          onInterimUpdate(interimTranscript.trim());
         }
       };
 
-      // Handle recognition errors
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
         setIsListening(false);
       };
 
-      // Handle recognition end and restart if `isMicOn` is true
       recognition.onend = () => {
         console.log('Speech recognition ended. Restarting...');
         setIsListening(false);
@@ -72,12 +68,11 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         }
       };
 
-      recognitionRef.current = recognition; // Store the recognition instance
+      recognitionRef.current = recognition;
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
 
-    // Cleanup recognition instance on unmount
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.onend = null;
@@ -86,9 +81,8 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current = null;
       }
     };
-  }, [onSpeechResult, onInterimUpdate, isMicOn]); // Ensure both are dependencies
+  }, [onSpeechResult, onInterimUpdate, isMicOn]);
 
-  // Effect to control the microphone based on `isMicOn` prop
   useEffect(() => {
     if (isMicOn && recognitionRef.current) {
       recognitionRef.current.start();
