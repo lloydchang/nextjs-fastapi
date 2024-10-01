@@ -7,7 +7,6 @@ import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
-import { useChat } from '../hooks/useChat'; // Import useChat to send messages to the chatbot
 
 // TypeScript Types
 type Talk = {
@@ -25,8 +24,7 @@ const sdgKeywords = [
 ];
 
 const MiddlePanel: React.FC = () => {
-  const { talks, setTalks, setTranscript } = useTalkContext(); // Get setTranscript from context
-  const { sendActionToChatbot } = useChat(); // Use sendActionToChatbot from the useChat hook
+  const { talks, setTalks } = useTalkContext();
   const initialKeyword = useRef<string>("TED AI");
 
   const [query, setQuery] = useState<string>(initialKeyword.current);
@@ -67,33 +65,6 @@ const MiddlePanel: React.FC = () => {
     }
   }, [query, setTalks]);
 
-  // Fetch transcript for the selected talk
-  const fetchTranscript = useCallback(async (url: string) => {
-    const transcriptUrl = url.replace('/talks/', '/talks/') + '/transcript?subtitle=en';
-    
-    try {
-      const response = await fetch(transcriptUrl);
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      const transcriptData = await response.text();
-      // Extract the transcript text from the HTML response
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(transcriptData, 'text/html');
-      const transcriptText = Array.from(doc.querySelectorAll('.Grid--withGutter .Grid-cell'))
-        .map((element) => element.textContent)
-        .join('\n');
-      
-      // Set the transcript in the context
-      setTranscript(transcriptText); // Use context setter
-      // Optionally, send the transcript to the chatbot
-      const formattedTranscript = `📜 ${transcriptText}`;
-      sendActionToChatbot(formattedTranscript); // Send the prefixed transcript to the chatbot
-    } catch (error) {
-      console.error("Failed to fetch transcript:", error);
-    }
-  }, [setTranscript, sendActionToChatbot]);
-
   // Set the initial keyword when the component mounts
   useEffect(() => {
     initialKeyword.current = determineInitialKeyword(); // Determine the initial keyword
@@ -106,14 +77,7 @@ const MiddlePanel: React.FC = () => {
     if (searchInitiated) {
       handleSearch(); // Run the search
     }
-  }, [searchInitiated, handleSearch]);
-
-  // Fetch the transcript when the selected talk changes
-  useEffect(() => {
-    if (selectedTalk) {
-      fetchTranscript(selectedTalk.url); // Fetch transcript for the selected talk
-    }
-  }, [selectedTalk, fetchTranscript]);
+  }, [searchInitiated, handleSearch]); // Depend on searchInitiated and handleSearch
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
