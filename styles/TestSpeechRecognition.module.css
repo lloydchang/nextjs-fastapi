@@ -5,26 +5,17 @@
   padding: 15px;
   border-radius: 8px;
   margin-top: 20px;
-  background-color: rgba(0, 0, 0, 0.0); /* Set translucent background */
+  background-color: #333; /* Use a darker background color */
 }
 
 .transcriptContainer {
+  color: white;
   margin-bottom: 10px;
-}
-
-.finalText {
-  color: #ffffff; /* White color for final results */
-}
-
-.interimText {
-  color: #cccccc; /* Light gray color for interim results */
-}
-
-.statusText {
-  font-weight: bold;
+  font-size: 0.85em; /* Make the text smaller */
 }
 
 .error {
   color: red;
-  margin-top: 10px;
 }
+
+/* Removed the .buttons and .button styles */

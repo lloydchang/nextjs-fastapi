@@ -23,7 +23,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: -1;
 }
 
@@ -43,7 +43,6 @@
 }
 
 .content {
-  background-color: rgba(0, 0, 0, 0.3);;
   position: absolute;
   top: 0;
   left: 0;
@@ -58,7 +57,7 @@
 }
 
 .title {
-  background-color: rgba(0, 0, 0, 0.3);;
+  background-color: rgba(0, 0, 0, 0.5);;
   color: #ffffff;
   font-size: 2rem;
   margin-bottom: 20px;
@@ -66,19 +65,16 @@
 }
 
 .chatInterface {
-  background-color: rgba(0, 0, 0, 0.3);;
   color: #eb0028;
   width: 100%;
   max-width: 600px;
 }
 
 .chatHeader {
-  background-color: rgba(0, 0, 0, 0.3);;
   margin-bottom: 10px;
 }
 
 .error {
-  background-color: rgba(0, 0, 0, 0.3);;
   color: red;
   margin-bottom: 10px;
 }

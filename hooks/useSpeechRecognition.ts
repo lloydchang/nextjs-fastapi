@@ -1,6 +1,6 @@
 // hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionReturn {
   startHearing: () => void;
@@ -12,9 +12,6 @@ export const useSpeechRecognition = (
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isRecognizing, setIsRecognizing] = useState(false); // Track recognition state
-
-  // Create a ref to track the timeout ID
-  const pauseTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Check for browser support for SpeechRecognition
@@ -34,22 +31,14 @@ export const useSpeechRecognition = (
           const transcript = event.results[i][0].transcript;
           const isFinal = event.results[i].isFinal;
 
-          // Detect a pause and consider interim results as final if a short pause is detected
-          if (!isFinal) {
-            // Reset the previous pause timeout
-            if (pauseTimeoutRef.current) {
-              clearTimeout(pauseTimeoutRef.current);
-            }
-
-            // Set a new timeout to consider this interim result as final after 300ms of silence
-            pauseTimeoutRef.current = window.setTimeout(() => {
-              console.log(`Mini-pause detected, considering interim as final: "${transcript}"`);
-              onResult(transcript, true); // Treat as final
-              pauseTimeoutRef.current = null; // Clear the timeout
-            }, 300); // Adjust the time threshold here for sensitivity to pauses
+          // Treat short interim results as final if they contain more than 3 words
+          if (!isFinal && transcript.trim().length > 0) {
+            console.log(`Interim considered as final: "${transcript}"`);
+            onResult(transcript, false); // Send interim results
+          } else {
+            onResult(transcript, isFinal); // Trigger callback with the result
           }
 
-          onResult(transcript, isFinal);
           console.log(`Speech result: "${transcript}", isFinal: ${isFinal}`);
         }
       };
@@ -58,6 +47,7 @@ export const useSpeechRecognition = (
       recog.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
         setIsRecognizing(false); // Reset recognizing state on error
+        console.warn('Speech recognition encountered an error:', event.error);
       };
 
       // Handle the end of the speech recognition session
