@@ -16,15 +16,18 @@ interface Talk {
 interface TalkContextType {
   talks: Talk[];
   setTalks: React.Dispatch<React.SetStateAction<Talk[]>>;
+  transcript: string | null; // Add a transcript state
+  setTranscript: React.Dispatch<React.SetStateAction<string | null>>; // Add a setter for the transcript
 }
 
 const TalkContext = createContext<TalkContextType | undefined>(undefined);
 
 export const TalkProvider: React.FC<{ children: ReactNode }> = React.memo(({ children }) => {
   const [talks, setTalks] = useState<Talk[]>([]);
+  const [transcript, setTranscript] = useState<string | null>(null); // State for transcript
 
   return (
-    <TalkContext.Provider value={{ talks, setTalks }}>
+    <TalkContext.Provider value={{ talks, setTalks, transcript, setTranscript }}>
       {children}
     </TalkContext.Provider>
   );
