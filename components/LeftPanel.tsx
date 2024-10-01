@@ -54,6 +54,13 @@ const LeftPanel: React.FC = () => {
     [sendActionToChatbot]
   );
 
+  // Auto-scroll to the bottom when a new message is added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   // Clean up on unmount
   useEffect(() => {
     return () => {
