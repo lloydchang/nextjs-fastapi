@@ -6,6 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import torch
 import asyncio
+from api.logger import logger  # Import the logger
 
 async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransformer, sdg_embeddings, top_n: int = 10) -> List[Dict]:
     """
@@ -21,9 +22,10 @@ async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransfo
     Returns:
         List[Dict]: List of search results with metadata.
     """
-    print(f"Performing semantic search for the query: '{query}'.")
+    logger.info(f"Performing semantic search for the query: '{query}'.")
 
     if model is None or 'description_vector' not in data.columns:
+        logger.error("Model or data not available.")
         return [{"error": "Model or data not available."}]
 
     try:
@@ -60,7 +62,9 @@ async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransfo
             }
             results.append(result)
 
+        logger.info(f"Semantic search completed successfully for query: '{query}'.")
         return results
 
     except Exception as e:
+        logger.error(f"Search error: {str(e)}")
         return [{"error": f"Search error: {str(e)}"}]
