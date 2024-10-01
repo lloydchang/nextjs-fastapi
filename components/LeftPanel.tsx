@@ -14,7 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { updateFinalResult, updateInterimResult } from '../utils/chatUtils'; // Import updated utility functions
+import { updateFinalResult, updateInterimResult } from '../utils/chatUtils';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -31,28 +31,22 @@ const LeftPanel: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
-    async (input: string, isFinal = true) => {
+    async (input: string, isFinal = true, isManual = false) => {
       if (input.trim()) {
         try {
           if (isFinal) {
-            // Deduplication and similarity check for final results
-            if (updateFinalResult(input)) {
-              const prefixedFinal = `[final] ${input}`; // Prefix final results
-              console.log('Adding Final Result:', prefixedFinal); // Debug log for final result
-              setMessages((prev) => [...prev, { sender: 'user', text: prefixedFinal }]);
-              await sendActionToChatbot(prefixedFinal); // Send final result to chatbot
+            // Manually typed messages should not be prefixed
+            if (isManual || updateFinalResult(input)) {
+              const messagePrefix = isManual ? '' : '🎙️ '; // Use 🎙️ prefix for speech-recognized final results
+              const formattedMessage = `${messagePrefix}${input}`;
+              setMessages((prev) => [...prev, { sender: 'user', text: formattedMessage }]);
+              await sendActionToChatbot(formattedMessage); // Send final result to chatbot
               setChatInput('');
-            } else {
-              console.log('Skipped similar or duplicate final result:', input); // Log for skipped results
             }
           } else {
-            // Deduplication check for interim results only
             if (updateInterimResult(input)) {
-              const prefixedInterim = `[interim] ${input}`; // Prefix interim results
-              console.log('Adding Interim Result:', prefixedInterim); // Debug log for interim result
-              setMessages((prev) => [...prev, { sender: 'user', text: prefixedInterim, isInterim: true }]);
-            } else {
-              console.log('Duplicate Interim Detected:', input); // Debug log for duplicate interim
+              const formattedInterim = `🎤 ${input}`; // Prefix interim results
+              setMessages((prev) => [...prev, { sender: 'user', text: formattedInterim, isInterim: true }]);
             }
           }
         } catch (error) {
@@ -65,16 +59,14 @@ const LeftPanel: React.FC = () => {
 
   const handleSpeechResults = useCallback(
     (results: string) => {
-      console.log('Final Speech Result:', results); // Debug Log
-      handleChat(results, true); // Handle final results
+      handleChat(results, true, false); // Speech results are not manual
     },
     [handleChat]
   );
 
   const handleInterimUpdates = useCallback(
     (interimResult: string) => {
-      console.log('Interim Speech Update:', interimResult); // Debug Log
-      handleChat(interimResult, false); // Send interim results as non-final
+      handleChat(interimResult, false, false); // Speech interims are not manual
     },
     [handleChat]
   );
@@ -115,7 +107,8 @@ const LeftPanel: React.FC = () => {
           </h3>
 
           <HeavyChatMessages messages={messages} />
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput)} />
+          {/* ChatInput passes isManual flag as true for typed messages */}
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={(isManual) => handleChat(chatInput, true, isManual)} />
 
           <ControlButtons
             isCamOn={mediaState.isCamOn}
