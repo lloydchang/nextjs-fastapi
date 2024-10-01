@@ -15,7 +15,7 @@ interface UseChatProps {
 export const useChat = ({ isMemOn }: UseChatProps) => {
   const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentContext, setCurrentContext] = useState<number[] | null>(null); // Track context state
+  const [currentContext, setCurrentContext] = useState<string | null>(null); // Track context as a full string
 
   // Ref to hold the latest messages for context
   const messagesRef = useRef<Message[]>([]);
@@ -69,9 +69,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
       try {
         console.log('Sending prompt to chatbot service:', input);
-
-        // Use the context from the state
-        const reply = await sendMessageToChatbot(input, currentContext, (message, newContext) => {
+        const fullContext = getConversationContext(); // Include full context each time
+        const reply = await sendMessageToChatbot(input, fullContext, (message, newContext) => {
           // Update state with the new context and add message
           setMessages((prev) => [...prev, { sender: 'bot', text: message }]);
           setCurrentContext(newContext);
@@ -81,10 +80,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         if (reply) setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-
         console.error('Error communicating with chatbot:', errorMessage);
-
-        // Send the error back to the chat window as a bot message
         setMessages((prev) => [
           ...prev,
           {
@@ -94,7 +90,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         ]);
       }
     },
-    [currentContext]
+    [getConversationContext]
   );
 
   // Clear Chat History

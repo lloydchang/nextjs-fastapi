@@ -11,7 +11,7 @@ export const sendMessageToChatbot = async (
     model: 'llama3.2',
     // Include the full conversation context in the prompt
     prompt: context ? `${systemPrompt}\n${context}\nUser: ${input}\nAssistant:` : `${systemPrompt}\nUser: ${input}\nAssistant:`,
-    temperature: 2.0,
+    temperature: 0.0,
   };
 
   try {
