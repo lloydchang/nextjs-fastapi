@@ -1,0 +1,77 @@
+/* styles/DebugPanel.module.css */
+
+.debugPanel {
+    position: fixed; /* Keep it fixed in the viewport */
+    bottom: 0; /* Position at the bottom */
+    right: 0; /* Position on the right */
+    width: 1000px; /* Maximum width */
+    min-width: 40px; /* Maximum width */
+    max-height: 900px; /* Set a max height */
+    background-color: rgba(0, 0, 0, 0.9); /* Dark background for contrast */
+    color: #fff; /* White text color for readability */
+    padding: 15px; /* Padding for spacing */
+    border-top-left-radius: 15px; /* Rounded corners */
+    z-index: 9999; /* High z-index to stay above other elements */
+    overflow: hidden; /* Prevent overflow of content */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Arrange children in a column */
+    transition: height 0.3s ease, width 0.3s ease; /* Smooth transition for height and width */
+  }
+  
+  .dragHandle {
+    cursor: grab; /* Change cursor to indicate draggable area */
+    padding: 5px; /* Padding for the draggable handle */
+    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker background for visibility */
+    border-radius: 5px; /* Rounded corners for the drag handle */
+  }
+  
+  .toggleButton {
+    background-color: #4caf50; /* Green background for the button */
+    border: none; /* Remove default border */
+    color: white; /* White text color */
+    padding: 15px; /* Padding for the button */
+    cursor: pointer; /* Pointer cursor on hover */
+    width: 100px; /* Full width */
+    text-align: center; /* Centered text */
+    margin-top: 10px; /* Space below the button */
+    font-size: 16px; /* Larger font size */
+    border-radius: 5px; /* Rounded corners for the button */
+  }
+  
+  .logContainer {
+    max-height: auto; /* Max height for logs section */
+    overflow-y: auto; /* Scrollable content */
+    padding: 15px; /* Padding for the log area */
+    border-top: 1px solid #444; /* Top border to separate from button */
+    background-color: rgba(0, 0, 0, 0.8); /* Darker background for logs */
+  }
+  
+  .logItem {
+    margin-bottom: 10px; /* Spacing between log items */
+    font-family: monospace; /* Monospace font for code-like appearance */
+    font-size: 14px; /* Slightly larger font size for readability */
+    white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
+  }
+  
+  .noLogsMessage {
+    color: #ccc; /* Lighter color for hidden logs message */
+    text-align: center; /* Center align the message */
+    margin-top: 10px; /* Margin above the message */
+  }
+  
+  .curlCommand {
+    font-family: monospace; /* Monospace font for command */
+    background-color: rgba(255, 255, 255, 0.1); /* Light background for visibility */
+    padding: 10px; /* Padding for the command display */
+    border-radius: 5px; /* Rounded corners */
+    margin-top: 10px; /* Space above the command */
+    white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
+    word-wrap: break-word; /* Break words when necessary */
+  }
+  
+  /* Additional styles to manage height */
+  .debugPanel.hidden {
+    height: 150px; /* Height of the toggle button when hidden */
+    width: 150px; /* Width adjusts to fit content */
+  }
+  
