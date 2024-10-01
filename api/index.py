@@ -21,7 +21,7 @@ import pickle
 
 # Import custom modules
 from api.search import semantic_search
-from api.transcript import router as transcript_router  # Import the transcript router
+from api.transcript import router as transcript_router  # Import transcript router
 from api.data_loader import load_dataset
 from api.embedding_utils import encode_descriptions, encode_sdg_keywords
 from api.sdg_manager import get_sdg_keywords
@@ -39,9 +39,6 @@ warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.
 logger.info("Step 2: Creating a FastAPI app instance with customized documentation paths.")
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
-# Include the transcript router
-app.include_router(transcript_router)
-
 # Enable CORS middleware to handle cross-origin requests
 logger.info("Step 3: Enabling CORS middleware to allow cross-origin requests from any origin.")
 app.add_middleware(
@@ -51,6 +48,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include the transcript router
+app.include_router(transcript_router, prefix="/api/py", tags=["Transcript"])
 
 # Load the TEDx Dataset with caching mechanism using data_loader.py
 file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
@@ -91,6 +91,8 @@ else:
                 logger.info("SDG keyword embeddings encoded and cached successfully.")
             except Exception as e:
                 logger.error(f"Error saving SDG keyword embeddings to cache: {e}")
+        else:
+            logger.error("Failed to encode SDG keywords.")
     else:
         logger.error("Model is not available. Cannot encode SDG keywords.")
         sdg_embeddings = None
@@ -157,7 +159,7 @@ else:
         logger.error("Model is not available or data is insufficient to encode descriptions.")
 
 # Include the transcript router
-app.include_router(transcript_router)
+app.include_router(transcript_router, prefix="/api/py", tags=["Transcript"])
 
 # Define a "Hello World" Endpoint for Testing
 logger.info("Step 11: Defining a 'Hello World' endpoint.")

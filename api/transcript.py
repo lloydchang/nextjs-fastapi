@@ -1,92 +1,62 @@
 # api/transcript.py
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict
-import requests
-from bs4 import BeautifulSoup
-import os
-import pickle
-from api.cache_manager import load_cache, save_cache
+from fastapi import APIRouter, HTTPException, Query, Response
+import httpx  # Use httpx to simulate curl-like behavior
 from api.logger import logger
 
 router = APIRouter()
 
-# Define the path for the transcripts cache
-TRANSCRIPTS_CACHE_PATH = "./api/cache/transcripts.pkl"
+# Define headers to replicate the curl command's headers
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://www.ted.com/',
+    'Connection': 'keep-alive',
+}
 
-# Load existing transcripts from cache or initialize an empty dictionary
-transcripts: Dict[str, str] = load_cache(TRANSCRIPTS_CACHE_PATH) or {}
-
-class ScrapeRequest(BaseModel):
-    url: HttpUrl
-
-@router.post("/scrape-transcript/")
-async def scrape_transcript(request: ScrapeRequest, background_tasks: BackgroundTasks):
-    url = request.url
-    if str(url) in transcripts:
-        logger.info(f"Transcript for URL '{url}' is already available or being processed.")
-        return {"message": "Transcript is already being processed or available.", "url": str(url)}
+@router.get("/transcript/")
+async def proxy_transcript(url: str = Query(..., description="The URL of the TED Talk transcript to proxy")):
+    """
+    A proxy endpoint that uses `httpx` to simulate the behavior of a `curl` command.
+    This returns the exact HTML content and headers, similar to a direct curl request.
     
-    logger.info(f"Initiating transcript scraping for URL: {url}")
-    background_tasks.add_task(scrape_and_store_transcript, str(url))
-    return {"message": "Scraping in progress", "url": str(url)}
+    Args:
+        url (str): The URL to be proxied.
 
-def scrape_and_store_transcript(url: str):
-    logger.info(f"Scraping transcript from URL: {url}")
+    Returns:
+        Response: A FastAPI response with the same content and headers as the original URL.
+    """
+    logger.info(f"Simulating curl request to URL: {url}")
+
     try:
-        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        # Use httpx to fetch the content, simulating curl behavior
+        async with httpx.AsyncClient(headers=HEADERS, follow_redirects=True) as client:
+            response = await client.get(url, timeout=10.0)
+
+        # If the request was not successful, raise an exception
         if response.status_code != 200:
-            transcripts[url] = f"Failed to retrieve the page. Status code: {response.status_code}"
             logger.error(f"Failed to retrieve page. Status code: {response.status_code} for URL: {url}")
-            save_cache(transcripts, TRANSCRIPTS_CACHE_PATH)
-            return
-        
-        soup = BeautifulSoup(response.content, "html.parser")
-        
-        # Attempt to find transcript elements; adjust selectors as needed based on actual TED.com structure
-        # Example selectors; may need to be updated
-        transcript_sections = soup.find_all("div", class_="Grid__cell flx-s:1 p-r:4")
-        
-        if not transcript_sections:
-            transcripts[url] = "Transcript section not found."
-            logger.error(f"Transcript section not found for URL: {url}")
-            save_cache(transcripts, TRANSCRIPTS_CACHE_PATH)
-            return
-        
-        # Extract text from all <p> tags within the transcript sections
-        transcript_text = "\n".join([p.get_text(strip=True) for p in transcript_sections if p.get_text(strip=True)])
-        
-        if not transcript_text:
-            transcripts[url] = "Transcript text is empty."
-            logger.error(f"Transcript text is empty for URL: {url}")
-        else:
-            transcripts[url] = transcript_text
-            logger.info(f"Transcript scraped and stored for URL: {url}")
-        
+            raise HTTPException(status_code=response.status_code, detail=f"Failed to retrieve the page. Status code: {response.status_code}")
+
+        # Reconstruct the headers to match `curl` output
+        curl_headers = "\n".join(f"{key}: {value}" for key, value in response.headers.items())
+
+        # Log the headers and return them as part of the response content for debugging
+        logger.info(f"Response Headers: {curl_headers}")
+
+        # Create a FastAPI response with the same content and headers as the original response
+        return Response(
+            content=response.content,  # Return the raw HTML content
+            status_code=response.status_code,
+            headers={k: v for k, v in response.headers.items() if k.lower() not in ["transfer-encoding", "content-length"]},  # Include relevant headers
+            media_type="text/html"  # Set the media type explicitly
+        )
+
+    except httpx.RequestError as e:
+        logger.error(f"Request to URL '{url}' failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Request failed: {e}")
+
     except Exception as e:
-        transcripts[url] = f"Error occurred: {str(e)}"
-        logger.error(f"Error scraping transcript for URL '{url}': {e}")
-    
-    # Save the updated transcripts to cache
-    save_cache(transcripts, TRANSCRIPTS_CACHE_PATH)
-
-class TranscriptResponse(BaseModel):
-    status: str
-    transcript: Optional[str] = None
-    message: Optional[str] = None
-
-@router.get("/get-transcript/", response_model=TranscriptResponse)
-async def get_transcript(url: HttpUrl):
-    url_str = str(url)
-    if url_str in transcripts:
-        transcript = transcripts[url_str]
-        if transcript.startswith("Error occurred") or transcript.endswith("not found.") or transcript.startswith("Failed"):
-            logger.warning(f"Transcript retrieval status for URL '{url}': {transcript}")
-            return {"status": "error", "message": transcript}
-        else:
-            logger.info(f"Transcript retrieved successfully for URL: {url}")
-            return {"status": "completed", "transcript": transcript}
-    else:
-        logger.info(f"Transcript not found for URL: {url}")
-        return {"status": "not found", "transcript": None}
+        logger.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
