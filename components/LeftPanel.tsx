@@ -31,6 +31,10 @@ const LeftPanel: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>(''); // Ensure this is outside any conditionals
   const [error, setError] = useState<string | null>(null);
 
+  // Refs for tracking final messages and user action
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const manuallyStoppedRef = useRef<boolean>(false);
+
   // Handle sending chat messages
   const handleChat = useCallback(
     async (input: string) => {
@@ -48,18 +52,46 @@ const LeftPanel: React.FC = () => {
     [sendActionToChatbot]
   );
 
-  // Handle speech recognition results
+  // Handle receiving speech results
   const handleSpeechResults = useCallback(
     (results: string) => {
       console.log('Received speech results:', results);
-      handleChat(results); // Send speech results to chatbot handler
+      // Send speech results to chat just like regular input
+      handleChat(results);
     },
     [handleChat]
   );
 
+  // Auto-scroll to the bottom when a new message is added
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      manuallyStoppedRef.current = true; // Ensure cleanup respects manual stop
+      console.log('Cleaning up LeftPanel component.');
+      stopCam();
+      toggleMic(); // Ensure mic is stopped
+      if (mediaState.isPipOn) {
+        document.exitPictureInPicture().catch((err) => {
+          console.error('Error exiting PiP on cleanup.', err);
+        });
+      }
+    };
+  }, [stopCam, toggleMic, mediaState.isPipOn]);
+
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
+      
+      {/* Display Microphone Status */}
+      <div className={styles.micStatus}>
+        <strong>Microphone Status: {mediaState.isMicOn ? 'ON 🎤' : 'OFF 🎤'}</strong>
+      </div>
 
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
@@ -73,7 +105,7 @@ const LeftPanel: React.FC = () => {
         <h1 className={styles.title}>
           <b>Ideas Change Everything!</b>
         </h1>
-        <div className={styles.chatInterface}>
+        <div className={styles.chatInterface} ref={chatContainerRef}>
           <h3 className={styles.chatHeader}>
             <b>Chat with TEDxSDG</b>
           </h3>
@@ -94,7 +126,7 @@ const LeftPanel: React.FC = () => {
             eraseMemory={clearChatHistory} // Pass eraseMemory function
           />
 
-          {/* Test Speech Recognition Component */}
+          {/* Test Speech Recognition Component - Pass the callback */}
           <TestSpeechRecognition isMicOn={mediaState.isMicOn} onSpeechResult={handleSpeechResults} />
         </div>
       </div>
