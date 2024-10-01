@@ -86,7 +86,7 @@ const MiddlePanel: React.FC = () => {
   const generateEmbedUrl = useCallback((url: string): string => {
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
-    return match ? `https://embed.ted.com/talks/${match[1]}` : url;
+    return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
   }, []);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
