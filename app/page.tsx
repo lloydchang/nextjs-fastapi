@@ -13,7 +13,7 @@
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { TalkProvider } from '../context/TalkContext'; // Import the TalkProvider
-import './globals.css'; // Ensure global styles are applied
+import '../styles/globals.css'; // Ensure global styles are applied
 import ErrorBoundary from '../components/ErrorBoundary';
 
 // Lazy load all panels
