@@ -43,7 +43,7 @@ app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 logger.info("Step 3: Enabling CORS middleware to allow cross-origin requests from any origin.")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update with specific origins in production
+    allow_origins=["http://localhost:3000"],  # Update with specific origins in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -157,9 +157,6 @@ else:
             logger.error(f"Step 9.3: Error encoding descriptions: {e}")
     else:
         logger.error("Model is not available or data is insufficient to encode descriptions.")
-
-# Include the transcript router
-app.include_router(transcript_router, prefix="/api/py", tags=["Transcript"])
 
 # Define a "Hello World" Endpoint for Testing
 logger.info("Step 11: Defining a 'Hello World' endpoint.")
