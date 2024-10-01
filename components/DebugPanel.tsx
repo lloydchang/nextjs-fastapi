@@ -87,7 +87,6 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ logs, curlCommand, errorDetails
       </div>
       {isVisible && (
         <div className={styles.logContainer} ref={logContainerRef}>
-          <h2>Debug Logs</h2>
           {logs.map((log, index) => (
             <div key={index}>
               {formatLogMessage(log).map((line, lineIndex) => (
