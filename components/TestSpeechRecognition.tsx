@@ -62,10 +62,14 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         setIsListening(false);
       };
 
-      // Handle recognition end
+      // Handle recognition end and restart if `isMicOn` is true
       recognition.onend = () => {
-        console.log('Speech recognition ended.');
+        console.log('Speech recognition ended. Restarting...');
         setIsListening(false);
+        if (isMicOn) {
+          recognition.start(); // Restart speech recognition if mic is still on
+          setIsListening(true);
+        }
       };
 
       recognitionRef.current = recognition; // Store the recognition instance
@@ -82,7 +86,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current = null;
       }
     };
-  }, [onSpeechResult, onInterimUpdate]);
+  }, [onSpeechResult, onInterimUpdate, isMicOn]); // Ensure both are dependencies
 
   // Effect to control the microphone based on `isMicOn` prop
   useEffect(() => {
