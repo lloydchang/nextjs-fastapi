@@ -32,7 +32,6 @@ const LeftPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Refs for tracking final messages and user action
-  const lastFinalMessageRef = useRef<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const manuallyStoppedRef = useRef<boolean>(false);
 
@@ -51,6 +50,16 @@ const LeftPanel: React.FC = () => {
       }
     },
     [sendActionToChatbot]
+  );
+
+  // Handle receiving speech results
+  const handleSpeechResults = useCallback(
+    (results: string) => {
+      console.log('Received speech results:', results);
+      // Send speech results to chat just like regular input
+      handleChat(results);
+    },
+    [handleChat]
   );
 
   // Auto-scroll to the bottom when a new message is added
@@ -117,8 +126,8 @@ const LeftPanel: React.FC = () => {
             eraseMemory={clearChatHistory} // Pass eraseMemory function
           />
 
-          {/* Test Speech Recognition Component */}
-          <TestSpeechRecognition isMicOn={mediaState.isMicOn} />
+          {/* Test Speech Recognition Component - Pass the callback */}
+          <TestSpeechRecognition isMicOn={mediaState.isMicOn} onSpeechResult={handleSpeechResults} />
         </div>
       </div>
     </div>
