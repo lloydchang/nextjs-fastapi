@@ -1,12 +1,12 @@
-# api/main.py
+# fastapi/main.py
 
 """
 Title: Combined API for TEDx SDG Search and Transcript Fetching
 
-This main application combines the semantic search module (`api/search.py`) and the transcript fetching module (`api/transcript.py`) into a single FastAPI application. Each module is defined as a sub-application and mounted under different URL paths.
+This main application combines the semantic search module (`fastapi/search.py`) and the transcript fetching module (`fastapi/transcript.py`) into a single FastAPI application. Each module is defined as a sub-application and mounted under different URL paths.
 
-- Semantic Search (SDG-Aligned TEDx Talks): Accessible at `/api/py/search/`
-- Transcript Fetching: Accessible at `/api/py/transcript/`
+- Semantic Search (SDG-Aligned TEDx Talks): Accessible at `/fastapi/search/`
+- Transcript Fetching: Accessible at `/fastapi/transcript/`
 """
 
 from fastapi import FastAPI
@@ -21,8 +21,8 @@ app = FastAPI(
 )
 
 # Mount Sub-Applications to Specific Paths
-app.mount("/api/py/search", search_app)  # Mount the semantic search app under /api/py/search
-app.mount("/api/py/transcript", transcript_app)  # Mount the transcript app under /api/transcript
+app.mount("/fastapi/search", search_app)  # Mount the semantic search app under /fastappi/search
+app.mount("/fastapi/transcript", transcript_app)  # Mount the transcript app under /fastapi/transcript
 
 # Root Endpoint for Testing the Main Application
 @app.get("/")
