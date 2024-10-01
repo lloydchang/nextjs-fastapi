@@ -19,6 +19,7 @@ import asyncio
 import warnings
 import os
 import pickle
+from api.sdg_utils import compute_sdg_tags  # Import the utility function
 
 # Import the semantic_search function from search.py
 from api.search import semantic_search
@@ -109,17 +110,9 @@ else:
             description_vectors = model.encode(descriptions, convert_to_tensor=True, batch_size=32)
             cosine_similarities = util.pytorch_cos_sim(description_vectors, sdg_embeddings)
 
-            sdg_tags_list = []
-            for row in cosine_similarities:
-                sdg_indices = torch.where(row > 0.5)[0]
-                if len(sdg_indices) == 0:
-                    top_n = row.topk(1).indices
-                    sdg_indices = top_n
+            # Compute SDG tags using the utility function
+            data['sdg_tags'] = compute_sdg_tags(cosine_similarities, sdg_names)
 
-                sdg_tags = [sdg_names[i] for i in sdg_indices]
-                sdg_tags_list.append(sdg_tags)
-
-            data['sdg_tags'] = sdg_tags_list
             with open(sdg_tags_cache, 'wb') as cache_file:
                 pickle.dump(data['sdg_tags'], cache_file)
             logger.info("SDG tags computed and cached successfully.")
