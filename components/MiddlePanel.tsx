@@ -43,6 +43,11 @@ const MiddlePanel: React.FC = () => {
 
   // Define the search function
   const handleSearch = useCallback(async () => {
+    if (!query.trim()) {
+      setError("Please enter a keyword to search."); // Show error if query is empty
+      return;
+    }
+
     setError(null);
     setTalks([]);
     setLoading(true);
