@@ -3,53 +3,37 @@
 let lastFinalResult: string = '';
 let lastInterimResult: string = '';
 
+// Function to update the final result if it's substantially different
 export const updateFinalResult = (newResult: string) => {
-  if (isSubstantiallyDifferent(newResult, lastFinalResult)) {
-    lastFinalResult = newResult;
-    return true; // Indicate that the final result is new
-  }
-  return false; // Final result is a duplicate
+  if (newResult.trim() === lastFinalResult.trim()) return false;
+  lastFinalResult = newResult.trim();
+  return true; // Unique final result
 };
 
+// Function to update the interim result if it's substantially different
 export const updateInterimResult = (newResult: string) => {
-  if (isSubstantiallyDifferent(newResult, lastInterimResult)) {
-    lastInterimResult = newResult;
-    return true; // Indicate that the interim result is new
-  }
-  return false; // Interim result is a duplicate
+  if (newResult.trim().length < 10) return false; // Ignore very short results
+  if (isFragmentRepeated(newResult, lastInterimResult)) return false;
+  lastInterimResult = newResult.trim();
+  return true; // Unique interim result
 };
 
-// A utility function to check the substantial difference
-const isSubstantiallyDifferent = (current: string, previous: string) => {
-  const distance = levenshteinDistance(current, previous);
-  const maxLength = Math.max(current.length, previous.length);
-  return distance / maxLength > 0.2; // Adjust the threshold as needed
+// Check if final is too similar to the last interim
+export const isSimilarToLastInterim = (finalResult: string): boolean => {
+  if (finalResult.trim().length < lastInterimResult.trim().length * 0.9) return true; // Final too short
+  return isFragmentRepeated(finalResult, lastInterimResult);
 };
 
-// Helper function to calculate the Levenshtein distance between two strings
-const levenshteinDistance = (a: string, b: string) => {
-  const an = a ? a.length : 0;
-  const bn = b ? b.length : 0;
-  if (an === 0) return bn;
-  if (bn === 0) return an;
+// Utility function to detect if a fragment is repeated
+const isFragmentRepeated = (current: string, previous: string) => {
+  const minLength = Math.min(current.length, previous.length);
+  const commonPrefix = getCommonPrefixLength(current, previous);
+  return minLength >= 5 && commonPrefix / minLength >= 0.8; // Adjust repetition threshold as needed
+};
 
-  const matrix = Array(an + 1)
-    .fill(0)
-    .map(() => Array(bn + 1).fill(0));
-
-  for (let i = 0; i <= an; i++) matrix[i][0] = i;
-  for (let j = 0; j <= bn; j++) matrix[0][j] = j;
-
-  for (let i = 1; i <= an; i++) {
-    for (let j = 1; j <= bn; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,
-        matrix[i][j - 1] + 1,
-        matrix[i - 1][j - 1] + cost
-      );
-    }
-  }
-
-  return matrix[an][bn];
+// Helper function to get common prefix length
+const getCommonPrefixLength = (s1: string, s2: string): number => {
+  let n = 0;
+  while (n < s1.length && n < s2.length && s1[n] === s2[n]) n++;
+  return n;
 };
