@@ -20,6 +20,7 @@
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
     "glob": "^9.3.4",
+    "jaro-winkler": "^0.2.8",
     "jsdom": "^25.0.1",
     "lru-cache": "^9.0.0",
     "postcss": "^8.4.47",

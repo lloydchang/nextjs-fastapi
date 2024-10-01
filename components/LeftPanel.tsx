@@ -14,7 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { updateFinalResult, updateInterimResult } from '../utils/chatUtils'; // Import utility functions
+import { updateFinalResult, updateInterimResult } from '../utils/chatUtils'; // Import updated utility functions
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -27,7 +27,7 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
@@ -35,19 +35,24 @@ const LeftPanel: React.FC = () => {
       if (input.trim()) {
         try {
           if (isFinal) {
-            // Only send final results if they are unique
+            // Deduplication and similarity check for final results
             if (updateFinalResult(input)) {
               const prefixedFinal = `[final] ${input}`; // Prefix final results
+              console.log('Adding Final Result:', prefixedFinal); // Debug log for final result
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedFinal }]);
               await sendActionToChatbot(prefixedFinal); // Send final result to chatbot
               setChatInput('');
+            } else {
+              console.log('Skipped similar or duplicate final result:', input); // Log for skipped results
             }
           } else {
-            // Deduplication check for interim results
+            // Deduplication check for interim results only
             if (updateInterimResult(input)) {
               const prefixedInterim = `[interim] ${input}`; // Prefix interim results
-              console.log('Sending interim to chatbot:', prefixedInterim); // Debug Log for interim results
+              console.log('Adding Interim Result:', prefixedInterim); // Debug log for interim result
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedInterim, isInterim: true }]);
+            } else {
+              console.log('Duplicate Interim Detected:', input); // Debug log for duplicate interim
             }
           }
         } catch (error) {
