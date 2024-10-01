@@ -9,8 +9,7 @@
     max-height: 900px; /* Set a max height */
     background-color: rgba(0, 0, 0, 0.9); /* Dark background for contrast */
     color: #fff; /* White text color for readability */
-    padding: 15px; /* Padding for spacing */
-    border-bottom-left-radius: 15px; /* Rounded bottom-left corner */
+    padding: 20px; /* Padding for spacing */
     z-index: 9999; /* High z-index to stay above other elements */
     overflow: hidden; /* Prevent overflow of content */
     display: flex; /* Use flexbox for layout */
@@ -22,12 +21,11 @@
     cursor: grab; /* Change cursor to indicate draggable area */
     padding: 5px; /* Padding for the draggable handle */
     background-color: rgba(0, 0, 0, 0.7); /* Slightly darker background for visibility */
-    border-radius: 5px; /* Rounded corners for the drag handle */
 }
 
 .toggleButton {
     background-color: #4caf50; /* Green background for the button */
-    border: none; /* Remove default border */
+    border: 0px solid #444; /* Thinner border */
     color: white; /* White text color */
     padding: 15px; /* Padding for the button */
     cursor: pointer; /* Pointer cursor on hover */
@@ -35,7 +33,7 @@
     text-align: center; /* Centered text */
     margin-top: 10px; /* Space below the button */
     font-size: 16px; /* Larger font size */
-    border-radius: 5px; /* Rounded corners for the button */
+    border-radius: 15px; /* Rectangular corners */
 }
 
 .logContainer {
@@ -63,7 +61,6 @@
     font-family: monospace; /* Monospace font for command */
     background-color: rgba(255, 255, 255, 0.1); /* Light background for visibility */
     padding: 10px; /* Padding for the command display */
-    border-radius: 5px; /* Rounded corners */
     margin-top: 10px; /* Space above the command */
     white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
     word-wrap: break-word; /* Break words when necessary */
