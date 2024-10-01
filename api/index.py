@@ -3,7 +3,7 @@
 """
 Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
 
-[Full description as provided]
+[Full description as provided earlier]
 """
 
 # Import necessary modules from FastAPI and other libraries
@@ -21,6 +21,7 @@ import pickle
 
 # Import custom modules
 from api.search import semantic_search
+from api.transcript import router as transcript_router  # Import the transcript router
 from api.data_loader import load_dataset
 from api.embedding_utils import encode_descriptions, encode_sdg_keywords
 from api.sdg_manager import get_sdg_keywords
@@ -28,9 +29,6 @@ from api.sdg_utils import compute_sdg_tags
 from api.model import load_model
 from api.logger import logger
 from api.cache_manager import save_cache
-
-# Import the transcript router
-from api.transcript import transcript_router
 
 # Suppress FutureWarnings from transformers and torch libraries
 logger.info("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
@@ -41,6 +39,9 @@ warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.
 logger.info("Step 2: Creating a FastAPI app instance with customized documentation paths.")
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
+# Include the transcript router
+app.include_router(transcript_router)
+
 # Enable CORS middleware to handle cross-origin requests
 logger.info("Step 3: Enabling CORS middleware to allow cross-origin requests from any origin.")
 app.add_middleware(
@@ -50,9 +51,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Include the transcript router
-app.include_router(transcript_router)
 
 # Load the TEDx Dataset with caching mechanism using data_loader.py
 file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
@@ -158,9 +156,12 @@ else:
     else:
         logger.error("Model is not available or data is insufficient to encode descriptions.")
 
+# Include the transcript router
+app.include_router(transcript_router)
+
 # Define a "Hello World" Endpoint for Testing
 logger.info("Step 11: Defining a 'Hello World' endpoint.")
-@app.get("/api/py/helloFastApi", summary="Hello World Endpoint")
+@app.get("/api/py/helloFastApi")
 async def hello_fast_api():
     """
     A simple endpoint to verify that the API is working.
@@ -169,14 +170,16 @@ async def hello_fast_api():
 
 # Create a Search Endpoint for TEDx Talks Using Asynchronous Search
 logger.info("Step 12: Creating a Search endpoint for TEDx talks.")
-@app.get("/api/py/search", response_model=List[Dict], summary="Semantic Search Endpoint")
-async def search(query: str = Query(..., min_length=1)):
+@app.get("/api/py/search")
+async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     """
     Endpoint to perform semantic search on TEDx talks based on a query.
     
-    - **query**: The search query provided by the user.
+    Args:
+        query (str): The search query provided by the user.
     
-    **Returns**: A list of TEDx talks matching the query with relevant metadata.
+    Returns:
+        List[Dict]: A list of TEDx talks matching the query with relevant metadata.
     """
     try:
         return await semantic_search(query, data, model, sdg_embeddings)
