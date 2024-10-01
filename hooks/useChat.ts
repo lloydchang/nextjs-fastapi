@@ -1,113 +1,30 @@
 // hooks/useChat.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
 
-export interface Message {
-  sender: string;
-  text: string;
-  isInterim?: boolean;
-}
+import { useState } from 'react';
+import { useTalkContext } from '../context/TalkContext';
 
-interface UseChatProps {
-  isMemOn: boolean;
-}
+export const useChat = () => {
+  const { transcript } = useTalkContext(); // Access the transcript from context
+  const [messages, setMessages] = useState<{ sender: string; text: string }[]>([]);
 
-export const useChat = ({ isMemOn }: UseChatProps) => {
-  const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentContext, setCurrentContext] = useState<number[] | null>(null); // Track context state
+  const sendActionToChatbot = async (message: string) => {
+    // Logic for sending the message to the chatbot
+    // You might want to add handling for the transcript here
+  };
 
-  // Ref to hold the latest messages for context
-  const messagesRef = useRef<Message[]>([]);
-
-  // Update messagesRef whenever messages change
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
-
-  // Load messages from localStorage when memory is enabled and component mounts
-  useEffect(() => {
-    if (isMemOn) {
-      try {
-        const storedMessages = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (storedMessages) {
-          const parsedMessages = JSON.parse(storedMessages);
-          setMessages(parsedMessages);
-          console.log('Chat history loaded from memory.');
-        }
-      } catch (error) {
-        console.error('Failed to load chat history from memory:', error);
-      }
-    } else {
-      setMessages([]); // Clear messages if memory is turned off
+  // Function to send the transcript if it exists
+  const sendTranscript = () => {
+    if (transcript) {
+      const formattedTranscript = `📜 ${transcript}`; // Format the transcript
+      setMessages((prev) => [...prev, { sender: 'user', text: formattedTranscript }]);
+      sendActionToChatbot(formattedTranscript); // Send the formatted transcript
     }
-  }, [isMemOn]);
+  };
 
-  // Save messages to localStorage whenever they change and memory is enabled
-  useEffect(() => {
-    if (isMemOn && messages.length > 0) {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
-        console.log('Chat history saved to memory.');
-      } catch (error) {
-        console.error('Failed to save chat history to memory:', error);
-      }
-    }
-  }, [messages, isMemOn]);
-
-  // Helper function to construct conversation context
-  const getConversationContext = useCallback((): string => {
-    return messagesRef.current
-      .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
-      .join('\n');
-  }, []);
-
-  // Send user message to the chatbot and receive a response
-  const sendActionToChatbot = useCallback(
-    async (input: string) => {
-      setMessages((prev) => [...prev, { sender: 'user', text: input }]);
-
-      try {
-        console.log('Sending prompt to chatbot service:', input);
-
-        // Use the context from the state
-        const reply = await sendMessageToChatbot(input, currentContext, (message, newContext) => {
-          // Update state with the new context and add message
-          setMessages((prev) => [...prev, { sender: 'bot', text: message }]);
-          setCurrentContext(newContext);
-        });
-
-        // Handle the non-streaming response mode
-        if (reply) setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-
-        console.error('Error communicating with chatbot:', errorMessage);
-
-        // Send the error back to the chat window as a bot message
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: 'bot',
-            text: `Error: ${errorMessage}`, // Format the error message for display
-          },
-        ]);
-      }
-    },
-    [currentContext]
-  );
-
-  // Clear Chat History
-  const clearChatHistory = useCallback(() => {
-    setMessages([]);
-    setCurrentContext(null);
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      console.log('Chat history cleared from memory.');
-    } catch (error) {
-      console.error('Failed to clear chat history from memory:', error);
-    }
-  }, []);
-
-  return { messages, setMessages, sendActionToChatbot, clearChatHistory };
+  return {
+    messages,
+    setMessages,
+    sendActionToChatbot,
+    sendTranscript, // Expose the sendTranscript function if needed
+  };
 };

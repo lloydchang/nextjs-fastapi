@@ -14,6 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
+import { useTalkContext } from '../context/TalkContext'; // Import useTalkContext
 import { updateFinalResult, updateInterimResult, trimOverlap } from '../utils/chatUtils'; // Import utility functions
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
@@ -24,6 +25,7 @@ const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
 const LeftPanel: React.FC = () => {
   const { mediaState, videoRef, audioRef, startCam, stopCam, toggleMic, togglePip, toggleMem } = useMedia();
   const { messages, setMessages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
+  const { transcript } = useTalkContext(); // Access transcript from context
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
