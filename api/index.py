@@ -22,6 +22,7 @@ import pickle
 from api.sdg_utils import compute_sdg_tags  # Import the utility function
 from api.model import load_model  # Import the model loading function
 from api.embedding_utils import encode_descriptions, encode_sdg_keywords  # Import embedding functions
+from api.sdg_manager import get_sdg_keywords
 
 # Import the semantic_search function from search.py
 from api.search import semantic_search
