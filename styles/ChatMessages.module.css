@@ -17,12 +17,14 @@
   flex-direction: column;
 }
 
-.userMessage {
-  align-items: flex-end;
+.userMessage .text { /* Increase specificity for user messages */
+  color: #eb0028; /* User message color (red) */
+  align-self: flex-end; /* Align to the right */
 }
 
-.botMessage {
-  align-items: flex-start;
+.botMessage .text {
+  color: white; /* Bot message color */
+  align-self: flex-start; /* Align to the left */
 }
 
 .sender {
@@ -32,7 +34,7 @@
 
 .text {
   background-color: black;
-  color: white;
+  color: white; /* Default color, overridden in specific user/bot styles */
   padding: 8px 12px;
   border-radius: 15px;
   max-width: 70%;
