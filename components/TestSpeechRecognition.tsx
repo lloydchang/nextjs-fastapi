@@ -5,21 +5,23 @@ import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import styles from '../styles/TestSpeechRecognition.module.css';
 
 interface TestSpeechRecognitionProps {
-  isMicOn: boolean; // Add a prop to control mic state
+  isMicOn: boolean; // Prop to control mic state
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn }) => {
-  const [transcript, setTranscript] = React.useState<string>('');
-  const [isFinal, setIsFinal] = React.useState<boolean>(false);
+  const [results, setResults] = React.useState<string>('');
+  const [interimResults, setInterimResults] = React.useState<string>(''); // Track interim results
   const [isListening, setIsListening] = React.useState<boolean>(false); // Track if speech recognition is active
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleResult = React.useCallback((newTranscript: string, final: boolean) => {
-    console.log(`TestSpeechRecognition - Transcript: "${newTranscript}", Final: ${final}`);
-    setTranscript(newTranscript);
-    setIsFinal(final);
+  const handleResult = React.useCallback((newResults: string, final: boolean) => {
+    console.log(`TestSpeechRecognition - Results: "${newResults}", Final: ${final}`);
     if (final) {
+      setResults(newResults); // Set final results
+      setInterimResults(''); // Clear interim when final is set
       setError(null); // Clear any previous errors
+    } else {
+      setInterimResults(newResults); // Update interim results
     }
   }, []);
 
@@ -29,11 +31,11 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn }
   useEffect(() => {
     console.log(`isMicOn state changed: ${isMicOn}`);
     if (isMicOn) {
-      console.log('Microphone is on, starting speech recognition...');
+      console.log('Microphone is on, starting listening...');
       startHearing();
       setIsListening(true); // Update the status to indicate that it's listening
     } else {
-      console.log('Microphone is off, stopping speech recognition...');
+      console.log('Microphone is off, stopping listening...');
       stopHearing();
       setIsListening(false); // Update the status to indicate that it's not listening
     }
@@ -44,23 +46,15 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn }
       <div className={styles.transcriptContainer}>
         {/* Show the current speech recognition status */}
         <p>
-          <strong>Speech Recognition Status:</strong> {isListening ? 'Listening 🎧' : 'Not Listening 🚫'}
+          <strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong>
         </p>
         <p>
-          <strong>Transcript:</strong> {transcript}
+          <strong>Final Results:</strong> {results}
         </p>
         <p>
-          <strong>Status:</strong> {isFinal ? 'Final' : 'Interim'}
+          <strong>Interim Results:</strong> {interimResults}
         </p>
         {error && <p className={styles.error}>{error}</p>}
-      </div>
-      <div className={styles.buttons}>
-        <button type="button" onClick={startHearing} className={styles.button}>
-          Start Hearing
-        </button>
-        <button type="button" onClick={stopHearing} className={styles.button}>
-          Stop Hearing
-        </button>
       </div>
     </div>
   );
