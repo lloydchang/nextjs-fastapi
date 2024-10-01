@@ -18,6 +18,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
   const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
+  const noInterimTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Store the timeout reference
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -46,11 +47,25 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
           setResults(finalTranscript.trim());
           onSpeechResult(finalTranscript.trim());
           setInterimResults('');
+          // Clear timeout when final result is received
+          if (noInterimTimeoutRef.current) {
+            clearTimeout(noInterimTimeoutRef.current);
+          }
         }
 
         if (interimTranscript) {
           setInterimResults(interimTranscript.trim());
           onInterimUpdate(interimTranscript.trim());
+          // Restart timeout if there are interim results
+          if (noInterimTimeoutRef.current) {
+            clearTimeout(noInterimTimeoutRef.current); // Clear any existing timeout
+          }
+          // Set a timeout to restart recognition if no interim results for 3 seconds
+          noInterimTimeoutRef.current = setTimeout(() => {
+            console.log('No interim results for 3 seconds. Restarting...');
+            recognition.stop(); // Stop recognition
+            recognition.start(); // Restart recognition
+          }, 3000); // 3 seconds
         }
       };
 
@@ -84,6 +99,9 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current.onresult = null;
         recognitionRef.current.onerror = null;
         recognitionRef.current = null; // Clean up the recognition instance
+      }
+      if (noInterimTimeoutRef.current) {
+        clearTimeout(noInterimTimeoutRef.current); // Clean up the timeout
       }
     };
   }, [onSpeechResult, onInterimUpdate, isMicOn]);
