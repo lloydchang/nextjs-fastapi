@@ -3,32 +3,7 @@
 """
 Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
 
-This semantic search API, built on FastAPI, harnesses AI and Natural Language Processing (NLP) to connect inspirational ideas from TEDx talks to the United Nations Sustainable Development Goals (SDGs). By allowing users to explore TEDx talks through the lens of SDGs, the application serves as a vital tool to bridge the gap between innovative ideas and actionable solutions, facilitating progress towards the Global Goals in a data-driven and research-backed manner. This API aims to address inefficiencies in discovering and mapping relevant content for sustainable development, making it easier for organizations, researchers, and activists to find resources aligned with specific SDGs.
-
-The primary impact of this application lies in its ability to enhance information accessibility and scalability. It enables users to search and explore TEDx talks closely aligned with their areas of interest, reducing the time needed to manually sift through large datasets. Additionally, by associating TEDx content with SDG themes, the application helps contextualize global challenges, providing users with actionable insights directly linked to research-backed SDG metrics.
-
-Research Grounding:
-
-The AI model applied here, Sentence-BERT, is widely recognized for its robust performance in semantic similarity tasks. This research-backed model is fine-tuned specifically for sentence-level comparisons, making it ideal for understanding thematic relevance across a variety of domains. The application employs a well-defined plan to leverage this model for SDG alignment, using keyword embeddings and similarity scores to map talks to their corresponding SDGs.
-
-The deployment strategy involves precomputing and caching embeddings, enabling fast, real-time search capabilities even with extensive datasets. The process includes multiple optimization steps, such as:
-- Precomputing SDG keyword embeddings.
-- Encoding TEDx talk descriptions.
-- Computing and caching SDG relevance scores for each talk.
-
-Expected Outcomes:
-
-1. Improved Content Discovery: By using semantic search, the application allows users to find highly relevant TEDx talks that might otherwise be overlooked in traditional keyword-based searches.
-2. Enhanced Awareness and Impact: Users, including non-profits, educators, and policymakers, can gain deeper insights into specific SDGs through TEDx content, sparking new ideas and strategies for addressing global challenges.
-3. Catalyzing Action: By connecting SDG-aligned talks to users actively working in these areas, the API can catalyze the development of new projects, partnerships, and initiatives that are rooted in innovative, research-backed solutions.
-
-AI Acceleration:
-
-The application accelerates SDG progress by reducing inefficiencies in navigating complex information sources. For instance, traditional methods of sifting through TEDx transcripts would take significant time and manual effort. This AI-powered solution reduces that time exponentially, providing quick access to curated content that aligns with specific sustainable development goals. This efficient content mapping has the potential to accelerate policy development, educational initiatives, and community projects by making relevant knowledge more accessible.
-
-Furthermore, the application is built with a clear strategy for future scaling. Additional SDG-related data sources, such as UNDP Human Development Reports or International Aid Transparency Initiative (IATI) data, can be integrated to create even more comprehensive SDG mappings. With additional datasets and continuous refinement of the AI model, the application can support broader impact areas, such as sustainability reporting, project planning, and real-time monitoring of progress towards the Global Goals.
-
-Through this semantic search application, the goal is to create a scalable, AI-driven platform that democratizes access to valuable information, enabling users across sectors to make informed decisions that drive meaningful progress towards achieving the UN SDGs.
+[Full description as provided]
 """
 
 # Import necessary modules from FastAPI and other libraries
@@ -54,6 +29,9 @@ from api.model import load_model
 from api.logger import logger
 from api.cache_manager import save_cache
 
+# Import the transcript router
+from api.transcript import transcript_router
+
 # Suppress FutureWarnings from transformers and torch libraries
 logger.info("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
 warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.tokenization_utils_base")
@@ -72,6 +50,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include the transcript router
+app.include_router(transcript_router)
 
 # Load the TEDx Dataset with caching mechanism using data_loader.py
 file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
@@ -179,7 +160,7 @@ else:
 
 # Define a "Hello World" Endpoint for Testing
 logger.info("Step 11: Defining a 'Hello World' endpoint.")
-@app.get("/api/py/helloFastApi")
+@app.get("/api/py/helloFastApi", summary="Hello World Endpoint")
 async def hello_fast_api():
     """
     A simple endpoint to verify that the API is working.
@@ -188,16 +169,14 @@ async def hello_fast_api():
 
 # Create a Search Endpoint for TEDx Talks Using Asynchronous Search
 logger.info("Step 12: Creating a Search endpoint for TEDx talks.")
-@app.get("/api/py/search")
-async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
+@app.get("/api/py/search", response_model=List[Dict], summary="Semantic Search Endpoint")
+async def search(query: str = Query(..., min_length=1)):
     """
     Endpoint to perform semantic search on TEDx talks based on a query.
     
-    Args:
-        query (str): The search query provided by the user.
+    - **query**: The search query provided by the user.
     
-    Returns:
-        List[Dict]: A list of TEDx talks matching the query with relevant metadata.
+    **Returns**: A list of TEDx talks matching the query with relevant metadata.
     """
     try:
         return await semantic_search(query, data, model, sdg_embeddings)
