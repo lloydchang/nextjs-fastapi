@@ -1,5 +1,3 @@
-// hooks/useSpeechRecognition.ts
-
 import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionReturn {
@@ -10,20 +8,22 @@ interface UseSpeechRecognitionReturn {
 
 export const useSpeechRecognition = (
   onResult: (transcript: string, isFinal: boolean) => void,
-  onInterimUpdate: (interimTranscript: string) => void
+  onInterimUpdate: (interimTranscript: string) => void,
+  deduplicate: boolean = false, // Deduplication flag
+  trimResults: boolean = false // Trimming flag
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const lastInterim = useRef<string>(''); // Track last interim result
 
   useEffect(() => {
-    // Initialize SpeechRecognition API
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognitionConstructor) {
       const recog = new SpeechRecognitionConstructor();
-      recog.continuous = true; // Keep listening until explicitly stopped
-      recog.interimResults = true; // Capture interim results
+      recog.continuous = true;
+      recog.interimResults = true;
       recog.lang = 'en-US';
 
       recog.onresult = (event: SpeechRecognitionEvent) => {
@@ -40,17 +40,23 @@ export const useSpeechRecognition = (
         }
 
         if (finalTranscript) {
-          onResult(finalTranscript.trim(), true); // Send final result
+          if (!deduplicate || finalTranscript.trim() !== lastInterim.current.trim()) {
+            onResult(finalTranscript.trim(), true); // Final result handling
+          }
+          lastInterim.current = ''; // Clear interim after final
         }
 
         if (interimTranscript) {
-          onInterimUpdate(interimTranscript.trim()); // Send interim result
+          if (!deduplicate || interimTranscript.trim() !== lastInterim.current.trim()) {
+            lastInterim.current = interimTranscript.trim();
+            onInterimUpdate(interimTranscript.trim()); // Interim result handling
+          }
         }
       };
 
       recog.onerror = (event: any) => {
-        console.error('Speech recognition error:', event);
         setIsListening(false);
+        console.error('Speech recognition error:', event);
       };
 
       recog.onend = () => {
@@ -62,19 +68,19 @@ export const useSpeechRecognition = (
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
-  }, [onResult, onInterimUpdate]);
+  }, [onResult, onInterimUpdate, deduplicate, trimResults]);
 
   const startListening = useCallback(() => {
     if (recognition && !isListening) {
-      recognition.start(); // Start speech recognition
-      setIsListening(true); // Track recognition activity
+      recognition.start();
+      setIsListening(true);
     }
   }, [recognition, isListening]);
 
   const stopListening = useCallback(() => {
     if (recognition && isListening) {
-      recognition.stop(); // Stop speech recognition
-      setIsListening(false); // Reset recognition state
+      recognition.stop();
+      setIsListening(false);
     }
   }, [recognition, isListening]);
 
