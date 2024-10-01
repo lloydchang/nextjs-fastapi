@@ -1,3 +1,5 @@
+// components/RightPanel.tsx
+
 'use client'; // Mark as a client component
 
 import React from 'react';
@@ -10,8 +12,10 @@ const RightPanel: React.FC = () => {
     <div className={styles.rightPanel}>
       <h1>and SDGs</h1>
       <iframe
-        src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/"
-        className={styles.iframe}
+        src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
+        width="100%"
+        height="100%"
+        style={{ border: 'none' }}
         loading="lazy"
         title="SDG Reporting Status"
       />
