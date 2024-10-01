@@ -19,7 +19,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
 
   const handleResult = (newResults: string, final: boolean) => {
     if (final) {
-      setResults(prev => `${prev} ${newResults}`.trim());
+      setResults(newResults); // Replace final results instead of appending
       setInterimResults(''); // Clear interim results when final is received
       onSpeechResult(newResults.trim()); // Send final result to parent
     } else {
