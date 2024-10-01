@@ -37,7 +37,6 @@ from fastapi import FastAPI, Query
 from typing import List, Dict
 import pandas as pd
 import numpy as np
-import re
 from sentence_transformers import SentenceTransformer, util
 import torch
 from fastapi.middleware.cors import CORSMiddleware
@@ -143,60 +142,3 @@ else:
         data['sdg_tags'] = sdg_tags_list
         with open(sdg_tags_cache, 'wb') as cache_file:
             pickle.dump(data['sdg_tags'], cache_file)
-
-# Step 9: Precompute or Load Cached Embeddings for Each Description
-print("Step 9: Precomputing or loading cached embeddings for each description.")
-description_embeddings_cache = "./cache/description_embeddings.pkl"
-
-if os.path.exists(description_embeddings_cache):
-    print("Step 9.1: Loading cached description embeddings.")
-    with open(description_embeddings_cache, 'rb') as cache_file:
-        data['description_vector'] = pickle.load(cache_file)
-else:
-    print("Step 9.2: Encoding descriptions.")
-    if model and not data.empty and 'description' in data.columns:
-        data['description_vector'] = data['description'].apply(lambda x: model.encode(str(x), clean_up_tokenization_spaces=True, convert_to_tensor=True).tolist())
-        with open(description_embeddings_cache, 'wb') as cache_file:
-            pickle.dump(data['description_vector'], cache_file)
-
-# Step 10: Create a Semantic Search Function Using NumPy and Asynchronous Handling
-print("Step 10: Creating a semantic search function.")
-async def semantic_search(query: str, top_n: int = 10) -> List[Dict]:
-    print(f"Step 10.1: Performing semantic search for the query: '{query}'.")
-    if model is None or 'description_vector' not in data.columns:
-        return [{"error": "Model or data not available."}]
-    
-    try:
-        query_vector = await asyncio.to_thread(model.encode, query, clean_up_tokenization_spaces=True, convert_to_tensor=True)
-        query_vector = query_vector.cpu().numpy()
-
-        description_vectors_np = np.array([np.array(vec) for vec in data['description_vector']])
-        similarities = np.dot(description_vectors_np, query_vector) / (np.linalg.norm(description_vectors_np, axis=1) * np.linalg.norm(query_vector))
-        top_indices = np.argsort(-similarities)[:top_n]
-        return [
-            {
-                'title': data.iloc[idx]['slug'].replace('_', ' '),
-                'description': data.iloc[idx]['description'],
-                'presenter': data.iloc[idx]['presenterDisplayName'],
-                'sdg_tags': data.iloc[idx]['sdg_tags'],
-                'similarity_score': float(similarities[idx]),
-                'url': f"https://www.ted.com/talks/{data.iloc[idx]['slug']}"
-            }
-            for idx in top_indices
-        ]
-    except Exception as e:
-        print(f"Step 10.2: Error during semantic search: {e}")
-        return [{"error": f"Search error: {str(e)}"}]
-
-# Step 11: Define a "Hello World" Endpoint for Testing
-@app.get("/api/py/helloFastApi")
-async def hello_fast_api():
-    return {"message": "Hello from FastAPI"}
-
-# Step 12: Create a Search Endpoint for TEDx Talks Using Asynchronous Search
-@app.get("/api/py/search/")
-async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
-    try:
-        return await semantic_search(query)
-    except Exception as e:
-        return [{"error": str(e)}]
