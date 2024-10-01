@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
 
 export interface Message {
+  id: string; // Add a unique ID for each message
   sender: string;
   text: string;
   isInterim?: boolean;
@@ -75,7 +76,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       }
 
       console.log("Processing new message:", input);
-      setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+      const newMessageId = `${Date.now()}-${Math.random()}`; // Create a unique ID
+      setMessages((prev) => [...prev, { id: newMessageId, sender: 'user', text: input }]);
       isSendingRef.current = true; // Set sending status
 
       try {
@@ -83,18 +85,23 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         const fullContext = getConversationContext(); // Include full context each time
         const reply = await sendMessageToChatbot(input, fullContext, (message, newContext) => {
           // Update state with the new context and add message
-          setMessages((prev) => [...prev, { sender: 'bot', text: message }]);
+          const replyId = `${Date.now()}-${Math.random()}`; // Unique ID for bot message
+          setMessages((prev) => [...prev, { id: replyId, sender: 'bot', text: message }]);
           setCurrentContext(newContext);
         });
 
         // Handle the non-streaming response mode
-        if (reply) setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
+        if (reply) {
+          const replyId = `${Date.now()}-${Math.random()}`;
+          setMessages((prev) => [...prev, { id: replyId, sender: 'bot', text: reply }]);
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
         console.error('Error communicating with chatbot:', errorMessage);
         setMessages((prev) => [
           ...prev,
           {
+            id: `error-${Date.now()}`,
             sender: 'bot',
             text: `Error: ${errorMessage}`, // Format the error message for display
           },
