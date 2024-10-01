@@ -2,10 +2,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import { useChat } from '../hooks/useChat';
 import SearchSection from './SearchSection';
+import NowPlayingSection from './NowPlayingSection';
 import styles from '../styles/MiddlePanel.module.css';
 
 // TypeScript Types
@@ -16,8 +17,15 @@ type Talk = {
 };
 
 const MiddlePanel: React.FC = () => {
-  const { talks, setTalks } = useTalkContext(); // Get talks from context
+  const { talks, setTalks, setTranscript } = useTalkContext();
   const { sendActionToChatbot } = useChat();
+  const initialKeyword = useRef<string>("TED AI");
+
+  const [query, setQuery] = useState<string>(initialKeyword.current);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
+  const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
 
   const determineInitialKeyword = () => {
     const randomNumber = Math.floor(Math.random() * 18);
@@ -25,12 +33,6 @@ const MiddlePanel: React.FC = () => {
       ? "TED AI" 
       : ['poverty', 'hunger', 'health', 'education', 'gender', 'water', 'energy', 'work', 'industry', 'inequality', 'city', 'consumption', 'climate', 'ocean', 'land', 'peace', 'partnership'][Math.floor(Math.random() * 16)];
   };
-
-  const [query, setQuery] = useState<string>(determineInitialKeyword()); // Set default query
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
-  const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
 
   const handleSearch = useCallback(async () => {
     setError(null);
@@ -55,22 +57,59 @@ const MiddlePanel: React.FC = () => {
     }
   }, [query, setTalks]);
 
-  const handleBotShare = () => {
-    // Logic for sharing the transcript can be managed in SearchSection
-  };
+  const fetchTranscript = useCallback(async (url: string) => {
+    const transcriptUrl = url.replace('/talks/', '/talks/') + '/transcript?subtitle=en';
+    
+    try {
+      const response = await fetch(transcriptUrl);
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+      const transcriptData = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(transcriptData, 'text/html');
+      const transcriptText = Array.from(doc.querySelectorAll('.Grid--withGutter .Grid-cell'))
+        .map((element) => element.textContent)
+        .join('\n');
+      
+      setTranscript(transcriptText);
+      const formattedTranscript = `📜 ${transcriptText}`;
+      sendActionToChatbot(formattedTranscript);
+    } catch (error) {
+      console.error("Failed to fetch transcript:", error);
+    }
+  }, [setTranscript, sendActionToChatbot]);
 
   useEffect(() => {
-    setSearchInitiated(true); // Start search initiation
+    initialKeyword.current = determineInitialKeyword();
+    setQuery(initialKeyword.current);
+    setSearchInitiated(true);
   }, []);
 
   useEffect(() => {
     if (searchInitiated) {
-      handleSearch(); // Perform search
+      handleSearch();
     }
   }, [searchInitiated, handleSearch]);
 
+  useEffect(() => {
+    if (selectedTalk) {
+      fetchTranscript(selectedTalk.url);
+    }
+  }, [selectedTalk, fetchTranscript]);
+
+  const generateEmbedUrl = useCallback((url: string): string => {
+    const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
+    const match = url.match(tedRegex);
+    return match ? `https://embed.ted.com/talks/${match[1]}` : url;
+  }, []);
+
   return (
     <div className={styles.middlePanel}>
+      <NowPlayingSection
+        selectedTalk={selectedTalk}
+        generateEmbedUrl={generateEmbedUrl}
+      />
       <SearchSection
         query={query}
         setQuery={setQuery}
@@ -79,7 +118,6 @@ const MiddlePanel: React.FC = () => {
         selectedTalk={selectedTalk}
         setSelectedTalk={setSelectedTalk}
         talks={talks}
-        onBotShare={handleBotShare} // Pass the bot share function to SearchSection
       />
       {error && <p className={styles.errorText}>{error}</p>}
     </div>
