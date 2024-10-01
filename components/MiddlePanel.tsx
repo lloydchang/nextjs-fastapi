@@ -49,7 +49,7 @@ const MiddlePanel: React.FC = () => {
     setSelectedTalk(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SEARCH_API_URL}?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
