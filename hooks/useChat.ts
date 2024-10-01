@@ -16,6 +16,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentContext, setCurrentContext] = useState<string | null>(null); // Track context as a full string
+  const isSendingRef = useRef(false); // Ref to track if message is already being sent
 
   // Ref to hold the latest messages for context
   const messagesRef = useRef<Message[]>([]);
@@ -68,7 +69,13 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   // Send user message to the chatbot and receive a response
   const sendActionToChatbot = useCallback(
     async (input: string) => {
+      if (isSendingRef.current) {
+        console.warn('A message is already being processed. Please wait.');
+        return; // Prevent multiple concurrent sends
+      }
+
       setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+      isSendingRef.current = true; // Set sending status
 
       try {
         console.log('Sending prompt to chatbot service:', input);
@@ -91,6 +98,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
             text: `Error: ${errorMessage}`, // Format the error message for display
           },
         ]);
+      } finally {
+        isSendingRef.current = false; // Reset sending status
       }
     },
     [getConversationContext]
