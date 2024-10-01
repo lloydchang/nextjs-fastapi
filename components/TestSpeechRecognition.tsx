@@ -1,55 +1,65 @@
 // components/TestSpeechRecognition.tsx
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
-import { sendMessageToChat } from '../utils/chatUtils'; // Function to send messages to the chat window
 import styles from '../styles/TestSpeechRecognition.module.css';
 
 interface TestSpeechRecognitionProps {
-  isMicOn: boolean; // Prop to control mic state
-  onSpeechResult: (finalResults: string) => void; // Callback to send results to chatbot
+  isMicOn: boolean;
+  onSpeechResult: (transcript: string, isFinal: boolean) => void;
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, onSpeechResult }) => {
-  const [results, setResults] = React.useState<string>('');
-  const [interimResults, setInterimResults] = React.useState<string>(''); // Track interim results
-  const [isListening, setIsListening] = React.useState<boolean>(false); // Track if speech recognition is active
+  const [finalResults, setFinalResults] = React.useState<string>(''); // Store the final recognized results
+  const [interimResults, setInterimResults] = React.useState<string>(''); // Store interim results
+  const [isListening, setIsListening] = React.useState<boolean>(false); // Track the microphone state
   const [error, setError] = React.useState<string | null>(null);
 
+  // Track the last processed segment to filter duplicates
+  const lastRecognizedSegmentRef = useRef<string>(''); // Store the last processed segment
+
+  // Handle incoming speech results
   const handleResult = React.useCallback(
     (newResults: string, isFinal: boolean) => {
-      console.log(`TestSpeechRecognition - Results: "${newResults}", Final: ${isFinal}`);
+      console.log(`Speech Recognition - Received: "${newResults}", Final: ${isFinal}`);
+
+      // Avoid processing duplicate segments
+      if (newResults === lastRecognizedSegmentRef.current) {
+        console.log('Duplicate detected, skipping...');
+        return; // Skip processing if it's a duplicate
+      }
+
+      // Update the reference to track the latest recognized segment
+      lastRecognizedSegmentRef.current = newResults;
 
       if (isFinal) {
-        setResults(newResults); // Set final results
-        setInterimResults(''); // Clear interim when final is set
-        setError(null); // Clear any previous errors
+        // Concatenate the new final result and send to the chatbot
+        const updatedFinalResults = (finalResults ? `${finalResults} ${newResults}` : newResults).trim();
 
-        // Send final results to the chat window
-        sendMessageToChat(newResults);
+        // Send the final result to the parent component (e.g., chatbot)
+        onSpeechResult(updatedFinalResults, true);
 
-        // Send final results to the chatbot handler via callback
-        onSpeechResult(newResults);
+        // Clear the final results after sending to the chatbot
+        setFinalResults(''); // Clear final results to start fresh for the next input
+        setError(null); // Clear errors, if any
       } else {
-        setInterimResults(newResults); // Update interim results
+        // For interim results, keep updating them in real-time for display
+        setInterimResults(newResults);
       }
     },
-    [onSpeechResult]
+    [finalResults, onSpeechResult]
   );
 
   const { startHearing, stopHearing } = useSpeechRecognition(handleResult);
 
   // Automatically start/stop hearing when `isMicOn` changes
   useEffect(() => {
-    console.log(`isMicOn state changed: ${isMicOn}`);
     if (isMicOn) {
-      console.log('Microphone is on, starting listening...');
       startHearing();
-      setIsListening(true); // Update the status to indicate that it's listening
+      setIsListening(true); // Indicate that listening is active
     } else {
-      console.log('Microphone is off, stopping listening...');
       stopHearing();
-      setIsListening(false); // Update the status to indicate that it's not listening
+      setIsListening(false); // Indicate that listening is inactive
     }
   }, [isMicOn, startHearing, stopHearing]);
 
@@ -57,12 +67,18 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
     <div className={styles.container}>
       <div className={styles.transcriptContainer}>
         {/* Show the current speech recognition status */}
-        <p>
-          <strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong>
+        <p className={styles.statusText}>
+          {isListening ? 'Listening 👂' : 'Not Listening 🙉'}
         </p>
+
+        {/* Display the combined transcription with separate styles for final and interim */}
         <p>
-          <strong>Interim Results:</strong> {interimResults}
+          <strong>Transcription:</strong>{' '}
+          <span className={styles.finalText}>{finalResults}</span>{' '}
+          <span className={styles.interimText}>{interimResults}</span>
         </p>
+
+        {/* Display any errors if present */}
         {error && <p className={styles.error}>{error}</p>}
       </div>
     </div>
