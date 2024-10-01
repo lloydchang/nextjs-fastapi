@@ -160,6 +160,7 @@ const MiddlePanel: React.FC = () => {
               await sendTranscriptToChatbot(transcript);
             } else {
               addLog("Transcript scraping timed out.");
+              setError("Transcript scraping timed out. Please try again later.");
             }
           }
         }, pollInterval);

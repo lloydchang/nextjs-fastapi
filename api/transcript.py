@@ -2,93 +2,91 @@
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, HttpUrl
-from typing import Dict
+from typing import Optional, Dict
 import requests
 from bs4 import BeautifulSoup
+import os
+import pickle
 from api.cache_manager import load_cache, save_cache
 from api.logger import logger
 
-transcript_router = APIRouter(prefix="/api/py", tags=["Transcript"])
+router = APIRouter()
 
-# Define the path for storing transcripts
-transcript_cache_path = "./api/cache/transcripts.pkl"
+# Define the path for the transcripts cache
+TRANSCRIPTS_CACHE_PATH = "./api/cache/transcripts.pkl"
 
-# Load existing transcripts from cache
-transcripts: Dict[str, str] = load_cache(transcript_cache_path) or {}
+# Load existing transcripts from cache or initialize an empty dictionary
+transcripts: Dict[str, str] = load_cache(TRANSCRIPTS_CACHE_PATH) or {}
 
 class ScrapeRequest(BaseModel):
     url: HttpUrl
 
-@transcript_router.post("/scrape-transcript/", summary="Scrape and store transcript from a TEDx talk URL.")
+@router.post("/scrape-transcript/")
 async def scrape_transcript(request: ScrapeRequest, background_tasks: BackgroundTasks):
-    """
-    Initiates the scraping of a transcript from the provided TEDx talk URL.
-    
-    - **url**: The URL of the TEDx talk from which to scrape the transcript.
-    """
     url = request.url
-    if url in transcripts:
-        existing_transcript = transcripts[url]
-        if existing_transcript.startswith("Error"):
-            return {"message": "Previous scraping attempt failed. You can retry.", "url": url}
-        return {"message": "Transcript is already available.", "url": url}
+    if str(url) in transcripts:
+        logger.info(f"Transcript for URL '{url}' is already available or being processed.")
+        return {"message": "Transcript is already being processed or available.", "url": str(url)}
     
-    background_tasks.add_task(scrape_and_store_transcript, url)
-    return {"message": "Scraping in progress.", "url": url}
+    logger.info(f"Initiating transcript scraping for URL: {url}")
+    background_tasks.add_task(scrape_and_store_transcript, str(url))
+    return {"message": "Scraping in progress", "url": str(url)}
 
 def scrape_and_store_transcript(url: str):
-    """
-    Scrapes the transcript from the given TEDx talk URL and stores it in the transcripts dictionary.
-    """
-    logger.info(f"Starting transcript scraping for URL: {url}")
+    logger.info(f"Scraping transcript from URL: {url}")
     try:
-        # Fetch the transcript page
-        response = requests.get(url)
+        response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
         if response.status_code != 200:
-            error_msg = f"Failed to retrieve the page. Status code: {response.status_code}"
-            transcripts[url] = f"Error: {error_msg}"
-            logger.error(error_msg)
-            save_cache(transcripts, transcript_cache_path)
+            transcripts[url] = f"Failed to retrieve the page. Status code: {response.status_code}"
+            logger.error(f"Failed to retrieve page. Status code: {response.status_code} for URL: {url}")
+            save_cache(transcripts, TRANSCRIPTS_CACHE_PATH)
             return
         
         soup = BeautifulSoup(response.content, "html.parser")
         
-        # TED.com structure might vary; adjust selectors accordingly
-        # Attempting to find transcript sections
-        transcript_sections = soup.find_all("div", class_="Grid__cell flx-s:1 flx-nw:1 p-r:4")
-        transcript_text = ""
-        for section in transcript_sections:
-            paragraphs = section.find_all("p")
-            for p in paragraphs:
-                transcript_text += p.get_text(separator=" ", strip=True) + "\n"
+        # Attempt to find transcript elements; adjust selectors as needed based on actual TED.com structure
+        # Example selectors; may need to be updated
+        transcript_sections = soup.find_all("div", class_="Grid__cell flx-s:1 p-r:4")
         
-        if not transcript_text.strip():
-            raise ValueError("Transcript content not found in the page.")
+        if not transcript_sections:
+            transcripts[url] = "Transcript section not found."
+            logger.error(f"Transcript section not found for URL: {url}")
+            save_cache(transcripts, TRANSCRIPTS_CACHE_PATH)
+            return
         
-        transcripts[url] = transcript_text.strip()
-        logger.info(f"Transcript scraped successfully for URL: {url}")
-    
+        # Extract text from all <p> tags within the transcript sections
+        transcript_text = "\n".join([p.get_text(strip=True) for p in transcript_sections if p.get_text(strip=True)])
+        
+        if not transcript_text:
+            transcripts[url] = "Transcript text is empty."
+            logger.error(f"Transcript text is empty for URL: {url}")
+        else:
+            transcripts[url] = transcript_text
+            logger.info(f"Transcript scraped and stored for URL: {url}")
+        
     except Exception as e:
-        error_msg = f"Error occurred while scraping transcript: {str(e)}"
-        transcripts[url] = f"Error: {error_msg}"
-        logger.error(error_msg)
+        transcripts[url] = f"Error occurred: {str(e)}"
+        logger.error(f"Error scraping transcript for URL '{url}': {e}")
     
-    finally:
-        # Save the updated transcripts to cache
-        save_cache(transcripts, transcript_cache_path)
+    # Save the updated transcripts to cache
+    save_cache(transcripts, TRANSCRIPTS_CACHE_PATH)
 
-@transcript_router.get("/get-transcript/", summary="Retrieve the transcript for a given TEDx talk URL.")
+class TranscriptResponse(BaseModel):
+    status: str
+    transcript: Optional[str] = None
+    message: Optional[str] = None
+
+@router.get("/get-transcript/", response_model=TranscriptResponse)
 async def get_transcript(url: HttpUrl):
-    """
-    Retrieves the transcript for the provided TEDx talk URL.
-    
-    - **url**: The URL of the TEDx talk whose transcript is to be retrieved.
-    """
-    if url not in transcripts:
-        raise HTTPException(status_code=404, detail="Transcript not found for the provided URL.")
-    
-    transcript = transcripts[url]
-    if transcript.startswith("Error"):
-        return {"status": "error", "message": transcript}
-    
-    return {"status": "completed", "transcript": transcript}
+    url_str = str(url)
+    if url_str in transcripts:
+        transcript = transcripts[url_str]
+        if transcript.startswith("Error occurred") or transcript.endswith("not found.") or transcript.startswith("Failed"):
+            logger.warning(f"Transcript retrieval status for URL '{url}': {transcript}")
+            return {"status": "error", "message": transcript}
+        else:
+            logger.info(f"Transcript retrieved successfully for URL: {url}")
+            return {"status": "completed", "transcript": transcript}
+    else:
+        logger.info(f"Transcript not found for URL: {url}")
+        return {"status": "not found", "transcript": None}
