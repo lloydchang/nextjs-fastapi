@@ -3,9 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "python3 -m uvicorn api.index:app --reload",
+    "fastapi-dev": "python3 -m uvicorn api.main:app --reload",  // Updated to use main.py instead of index.py
     "next-dev": "next dev",
-    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
+    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",  // Run both servers concurrently
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -17,7 +17,7 @@
     "autoprefixer": "10.4.20",
     "axios": "^1.7.7",
     "classnames": "^2.5.1",
-    "concurrently": "^9.0.1",
+    "concurrently": "^9.0.1",  // Allows concurrent running of multiple scripts
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
     "glob": "^9.3.4",
