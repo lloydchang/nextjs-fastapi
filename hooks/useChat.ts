@@ -55,11 +55,14 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, [messages, isMemOn]);
 
-  // Helper function to construct conversation context
+  // Helper function to construct conversation context with clear delimiters
   const getConversationContext = useCallback((): string => {
-    return messagesRef.current
+    // Format the history part with markers
+    const history = messagesRef.current
       .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
       .join('\n');
+
+    return `### History:\n${history}`;
   }, []);
 
   // Send user message to the chatbot and receive a response
