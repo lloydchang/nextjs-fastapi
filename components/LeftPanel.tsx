@@ -29,7 +29,11 @@ const LeftPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastMessageType, setLastMessageType] = useState<'interim' | 'final' | 'manual'>('manual');
 
+  const [deduplicate, setDeduplicate] = useState<boolean>(false); // Flag for deduplication
+  const [trimResults, setTrimResults] = useState<boolean>(false); // Flag for trimming
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastInterimResult = useRef<string>(''); // Track the last interim result for deduplication
 
   const handleChat = useCallback(
     async (input: string, isFinal = true, isManual = false) => {
@@ -38,9 +42,9 @@ const LeftPanel: React.FC = () => {
           let processedInput = input.trim();
 
           if (isFinal) {
-            if (lastMessageType === 'interim') {
-              // Trim overlapping words when a final follows an interim
-              processedInput = trimOverlap(input, lastInterimResult);
+            if (lastMessageType === 'interim' && trimResults) {
+              // Trim overlapping words when a final follows an interim if `trimResults` is true
+              processedInput = trimOverlap(input, lastInterimResult.current);
             }
 
             // Manually typed messages should not be prefixed
@@ -53,14 +57,20 @@ const LeftPanel: React.FC = () => {
               setLastMessageType('final');
             }
           } else {
-            if (lastMessageType === 'interim') {
-              // Trim overlapping words when an interim follows another interim
-              processedInput = trimOverlap(input, lastInterimResult);
+            if (lastMessageType === 'interim' && trimResults) {
+              // Trim overlapping words when an interim follows another interim if `trimResults` is true
+              processedInput = trimOverlap(input, lastInterimResult.current);
+            }
+
+            if (deduplicate && processedInput === lastInterimResult.current) {
+              // Skip duplicate interim results if `deduplicate` is true
+              return;
             }
 
             if (updateInterimResult(processedInput)) {
               const formattedInterim = `🎤 ${processedInput}`; // Prefix interim results
               setMessages((prev) => [...prev, { sender: 'user', text: formattedInterim, isInterim: true }]);
+              lastInterimResult.current = processedInput; // Update last interim result
               setLastMessageType('interim');
             }
           }
@@ -69,7 +79,7 @@ const LeftPanel: React.FC = () => {
         }
       }
     },
-    [sendActionToChatbot, lastMessageType]
+    [sendActionToChatbot, lastMessageType, deduplicate, trimResults]
   );
 
   const handleSpeechResults = useCallback(
