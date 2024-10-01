@@ -63,7 +63,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
       .join('\n');
 
-    return `### History:\n${history}`;
+    return `### Conversation History:\n${history}`;
   }, []);
 
   // Send user message to the chatbot and receive a response
@@ -74,6 +74,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         return; // Prevent multiple concurrent sends
       }
 
+      console.log("Processing new message:", input);
       setMessages((prev) => [...prev, { sender: 'user', text: input }]);
       isSendingRef.current = true; // Set sending status
 
