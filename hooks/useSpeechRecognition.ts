@@ -1,20 +1,22 @@
 // hooks/useSpeechRecognition.ts
 
 import { useState, useEffect, useCallback } from 'react';
+import { isSubstantiallyDifferent, isSentenceComplete } from '../utils/speechRecognitionUtils';
 
 interface UseSpeechRecognitionReturn {
-  startHearing: () => void;
-  stopHearing: () => void;
+  startListening: () => void; // Renamed from startHearing
+  stopListening: () => void; // Renamed from stopHearing
 }
 
 export const useSpeechRecognition = (
-  onResult: (transcript: string, isFinal: boolean) => void
+  onResult: (transcript: string, isFinal: boolean) => void,
+  onInterimUpdate: (interimResult: string) => void // Add onInterimUpdate callback
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isRecognizing, setIsRecognizing] = useState(false); // Track recognition state
+  const [sentenceBuffer, setSentenceBuffer] = useState(''); // Track buffered interim results
 
   useEffect(() => {
-    // Check for browser support for SpeechRecognition
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -24,24 +26,38 @@ export const useSpeechRecognition = (
       recog.interimResults = true; // Allow interim results to be captured
       recog.lang = 'en-US'; // Set the language to English
 
-      // Handle speech recognition results
       recog.onresult = (event: SpeechRecognitionEvent) => {
+        let interimText = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript;
+          const transcript = event.results[i][0].transcript.trim();
           const isFinal = event.results[i].isFinal;
-          console.log(`Speech result: "${transcript}", isFinal: ${isFinal}`);
-          onResult(transcript, isFinal); // Trigger callback with the result
+
+          if (isFinal) {
+            onResult(transcript, true); // Send the final result immediately
+            setSentenceBuffer(''); // Reset sentence buffer on final result
+          } else {
+            interimText += transcript + ' ';
+          }
+        }
+
+        interimText = interimText.trim();
+
+        if (interimText && isSentenceComplete(interimText)) {
+          onResult(interimText, false); // Send only complete sentences or clauses
+          setSentenceBuffer(''); // Clear buffer when a complete sentence is formed
+        } else {
+          setSentenceBuffer(interimText); // Update sentence buffer
+          if (isSubstantiallyDifferent(interimText, sentenceBuffer)) {
+            onInterimUpdate(interimText); // Send interim updates to chatbots
+          }
         }
       };
 
-      // Handle errors in speech recognition
       recog.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
         setIsRecognizing(false); // Reset recognizing state on error
-        console.warn('Speech recognition encountered an error:', event.error);
       };
 
-      // Handle the end of the speech recognition session
       recog.onend = () => {
         console.log('Speech recognition ended.');
         setIsRecognizing(false); // Update state when recognition ends
@@ -51,10 +67,9 @@ export const useSpeechRecognition = (
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
-  }, [onResult]);
+  }, [onResult, onInterimUpdate]);
 
-  // Start the speech recognition process
-  const startHearing = useCallback(() => {
+  const startListening = useCallback(() => {
     if (recognition && !isRecognizing) {
       try {
         recognition.start(); // Start speech recognition
@@ -66,8 +81,7 @@ export const useSpeechRecognition = (
     }
   }, [recognition, isRecognizing]);
 
-  // Stop the speech recognition process
-  const stopHearing = useCallback(() => {
+  const stopListening = useCallback(() => {
     if (recognition && isRecognizing) {
       recognition.stop(); // Stop speech recognition
       setIsRecognizing(false); // Reset recognizing state
@@ -75,5 +89,5 @@ export const useSpeechRecognition = (
     }
   }, [recognition, isRecognizing]);
 
-  return { startHearing, stopHearing };
+  return { startListening, stopListening }; // Updated return object with new function names
 };
