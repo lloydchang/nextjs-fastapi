@@ -1,22 +1,55 @@
 # api/sdg_keywords.py
 
-# SDG Keywords Mapping for Semantic Search
 sdg_keywords = {
-    'SDG 1 - No Poverty': ['poverty'],
-    'SDG 2 - Zero Hunger': ['hunger'],
-    'SDG 3 - Good Health and Well-Being': ['health'],
-    'SDG 4 - Quality Education': ['education'],
-    'SDG 5 - Gender Equality': ['gender'],
-    'SDG 6 - Clean Water and Sanitation': ['water'],
-    'SDG 7 - Affordable and Clean Energy': ['energy'],
-    'SDG 8 - Decent Work and Economic Growth': ['work'],
-    'SDG 9 - Industry, Innovation, and Infrastructure': ['industry'],
-    'SDG 10 - Reduced Inequalities': ['inequality'],
-    'SDG 11 - Sustainable Cities and Communities': ['city'],
-    'SDG 12 - Responsible Consumption and Production': ['consumption'],
-    'SDG 13 - Climate Action': ['climate'],
-    'SDG 14 - Life Below Water': ['ocean'],
-    'SDG 15 - Life on Land': ['land'],
-    'SDG 16 - Peace, Justice, and Strong Institutions': ['peace'],
-    'SDG 17 - Partnerships for the Goals': ['partnership']
+    "SDG1_No_Poverty": [
+        "poverty", "economic", "social", "inequality", "income", "vulnerable", "resources", "sustainability"
+    ],
+    "SDG2_Zero_Hunger": [
+        "hunger", "food security", "nutrition", "agriculture", "sustainable", "farming", "access", "rural development"
+    ],
+    "SDG3_Good_Health_and_Well-being": [
+        "health", "well-being", "medical", "disease", "healthcare", "access", "nutrition", "fitness"
+    ],
+    "SDG4_Quality_Education": [
+        "education", "learning", "schools", "access", "literacy", "skills", "training", "higher education"
+    ],
+    "SDG5_Gender_Equality": [
+        "gender equality", "women empowerment", "feminism", "equal rights", "discrimination", "violence", "representation", "opportunity"
+    ],
+    "SDG6_Clean_Water_and_Sanitation": [
+        "water", "sanitation", "clean water", "access", "hygiene", "water management", "pollution", "sustainable"
+    ],
+    "SDG7_Affordable_and_Clean_Energy": [
+        "energy", "renewable", "sustainable", "electricity", "access", "solar", "wind", "clean energy"
+    ],
+    "SDG8_Decent_Work_and_Economic_Growth": [
+        "work", "employment", "economic growth", "labor", "job creation", "productivity", "business", "entrepreneurship"
+    ],
+    "SDG9_Industry,_Innovation_and_Infrastructure": [
+        "industry", "innovation", "infrastructure", "technology", "manufacturing", "research", "development", "construction"
+    ],
+    "SDG10_Reduced_Inequalities": [
+        "inequality", "social inclusion", "discrimination", "poverty", "access", "equity", "diversity", "justice"
+    ],
+    "SDG11_Sustainable_Cities_and_Communities": [
+        "cities", "sustainability", "urban development", "infrastructure", "transportation", "housing", "environment", "planning"
+    ],
+    "SDG12_Responsible_Consumption_and_Production": [
+        "consumption", "production", "sustainability", "waste management", "recycling", "resource efficiency", "environment", "lifecycle"
+    ],
+    "SDG13_Climate_Action": [
+        "climate change", "emissions", "carbon footprint", "global warming", "sustainability", "resilience", "adaptation", "mitigation"
+    ],
+    "SDG14_Life_Below_Water": [
+        "marine life", "ocean", "water ecosystems", "fisheries", "pollution", "conservation", "biodiversity", "sustainability"
+    ],
+    "SDG15_Life_On_Land": [
+        "biodiversity", "forests", "land ecosystems", "conservation", "desertification", "sustainability", "habitats", "wildlife"
+    ],
+    "SDG16_Peace,_Justice_and_Strong_Institutions": [
+        "peace", "justice", "institutions", "governance", "transparency", "rule of law", "corruption", "human rights"
+    ],
+    "SDG17_Partnerships_for_the_Goals": [
+        "partnerships", "collaboration", "cooperation", "alliances", "funding", "support", "networking", "synergy"
+    ]
 }
