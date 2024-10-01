@@ -2,12 +2,11 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
-import dynamic from 'next/dynamic';
 
 // TypeScript Types
 type Talk = {
@@ -15,6 +14,14 @@ type Talk = {
   url: string;
   sdg_tags: string[];
 };
+
+// List of SDG keywords
+const sdgKeywords = [
+  'poverty', 'hunger', 'health', 'education', 'gender',
+  'water', 'energy', 'work', 'industry', 'inequality',
+  'city', 'consumption', 'climate', 'ocean', 'land',
+  'peace', 'partnership'
+];
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
@@ -26,11 +33,19 @@ const MiddlePanel: React.FC = () => {
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
 
+  // Function to determine the initial keyword based on randomization
+  const determineInitialKeyword = () => {
+    const randomNumber = Math.floor(Math.random() * 18); // Generate a random number between 0 and 17
+    return randomNumber === 0 
+      ? "TED AI" 
+      : sdgKeywords[Math.floor(Math.random() * sdgKeywords.length)];
+  };
+
+  // Define the search function
   const handleSearch = useCallback(async () => {
     setError(null);
     setTalks([]);
     setLoading(true);
-    setSearchInitiated(true);
     setSelectedTalk(null);
 
     try {
@@ -50,11 +65,19 @@ const MiddlePanel: React.FC = () => {
     }
   }, [query, setTalks]);
 
+  // Set the initial keyword when the component mounts
   useEffect(() => {
-    if (!searchInitiated) {
-      handleSearch();
+    initialKeyword.current = determineInitialKeyword(); // Determine the initial keyword
+    setQuery(initialKeyword.current); // Update the query state
+    setSearchInitiated(true); // Trigger search
+  }, []);
+
+  // Run the search after setting the query
+  useEffect(() => {
+    if (searchInitiated) {
+      handleSearch(); // Run the search
     }
-  }, [searchInitiated, handleSearch]);
+  }, [searchInitiated, handleSearch]); // Depend on searchInitiated and handleSearch
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -146,7 +169,6 @@ const MiddlePanel: React.FC = () => {
       )}
 
       {error && <p className={styles.errorText}>{error}</p>}
-
     </div>
   );
 };
