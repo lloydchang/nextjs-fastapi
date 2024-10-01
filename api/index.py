@@ -2,29 +2,39 @@
 
 """
 Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
+
+[Full description as provided]
 """
 
 # Step 1: Import necessary modules from FastAPI and other libraries
+print("Step 1: Importing necessary modules from FastAPI and other libraries, including FastAPI, Pandas, NumPy, and Sentence-BERT.")
 from fastapi import FastAPI, Query
-from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
-import warnings
-import pickle
-import os
-from sentence_transformers import SentenceTransformer, util
 from typing import List, Dict
+import pandas as pd
+import numpy as np
+import re
+from sentence_transformers import SentenceTransformer, util
 import torch
+from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from api.sdg_utils import compute_sdg_tags  # Import the new utility function
+import warnings
+import os
+import pickle
+
+# Import the semantic_search function from search.py
+from api.search import semantic_search
 
 # Step 1.1: Suppress `FutureWarning` in transformers and torch libraries
+print("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
 warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.tokenization_utils_base")
 warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*", module="torch.storage")
 
 # Step 2: Create a FastAPI app instance
+print("Step 2: Creating a FastAPI app instance with customized documentation paths.")
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
 # Step 3: Enable CORS middleware to handle cross-origin requests
+print("Step 3: Enabling CORS middleware to allow cross-origin requests from any origin.")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,64 +44,125 @@ app.add_middleware(
 )
 
 # Step 4: Load the TEDx Dataset with caching mechanism
+print("Step 4: Loading the TEDx Dataset with a caching mechanism.")
 file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
 cache_file_path = "./api/cache/tedx_dataset.pkl"
 data = pd.DataFrame()
 
 if os.path.exists(cache_file_path):
+    print("Step 4.1: Loading cached dataset.")
     with open(cache_file_path, 'rb') as cache_file:
         data = pickle.load(cache_file)
 else:
+    print("Step 4.2: Loading dataset from CSV file.")
     try:
         data = pd.read_csv(file_path)
+        print(f"Step 4.3: Dataset successfully loaded with {len(data)} records.")
+        # Cache the dataset for future use
         with open(cache_file_path, 'wb') as cache_file:
             pickle.dump(data, cache_file)
     except Exception as e:
-        print(f"Error loading dataset: {e}")
+        print(f"Step 4.4: Error loading dataset: {e}")
 
 # Step 5: Load the Sentence-BERT model for Semantic Search
-model = None
-sdg_embeddings = None
-
+print("Step 5: Loading the Sentence-BERT model for semantic search.")
 try:
     model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-    from api.sdg_keywords import sdg_keywords
+    print("Step 5.1: Sentence-BERT model initialized successfully.")
+except Exception as e:
+    print(f"Step 5.2: Error initializing Sentence-BERT model: {e}")
+    model = None
 
-    # Precompute or Load Cached SDG Keyword Embeddings
-    sdg_embeddings_cache = "./api/cache/sdg_embeddings.pkl"
-    sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
+# Step 6: Define the Initial SDG Keywords for All 17 SDGs
+print("Step 6: Importing the predefined list of SDG keywords for all 17 SDGs.")
+from api.sdg_keywords import sdg_keywords
 
-    if os.path.exists(sdg_embeddings_cache):
-        with open(sdg_embeddings_cache, 'rb') as cache_file:
-            sdg_embeddings = pickle.load(cache_file)
-    else:
+# Step 7: Precompute or Load Cached SDG Keyword Embeddings
+print("Step 7: Precomputing or loading cached SDG keyword embeddings.")
+sdg_embeddings_cache = "./api/cache/sdg_embeddings.pkl"
+sdg_names = list(sdg_keywords.keys())
+sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
+
+if os.path.exists(sdg_embeddings_cache):
+    print("Step 7.1: Loading cached SDG keyword embeddings.")
+    with open(sdg_embeddings_cache, 'rb') as cache_file:
+        sdg_embeddings = pickle.load(cache_file)
+else:
+    print("Step 7.2: Encoding SDG keywords as a matrix.")
+    try:
         sdg_embeddings = model.encode(sdg_keyword_list, convert_to_tensor=True)
         with open(sdg_embeddings_cache, 'wb') as cache_file:
             pickle.dump(sdg_embeddings, cache_file)
-except Exception as e:
-    print(f"Error initializing Sentence-BERT model: {e}")
+    except Exception as e:
+        print(f"Step 7.3: Error encoding SDG keywords: {e}")
+        sdg_embeddings = None
 
-# Step 6: Define a "Hello World" Endpoint for Testing
+# Step 8: Precompute or Load Cached SDG Tags for Each TEDx Talk
+print("Step 8: Precomputing or loading cached SDG tags for TEDx talks.")
+sdg_tags_cache = "./api/cache/sdg_tags.pkl"
+
+if os.path.exists(sdg_tags_cache):
+    print("Step 8.1: Loading cached SDG tags.")
+    with open(sdg_tags_cache, 'rb') as cache_file:
+        data['sdg_tags'] = pickle.load(cache_file)
+else:
+    print("Step 8.2: Computing SDG tags.")
+    if not data.empty and 'description' in data.columns and sdg_embeddings is not None:
+        try:
+            descriptions = data['description'].tolist()
+            description_vectors = model.encode(descriptions, convert_to_tensor=True, batch_size=32)
+            cosine_similarities = util.pytorch_cos_sim(description_vectors, sdg_embeddings)
+
+            sdg_tags_list = []
+            for row in cosine_similarities:
+                sdg_indices = torch.where(row > 0.5)[0]
+                if len(sdg_indices) == 0:
+                    top_n = row.topk(1).indices
+                    sdg_indices = top_n
+
+                sdg_tags = [sdg_names[i] for i in sdg_indices]
+                sdg_tags_list.append(sdg_tags)
+
+            data['sdg_tags'] = sdg_tags_list
+            with open(sdg_tags_cache, 'wb') as cache_file:
+                pickle.dump(data['sdg_tags'], cache_file)
+        except Exception as e:
+            print(f"Step 8.3: Error computing SDG tags: {e}")
+
+# Step 9: Precompute or Load Cached Embeddings for Each Description
+print("Step 9: Precomputing or loading cached embeddings for each description.")
+description_embeddings_cache = "./api/cache/description_embeddings.pkl"
+
+if os.path.exists(description_embeddings_cache):
+    print("Step 9.1: Loading cached description embeddings.")
+    with open(description_embeddings_cache, 'rb') as cache_file:
+        data['description_vector'] = pickle.load(cache_file)
+else:
+    print("Step 9.2: Encoding descriptions.")
+    if model and not data.empty and 'description' in data.columns:
+        try:
+            data['description_vector'] = data['description'].apply(
+                lambda x: model.encode(str(x), clean_up_tokenization_spaces=True, convert_to_tensor=True).tolist()
+            )
+            with open(description_embeddings_cache, 'wb') as cache_file:
+                pickle.dump(data['description_vector'], cache_file)
+        except Exception as e:
+            print(f"Step 9.3: Error encoding descriptions: {e}")
+
+# Step 10: Create a Semantic Search Function Using NumPy and Asynchronous Handling
+# (Moved to search.py)
+
+# Step 11: Define a "Hello World" Endpoint for Testing
+print("Step 11: Defining a 'Hello World' endpoint.")
 @app.get("/api/py/helloFastApi")
 async def hello_fast_api():
     return {"message": "Hello from FastAPI"}
 
-# Step 7: Compute or Load Cached SDG Tags Using External Utility
-sdg_tags_cache = "./api/cache/sdg_tags.pkl"
-
-if os.path.exists(sdg_tags_cache):
-    with open(sdg_tags_cache, 'rb') as cache_file:
-        data['sdg_tags'] = pickle.load(cache_file)
-else:
-    if not data.empty and 'description' in data.columns:
-        descriptions = data['description'].tolist()
-        description_vectors = model.encode(descriptions, convert_to_tensor=True, batch_size=32)
-        cosine_similarities = util.pytorch_cos_sim(description_vectors, sdg_embeddings)
-
-        # Use the new utility function to compute SDG tags
-        data['sdg_tags'] = compute_sdg_tags(cosine_similarities, sdg_names)
-
-        with open(sdg_tags_cache, 'wb') as cache_file:
-            pickle.dump(data['sdg_tags'], cache_file)
-
-# Other code sections remain unchanged...
+# Step 12: Create a Search Endpoint for TEDx Talks Using Asynchronous Search
+print("Step 12: Creating a Search endpoint for TEDx talks.")
+@app.get("/api/py/search")
+async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
+    try:
+        return await semantic_search(query, data, model, sdg_embeddings)
+    except Exception as e:
+        return [{"error": str(e)}]
