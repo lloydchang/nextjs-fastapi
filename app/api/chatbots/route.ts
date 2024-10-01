@@ -1,12 +1,10 @@
-// api/chatbots/route.ts
+// app/api/chatbots/route.ts
 
 // moved from
 // pages/api/chatbot.ts
 // to
 // api/chatbots/route.ts
 // because of Next.js 14
-
-// app/api/chatbots/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sendMessageToChatbot } from '../../../services/chatService';
@@ -31,6 +29,4 @@ export async function POST(req: NextRequest) {
 }
 
 // Configuration to indicate this is an edge runtime
-export const config = {
-  runtime: 'experimental-edge',
-};
+export const runtime = 'experimental-edge';
