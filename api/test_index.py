@@ -1,4 +1,5 @@
 # api/test_index.py
+
 """
 Test Suite for Combined API in index.py
 
@@ -10,17 +11,17 @@ This test file uses pytest and httpx to test the primary FastAPI application for
 
 import pytest
 from httpx import AsyncClient
-from index import app  # Import the FastAPI app from index.py
 import sys
 import os
+import pytest_asyncio
 
 # Set the root directory of the project to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from index import app  # Import the FastAPI app from index.py
 
-# Define the pytest fixture for the test client
-@pytest.fixture
+# Use `pytest_asyncio.fixture` for async client fixture
+@pytest_asyncio.fixture
 async def client():
     async with AsyncClient(app=app, base_url="http://127.0.0.1:8000") as ac:
         yield ac
@@ -28,19 +29,19 @@ async def client():
 # Test the Root Endpoint for the Main Application
 @pytest.mark.asyncio
 async def test_hello_fast_api(client):
-    response = await client.get("/api/py/helloFastApi")
+    response = await client.get("/api/py/helloFastApi")  # Removed trailing slash
     assert response.status_code == 200
     assert response.json() == {"message": "Hello from FastAPI!"}
 
 # Test the Search Endpoint with a Sample Query
 @pytest.mark.asyncio
 async def test_search_endpoint(client):
-    response = await client.get("/api/py/search?query=climate+change")
+    response = await client.get("/api/py/search/?query=climate+change")  # Use trailing slash in path
     assert response.status_code == 200
     assert isinstance(response.json(), list)  # The response should be a list of results or error
 
 # Test the Transcript Sub-Application Mounting
 @pytest.mark.asyncio
 async def test_transcript_app_mount(client):
-    response = await client.get("/api/py/transcript")
+    response = await client.get("/api/py/transcript/")  # Ensure trailing slash
     assert response.status_code in [200, 404]  # Check if the endpoint exists or returns 404 (if not implemented)
