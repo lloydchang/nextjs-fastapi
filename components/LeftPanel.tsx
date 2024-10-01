@@ -14,7 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { isSubstantiallyDifferent } from '../utils/speechRecognitionUtils'; // Import the utility function
+import { updateFinalResult, updateInterimResult } from '../utils/chatUtils'; // Import utility functions
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -29,8 +29,6 @@ const LeftPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const lastFinalResultRef = useRef<string>(''); // Track last final result sent to the chatbot
-  const lastInterimResultRef = useRef<string>(''); // Track last interim result sent to the chatbot
 
   const handleChat = useCallback(
     async (input: string, isFinal = true) => {
@@ -38,21 +36,18 @@ const LeftPanel: React.FC = () => {
         try {
           if (isFinal) {
             // Only send final results if they are unique
-            if (isSubstantiallyDifferent(input, lastFinalResultRef.current)) {
+            if (updateFinalResult(input)) {
               const prefixedFinal = `[final] ${input}`; // Prefix final results
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedFinal }]);
               await sendActionToChatbot(prefixedFinal); // Send final result to chatbot
               setChatInput('');
-              lastFinalResultRef.current = input; // Update the last final result sent
-              lastInterimResultRef.current = ''; // Reset interim tracking on final result
             }
           } else {
             // Deduplication check for interim results
-            if (isSubstantiallyDifferent(input, lastInterimResultRef.current)) {
+            if (updateInterimResult(input)) {
               const prefixedInterim = `[interim] ${input}`; // Prefix interim results
               console.log('Sending interim to chatbot:', prefixedInterim); // Debug Log for interim results
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedInterim, isInterim: true }]);
-              lastInterimResultRef.current = input; // Update last interim result sent
             }
           }
         } catch (error) {
