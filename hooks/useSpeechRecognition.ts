@@ -9,7 +9,7 @@ interface UseSpeechRecognitionReturn {
 
 export const useSpeechRecognition = (
   onResult: (transcript: string, isFinal: boolean) => void,
-  onInterimUpdate: (interimResult: string) => void
+  onInterimUpdate: (interimTranscript: string) => void // Accept onInterimUpdate
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isRecognizing, setIsRecognizing] = useState(false);
@@ -20,8 +20,8 @@ export const useSpeechRecognition = (
 
     if (SpeechRecognitionConstructor) {
       const recog = new SpeechRecognitionConstructor();
-      recog.continuous = true; 
-      recog.interimResults = true; 
+      recog.continuous = true;
+      recog.interimResults = true;
       recog.lang = 'en-US';
 
       recog.onresult = (event: SpeechRecognitionEvent) => {
@@ -29,7 +29,7 @@ export const useSpeechRecognition = (
           const transcript = event.results[i][0].transcript.trim();
           const isFinal = event.results[i].isFinal;
 
-          // Send both interim and final results
+          // Call the appropriate function based on whether the result is final or interim
           if (isFinal) {
             onResult(transcript, true); // Send final result
           } else {
@@ -51,7 +51,7 @@ export const useSpeechRecognition = (
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
-  }, [onResult, onInterimUpdate]);
+  }, [onResult, onInterimUpdate]); // Add onInterimUpdate to dependency array
 
   const startListening = useCallback(() => {
     if (recognition && !isRecognizing) {
