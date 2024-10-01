@@ -21,6 +21,7 @@ import os
 import pickle
 from api.sdg_utils import compute_sdg_tags  # Import the utility function
 from api.model import load_model  # Import the model loading function
+from api.embedding_utils import encode_descriptions, encode_sdg_keywords  # Import embedding functions
 
 # Import the semantic_search function from search.py
 from api.search import semantic_search
@@ -103,8 +104,11 @@ else:
     if not data.empty and 'description' in data.columns and sdg_embeddings is not None:
         try:
             descriptions = data['description'].tolist()
-            description_vectors = model.encode(descriptions, convert_to_tensor=True, batch_size=32)
-            cosine_similarities = util.pytorch_cos_sim(description_vectors, sdg_embeddings)
+            description_vectors = encode_descriptions(descriptions, model)
+            # Convert to torch tensors for cosine similarity computation
+            description_vectors_tensor = torch.tensor(description_vectors)
+            sdg_embeddings_tensor = torch.tensor(sdg_embeddings)
+            cosine_similarities = util.pytorch_cos_sim(description_vectors_tensor, sdg_embeddings_tensor)
 
             # Compute SDG tags using the utility function
             data['sdg_tags'] = compute_sdg_tags(cosine_similarities, sdg_names)
@@ -131,9 +135,9 @@ else:
     logger.info("Step 9.2: Encoding descriptions.")
     if model and not data.empty and 'description' in data.columns:
         try:
-            data['description_vector'] = data['description'].apply(
-                lambda x: model.encode(str(x), clean_up_tokenization_spaces=True, convert_to_tensor=True).tolist()
-            )
+            descriptions = data['description'].tolist()
+            encoded_descriptions = encode_descriptions(descriptions, model)
+            data['description_vector'] = encoded_descriptions
             with open(description_embeddings_cache, 'wb') as cache_file:
                 pickle.dump(data['description_vector'], cache_file)
             logger.info("Description embeddings encoded and cached successfully.")
