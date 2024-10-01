@@ -14,7 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { updateFinalResult, updateInterimResult, trimOverlap } from '../utils/chatUtils'; // Import utility functions
+import { updateFinalResult, updateInterimResult, trimOverlap } from '../utils/chatUtils';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -28,12 +28,12 @@ const LeftPanel: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [lastMessageType, setLastMessageType] = useState<'interim' | 'final' | 'manual'>('manual');
-
   const [deduplicate, setDeduplicate] = useState<boolean>(false); // Flag for deduplication
   const [trimResults, setTrimResults] = useState<boolean>(false); // Flag for trimming
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const lastInterimResult = useRef<string>(''); // Track the last interim result for deduplication
+  const lastFinalMessageRef = useRef<string | null>(null); // Track the last final message to avoid duplication
 
   const handleChat = useCallback(
     async (input: string, isFinal = true, isManual = false) => {
@@ -43,34 +43,31 @@ const LeftPanel: React.FC = () => {
 
           if (isFinal) {
             if (lastMessageType === 'interim' && trimResults) {
-              // Trim overlapping words when a final follows an interim if `trimResults` is true
               processedInput = trimOverlap(input, lastInterimResult.current);
             }
 
-            // Manually typed messages should not be prefixed
-            if (isManual || updateFinalResult(processedInput)) {
+            if (isManual || (updateFinalResult(processedInput) && processedInput !== lastFinalMessageRef.current)) {
               const messagePrefix = isManual ? '' : '🎙️ '; // Use 🎙️ prefix for speech-recognized final results
               const formattedMessage = `${messagePrefix}${processedInput}`;
               setMessages((prev) => [...prev, { sender: 'user', text: formattedMessage }]);
-              await sendActionToChatbot(formattedMessage); // Send final result to chatbot
+              await sendActionToChatbot(formattedMessage);
               setChatInput('');
               setLastMessageType('final');
+              lastFinalMessageRef.current = processedInput; // Update the last final message to avoid duplicates
             }
           } else {
             if (lastMessageType === 'interim' && trimResults) {
-              // Trim overlapping words when an interim follows another interim if `trimResults` is true
               processedInput = trimOverlap(input, lastInterimResult.current);
             }
 
             if (deduplicate && processedInput === lastInterimResult.current) {
-              // Skip duplicate interim results if `deduplicate` is true
-              return;
+              return; // Skip duplicate interim results if `deduplicate` is true
             }
 
             if (updateInterimResult(processedInput)) {
-              const formattedInterim = `🎤 ${processedInput}`; // Prefix interim results
+              const formattedInterim = `🎤 ${processedInput}`;
               setMessages((prev) => [...prev, { sender: 'user', text: formattedInterim, isInterim: true }]);
-              lastInterimResult.current = processedInput; // Update last interim result
+              lastInterimResult.current = processedInput;
               setLastMessageType('interim');
             }
           }
@@ -84,14 +81,14 @@ const LeftPanel: React.FC = () => {
 
   const handleSpeechResults = useCallback(
     (results: string) => {
-      handleChat(results, true, false); // Speech results are not manual
+      handleChat(results, true, false); // Handle final speech results
     },
     [handleChat]
   );
 
   const handleInterimUpdates = useCallback(
     (interimResult: string) => {
-      handleChat(interimResult, false, false); // Speech interims are not manual
+      handleChat(interimResult, false, false); // Handle interim speech results
     },
     [handleChat]
   );
@@ -114,7 +111,7 @@ const LeftPanel: React.FC = () => {
 
       <div className={styles.content}>
         <h1 className={styles.title}>
-          <b>Ideas Change Everything!</b>
+          <b>Ideas change everything</b>
         </h1>
         <div className={styles.chatInterface} ref={chatContainerRef}>
           <h3 className={styles.chatHeader}>
@@ -137,7 +134,6 @@ const LeftPanel: React.FC = () => {
             eraseMemory={clearChatHistory}
           />
 
-          {/* Test Speech Recognition Component */}
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
             onSpeechResult={handleSpeechResults}
