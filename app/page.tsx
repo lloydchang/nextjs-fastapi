@@ -20,17 +20,17 @@ import ErrorBoundary from '../components/ErrorBoundary';
 // Dynamically load all panels
 const LeftPanel = dynamic(() => import('../components/LeftPanel'), {
   loading: () => <p>Loading Left Panel...</p>,
-  ssr: false,
+  ssr: true,
 });
 
 const MiddlePanel = dynamic(() => import('../components/MiddlePanel'), {
   loading: () => <p>Loading Middle Panel...</p>,
-  ssr: false,
+  ssr: true,
 });
 
 const RightPanel = dynamic(() => import('../components/RightPanel'), {
   loading: () => <p>Loading Right Panel...</p>,
-  ssr: false,
+  ssr: true,
 });
 
 const Home: React.FC = () => {
