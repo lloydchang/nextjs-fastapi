@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseSpeechRecognitionReturn {
   startListening: () => void;
   stopListening: () => void;
+  isListening: boolean;
 }
 
 export const useSpeechRecognition = (
@@ -12,9 +13,10 @@ export const useSpeechRecognition = (
   onInterimUpdate: (interimTranscript: string) => void
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [isRecognizing, setIsRecognizing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
+    // Initialize SpeechRecognition API
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -25,29 +27,35 @@ export const useSpeechRecognition = (
       recog.lang = 'en-US';
 
       recog.onresult = (event: SpeechRecognitionEvent) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript.trim();
-          const isFinal = event.results[i].isFinal;
-
-          // Call the appropriate function based on whether the result is final or interim
-          if (isFinal) {
-            onResult(transcript, true); // Send final result
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
           } else {
-            onInterimUpdate(transcript); // Send interim result directly
+            interimTranscript += transcript + ' ';
           }
+        }
+
+        if (finalTranscript) {
+          onResult(finalTranscript.trim(), true); // Send final result
+        }
+
+        if (interimTranscript) {
+          onInterimUpdate(interimTranscript.trim()); // Send interim result
         }
       };
 
       recog.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
-        setIsRecognizing(false);
+        setIsListening(false);
       };
 
       recog.onend = () => {
-        setIsRecognizing(false);
-        console.log('Recognition ended, restarting...');
-        recog.start(); // Auto-restart
-        setIsRecognizing(true);
+        setIsListening(false);
+        console.log('Recognition ended.');
       };
 
       setRecognition(recog);
@@ -57,18 +65,18 @@ export const useSpeechRecognition = (
   }, [onResult, onInterimUpdate]);
 
   const startListening = useCallback(() => {
-    if (recognition && !isRecognizing) {
+    if (recognition && !isListening) {
       recognition.start(); // Start speech recognition
-      setIsRecognizing(true); // Track that recognition is active
+      setIsListening(true); // Track recognition activity
     }
-  }, [recognition, isRecognizing]);
+  }, [recognition, isListening]);
 
   const stopListening = useCallback(() => {
-    if (recognition && isRecognizing) {
+    if (recognition && isListening) {
       recognition.stop(); // Stop speech recognition
-      setIsRecognizing(false); // Reset recognizing state
+      setIsListening(false); // Reset recognition state
     }
-  }, [recognition, isRecognizing]);
+  }, [recognition, isListening]);
 
-  return { startListening, stopListening };
+  return { startListening, stopListening, isListening };
 };
