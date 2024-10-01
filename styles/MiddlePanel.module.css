@@ -3,10 +3,8 @@
 .middlePanel {
   flex: 1;
   padding: 20px;
-  background-color: #000000;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column; /* Ensure components stack vertically */
+  background-color: #000000; /* Background color */
+  overflow-y: auto; /* Allow scrolling */
 }
 
 .nowPlaying {
@@ -14,7 +12,7 @@
 }
 
 .videoFrame {
-  border-radius: 10px;
+  border-radius: 10px; /* Rounded corners for video frame */
 }
 
 .searchContainer {
@@ -24,93 +22,85 @@
 }
 
 .searchInputContainer {
-  display: flex;
-  align-items: center; /* Align items vertically in the center */
+  display: flex; /* Align items in a row */
+  align-items: center; /* Center items vertically */
   gap: 10px; /* Space between input and buttons */
   margin-bottom: 20px; /* Space below the search input area */
 }
 
 .searchInput {
-  flex: 1;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  color: black;
+  flex: 1; /* Allow input to take available space */
+  padding: 10px; /* Padding inside the input */
+  border-radius: 5px; /* Rounded corners */
+  border: 1px solid #ccc; /* Light gray border */
+  color: black; /* Text color */
 }
 
 .button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
+  padding: 10px 15px; /* Padding for buttons */
+  border: none; /* No border */
+  border-radius: 5px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-weight: bold; /* Bold text */
   transition: background-color 0.3s ease, transform 0.2s ease; /* Added transform transition */
 }
 
 .searchButton {
-  background-color: #2196f3;
-  color: white;
+  background-color: #2196f3; /* Primary blue */
+  color: white; /* White text */
 }
 
 .searchButton:hover {
-  background-color: #1976d2; /* Change hover background color */
-  color: #ffffff; 
-  transform: translateY(-2px); /* Added hover effect */
+  background-color: #1976d2; /* Darker blue on hover */
+  transform: translateY(-2px); /* Hover effect */
 }
 
 .searchButton:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.tedButton {
-  background-color: #eb0028;
-  color: white;
-}
-
-.tedButton:hover {
-  background-color: #c20022; /* Change hover background color */
-  transform: translateY(-2px); /* Added hover effect */
+  background-color: #cccccc; /* Gray when disabled */
+  cursor: not-allowed; /* Not-allowed cursor */
 }
 
 .loadingSpinner {
-  margin-left: 10px;
+  margin-left: 10px; /* Space to the left of the spinner */
 }
 
 .resultsContainer {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Stack results vertically */
   gap: 10px; /* Space between results */
+  margin-top: 20px; /* Space above results */
+  max-height: 300px; /* Max height for results */
+  overflow-y: auto; /* Scroll if too many results */
 }
 
 .resultItem {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #000000;
-  transition: background-color 0.3s ease;
+  padding: 10px; /* Padding for each result item */
+  border: 1px solid #ddd; /* Light gray border */
+  border-radius: 5px; /* Rounded corners */
+  background-color: #000000; /* Black background */
+  transition: background-color 0.3s ease; /* Smooth background transition */
 }
 
 .resultItem:hover {
-  background-color: #f1f1f1;
+  background-color: #f1f1f1; /* Light gray on hover */
 }
 
 .resultLink {
-  color: #2196f3;
-  text-decoration: none;
-  font-weight: bold;
+  color: #2196f3; /* Link color (blue) */
+  text-decoration: none; /* No underline */
+  font-weight: bold; /* Bold text */
 }
 
 .resultLink:hover {
-  text-decoration: underline;
+  text-decoration: underline; /* Underline on hover */
 }
 
 .sdgTags {
-  color: white;
-  font-size: 1em;
+  color: #757575; /* Gray color for tags */
+  font-size: 0.9em; /* Smaller font size for tags */
 }
 
 .errorText {
-  color: #f44336;
-  text-align: center;
+  color: #f44336; /* Error color (red) */
+  text-align: center; /* Center the error message */
 }
