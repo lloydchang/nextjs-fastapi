@@ -1,5 +1,3 @@
-/* app/globals.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -26,40 +24,4 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.container {
-  display: grid;
-  grid-template-columns: 3fr 3fr 1fr; /* Define layout columns */
-  width: 100vw; /* Full screen width */
-  height: 100vh; /* Full screen height */
-  gap: 0px; /* Ensure no space between grid items */
-  margin: 0; /* Remove default margins */
-  padding: 0; /* Remove default padding */
-}
-
-.left-panel,
-.middle-panel,
-.right-panel {
-  border: none; /* Ensure no borders */
-  margin: 0; /* Remove any margin */
-  padding: 0; /* Remove any padding */
-  box-shadow: none; /* Remove any box-shadow that may cause borders */
-}
-
-.left-panel {
-  background-color: #f0f0f0; /* Ensure consistent background */
-}
-
-.middle-panel {
-  background-color: #e9ecef;
-}
-
-.right-panel {
-  background-color: #f0f0f0;
 }

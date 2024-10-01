@@ -1,0 +1,25 @@
+/* styles/globals.css */
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 3fr 2fr 1fr; /* Left panel is 3fr, middle is 2fr, right is 1fr */
+  width: 100vw; /* Full screen width */
+  height: 100vh; /* Full screen height */
+}
+
+.left-panel {
+  background-color: #f0f0f0;
+}
+
+.middle-panel {
+  background-color: #e9ecef;
+}
+
+.right-panel {
+  background-color: #f0f0f0;
+}
