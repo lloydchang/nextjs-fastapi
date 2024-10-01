@@ -38,15 +38,21 @@ const LeftPanel: React.FC = () => {
             // Deduplication and similarity check for final results
             if (updateFinalResult(input)) {
               const prefixedFinal = `[final] ${input}`; // Prefix final results
+              console.log('Adding Final Result:', prefixedFinal); // Debug log for final result
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedFinal }]);
               await sendActionToChatbot(prefixedFinal); // Send final result to chatbot
               setChatInput('');
+            } else {
+              console.log('Skipped similar or duplicate final result:', input); // Log for skipped results
             }
           } else {
             // Deduplication check for interim results only
             if (updateInterimResult(input)) {
               const prefixedInterim = `[interim] ${input}`; // Prefix interim results
+              console.log('Adding Interim Result:', prefixedInterim); // Debug log for interim result
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedInterim, isInterim: true }]);
+            } else {
+              console.log('Duplicate Interim Detected:', input); // Debug log for duplicate interim
             }
           }
         } catch (error) {
@@ -57,6 +63,38 @@ const LeftPanel: React.FC = () => {
     [sendActionToChatbot]
   );
 
+  const handleSpeechResults = useCallback(
+    (results: string) => {
+      console.log('Final Speech Result:', results); // Debug Log
+      handleChat(results, true); // Handle final results
+    },
+    [handleChat]
+  );
+
+  const handleInterimUpdates = useCallback(
+    (interimResult: string) => {
+      console.log('Interim Speech Update:', interimResult); // Debug Log
+      handleChat(interimResult, false); // Send interim results as non-final
+    },
+    [handleChat]
+  );
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    return () => {
+      stopCam();
+      toggleMic();
+      if (mediaState.isPipOn) {
+        document.exitPictureInPicture().catch(console.error);
+      }
+    };
+  }, [stopCam, toggleMic, mediaState.isPipOn]);
+
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
@@ -66,6 +104,7 @@ const LeftPanel: React.FC = () => {
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
+
       <div className={styles.content}>
         <h1 className={styles.title}>
           <b>Ideas Change Everything!</b>
@@ -94,8 +133,8 @@ const LeftPanel: React.FC = () => {
           {/* Test Speech Recognition Component */}
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
-            onSpeechResult={(result) => handleChat(result, true)}
-            onInterimUpdate={(interim) => handleChat(interim, false)}
+            onSpeechResult={handleSpeechResults}
+            onInterimUpdate={handleInterimUpdates}
           />
         </div>
       </div>
