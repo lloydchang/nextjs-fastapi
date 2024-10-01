@@ -67,8 +67,8 @@ app.add_middleware(
 
 # Step 4: Load the TEDx Dataset with caching mechanism
 print("Step 4: Loading the TEDx Dataset with a caching mechanism.")
-file_path = "./fastapi/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-cache_file_path = "./api/cache/tedx_dataset.pkl"
+file_path = "./data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+cache_file_path = "./cache/tedx_dataset.pkl"
 data = pd.DataFrame()
 
 if os.path.exists(cache_file_path):
@@ -101,7 +101,7 @@ from api.sdg_keywords import sdg_keywords
 
 # Step 7: Precompute or Load Cached SDG Keyword Embeddings
 print("Step 7: Precomputing or loading cached SDG keyword embeddings.")
-sdg_embeddings_cache = "./api/cache/sdg_embeddings.pkl"
+sdg_embeddings_cache = "./cache/sdg_embeddings.pkl"
 sdg_names = list(sdg_keywords.keys())
 sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
 
@@ -117,7 +117,7 @@ else:
 
 # Step 8: Precompute or Load Cached SDG Tags for Each TEDx Talk
 print("Step 8: Precomputing or loading cached SDG tags for TEDx talks.")
-sdg_tags_cache = "./api/cache/sdg_tags.pkl"
+sdg_tags_cache = "./cache/sdg_tags.pkl"
 
 if os.path.exists(sdg_tags_cache):
     print("Step 8.1: Loading cached SDG tags.")
@@ -146,7 +146,7 @@ else:
 
 # Step 9: Precompute or Load Cached Embeddings for Each Description
 print("Step 9: Precomputing or loading cached embeddings for each description.")
-description_embeddings_cache = "./api/cache/description_embeddings.pkl"
+description_embeddings_cache = "./cache/description_embeddings.pkl"
 
 if os.path.exists(description_embeddings_cache):
     print("Step 9.1: Loading cached description embeddings.")
@@ -194,7 +194,7 @@ async def hello_fast_api():
     return {"message": "Hello from FastAPI"}
 
 # Step 12: Create a Search Endpoint for TEDx Talks Using Asynchronous Search
-@app.get("/api/search")
+@app.get("/api/py/search/")
 async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     try:
         return await semantic_search(query)

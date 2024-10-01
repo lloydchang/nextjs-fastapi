@@ -1,5 +1,6 @@
-# fastapi/sdg_keywords.py
+# api/sdg_keywords.py
 
+# SDG Keywords Mapping for Semantic Search
 sdg_keywords = {
     'SDG 1 - No Poverty': ['poverty'],
     'SDG 2 - Zero Hunger': ['hunger'],
