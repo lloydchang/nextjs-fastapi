@@ -28,7 +28,7 @@
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
-  transition: background-color 0.3s ease, transform 0.2s ease; /* Added transform transition */
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .searchButton {
@@ -37,9 +37,9 @@
 }
 
 .searchButton:hover {
-  background-color: #1976d2; /* Change hover background color */
+  background-color: #1976d2;
   color: #ffffff; 
-  transform: translateY(-2px); /* Added hover effect */
+  transform: translateY(-2px); 
 }
 
 .searchButton:disabled {
@@ -53,12 +53,35 @@
 }
 
 .tedButton:hover {
-  background-color: #c20022; /* Change hover background color */
-  transform: translateY(-2px); /* Added hover effect */
+  background-color: #c20022;
+  transform: translateY(-2px);
 }
 
+/* Container to keep the spinner centered */
+.loadingSpinnerContainer {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  height: 24px;
+  width: 24px;
+}
+
+/* Spinner animation */
 .loadingSpinner {
-  margin-left: 10px;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite; /* The rotation animation */
+  transform-origin: 50% 50%; /* Ensure it spins from the center */
+}
+
+/* Define the keyframes for the rotation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start position */
+  }
+  100% {
+    transform: rotate(360deg); /* End position */
+  }
 }
 
 .nowPlaying {
@@ -105,4 +128,13 @@
 .errorText {
   color: #f44336;
   text-align: center;
+}
+
+.successMessage {
+  color: #4caf50;
+  text-align: center;
+}
+
+.alignLeft {
+  text-align: left;
 }

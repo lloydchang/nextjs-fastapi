@@ -254,8 +254,14 @@ const MiddlePanel: React.FC = () => {
           </>
         )}
         {loading && (
-          <div className={styles.loadingSpinner}>
-            <Image src={SDGWheel} alt="Loading..." width={24} height={24} />
+          <div className={styles.loadingSpinnerContainer}>
+            <Image
+              src={SDGWheel}
+              alt="Loading..."
+              width={24}
+              height={24}
+              className={styles.loadingSpinner} // Add class to Image for rotation
+            />
           </div>
         )}
       </div>
