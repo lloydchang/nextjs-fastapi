@@ -116,7 +116,7 @@ const LeftPanel: React.FC = () => {
             eraseMemory={clearChatHistory}
           />
 
-          {/* Test Speech Recognition Component */}
+          {/* Ensure Test Speech Recognition Component is rendered */}
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
             onSpeechResult={handleSpeechResults}

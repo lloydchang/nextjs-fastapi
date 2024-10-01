@@ -10,7 +10,11 @@ interface TestSpeechRecognitionProps {
   onInterimUpdate: (interimResult: string) => void; // Callback for interim results (real-time to chatbots)
 }
 
-const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, onSpeechResult, onInterimUpdate }) => {
+const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
+  isMicOn,
+  onSpeechResult,
+  onInterimUpdate,
+}) => {
   const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
   const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
@@ -27,6 +31,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
     const uniqueChunks = getUniqueInterimChunks(newResults);
     const newInterimResult = uniqueChunks.join(' ');
 
+    // Send interim updates if unique
     if (newInterimResult && newInterimResult !== prevInterimResult.current) {
       onInterimUpdate(newInterimResult); // Send interim updates to chatbots
       prevInterimResult.current = newInterimResult;
@@ -36,27 +41,27 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
     if (final) {
       setResults(prev => `${prev} ${newResults}`.trim());
       setInterimResults('');
-      sentInterimSet.current.clear();
-      onSpeechResult(newResults.trim());
-      prevInterimResult.current = '';
+      sentInterimSet.current.clear(); // Clear sent interim tracking on final result
+      onSpeechResult(newResults.trim()); // Send final result to parent
+      prevInterimResult.current = ''; // Reset previous interim tracker
     } else {
-      setInterimResults(newResults);
+      setInterimResults(newResults); // Store interim results for display
     }
   }, [onInterimUpdate, onSpeechResult]);
 
-  const { startHearing, stopHearing } = useSpeechRecognition(handleResult);
+  const { startListening, stopListening } = useSpeechRecognition(handleResult, onInterimUpdate);
 
   useEffect(() => {
     if (isMicOn) {
-      startHearing();
+      startListening();
       setIsListening(true);
     } else {
-      stopHearing();
+      stopListening();
       setIsListening(false);
-      sentInterimSet.current.clear();
-      prevInterimResult.current = '';
+      sentInterimSet.current.clear(); // Clear sent interim tracking
+      prevInterimResult.current = ''; // Reset previous interim tracker
     }
-  }, [isMicOn, startHearing, stopHearing]);
+  }, [isMicOn, startListening, stopListening]);
 
   return (
     <div className={styles.container}>
