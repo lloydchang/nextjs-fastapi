@@ -40,6 +40,8 @@ const MiddlePanel: React.FC = () => {
   const [transcriptSaved, setTranscriptSaved] = useState<boolean>(false);
   const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
   const [errorDetails, setErrorDetails] = useState<string>(''); // State for error details
+  const [transcriptStatus, setTranscriptStatus] = useState<string>(''); // Track transcript scraping status
+  const [transcript, setTranscript] = useState<string>(''); // Store retrieved transcript
 
   // Helper function to add logs
   const addLog = (message: string) => {
@@ -55,54 +57,63 @@ const MiddlePanel: React.FC = () => {
   // Function to scrape the transcript using axios
   const scrapeTranscript = async (url: string) => {
     addLog('Starting to scrape transcript...');
-    const transcriptUrl = `${url}/transcript?subtitle=en`;
-    addLog(`Fetching transcript from: ${transcriptUrl}`);
-
+    const transcriptUrl = `http://localhost:8000/api/py/scrape-transcript/`; // Adjust if needed
     try {
-      const response = await axios.get(transcriptUrl, {
+      const response = await axios.post(transcriptUrl, { url }, {
         headers: {
-          'User-Agent': 'curl/7.68.0', // Simulate curl user agent
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Referer': 'https://www.ted.com/',
-          'Connection': 'keep-alive',
-          'DNT': '1'
+          'Content-Type': 'application/json'
         }
       });
-
-      // Log HTTP response status and headers
-      addLog(`HTTP Response Status: ${response.status}`);
-      addLog('HTTP Response Headers: ' + JSON.stringify(response.headers));
-
-      const transcriptText = response.data; // Axios handles the response parsing
-
-      // Check for the transcript in the HTML response
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(transcriptText, 'text/html');
-      const transcriptElement = doc.querySelector('.Grid__cell.flx-s:1') || doc.querySelector('.talk-transcript__paragraph');
-
-      if (!transcriptElement) {
-        throw new Error('Transcript element not found in the HTML.');
-      }
-
-      const text = transcriptElement.textContent || '';
-      addLog('Transcript Text: ' + text);
-      return text; // Return the scraped transcript
+      addLog(`Scraping initiated: ${response.data.message}`);
+      setTranscriptStatus(response.data.message);
     } catch (err) {
-      addLog("Error during transcript scraping.");
+      addLog("Error initiating transcript scraping.");
       if (axios.isAxiosError(err)) {
         addLog(`Axios error: ${err.message}`);
         if (err.response) {
           addLog(`Error Response Status: ${err.response.status}`);
-          addLog(`Error Response Body: ${err.response.data}`);
+          addLog(`Error Response Data: ${JSON.stringify(err.response.data)}`);
         }
       } else {
-        addLog(`Network error: ${err.message}`);
+        addLog(`Unexpected error: ${err}`);
       }
-      addLog(`Attempted URL: ${transcriptUrl}`); // Log the exact URL being requested
-      setError("Failed to scrape the transcript.");
-      setErrorDetails(err.message); // Set error details
-      throw err; // Re-throw the error for handling
+      setError("Failed to initiate transcript scraping.");
+      setErrorDetails(err.message);
+    }
+  };
+
+  // Function to retrieve the transcript
+  const retrieveTranscript = async (url: string) => {
+    addLog('Attempting to retrieve transcript...');
+    const getTranscriptUrl = `http://localhost:8000/api/py/get-transcript/?url=${encodeURIComponent(url)}`;
+    try {
+      const response = await axios.get(getTranscriptUrl);
+      if (response.data.status === "completed") {
+        setTranscript(response.data.transcript);
+        addLog("Transcript retrieved successfully.");
+        setTranscriptStatus("completed");
+      } else if (response.data.status === "error") {
+        setTranscriptStatus("error");
+        setError("Failed to retrieve transcript.");
+        setErrorDetails(response.data.message);
+        addLog(`Transcript retrieval error: ${response.data.message}`);
+      } else {
+        setTranscriptStatus("not found");
+        addLog("Transcript not found yet.");
+      }
+    } catch (err) {
+      addLog("Error retrieving transcript.");
+      if (axios.isAxiosError(err)) {
+        addLog(`Axios error: ${err.message}`);
+        if (err.response) {
+          addLog(`Error Response Status: ${err.response.status}`);
+          addLog(`Error Response Data: ${JSON.stringify(err.response.data)}`);
+        }
+      } else {
+        addLog(`Unexpected error: ${err}`);
+      }
+      setError("Failed to retrieve transcript.");
+      setErrorDetails(err.message);
     }
   };
 
@@ -130,13 +141,33 @@ const MiddlePanel: React.FC = () => {
   const handleTranscript = useCallback(async () => {
     if (selectedTalk) {
       try {
-        const transcriptText = await scrapeTranscript(selectedTalk.url);
-        await sendTranscriptToChatbot(transcriptText);
+        // Initiate scraping
+        await scrapeTranscript(selectedTalk.url);
+        
+        // Polling to check when transcript is available
+        const pollInterval = 5000; // 5 seconds
+        const maxAttempts = 12; // Poll for 1 minute
+        let attempts = 0;
+
+        const pollTranscript = setInterval(async () => {
+          attempts += 1;
+          addLog(`Polling attempt ${attempts} for transcript...`);
+          await retrieveTranscript(selectedTalk.url);
+          
+          if (transcriptStatus === "completed" || attempts >= maxAttempts) {
+            clearInterval(pollTranscript);
+            if (transcriptStatus === "completed") {
+              await sendTranscriptToChatbot(transcript);
+            } else {
+              addLog("Transcript scraping timed out.");
+            }
+          }
+        }, pollInterval);
       } catch (err) {
         addLog("Error in handling transcript process.");
       }
     }
-  }, [selectedTalk]);
+  }, [selectedTalk, transcript, transcriptStatus]);
 
   // Define the search function with result randomization
   const handleSearch = useCallback(async () => {
@@ -146,11 +177,13 @@ const MiddlePanel: React.FC = () => {
     setSelectedTalk(null);
     setTranscriptSaved(false); // Reset save state on new search
     setErrorDetails(''); // Reset error details on new search
+    setTranscript('');
+    setTranscriptStatus('');
 
     addLog('Initiating Search...');
     try {
       const response = await axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
-      if (!response.status === 200) {
+      if (response.status !== 200) {
         addLog(`Search failed. Status: ${response.status} - ${response.statusText}`);
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
@@ -281,6 +314,7 @@ const MiddlePanel: React.FC = () => {
             className={styles.videoFrame}
           />
           {transcriptSaved && <p className={styles.successMessage}>Transcript sent successfully!</p>}
+          {transcript && <p className={styles.transcriptText}>{transcript}</p>}
         </div>
       )}
 
@@ -296,6 +330,8 @@ const MiddlePanel: React.FC = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     setSelectedTalk(talk);
+                    setTranscript(''); // Reset transcript when selecting a new talk
+                    setTranscriptStatus('');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
