@@ -6,18 +6,18 @@
 // app/page.tsx
 // because of Next.js 14
 
-// pages/index.tsx
+// app/page.tsx
 
 'use client'; // Mark as Client Component
 
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { TalkProvider } from '../context/TalkContext'; // Import the TalkProvider
-import './globals.css'; // Ensure global styles are applied
+import { TalkProvider } from '../context/TalkContext';
+import { ChatProvider } from '../context/ChatContext'; // Import ChatProvider
+import './globals.css'; // Global CSS styles
 import ErrorBoundary from '../components/ErrorBoundary';
 
-// Lazy load all panels
-
+// Dynamically load all panels
 const LeftPanel = dynamic(() => import('../components/LeftPanel'), {
   loading: () => <p>Loading Left Panel...</p>,
   ssr: false,
@@ -35,25 +35,28 @@ const RightPanel = dynamic(() => import('../components/RightPanel'), {
 
 const Home: React.FC = () => {
   return (
-    <TalkProvider>
-      <div className="container">
-      <Suspense fallback={<p>Loading Left Panel...</p>}>
-          <ErrorBoundary>
+    <ChatProvider isMemOn={true}>
+      <TalkProvider>
+        <div className="container">
+          {/* Use Suspense and ErrorBoundary for each panel */}
+          <Suspense fallback={<p>Loading Left Panel...</p>}>
+            <ErrorBoundary>
               <LeftPanel />
-          </ErrorBoundary>
-      </Suspense>
-      <Suspense fallback={<p>Loading Middle Panel...</p>}>
-          <ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
+          <Suspense fallback={<p>Loading Middle Panel...</p>}>
+            <ErrorBoundary>
               <MiddlePanel />
-          </ErrorBoundary>
-        </Suspense>
-        <Suspense fallback={<p>Loading Right Panel...</p>}>
-          <ErrorBoundary>
+            </ErrorBoundary>
+          </Suspense>
+          <Suspense fallback={<p>Loading Right Panel...</p>}>
+            <ErrorBoundary>
               <RightPanel />
-          </ErrorBoundary>
-        </Suspense>
-      </div>
-    </TalkProvider>
+            </ErrorBoundary>
+          </Suspense>
+        </div>
+      </TalkProvider>
+    </ChatProvider>
   );
 };
 

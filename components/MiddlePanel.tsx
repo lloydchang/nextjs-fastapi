@@ -7,6 +7,8 @@ import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
+import { useChatContext } from '../context/ChatContext';
+import DebugPanel from './DebugPanel'; // Import DebugPanel
 
 // TypeScript Types
 type Talk = {
@@ -32,27 +34,65 @@ const MiddlePanel: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
+  const [transcriptSaved, setTranscriptSaved] = useState<boolean>(false);
+  const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
+
+  // Use the shared context
+  const { sendActionToChatbot } = useChatContext();
+
+  // Helper function to add logs
+  const addLog = (message: string) => {
+    setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
+  };
 
   // Function to determine the initial keyword based on randomization
   const determineInitialKeyword = () => {
-    const randomNumber = Math.floor(Math.random() * 18); // Generate a random number between 0 and 17
-    return randomNumber === 0 
-      ? "TED AI" 
-      : sdgKeywords[Math.floor(Math.random() * sdgKeywords.length)];
+    const randomNumber = Math.floor(Math.random() * 18);
+    return randomNumber === 0 ? "TED AI" : sdgKeywords[Math.floor(Math.random() * sdgKeywords.length)];
   };
+
+  // Function to scrape and send the transcript to the chatbot
+  const scrapeAndSendTranscript = useCallback(async () => {
+    addLog('Clicked Chat Button');
+    if (selectedTalk) {
+      addLog(`Selected Talk: ${selectedTalk.title}`);
+      try {
+        const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
+        addLog(`Fetching transcript from: ${transcriptUrl}`);
+        const response = await fetch(transcriptUrl, { headers: { 'Content-Type': 'application/json' } });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch transcript from ${transcriptUrl}`);
+        }
+
+        const jsonResponse = await response.json(); // Parse the JSON response
+        const transcriptText = jsonResponse.transcript; // Extract the transcript field
+        addLog('Transcript Text: ' + transcriptText);
+
+        // Send the scraped transcript directly to the chatbot as a new message
+        const formattedMessage = `🎙️ Transcript of "${selectedTalk.title}": ${transcriptText}`;
+        addLog('Sending Message to Chatbot: ' + formattedMessage);
+        await sendActionToChatbot(formattedMessage);
+        addLog('Message Sent Successfully');
+
+        setTranscriptSaved(true);
+      } catch (err) {
+        addLog("Failed to scrape and send the transcript.");
+        setError("Failed to scrape and send the transcript.");
+      }
+    } else {
+      addLog("No selected talk available to send.");
+    }
+  }, [selectedTalk, sendActionToChatbot]);
 
   // Define the search function
   const handleSearch = useCallback(async () => {
-    if (!query.trim()) {
-      setError("Please enter a keyword to search."); // Show error if query is empty
-      return;
-    }
-
     setError(null);
     setTalks([]);
     setLoading(true);
     setSelectedTalk(null);
+    setTranscriptSaved(false); // Reset save state on new search
 
+    addLog('Initiating Search...');
     try {
       const response = await fetch(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
       if (!response.ok) {
@@ -60,10 +100,14 @@ const MiddlePanel: React.FC = () => {
       }
       const data: Talk[] = await response.json();
       setTalks(data);
+      addLog('Search results retrieved: ' + data.length + ' talks found.');
+
       if (data.length > 0) {
         setSelectedTalk(data[0]);
+        addLog('Selected Talk: ' + data[0].title);
       }
     } catch (err) {
+      addLog("Failed to fetch search results.");
       setError("Failed to fetch search results. Please check if the backend server is running.");
     } finally {
       setLoading(false);
@@ -72,17 +116,18 @@ const MiddlePanel: React.FC = () => {
 
   // Set the initial keyword when the component mounts
   useEffect(() => {
-    initialKeyword.current = determineInitialKeyword(); // Determine the initial keyword
-    setQuery(initialKeyword.current); // Update the query state
-    setSearchInitiated(true); // Trigger search
+    initialKeyword.current = determineInitialKeyword();
+    setQuery(initialKeyword.current);
+    setSearchInitiated(true);
+    addLog(`Initial keyword set: ${initialKeyword.current}`);
   }, []);
 
   // Run the search after setting the query
   useEffect(() => {
     if (searchInitiated) {
-      handleSearch(); // Run the search
+      handleSearch();
     }
-  }, [searchInitiated, handleSearch]); // Depend on searchInitiated and handleSearch
+  }, [searchInitiated, handleSearch]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -120,12 +165,20 @@ const MiddlePanel: React.FC = () => {
           {loading ? "Searching…" : "Search"}
         </button>
         {selectedTalk && (
-          <button
-            onClick={() => window.open(selectedTalk.url, '_blank')}
-            className={`${styles.button} ${styles.tedButton}`}
-          >
-            Play in New Tab
-          </button>
+          <>
+            <button
+              onClick={scrapeAndSendTranscript}
+              className={`${styles.button} ${styles.chatButton}`}
+            >
+              Chat
+            </button>
+            <button
+              onClick={() => window.open(selectedTalk.url, '_blank')}
+              className={`${styles.button} ${styles.tedButton}`}
+            >
+              Play in New Tab
+            </button>
+          </>
         )}
         {loading && (
           <div className={styles.loadingSpinner}>
@@ -144,6 +197,7 @@ const MiddlePanel: React.FC = () => {
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
           />
+          {transcriptSaved && <p className={styles.successMessage}>Transcript sent successfully!</p>}
         </div>
       )}
 
@@ -174,6 +228,9 @@ const MiddlePanel: React.FC = () => {
       )}
 
       {error && <p className={styles.errorText}>{error}</p>}
+      
+      {/* Render Debug Panel */}
+      <DebugPanel logs={logs} />
     </div>
   );
 };
