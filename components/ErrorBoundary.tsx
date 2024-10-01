@@ -62,7 +62,7 @@ class ErrorBoundary extends Component<Props, State> {
       "Oops! The app decided to take an impromptu vacation to Syntax Error Island. We’re looking for its return flight now.",
       "Well, well, well… Seems like our code tried to debug itself and got caught in an endless loop of procrastination.",
       "Oopsie-daisy! The app stubbed its toe on a missing dependency. We’ll find a band-aid and get it back to work.",
-      "Hmm, seems like our code mistook 'undefined' for enlightenment and achieved Nirvana. We’ll bring it back to reality soon.",
+      "Hmm, seems like our code mistook 'undefined' for enlightenment. We’ll bring it back to reality soon.",
       "Oops! Our code got distracted watching cat videos. We’ve sent a stern message, but who can resist a good cat video?",
       "Oh no! The code encountered a Schrödinger’s bug: it exists and doesn’t exist at the same time. Reality might break if we try to fix it.",
       "Oops! The code spiraled into an identity crisis after discovering it was just a bunch of ones and zeros.",
