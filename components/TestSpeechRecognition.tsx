@@ -57,6 +57,11 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
         setIsListening(false);
+        // Restart recognition on error
+        if (isMicOn) {
+          recognition.start();
+          setIsListening(true);
+        }
       };
 
       recognition.onend = () => {
@@ -68,7 +73,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         }
       };
 
-      recognitionRef.current = recognition;
+      recognitionRef.current = recognition; // Save the recognition instance
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
@@ -78,17 +83,17 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current.onend = null;
         recognitionRef.current.onresult = null;
         recognitionRef.current.onerror = null;
-        recognitionRef.current = null;
+        recognitionRef.current = null; // Clean up the recognition instance
       }
     };
   }, [onSpeechResult, onInterimUpdate, isMicOn]);
 
   useEffect(() => {
     if (isMicOn && recognitionRef.current) {
-      recognitionRef.current.start();
+      recognitionRef.current.start(); // Start recognition when mic is on
       setIsListening(true);
     } else if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      recognitionRef.current.stop(); // Stop recognition when mic is off
       setIsListening(false);
     }
   }, [isMicOn]);

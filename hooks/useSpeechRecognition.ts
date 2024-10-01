@@ -1,32 +1,35 @@
-import { useState, useEffect, useCallback } from 'react';
+// components/TestSpeechRecognition.tsx
 
-interface UseSpeechRecognitionReturn {
-  startListening: () => void;
-  stopListening: () => void;
-  isListening: boolean;
+import React, { useEffect, useState, useRef } from 'react';
+import styles from '../styles/TestSpeechRecognition.module.css';
+
+interface TestSpeechRecognitionProps {
+  isMicOn: boolean; // Prop to control mic state
+  onSpeechResult: (finalResults: string) => void; // Callback for final results
+  onInterimUpdate: (interimResult: string) => void; // Callback for interim results
 }
 
-export const useSpeechRecognition = (
-  onResult: (transcript: string, isFinal: boolean) => void,
-  onInterimUpdate: (interimTranscript: string) => void,
-  deduplicate: boolean = false, // Deduplication flag
-  trimResults: boolean = false // Trimming flag
-): UseSpeechRecognitionReturn => {
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [isListening, setIsListening] = useState(false);
-  const lastInterim = useRef<string>(''); // Track last interim result
+const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
+  isMicOn,
+  onSpeechResult,
+  onInterimUpdate,
+}) => {
+  const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
+  const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
+  const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
+  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (SpeechRecognitionConstructor) {
-      const recog = new SpeechRecognitionConstructor();
-      recog.continuous = true;
-      recog.interimResults = true;
-      recog.lang = 'en-US';
+      const recognition = new SpeechRecognitionConstructor();
+      recognition.continuous = true; // Continuous listening mode
+      recognition.interimResults = true; // Capture interim results
+      recognition.lang = 'en-US';
 
-      recog.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interimTranscript = '';
         let finalTranscript = '';
 
@@ -40,49 +43,70 @@ export const useSpeechRecognition = (
         }
 
         if (finalTranscript) {
-          if (!deduplicate || finalTranscript.trim() !== lastInterim.current.trim()) {
-            onResult(finalTranscript.trim(), true); // Final result handling
-          }
-          lastInterim.current = ''; // Clear interim after final
+          setResults(finalTranscript.trim());
+          onSpeechResult(finalTranscript.trim());
+          setInterimResults('');
         }
 
         if (interimTranscript) {
-          if (!deduplicate || interimTranscript.trim() !== lastInterim.current.trim()) {
-            lastInterim.current = interimTranscript.trim();
-            onInterimUpdate(interimTranscript.trim()); // Interim result handling
-          }
+          setInterimResults(interimTranscript.trim());
+          onInterimUpdate(interimTranscript.trim());
         }
       };
 
-      recog.onerror = (event: any) => {
-        setIsListening(false);
+      recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
-      };
-
-      recog.onend = () => {
         setIsListening(false);
-        console.log('Recognition ended.');
+        // Restart recognition on error
+        if (isMicOn) {
+          recognition.start();
+          setIsListening(true);
+        }
       };
 
-      setRecognition(recog);
+      recognition.onend = () => {
+        console.log('Speech recognition ended. Restarting...');
+        setIsListening(false);
+        if (isMicOn) {
+          recognition.start(); // Restart speech recognition if mic is still on
+          setIsListening(true);
+        }
+      };
+
+      recognitionRef.current = recognition; // Save the recognition instance
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
-  }, [onResult, onInterimUpdate, deduplicate, trimResults]);
 
-  const startListening = useCallback(() => {
-    if (recognition && !isListening) {
-      recognition.start();
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current = null; // Clean up the recognition instance
+      }
+    };
+  }, [onSpeechResult, onInterimUpdate, isMicOn]);
+
+  useEffect(() => {
+    if (isMicOn && recognitionRef.current) {
+      recognitionRef.current.start(); // Start recognition when mic is on
       setIsListening(true);
-    }
-  }, [recognition, isListening]);
-
-  const stopListening = useCallback(() => {
-    if (recognition && isListening) {
-      recognition.stop();
+    } else if (recognitionRef.current) {
+      recognitionRef.current.stop(); // Stop recognition when mic is off
       setIsListening(false);
     }
-  }, [recognition, isListening]);
+  }, [isMicOn]);
 
-  return { startListening, stopListening, isListening };
+  return (
+    <div className={styles.container}>
+      <div className={styles.transcriptContainer}>
+        <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
+        <p><strong>Final Results:</strong> {results}</p>
+        <p><strong>Interim Results:</strong> {interimResults}</p>
+      </div>
+    </div>
+  );
 };
+
+export default React.memo(TestSpeechRecognition);
