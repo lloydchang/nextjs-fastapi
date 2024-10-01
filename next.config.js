@@ -3,18 +3,18 @@ const nextConfig = {
   rewrites: async () => {
     return [
       {
-        source: "/api/py/:path*",
+        source: "/fastapi/py/:path*",
         destination:
           process.env.NODE_ENV === "development"
-            ? "http://127.0.0.1:8000/api/py/:path*"
-            : "/api/",
+            ? "http://127.0.0.1:8000/fastapi/py/:path*"
+            : "/fastapi/",
       },
       {
         source: "/docs",
         destination:
           process.env.NODE_ENV === "development"
-            ? "http://127.0.0.1:8000/api/py/docs"
-            : "/api/py/docs",
+            ? "http://127.0.0.1:8000/fastapi/py/docs"
+            : "/fastapi/py/docs",
       },
       {
         source: "/openapi.json",

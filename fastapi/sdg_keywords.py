@@ -1,4 +1,4 @@
-# api/sdg_keywords.py
+# fastapi/sdg_keywords.py
 
 sdg_keywords = {
     'SDG 1 - No Poverty': ['poverty'],

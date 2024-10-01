@@ -1,4 +1,4 @@
-# api/search.py
+# fastapi/search.py
 
 """
 Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
@@ -53,7 +53,7 @@ warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.
 
 # Step 2: Create a FastAPI app instance
 print("Step 2: Creating a FastAPI app instance with customized documentation paths.")
-app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+app = FastAPI(docs_url="/fastapi/docs", openapi_url="/fastapi/openapi.json")
 
 # Step 3: Enable CORS middleware to handle cross-origin requests
 print("Step 3: Enabling CORS middleware to allow cross-origin requests from any origin.")
@@ -67,8 +67,8 @@ app.add_middleware(
 
 # Step 4: Load the TEDx Dataset with caching mechanism
 print("Step 4: Loading the TEDx Dataset with a caching mechanism.")
-file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-cache_file_path = "./api/cache/tedx_dataset.pkl"
+file_path = "./fastapi/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+cache_file_path = "./fastapi/cache/tedx_dataset.pkl"
 data = pd.DataFrame()
 
 if os.path.exists(cache_file_path):
@@ -101,7 +101,7 @@ from api.sdg_keywords import sdg_keywords
 
 # Step 7: Precompute or Load Cached SDG Keyword Embeddings
 print("Step 7: Precomputing or loading cached SDG keyword embeddings.")
-sdg_embeddings_cache = "./api/cache/sdg_embeddings.pkl"
+sdg_embeddings_cache = "./fastapi/cache/sdg_embeddings.pkl"
 sdg_names = list(sdg_keywords.keys())
 sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
 
@@ -194,7 +194,7 @@ async def hello_fast_api():
     return {"message": "Hello from FastAPI"}
 
 # Step 12: Create a Search Endpoint for TEDx Talks Using Asynchronous Search
-@app.get("/api/py/search")
+@app.get("/fastapi/search")
 async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     try:
         return await semantic_search(query)
