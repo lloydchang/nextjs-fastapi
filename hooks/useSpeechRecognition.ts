@@ -23,23 +23,14 @@ export const useSpeechRecognition = (
       recog.continuous = true; // Keep listening for speech input continuously
       recog.interimResults = true; // Allow interim results to be captured
       recog.lang = 'en-US'; // Set the language to English
-      recog.maxAlternatives = 1; // Limit alternatives for faster processing
 
       // Handle speech recognition results
       recog.onresult = (event: SpeechRecognitionEvent) => {
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript;
           const isFinal = event.results[i].isFinal;
-
-          // Treat short interim results as final if they contain more than 3 words
-          if (!isFinal && transcript.trim().length > 0) {
-            console.log(`Interim considered as final: "${transcript}"`);
-            onResult(transcript, false); // Send interim results
-          } else {
-            onResult(transcript, isFinal); // Trigger callback with the result
-          }
-
           console.log(`Speech result: "${transcript}", isFinal: ${isFinal}`);
+          onResult(transcript, isFinal); // Trigger callback with the result
         }
       };
 
