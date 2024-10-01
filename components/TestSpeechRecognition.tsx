@@ -1,7 +1,6 @@
 // components/TestSpeechRecognition.tsx
 
-import React, { useEffect, useState } from 'react';
-import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from '../styles/TestSpeechRecognition.module.css';
 
 interface TestSpeechRecognitionProps {
@@ -18,29 +17,83 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
   const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
-
-  const handleResult = (newResults: string, final: boolean) => {
-    if (final) {
-      setResults(newResults); // Set final results
-      onSpeechResult(newResults); // Send final results to parent
-      setInterimResults(''); // Clear interim results
-    } else {
-      setInterimResults(newResults); // Store interim results for display
-      onInterimUpdate(newResults); // Send interim results to parent
-    }
-  };
-
-  const { startListening, stopListening } = useSpeechRecognition(handleResult, onInterimUpdate);
+  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
 
   useEffect(() => {
-    if (isMicOn) {
-      startListening();
-      setIsListening(true);
+    // Initialize the SpeechRecognition API
+    const SpeechRecognitionConstructor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (SpeechRecognitionConstructor) {
+      const recognition = new SpeechRecognitionConstructor();
+      recognition.continuous = true; // Keep listening until explicitly stopped
+      recognition.interimResults = true; // Capture interim results
+      recognition.lang = 'en-US';
+
+      // Handle speech recognition results
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript.trim();
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript + ' ';
+          }
+        }
+
+        if (finalTranscript) {
+          setResults(finalTranscript.trim()); // Update the final result state
+          onSpeechResult(finalTranscript.trim()); // Send final results to parent via prop
+          setInterimResults(''); // Clear interim results after final results are captured
+        }
+
+        if (interimTranscript) {
+          setInterimResults(interimTranscript.trim()); // Store interim results for display
+          onInterimUpdate(interimTranscript.trim()); // Send interim results to parent
+        }
+      };
+
+      // Handle recognition errors
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event);
+        setIsListening(false);
+      };
+
+      // Handle recognition end
+      recognition.onend = () => {
+        console.log('Speech recognition ended.');
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition; // Store the recognition instance
     } else {
-      stopListening();
+      console.warn('SpeechRecognition is not supported in this browser.');
+    }
+
+    // Cleanup recognition instance on unmount
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current = null;
+      }
+    };
+  }, [onSpeechResult, onInterimUpdate]);
+
+  // Effect to control the microphone based on `isMicOn` prop
+  useEffect(() => {
+    if (isMicOn && recognitionRef.current) {
+      recognitionRef.current.start();
+      setIsListening(true);
+    } else if (recognitionRef.current) {
+      recognitionRef.current.stop();
       setIsListening(false);
     }
-  }, [isMicOn, startListening, stopListening]);
+  }, [isMicOn]);
 
   return (
     <div className={styles.container}>
