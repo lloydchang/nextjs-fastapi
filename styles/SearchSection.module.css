@@ -2,90 +2,91 @@
 
 .searchContainer {
     display: flex;
-    flex-direction: column; /* Stack search input and results vertically */
-    margin: 20px; /* Add some margin */
+    flex-direction: column;
+    margin: 0; /* Remove the margin */
+    padding: 0; /* Remove padding */
 }
 
 .searchInputContainer {
-    display: flex; /* Align items in a row */
-    align-items: center; /* Center items vertically */
-    gap: 10px; /* Space between elements */
-    margin-bottom: 20px; /* Space below the search input area */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0; /* Remove the bottom margin */
 }
 
 .searchInput {
-    flex: 1; /* Take remaining space */
-    padding: 10px; /* Padding inside the input */
-    font-size: 16px; /* Font size */
-    border: 1px solid #ccc; /* Border for the input */
-    border-radius: 4px; /* Rounded corners */
-    color: black; /* Text color */
+    flex: 1;
+    padding: 5px; /* Reduce padding for better alignment */
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: black;
 }
 
 .loadingSpinner {
-    display: flex; /* Use flexbox for loading spinner */
-    align-items: center; /* Center items */
+    display: flex;
+    align-items: center;
 }
 
 /* Button styles */
 .button {
-    padding: 10px 15px; /* Padding for buttons */
-    font-size: 16px; /* Font size */
-    border: none; /* No border */
-    border-radius: 4px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    font-weight: bold; /* Bold text */
-    transition: background-color 0.3s ease, transform 0.2s ease; /* Added transform transition */
+    padding: 8px 10px; /* Adjust button padding */
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .botButton {
-    background-color: #4CAF50; /* Green for Bot */
-    color: white; /* White text */
+    background-color: #4CAF50;
+    color: white;
 }
 
 .tabButton {
-    background-color: #eb0028; /* Red for Tab */
-    color: white; /* White text */
+    background-color: #eb0028;
+    color: white;
 }
 
 .tabButton:hover {
-    background-color: #c20022; /* Darker red on hover */
-    transform: translateY(-2px); /* Hover effect */
+    background-color: #c20022;
+    transform: translateY(-2px);
 }
 
 .searchButton {
-    background-color: #2196f3; /* Primary blue */
-    color: white; /* White text */
+    background-color: #2196f3;
+    color: white;
 }
 
 .searchButton:hover {
-    background-color: #1976d2; /* Darker blue on hover */
-    transform: translateY(-2px); /* Hover effect */
+    background-color: #1976d2;
+    transform: translateY(-2px);
 }
 
 /* Result item styles */
 .resultItem {
-    padding: 10px; /* Padding for each result item */
-    border-bottom: 1px solid #ddd; /* Add a bottom border as a divider */
-    background-color: #000000; /* Maintain background color */
+    padding: 5px; /* Adjust padding for each result item */
+    border-bottom: none; /* Remove bottom border */
+    background-color: transparent; /* Set transparent background */
 }
 
 .resultItem:last-child {
-    border-bottom: none; /* Remove border for the last item */
+    border-bottom: none; /* No border for the last item */
 }
 
 .resultLink {
-    color: #2196f3; /* Default hyperlink color */
-    text-decoration: none; /* Remove underline */
-    font-weight: bold; /* Make the text bold */
+    color: #2196f3;
+    text-decoration: none;
+    font-weight: bold;
 }
 
 .resultLink:hover {
-    color: #1976d2; /* Change color on hover */
-    text-decoration: underline; /* Add underline on hover */
+    color: #1976d2;
+    text-decoration: underline;
 }
 
 .sdgTags {
-    color: white; /* Tag color */
-    font-size: 0.8em; /* Smaller font size for tags */
+    color: white;
+    font-size: 0.8em;
 }
