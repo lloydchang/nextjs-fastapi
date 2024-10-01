@@ -9,8 +9,10 @@ export const sendMessageToChatbot = async (
   // Include context in the prompt if available
   const requestBody = {
     model: 'llama3.2',
-    // Include the full conversation context in the prompt
-    prompt: context ? `${systemPrompt}\n${context}\nUser: ${input}\nAssistant:` : `${systemPrompt}\nUser: ${input}\nAssistant:`,
+    // Structure the prompt to clearly separate history and new input
+    prompt: context 
+      ? `${systemPrompt}\n${context}\n\n### New Input:\nUser: ${input}\nAssistant:` 
+      : `${systemPrompt}\n### New Input:\nUser: ${input}\nAssistant:`,
     temperature: 0.0,
   };
 
