@@ -138,7 +138,7 @@ const MiddlePanel: React.FC = () => {
     }
   }, [selectedTalk]);
 
-  // Define the search function
+  // Define the search function with result randomization
   const handleSearch = useCallback(async () => {
     setError(null);
     setTalks([]);
@@ -154,7 +154,11 @@ const MiddlePanel: React.FC = () => {
         addLog(`Search failed. Status: ${response.status} - ${response.statusText}`);
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
-      const data: Talk[] = response.data;
+      let data: Talk[] = response.data;
+
+      // Randomize the order of the results
+      data = data.sort(() => Math.random() - 0.5);
+
       setTalks(data);
       addLog('Search results retrieved: ' + data.length + ' talks found.');
 
