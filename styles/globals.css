@@ -1,17 +1,54 @@
 /* styles/globals.css */
 
+/* Keyframes for any animations */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
+/* Tailwind CSS Base Configuration */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root color variables for light and dark modes */
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* General body styling */
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  margin: 0;
+  padding: 0;
+}
+
+/* Layout container styling for the main grid */
 .container {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr; /* Left panel is 3fr, middle is 2fr, right is 1fr */
   width: 100vw; /* Full screen width */
   height: 100vh; /* Full screen height */
+  gap: 0px; /* No gaps between panels */
 }
 
+/* Panel-specific styles */
 .left-panel {
   background-color: #f0f0f0;
 }
@@ -22,4 +59,17 @@
 
 .right-panel {
   background-color: #f0f0f0;
+  border: none; /* Ensure no border on right panel */
+  outline: none; /* No outline */
+}
+
+/* Optional: Footer Styling for Consistency */
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 60px;
+  padding: 10px;
+  background-color: #f9f9f9;
 }
