@@ -7,29 +7,30 @@ import styles from '../styles/TestSpeechRecognition.module.css';
 interface TestSpeechRecognitionProps {
   isMicOn: boolean; // Prop to control mic state
   onSpeechResult: (finalResults: string) => void; // Callback for final results
+  onInterimUpdate: (interimResult: string) => void; // Callback for interim results (real-time to chatbots)
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   isMicOn,
   onSpeechResult,
+  onInterimUpdate,
 }) => {
-  const [results, setResults] = useState<string>(''); // Stores final results
-  const [interimResults, setInterimResults] = useState<string>(''); // Stores interim results
+  const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
+  const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
 
   const handleResult = (newResults: string, final: boolean) => {
     if (final) {
-      const prefixedFinal = `[final] ${newResults}`; // Prefix final results
-      setResults(prefixedFinal); // Replace final results instead of appending
-      setInterimResults(''); // Clear interim results when final is received
-      onSpeechResult(newResults.trim()); // Send final result to parent
+      setResults(newResults); // Set final results
+      onSpeechResult(newResults); // Send final results to parent
+      setInterimResults(''); // Clear interim results
     } else {
-      const prefixedInterim = `[interim] ${newResults}`; // Prefix interim results
-      setInterimResults(prev => `${prev} ${prefixedInterim}`.trim()); // Update interim results for display
+      setInterimResults(newResults); // Store interim results for display
+      onInterimUpdate(newResults); // Send interim results to parent
     }
   };
 
-  const { startListening, stopListening } = useSpeechRecognition(handleResult);
+  const { startListening, stopListening } = useSpeechRecognition(handleResult, onInterimUpdate);
 
   useEffect(() => {
     if (isMicOn) {

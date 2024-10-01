@@ -9,7 +9,7 @@ interface UseSpeechRecognitionReturn {
 
 export const useSpeechRecognition = (
   onResult: (transcript: string, isFinal: boolean) => void,
-  onInterimUpdate: (interimTranscript: string) => void // Accept onInterimUpdate
+  onInterimUpdate: (interimTranscript: string) => void // Ensure this parameter is defined
 ): UseSpeechRecognitionReturn => {
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isRecognizing, setIsRecognizing] = useState(false);
@@ -51,7 +51,7 @@ export const useSpeechRecognition = (
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
-  }, [onResult, onInterimUpdate]); // Add onInterimUpdate to dependency array
+  }, [onResult, onInterimUpdate]); // Ensure both are dependencies
 
   const startListening = useCallback(() => {
     if (recognition && !isRecognizing) {

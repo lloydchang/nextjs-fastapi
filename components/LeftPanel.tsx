@@ -48,8 +48,7 @@ const LeftPanel: React.FC = () => {
             }
           } else {
             // Deduplication check for interim results
-            if (isSubstantiallyDifferent(input, lastInterimResultRef.current) &&
-                isSubstantiallyDifferent(input, lastFinalResultRef.current)) {
+            if (isSubstantiallyDifferent(input, lastInterimResultRef.current)) {
               const prefixedInterim = `[interim] ${input}`; // Prefix interim results
               console.log('Sending interim to chatbot:', prefixedInterim); // Debug Log for interim results
               setMessages((prev) => [...prev, { sender: 'user', text: prefixedInterim, isInterim: true }]);
