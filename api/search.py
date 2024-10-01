@@ -6,7 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import torch
 import asyncio
-from api.logger import logger  # Import the logger
+from api.logger import logger  # Import the centralized logger
 
 async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransformer, sdg_embeddings, top_n: int = 10) -> List[Dict]:
     """
@@ -46,6 +46,9 @@ async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransfo
             np.linalg.norm(description_vectors_np, axis=1) * np.linalg.norm(query_vector)
         )
 
+        # Handle any NaN values resulting from zero division
+        similarities = np.nan_to_num(similarities)
+
         # Get top N indices
         top_indices = np.argsort(-similarities)[:top_n]
 
@@ -62,7 +65,7 @@ async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransfo
             }
             results.append(result)
 
-        logger.info(f"Semantic search completed successfully for query: '{query}'.")
+        logger.info(f"Semantic search completed successfully for query: '{query}'. Found {len(results)} results.")
         return results
 
     except Exception as e:

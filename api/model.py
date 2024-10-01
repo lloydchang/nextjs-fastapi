@@ -1,7 +1,7 @@
 # api/model.py
 
 from sentence_transformers import SentenceTransformer
-from api.logger import logger  # Import the logger
+from api.logger import logger  # Import the centralized logger
 
 def load_model(model_name: str = 'paraphrase-MiniLM-L6-v2') -> SentenceTransformer:
     """
