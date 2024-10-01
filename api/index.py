@@ -20,6 +20,7 @@ import warnings
 import os
 import pickle
 from api.sdg_utils import compute_sdg_tags  # Import the utility function
+from api.model import load_model  # Import the model loading function
 
 # Import the semantic_search function from search.py
 from api.search import semantic_search
@@ -53,12 +54,7 @@ data = load_dataset(file_path, cache_file_path)
 
 # Step 5: Load the Sentence-BERT model for Semantic Search
 logger.info("Step 5: Loading the Sentence-BERT model for semantic search.")
-try:
-    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-    logger.info("Step 5.1: Sentence-BERT model initialized successfully.")
-except Exception as e:
-    logger.error(f"Step 5.2: Error initializing Sentence-BERT model: {e}")
-    model = None
+model = load_model('paraphrase-MiniLM-L6-v2')
 
 # Step 6: Define the Initial SDG Keywords for All 17 SDGs
 logger.info("Step 6: Importing the predefined list of SDG keywords for all 17 SDGs.")
