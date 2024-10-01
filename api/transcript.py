@@ -10,10 +10,8 @@ app = FastAPI()
 # Store scraped transcripts
 transcripts = {}
 
-
 class ScrapeRequest(BaseModel):
     url: str
-
 
 @app.post("/scrape-transcript/")
 async def scrape_transcript(request: ScrapeRequest, background_tasks: BackgroundTasks):
@@ -22,7 +20,6 @@ async def scrape_transcript(request: ScrapeRequest, background_tasks: Background
     
     background_tasks.add_task(scrape_and_store_transcript, request.url)
     return {"message": "Scraping in progress", "url": request.url}
-
 
 def scrape_and_store_transcript(url: str):
     try:
@@ -36,7 +33,6 @@ def scrape_and_store_transcript(url: str):
         transcripts[url] = transcript_text
     except Exception as e:
         transcripts[url] = f"Error occurred: {e}"
-
 
 @app.get("/get-transcript/")
 async def get_transcript(url: str):
