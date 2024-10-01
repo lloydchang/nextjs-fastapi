@@ -74,7 +74,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.intervalId = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * funnyParagraphs.length);
       this.setState({ currentMessage: funnyParagraphs[randomIndex] });
-    }, 1000);
+    }, 3000);
   };
 
   stopMessageRotation = () => {
