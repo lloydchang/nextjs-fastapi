@@ -1,26 +1,24 @@
 // components/TestSpeechRecognition.tsx
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import styles from '../styles/TestSpeechRecognition.module.css';
 
-const TestSpeechRecognition: React.FC<{ isMicOn: boolean }> = ({ isMicOn }) => {
+const TestSpeechRecognition: React.FC = () => {
   const [transcript, setTranscript] = React.useState<string>('');
   const [isFinal, setIsFinal] = React.useState<boolean>(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const { startHearing, stopHearing } = useSpeechRecognition((newTranscript, final) => {
+  const handleResult = React.useCallback((newTranscript: string, final: boolean) => {
+    console.log(`TestSpeechRecognition - Transcript: "${newTranscript}", Final: ${final}`);
     setTranscript(newTranscript);
     setIsFinal(final);
-  });
-
-  // Automatically start hearing when mic is active
-  useEffect(() => {
-    if (isMicOn) {
-      startHearing();
-    } else {
-      stopHearing();
+    if (final) {
+      setError(null); // Clear any previous errors
     }
-  }, [isMicOn, startHearing, stopHearing]);
+  }, []);
+
+  const { startHearing, stopHearing } = useSpeechRecognition(handleResult);
 
   return (
     <div className={styles.container}>
@@ -31,6 +29,15 @@ const TestSpeechRecognition: React.FC<{ isMicOn: boolean }> = ({ isMicOn }) => {
         <p>
           <strong>Status:</strong> {isFinal ? 'Final' : 'Interim'}
         </p>
+        {error && <p className={styles.error}>{error}</p>}
+      </div>
+      <div className={styles.buttons}>
+        <button type="button" onClick={startHearing} className={styles.button}>
+          Start Hearing
+        </button>
+        <button type="button" onClick={stopHearing} className={styles.button}>
+          Stop Hearing
+        </button>
       </div>
     </div>
   );

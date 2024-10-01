@@ -1,7 +1,6 @@
 // hooks/useMedia.ts
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useSpeechRecognition } from './useSpeechRecognition';
 
 interface MediaState {
   isCamOn: boolean;
@@ -24,7 +23,7 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: false,
+    isMicOn: false, // Initialize mic as off
     isPipOn: false,
     isMemOn: true,
   });
@@ -34,24 +33,30 @@ export const useMedia = (): UseMediaReturn => {
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
+  // Track the microphone and PiP state separately to prevent state conflicts
   const isMicOnRef = useRef(mediaState.isMicOn);
   const isPipOnRef = useRef(mediaState.isPipOn);
 
-  // Use the custom speech recognition hook
-  const { startHearing, stopHearing } = useSpeechRecognition((transcript, isFinal) => {
-    console.log(`Recognized speech: "${transcript}", Final: ${isFinal}`);
-  });
+  // Log state changes
+  useEffect(() => {
+    console.log('Media State Updated:', mediaState);
+  }, [mediaState]);
 
   // Start Camera
   const startCam = useCallback(async () => {
-    if (mediaState.isCamOn) return;
+    if (mediaState.isCamOn) {
+      console.log('Camera is already on.');
+      return;
+    }
     try {
+      console.log('Attempting to start camera.');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoStreamRef.current = stream;
         await videoRef.current.play();
         setMediaState((prev) => ({ ...prev, isCamOn: true }));
+        console.log('Camera started.');
       }
     } catch (err) {
       console.error('Unable to access camera.', err);
@@ -64,48 +69,61 @@ export const useMedia = (): UseMediaReturn => {
     if (videoStreamRef.current) {
       videoStreamRef.current.getTracks().forEach((track) => track.stop());
       videoStreamRef.current = null;
+      console.log('Camera stream stopped.');
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+      console.log('Camera srcObject cleared.');
     }
     setMediaState((prev) => ({ ...prev, isCamOn: false }));
+    console.log('Camera stopped.');
   }, []);
 
   // Start Microphone
   const startMic = useCallback(async () => {
-    if (isMicOnRef.current) return;
+    if (isMicOnRef.current) {
+      console.log('Microphone is already on.');
+      return;
+    }
     try {
+      console.log('Attempting to start microphone.');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       if (audioRef.current) {
         audioRef.current.srcObject = stream;
         audioStreamRef.current = stream;
         setMediaState((prev) => ({ ...prev, isMicOn: true }));
-        isMicOnRef.current = true;
-        startHearing(); // Start speech recognition when mic is started
+        isMicOnRef.current = true; // Update the ref to track mic state
+        console.log('Microphone started successfully.');
       }
     } catch (err) {
       console.error('Unable to access microphone.', err);
       alert('Unable to access microphone.');
     }
-  }, [startHearing]);
+  }, []);
 
   // Stop Microphone
   const stopMic = useCallback(() => {
-    if (!isMicOnRef.current) return;
+    if (!isMicOnRef.current) {
+      console.log('Microphone is already off.');
+      return;
+    }
     if (audioStreamRef.current) {
+      console.log('Stopping microphone.');
       audioStreamRef.current.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
     }
     if (audioRef.current) {
       audioRef.current.srcObject = null;
+      console.log('Microphone srcObject cleared.');
     }
     setMediaState((prev) => ({ ...prev, isMicOn: false }));
-    isMicOnRef.current = false;
-    stopHearing(); // Stop speech recognition when mic is stopped
-  }, [stopHearing]);
+    isMicOnRef.current = false; // Update the ref to track mic state
+    console.log('Microphone stopped successfully.');
+  }, []);
 
   // Toggle Microphone
   const toggleMic = useCallback(() => {
+    console.log(`Toggling mic. Current state: ${mediaState.isMicOn}`);
     mediaState.isMicOn ? stopMic() : startMic();
   }, [mediaState.isMicOn, startMic, stopMic]);
 
@@ -114,13 +132,17 @@ export const useMedia = (): UseMediaReturn => {
     if (videoRef.current) {
       try {
         if (!isPipOnRef.current) {
+          console.log('Entering Picture-in-Picture mode.');
           await videoRef.current.requestPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: true }));
           isPipOnRef.current = true;
+          console.log('Picture-in-Picture mode entered.');
         } else {
+          console.log('Exiting Picture-in-Picture mode.');
           await document.exitPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: false }));
           isPipOnRef.current = false;
+          console.log('Picture-in-Picture mode exited.');
         }
       } catch (err) {
         console.error('Unable to toggle PiP mode.', err);
@@ -131,10 +153,13 @@ export const useMedia = (): UseMediaReturn => {
   // Toggle Memory
   const toggleMem = useCallback(() => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
-  }, []);
+    console.log(`Memory toggled to: ${!mediaState.isMemOn}`);
+  }, [mediaState.isMemOn]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
+      console.log('Cleaning up useMedia.');
       stopCam();
       stopMic();
       if (isPipOnRef.current) {
