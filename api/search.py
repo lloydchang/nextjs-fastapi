@@ -1,96 +1,81 @@
 # api/search.py
 
-from fastapi import FastAPI, Query
-from typing import List, Dict
+# Step 1: Import necessary modules
+import os
 import pandas as pd
 import numpy as np
-from sentence_transformers import SentenceTransformer, util
 import torch
-import os
+from sentence_transformers import SentenceTransformer, util
 import pickle
-from sdg_keywords import sdg_keywords
+from typing import List, Dict
+import asyncio
 
-app = FastAPI()
+# Step 2: Function to Load TEDx Dataset with Caching Mechanism
+def load_datasets():
+    file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+    cache_file_path = "./api/cache/tedx_dataset.pkl"
+    data = pd.DataFrame()
 
-# Load the TEDx Dataset
-file_path = "./data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-cache_file_path = "./cache/tedx_dataset.pkl"
-data = pd.DataFrame()
+    if os.path.exists(cache_file_path):
+        with open(cache_file_path, 'rb') as cache_file:
+            data = pickle.load(cache_file)
+    else:
+        try:
+            data = pd.read_csv(file_path)
+            with open(cache_file_path, 'wb') as cache_file:
+                pickle.dump(data, cache_file)
+        except Exception as e:
+            print(f"Error loading dataset: {e}")
 
-if os.path.exists(cache_file_path):
-    with open(cache_file_path, 'rb') as cache_file:
-        data = pickle.load(cache_file)
-else:
+    return data, None
+
+# Step 3: Function to Initialize the Sentence-BERT Model
+def initialize_model(model=None):
     try:
-        data = pd.read_csv(file_path)
-        with open(cache_file_path, 'wb') as cache_file:
-            pickle.dump(data, cache_file)
+        if model is None:
+            model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+        print("Model initialized successfully.")
     except Exception as e:
-        print(f"Error loading dataset: {e}")
+        print(f"Error initializing model: {e}")
+        model = None
 
-# Load the Sentence-BERT model
-model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+    sdg_embeddings_cache = "./api/cache/sdg_embeddings.pkl"
+    from api.sdg_keywords import sdg_keywords
+    sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
 
-# Precompute or Load SDG Keyword Embeddings
-sdg_embeddings_cache = "./cache/sdg_embeddings.pkl"
-sdg_names = list(sdg_keywords.keys())
-sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
-
-if os.path.exists(sdg_embeddings_cache):
-    with open(sdg_embeddings_cache, 'rb') as cache_file:
-        sdg_embeddings = pickle.load(cache_file)
-else:
-    sdg_embeddings = model.encode(sdg_keyword_list, convert_to_tensor=True)
-    with open(sdg_embeddings_cache, 'wb') as cache_file:
-        pickle.dump(sdg_embeddings, cache_file)
-
-# Precompute or Load SDG Tags for Each TEDx Talk
-sdg_tags_cache = "./cache/sdg_tags.pkl"
-
-if os.path.exists(sdg_tags_cache):
-    with open(sdg_tags_cache, 'rb') as cache_file:
-        data['sdg_tags'] = pickle.load(cache_file)
-else:
-    if not data.empty and 'description' in data.columns:
-        descriptions = data['description'].tolist()
-        description_vectors = model.encode(descriptions, convert_to_tensor=True, batch_size=32)
-        cosine_similarities = util.pytorch_cos_sim(description_vectors, sdg_embeddings)
-
-        sdg_tags_list = []
-        for row in cosine_similarities:
-            sdg_indices = torch.where(row > 0.5)[0]
-            if len(sdg_indices) == 0:
-                top_n = row.topk(1).indices
-                sdg_indices = top_n
-
-            sdg_tags = [sdg_names[i] for i in sdg_indices]
-            sdg_tags_list.append(sdg_tags)
-
-        data['sdg_tags'] = sdg_tags_list
-        with open(sdg_tags_cache, 'wb') as cache_file:
-            pickle.dump(data['sdg_tags'], cache_file)
-
-@app.get("/")
-async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
-    query_vector = model.encode([query], convert_to_tensor=True)
+    if os.path.exists(sdg_embeddings_cache):
+        with open(sdg_embeddings_cache, 'rb') as cache_file:
+            sdg_embeddings = pickle.load(cache_file)
+    else:
+        sdg_embeddings = model.encode(sdg_keyword_list, convert_to_tensor=True)
+        with open(sdg_embeddings_cache, 'wb') as cache_file:
+            pickle.dump(sdg_embeddings, cache_file)
     
-    # Calculate cosine similarity between query and all TEDx talk descriptions
-    all_descriptions = data['description'].tolist()
-    all_vectors = model.encode(all_descriptions, convert_to_tensor=True)
-    cos_scores = util.pytorch_cos_sim(query_vector, all_vectors)[0]
-    
-    # Get top 10 most similar talks
-    top_results = torch.topk(cos_scores, k=10)
-    
-    results = []
-    for score, idx in zip(top_results.values, top_results.indices):
-        talk = data.iloc[idx]
-        results.append({
-            "title": talk['title'],
-            "description": talk['description'],
-            "url": talk['url'],
-            "sdg_tags": talk['sdg_tags'],
-            "relevance_score": float(score)
-        })
-    
-    return results
+    return sdg_embeddings
+
+# Step 4: Semantic Search Function Using NumPy and Asynchronous Handling
+async def semantic_search(query: str, data: pd.DataFrame, model, sdg_embeddings, top_n: int = 10) -> List[Dict]:
+    if model is None or 'description' not in data.columns:
+        return [{"error": "Model or data not available."}]
+
+    try:
+        query_vector = await asyncio.to_thread(model.encode, query, convert_to_tensor=True)
+        query_vector = query_vector.cpu().numpy()
+
+        description_vectors_np = np.array([np.array(vec) for vec in data['description_vector']])
+        similarities = np.dot(description_vectors_np, query_vector) / (np.linalg.norm(description_vectors_np, axis=1) * np.linalg.norm(query_vector))
+        top_indices = np.argsort(-similarities)[:top_n]
+
+        return [
+            {
+                'title': data.iloc[idx]['slug'].replace('_', ' '),
+                'description': data.iloc[idx]['description'],
+                'presenter': data.iloc[idx]['presenterDisplayName'],
+                'sdg_tags': data.iloc[idx]['sdg_tags'],
+                'similarity_score': float(similarities[idx]),
+                'url': f"https://www.ted.com/talks/{data.iloc[idx]['slug']}"
+            }
+            for idx in top_indices
+        ]
+    except Exception as e:
+        return [{"error": f"Search error: {str(e)}"}]
