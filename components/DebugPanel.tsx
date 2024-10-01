@@ -5,7 +5,7 @@ import styles from '../styles/DebugPanel.module.css';
 
 interface DebugPanelProps {
   logs: string[];
-  curlCommand: string; // Add a prop for the curl command
+  curlCommand?: string; // Make curlCommand optional
   errorDetails?: string; // Optional prop for error details
 }
 
@@ -103,11 +103,15 @@ const DebugPanel: React.FC<DebugPanelProps> = ({ logs, curlCommand, errorDetails
               ))}
             </div>
           )}
-          <h3>CURL Command</h3>
-          <pre className={styles.curlCommand}>{curlCommand}</pre>
+          {/* Conditionally render CURL command if provided and not the placeholder */}
+          {curlCommand && curlCommand !== 'Example CURL Command' && (
+            <>
+              <h3>CURL Command</h3>
+              <pre className={styles.curlCommand}>{curlCommand}</pre>
+            </>
+          )}
         </div>
       )}
-      {!isVisible && <p className={styles.noLogsMessage}>Logs hidden. Click "Show Logs" to view.</p>}
     </div>
   );
 };
