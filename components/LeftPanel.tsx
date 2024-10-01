@@ -14,7 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { updateFinalResult, updateInterimResult } from '../utils/chatUtils';
+import { updateFinalResult, updateInterimResult, trimOverlap } from '../utils/chatUtils'; // Import utility functions
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -27,6 +27,7 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [lastMessageType, setLastMessageType] = useState<'interim' | 'final' | 'manual'>('manual');
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -34,19 +35,33 @@ const LeftPanel: React.FC = () => {
     async (input: string, isFinal = true, isManual = false) => {
       if (input.trim()) {
         try {
+          let processedInput = input.trim();
+
           if (isFinal) {
+            if (lastMessageType === 'interim') {
+              // Trim overlapping words when a final follows an interim
+              processedInput = trimOverlap(input, lastInterimResult);
+            }
+
             // Manually typed messages should not be prefixed
-            if (isManual || updateFinalResult(input)) {
+            if (isManual || updateFinalResult(processedInput)) {
               const messagePrefix = isManual ? '' : '🎙️ '; // Use 🎙️ prefix for speech-recognized final results
-              const formattedMessage = `${messagePrefix}${input}`;
+              const formattedMessage = `${messagePrefix}${processedInput}`;
               setMessages((prev) => [...prev, { sender: 'user', text: formattedMessage }]);
               await sendActionToChatbot(formattedMessage); // Send final result to chatbot
               setChatInput('');
+              setLastMessageType('final');
             }
           } else {
-            if (updateInterimResult(input)) {
-              const formattedInterim = `🎤 ${input}`; // Prefix interim results
+            if (lastMessageType === 'interim') {
+              // Trim overlapping words when an interim follows another interim
+              processedInput = trimOverlap(input, lastInterimResult);
+            }
+
+            if (updateInterimResult(processedInput)) {
+              const formattedInterim = `🎤 ${processedInput}`; // Prefix interim results
               setMessages((prev) => [...prev, { sender: 'user', text: formattedInterim, isInterim: true }]);
+              setLastMessageType('interim');
             }
           }
         } catch (error) {
@@ -54,7 +69,7 @@ const LeftPanel: React.FC = () => {
         }
       }
     },
-    [sendActionToChatbot]
+    [sendActionToChatbot, lastMessageType]
   );
 
   const handleSpeechResults = useCallback(
@@ -77,16 +92,6 @@ const LeftPanel: React.FC = () => {
     }
   }, [messages]);
 
-  useEffect(() => {
-    return () => {
-      stopCam();
-      toggleMic();
-      if (mediaState.isPipOn) {
-        document.exitPictureInPicture().catch(console.error);
-      }
-    };
-  }, [stopCam, toggleMic, mediaState.isPipOn]);
-
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
@@ -107,8 +112,7 @@ const LeftPanel: React.FC = () => {
           </h3>
 
           <HeavyChatMessages messages={messages} />
-          {/* ChatInput passes isManual flag as true for typed messages */}
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={(isManual) => handleChat(chatInput, true, isManual)} />
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true, true)} />
 
           <ControlButtons
             isCamOn={mediaState.isCamOn}
