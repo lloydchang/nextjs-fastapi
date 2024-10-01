@@ -89,9 +89,9 @@ const LeftPanel: React.FC = () => {
       {error && <div className={styles.error}>{error}</div>}
       
       {/* Display Microphone Status */}
-      <div className={styles.micStatus}>
+      {/* <div className={styles.micStatus}>
         <strong>Microphone Status: {mediaState.isMicOn ? 'ON 🎤' : 'OFF 🎤'}</strong>
-      </div>
+      </div> */}
 
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
