@@ -28,6 +28,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
             msg.sender === 'user' ? styles.userMessage : styles.botMessage
           }`}
         >
+          {/* The `.text` class should be inside the `.userMessage` or `.botMessage` wrapper */}
           <span className={styles.text}>{msg.text}</span>
         </div>
       ))}
