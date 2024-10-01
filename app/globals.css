@@ -38,16 +38,20 @@ body {
   grid-template-columns: 3fr 2fr 1fr; /* Left panel is 3fr, middle is 2fr, right is 1fr */
   width: 100vw; /* Full screen width */
   height: 100vh; /* Full screen height */
+  padding: 0px; /* No padding around the container */
 }
 
 .left-panel {
   background-color: #f0f0f0;
+  padding: 0px; /* No padding inside the left panel */
 }
 
 .middle-panel {
   background-color: #e9ecef;
+  padding: 0px; /* No padding inside the middle panel */
 }
 
 .right-panel {
   background-color: #f0f0f0;
+  padding: 0px; /* No padding inside the right panel */
 }
