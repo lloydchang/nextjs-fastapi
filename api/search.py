@@ -1,4 +1,4 @@
-# api/index.py
+# api/search.py
 
 """
 Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
