@@ -8,7 +8,8 @@ import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import { useChatContext } from '../context/ChatContext';
-import DebugPanel from './DebugPanel';
+import DebugPanel from './DebugPanel'; // Import DebugPanel
+import axios from 'axios'; // Import axios
 
 // TypeScript Types
 type Talk = {
@@ -38,10 +39,11 @@ const MiddlePanel: React.FC = () => {
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [transcriptSaved, setTranscriptSaved] = useState<boolean>(false);
   const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
+  const [errorDetails, setErrorDetails] = useState<string>(''); // State for error details
 
   // Helper function to add logs
   const addLog = (message: string) => {
-    setLogs((prevLogs) => [...prevLogs, message]);
+    setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
   };
 
   // Function to determine the initial keyword based on randomization
@@ -50,42 +52,91 @@ const MiddlePanel: React.FC = () => {
     return sdgKeywords[randomIndex];
   };
 
-  // Function to scrape and send the transcript to the chatbot
-  const scrapeAndSendTranscript = useCallback(async () => {
-    addLog('Clicked Chat Button');
-    if (selectedTalk) {
-      addLog(`Selected Talk: ${selectedTalk.title}`);
-      try {
-        const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
-        addLog(`Fetching transcript from: ${transcriptUrl}`);
-        const response = await fetch(transcriptUrl, { headers: { 'Content-Type': 'text/html' } });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch transcript from ${transcriptUrl}`);
+  // Function to scrape the transcript using axios
+  const scrapeTranscript = async (url: string) => {
+    addLog('Starting to scrape transcript...');
+    const transcriptUrl = `${url}/transcript?subtitle=en`;
+    addLog(`Fetching transcript from: ${transcriptUrl}`);
+
+    try {
+      const response = await axios.get(transcriptUrl, {
+        headers: {
+          'User-Agent': 'curl/7.68.0', // Simulate curl user agent
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Referer': 'https://www.ted.com/',
+          'Connection': 'keep-alive',
+          'DNT': '1'
         }
+      });
 
-        const responseText = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(responseText, 'text/html');
-        const transcriptElement = doc.querySelector('.Grid__cell.flx-s:1');
-        const transcriptText = transcriptElement ? transcriptElement.textContent || '' : 'No transcript available.';
+      // Log HTTP response status and headers
+      addLog(`HTTP Response Status: ${response.status}`);
+      addLog('HTTP Response Headers: ' + JSON.stringify(response.headers));
 
-        addLog('Transcript Text: ' + transcriptText);
+      const transcriptText = response.data; // Axios handles the response parsing
 
-        // Send the scraped transcript directly to the chatbot as a new message
-        const formattedMessage = `🎙️ Transcript of "${selectedTalk.title}": ${transcriptText}`;
-        addLog('Sending Message to Chatbot: ' + formattedMessage);
+      // Check for the transcript in the HTML response
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(transcriptText, 'text/html');
+      const transcriptElement = doc.querySelector('.Grid__cell.flx-s:1') || doc.querySelector('.talk-transcript__paragraph');
+
+      if (!transcriptElement) {
+        throw new Error('Transcript element not found in the HTML.');
+      }
+
+      const text = transcriptElement.textContent || '';
+      addLog('Transcript Text: ' + text);
+      return text; // Return the scraped transcript
+    } catch (err) {
+      addLog("Error during transcript scraping.");
+      if (axios.isAxiosError(err)) {
+        addLog(`Axios error: ${err.message}`);
+        if (err.response) {
+          addLog(`Error Response Status: ${err.response.status}`);
+          addLog(`Error Response Body: ${err.response.data}`);
+        }
+      } else {
+        addLog(`Network error: ${err.message}`);
+      }
+      addLog(`Attempted URL: ${transcriptUrl}`); // Log the exact URL being requested
+      setError("Failed to scrape the transcript.");
+      setErrorDetails(err.message); // Set error details
+      throw err; // Re-throw the error for handling
+    }
+  };
+
+  // Function to send the transcript to the chatbot
+  const sendTranscriptToChatbot = async (transcriptText: string) => {
+    addLog('Sending transcript to chatbot...');
+    if (selectedTalk) {
+      const formattedMessage = `🎙️ Transcript of "${selectedTalk.title}": ${transcriptText}`;
+      addLog('Sending Message to Chatbot: ' + formattedMessage);
+      try {
         await sendActionToChatbot(formattedMessage);
         addLog('Message Sent Successfully');
-
         setTranscriptSaved(true);
       } catch (err) {
-        addLog("Failed to scrape and send the transcript.");
-        setError("Failed to scrape and send the transcript.");
+        addLog("Failed to send message to chatbot.");
+        setError("Failed to send the transcript to the chatbot.");
+        setErrorDetails(err.message); // Set error details
       }
     } else {
       addLog("No selected talk available to send.");
     }
-  }, [selectedTalk, sendActionToChatbot]);
+  };
+
+  // Define the function to handle transcript scraping and sending
+  const handleTranscript = useCallback(async () => {
+    if (selectedTalk) {
+      try {
+        const transcriptText = await scrapeTranscript(selectedTalk.url);
+        await sendTranscriptToChatbot(transcriptText);
+      } catch (err) {
+        addLog("Error in handling transcript process.");
+      }
+    }
+  }, [selectedTalk]);
 
   // Define the search function
   const handleSearch = useCallback(async () => {
@@ -94,14 +145,16 @@ const MiddlePanel: React.FC = () => {
     setLoading(true);
     setSelectedTalk(null);
     setTranscriptSaved(false); // Reset save state on new search
+    setErrorDetails(''); // Reset error details on new search
 
     addLog('Initiating Search...');
     try {
-      const response = await fetch(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
-      if (!response.ok) {
+      const response = await axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
+      if (!response.status === 200) {
+        addLog(`Search failed. Status: ${response.status} - ${response.statusText}`);
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
-      const data: Talk[] = await response.json();
+      const data: Talk[] = response.data;
       setTalks(data);
       addLog('Search results retrieved: ' + data.length + ' talks found.');
 
@@ -112,6 +165,7 @@ const MiddlePanel: React.FC = () => {
     } catch (err) {
       addLog("Failed to fetch search results.");
       setError("Failed to fetch search results. Please check if the backend server is running.");
+      setErrorDetails(err.message); // Set error details
     } finally {
       setLoading(false);
     }
@@ -150,6 +204,14 @@ const MiddlePanel: React.FC = () => {
     }
   }, [handleSearch]);
 
+  const openTranscriptInNewTab = () => {
+    if (selectedTalk) {
+      const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
+      window.open(transcriptUrl, '_blank');
+      addLog(`Opened transcript in a new tab: ${transcriptUrl}`);
+    }
+  };
+
   return (
     <div className={styles.middlePanel}>
       {/* Search Section */}
@@ -172,10 +234,16 @@ const MiddlePanel: React.FC = () => {
         {selectedTalk && (
           <>
             <button
-              onClick={scrapeAndSendTranscript}
+              onClick={handleTranscript} // Call handleTranscript to separate logic
               className={`${styles.button} ${styles.chatButton}`}
             >
               Chat
+            </button>
+            <button
+              onClick={openTranscriptInNewTab} // Open transcript URL in a new tab
+              className={`${styles.button} ${styles.tedButton}`}
+            >
+              View Transcript
             </button>
             <button
               onClick={() => window.open(selectedTalk.url, '_blank')}
@@ -235,7 +303,7 @@ const MiddlePanel: React.FC = () => {
       {error && <p className={styles.errorText}>{error}</p>}
       
       {/* Render Debug Panel */}
-      <DebugPanel logs={logs} />
+      <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} />
     </div>
   );
 };
