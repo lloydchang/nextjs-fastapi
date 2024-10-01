@@ -19,15 +19,17 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
 
   const handleResult = (newResults: string, final: boolean) => {
     if (final) {
-      setResults(newResults); // Replace final results instead of appending
+      const prefixedFinal = `[final] ${newResults}`; // Prefix final results
+      setResults(prefixedFinal); // Replace final results instead of appending
       setInterimResults(''); // Clear interim results when final is received
       onSpeechResult(newResults.trim()); // Send final result to parent
     } else {
-      setInterimResults(prev => `${prev} ${newResults}`.trim()); // Update interim results for display
+      const prefixedInterim = `[interim] ${newResults}`; // Prefix interim results
+      setInterimResults(prev => `${prev} ${prefixedInterim}`.trim()); // Update interim results for display
     }
   };
 
-  const { startListening, stopListening } = useSpeechRecognition(handleResult, setInterimResults);
+  const { startListening, stopListening } = useSpeechRecognition(handleResult);
 
   useEffect(() => {
     if (isMicOn) {

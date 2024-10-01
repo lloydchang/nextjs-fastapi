@@ -29,6 +29,7 @@ const LeftPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastFinalResultRef = useRef<string>(''); // Track last final result sent to the chatbot
   const lastInterimResultRef = useRef<string>(''); // Track last interim result sent to the chatbot
 
   const handleChat = useCallback(
@@ -36,14 +37,22 @@ const LeftPanel: React.FC = () => {
       if (input.trim()) {
         try {
           if (isFinal) {
-            setMessages((prev) => [...prev, { sender: 'user', text: input }]);
-            await sendActionToChatbot(input); // Send final result to chatbot immediately
-            setChatInput('');
+            // Only send final results if they are unique
+            if (isSubstantiallyDifferent(input, lastFinalResultRef.current)) {
+              const prefixedFinal = `[final] ${input}`; // Prefix final results
+              setMessages((prev) => [...prev, { sender: 'user', text: prefixedFinal }]);
+              await sendActionToChatbot(prefixedFinal); // Send final result to chatbot
+              setChatInput('');
+              lastFinalResultRef.current = input; // Update the last final result sent
+              lastInterimResultRef.current = ''; // Reset interim tracking on final result
+            }
           } else {
             // Deduplication check for interim results
-            if (isSubstantiallyDifferent(input, lastInterimResultRef.current)) {
-              console.log('Sending interim to chatbot:', input); // Debug Log for interim results
-              setMessages((prev) => [...prev, { sender: 'user', text: input, isInterim: true }]);
+            if (isSubstantiallyDifferent(input, lastInterimResultRef.current) &&
+                isSubstantiallyDifferent(input, lastFinalResultRef.current)) {
+              const prefixedInterim = `[interim] ${input}`; // Prefix interim results
+              console.log('Sending interim to chatbot:', prefixedInterim); // Debug Log for interim results
+              setMessages((prev) => [...prev, { sender: 'user', text: prefixedInterim, isInterim: true }]);
               lastInterimResultRef.current = input; // Update last interim result sent
             }
           }
@@ -58,7 +67,7 @@ const LeftPanel: React.FC = () => {
   const handleSpeechResults = useCallback(
     (results: string) => {
       console.log('Final Speech Result:', results); // Debug Log
-      handleChat(results, true);
+      handleChat(results, true); // Handle final results
     },
     [handleChat]
   );
