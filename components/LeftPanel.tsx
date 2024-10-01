@@ -6,7 +6,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
-import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import dynamic from 'next/dynamic';
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
@@ -79,6 +78,12 @@ const LeftPanel: React.FC = () => {
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
+      
+      {/* Display Microphone Status */}
+      <div className={styles.micStatus}>
+        <strong>Microphone Status: {mediaState.isMicOn ? 'ON 🎤' : 'OFF 🎤'}</strong>
+      </div>
+
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
@@ -97,11 +102,7 @@ const LeftPanel: React.FC = () => {
           </h3>
 
           <HeavyChatMessages messages={messages} />
-          <ChatInput
-            chatInput={chatInput}
-            setChatInput={setChatInput}
-            handleChat={() => handleChat(chatInput)}
-          />
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput)} />
 
           <ControlButtons
             isCamOn={mediaState.isCamOn}
@@ -117,7 +118,7 @@ const LeftPanel: React.FC = () => {
           />
 
           {/* Test Speech Recognition Component */}
-          <TestSpeechRecognition />
+          <TestSpeechRecognition isMicOn={mediaState.isMicOn} />
         </div>
       </div>
     </div>
