@@ -5,7 +5,7 @@ import sys
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,  # Set to DEBUG for more verbose output
+    level=logging.INFO,  # Change to DEBUG for more detailed logs
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout)

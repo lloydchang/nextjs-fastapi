@@ -4,7 +4,7 @@ import torch
 from typing import List
 from api.logger import logger  # Import the logger
 
-def compute_sdg_tags(cosine_similarities, sdg_names: List[str]) -> List[List[str]]:
+def compute_sdg_tags(cosine_similarities: torch.Tensor, sdg_names: List[str]) -> List[List[str]]:
     """
     Compute SDG tags for each TEDx talk based on cosine similarities.
 
