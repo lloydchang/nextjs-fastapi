@@ -5,13 +5,29 @@
   padding: 20px;
   background-color: #000000;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column; /* Ensure components stack vertically */
+}
+
+.nowPlaying {
+  margin-bottom: 20px; /* Space below the now playing section */
+}
+
+.videoFrame {
+  border-radius: 10px;
 }
 
 .searchContainer {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  flex-direction: column; /* Stack input and button vertically */
+  margin-top: auto; /* Push the search section to the bottom */
+}
+
+.searchInputContainer {
+  display: flex;
+  align-items: center; /* Align items vertically in the center */
+  gap: 10px; /* Space between input and buttons */
+  margin-bottom: 20px; /* Space below the search input area */
 }
 
 .searchInput {
@@ -61,18 +77,10 @@
   margin-left: 10px;
 }
 
-.nowPlaying {
-  margin-bottom: 20px;
-}
-
-.videoFrame {
-  border-radius: 10px;
-}
-
 .resultsContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 10px; /* Space between results */
 }
 
 .resultItem {
@@ -98,8 +106,8 @@
 }
 
 .sdgTags {
-  color: #757575;
-  font-size: 0.9em;
+  color: white;
+  font-size: 1em;
 }
 
 .errorText {
