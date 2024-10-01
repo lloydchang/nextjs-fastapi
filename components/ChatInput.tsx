@@ -6,14 +6,20 @@ import styles from '../styles/ChatInput.module.css';
 interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
-  handleChat: () => void;
+  handleChat: (isManual: boolean) => void; // Updated to accept `isManual` parameter
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
+  // Handle Enter key press
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleChat();
+      handleChat(true); // Mark as manual when Enter is pressed
     }
+  };
+
+  // Handle Send button click
+  const handleButtonClick = () => {
+    handleChat(true); // Mark as manual when Send button is clicked
   };
 
   return (
@@ -26,7 +32,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
         placeholder="Type your message..."
         className={styles.input}
       />
-      <button type="button" onClick={handleChat} className={styles.sendButton}>
+      <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
         Send
       </button>
     </div>
