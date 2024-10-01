@@ -8,7 +8,7 @@ import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import { useChatContext } from '../context/ChatContext';
-import DebugPanel from './DebugPanel'; // Import DebugPanel
+import DebugPanel from './DebugPanel';
 
 // TypeScript Types
 type Talk = {
@@ -27,9 +27,11 @@ const sdgKeywords = [
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
-  const initialKeyword = useRef<string>("TED AI");
+  const { sendActionToChatbot } = useChatContext();
 
-  const [query, setQuery] = useState<string>(initialKeyword.current);
+  // Track whether the initial keyword has been set
+  const initialKeyword = useRef<string>(""); // No initial value
+  const [query, setQuery] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
@@ -37,18 +39,15 @@ const MiddlePanel: React.FC = () => {
   const [transcriptSaved, setTranscriptSaved] = useState<boolean>(false);
   const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
 
-  // Use the shared context
-  const { sendActionToChatbot } = useChatContext();
-
   // Helper function to add logs
   const addLog = (message: string) => {
-    setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
+    setLogs((prevLogs) => [...prevLogs, message]);
   };
 
   // Function to determine the initial keyword based on randomization
   const determineInitialKeyword = () => {
-    const randomNumber = Math.floor(Math.random() * 18);
-    return randomNumber === 0 ? "TED AI" : sdgKeywords[Math.floor(Math.random() * sdgKeywords.length)];
+    const randomIndex = Math.floor(Math.random() * sdgKeywords.length);
+    return sdgKeywords[randomIndex];
   };
 
   // Function to scrape and send the transcript to the chatbot
@@ -59,13 +58,17 @@ const MiddlePanel: React.FC = () => {
       try {
         const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
         addLog(`Fetching transcript from: ${transcriptUrl}`);
-        const response = await fetch(transcriptUrl, { headers: { 'Content-Type': 'application/json' } });
+        const response = await fetch(transcriptUrl, { headers: { 'Content-Type': 'text/html' } });
         if (!response.ok) {
           throw new Error(`Failed to fetch transcript from ${transcriptUrl}`);
         }
 
-        const jsonResponse = await response.json(); // Parse the JSON response
-        const transcriptText = jsonResponse.transcript; // Extract the transcript field
+        const responseText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(responseText, 'text/html');
+        const transcriptElement = doc.querySelector('.Grid__cell.flx-s:1');
+        const transcriptText = transcriptElement ? transcriptElement.textContent || '' : 'No transcript available.';
+
         addLog('Transcript Text: ' + transcriptText);
 
         // Send the scraped transcript directly to the chatbot as a new message
@@ -116,10 +119,12 @@ const MiddlePanel: React.FC = () => {
 
   // Set the initial keyword when the component mounts
   useEffect(() => {
-    initialKeyword.current = determineInitialKeyword();
-    setQuery(initialKeyword.current);
-    setSearchInitiated(true);
-    addLog(`Initial keyword set: ${initialKeyword.current}`);
+    if (initialKeyword.current === "") {
+      initialKeyword.current = determineInitialKeyword();
+      setQuery(initialKeyword.current);
+      setSearchInitiated(true);
+      addLog(`Initial keyword set: ${initialKeyword.current}`);
+    }
   }, []);
 
   // Run the search after setting the query
