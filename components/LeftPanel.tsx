@@ -14,6 +14,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
+import { isSubstantiallyDifferent } from '../utils/speechRecognitionUtils'; // Import the utility function
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -26,8 +27,9 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-
+  
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastInterimResultRef = useRef<string>(''); // Track last interim result sent to the chatbot
 
   const handleChat = useCallback(
     async (input: string, isFinal = true) => {
@@ -35,11 +37,15 @@ const LeftPanel: React.FC = () => {
         try {
           if (isFinal) {
             setMessages((prev) => [...prev, { sender: 'user', text: input }]);
-            await sendActionToChatbot(input); // Send to chatbot immediately
+            await sendActionToChatbot(input); // Send final result to chatbot immediately
             setChatInput('');
           } else {
-            console.log('Sending interim to chatbot:', input); // Debug Log
-            setMessages((prev) => [...prev, { sender: 'user', text: input, isInterim: true }]);
+            // Deduplication check for interim results
+            if (isSubstantiallyDifferent(input, lastInterimResultRef.current)) {
+              console.log('Sending interim to chatbot:', input); // Debug Log for interim results
+              setMessages((prev) => [...prev, { sender: 'user', text: input, isInterim: true }]);
+              lastInterimResultRef.current = input; // Update last interim result sent
+            }
           }
         } catch (error) {
           setError('Failed to send message.');
@@ -60,7 +66,7 @@ const LeftPanel: React.FC = () => {
   const handleInterimUpdates = useCallback(
     (interimResult: string) => {
       console.log('Interim Speech Update:', interimResult); // Debug Log
-      handleChat(interimResult, false); // Send interim as non-final
+      handleChat(interimResult, false); // Send interim results as non-final
     },
     [handleChat]
   );
@@ -116,7 +122,7 @@ const LeftPanel: React.FC = () => {
             eraseMemory={clearChatHistory}
           />
 
-          {/* Ensure Test Speech Recognition Component is rendered */}
+          {/* Test Speech Recognition Component */}
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
             onSpeechResult={handleSpeechResults}

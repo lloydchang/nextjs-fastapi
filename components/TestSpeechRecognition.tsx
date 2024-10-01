@@ -1,55 +1,33 @@
 // components/TestSpeechRecognition.tsx
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import styles from '../styles/TestSpeechRecognition.module.css';
 
 interface TestSpeechRecognitionProps {
   isMicOn: boolean; // Prop to control mic state
   onSpeechResult: (finalResults: string) => void; // Callback for final results
-  onInterimUpdate: (interimResult: string) => void; // Callback for interim results (real-time to chatbots)
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   isMicOn,
   onSpeechResult,
-  onInterimUpdate,
 }) => {
-  const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
-  const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
+  const [results, setResults] = useState<string>(''); // Stores final results
+  const [interimResults, setInterimResults] = useState<string>(''); // Stores interim results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
-  const prevInterimResult = useRef<string>(''); // Stores the previous interim result to detect duplicates
-  const sentInterimSet = useRef<Set<string>>(new Set()); // Tracks sent interim sentences to prevent duplication
 
-  // Helper function to split results into logical chunks
-  const getUniqueInterimChunks = (text: string) => {
-    const chunks = text.trim().split(/\s+/).filter(chunk => chunk.length > 0);
-    return chunks.filter(chunk => !sentInterimSet.current.has(chunk));
-  };
-
-  const handleResult = useCallback((newResults: string, final: boolean) => {
-    const uniqueChunks = getUniqueInterimChunks(newResults);
-    const newInterimResult = uniqueChunks.join(' ');
-
-    // Send interim updates if unique
-    if (newInterimResult && newInterimResult !== prevInterimResult.current) {
-      onInterimUpdate(newInterimResult); // Send interim updates to chatbots
-      prevInterimResult.current = newInterimResult;
-      uniqueChunks.forEach(chunk => sentInterimSet.current.add(chunk));
-    }
-
+  const handleResult = (newResults: string, final: boolean) => {
     if (final) {
       setResults(prev => `${prev} ${newResults}`.trim());
-      setInterimResults('');
-      sentInterimSet.current.clear(); // Clear sent interim tracking on final result
+      setInterimResults(''); // Clear interim results when final is received
       onSpeechResult(newResults.trim()); // Send final result to parent
-      prevInterimResult.current = ''; // Reset previous interim tracker
     } else {
-      setInterimResults(newResults); // Store interim results for display
+      setInterimResults(prev => `${prev} ${newResults}`.trim()); // Update interim results for display
     }
-  }, [onInterimUpdate, onSpeechResult]);
+  };
 
-  const { startListening, stopListening } = useSpeechRecognition(handleResult, onInterimUpdate);
+  const { startListening, stopListening } = useSpeechRecognition(handleResult, setInterimResults);
 
   useEffect(() => {
     if (isMicOn) {
@@ -58,8 +36,6 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
     } else {
       stopListening();
       setIsListening(false);
-      sentInterimSet.current.clear(); // Clear sent interim tracking
-      prevInterimResult.current = ''; // Reset previous interim tracker
     }
   }, [isMicOn, startListening, stopListening]);
 
