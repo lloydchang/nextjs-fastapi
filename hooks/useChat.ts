@@ -1,5 +1,4 @@
 // hooks/useChat.ts
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
 
@@ -16,6 +15,7 @@ interface UseChatProps {
 export const useChat = ({ isMemOn }: UseChatProps) => {
   const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
   const [messages, setMessages] = useState<Message[]>([]);
+  const [currentContext, setCurrentContext] = useState<number[] | null>(null); // Track context state
 
   // Ref to hold the latest messages for context
   const messagesRef = useRef<Message[]>([]);
@@ -69,11 +69,16 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
       try {
         console.log('Sending prompt to chatbot service:', input);
-        
-        // Send only the prompt to the chatbot service
-        const reply = await sendMessageToChatbot(input); // Only pass the prompt
 
-        setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
+        // Use the context from the state
+        const reply = await sendMessageToChatbot(input, currentContext, (message, newContext) => {
+          // Update state with the new context and add message
+          setMessages((prev) => [...prev, { sender: 'bot', text: message }]);
+          setCurrentContext(newContext);
+        });
+
+        // Handle the non-streaming response mode
+        if (reply) setMessages((prev) => [...prev, { sender: 'bot', text: reply }]);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
@@ -89,12 +94,13 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         ]);
       }
     },
-    []
+    [currentContext]
   );
 
   // Clear Chat History
   const clearChatHistory = useCallback(() => {
     setMessages([]);
+    setCurrentContext(null);
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
       console.log('Chat history cleared from memory.');
