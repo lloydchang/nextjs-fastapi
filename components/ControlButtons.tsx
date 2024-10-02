@@ -33,9 +33,9 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   // On : Off button text
   const micButtonText = isMicOn ? '🎤' : '🎤';
   const eraseButtonText = '🗑️';
-  const memButtonText = isMemOn ? '🧠' : '🧠';
   const camButtonText = isCamOn ? '📷' : '📷';
   const pipButtonText = isPipOn ? '📹' : '📹';
+  const memButtonText = isMemOn ? '🧠' : '🧠';
 
   return (
     <div className={styles.container}>
@@ -61,17 +61,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {eraseButtonText}
       </button>
 
-      {/* Memory Button */}
-      <button
-        type="button"
-        onClick={toggleMem}
-        className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
-        aria-pressed={isMemOn}
-        aria-label={memButtonText}
-      >
-        {memButtonText}
-      </button>
-
       {/* Camera Button */}
       <button
         type="button"
@@ -92,6 +81,17 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={pipButtonText}
       >
         {pipButtonText}
+      </button>
+
+      {/* Memory Button */}
+      <button
+        type="button"
+        onClick={toggleMem}
+        className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
+        aria-pressed={isMemOn}
+        aria-label={memButtonText}
+      >
+        {memButtonText}
       </button>
 
     </div>
