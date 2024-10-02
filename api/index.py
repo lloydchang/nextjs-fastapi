@@ -123,7 +123,7 @@ else:
         cache_manager.save_cache(data['description_vector'], description_embeddings_cache)
         logger.info("Description embeddings encoded and cached successfully.")
 
-# Define a "Hello World" Endpoint for Testing
+# Define a "Hello, World!" Endpoint for Testing
 @app.get("/api/py/hello")
 async def hello():
     return {"message": "Hello, World!"}
