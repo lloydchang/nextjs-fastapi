@@ -33,7 +33,6 @@ const MiddlePanel: React.FC = () => {
   const [query, setQuery] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorDetails, setErrorDetails] = useState<string>('');
@@ -48,25 +47,38 @@ const MiddlePanel: React.FC = () => {
     return sdgKeywords[randomIndex];
   };
 
+  // Initial greeting fetch
+  useEffect(() => {
+    const fetchGreeting = axios.get('http://127.0.0.1:8000/api/py/hello');
+    fetchGreeting.then((greetingResponse) => {
+      if (greetingResponse.data && greetingResponse.data.message) {
+        setGreeting(greetingResponse.data.message);
+      } else {
+        setGreeting("Unknown response format");
+      }
+    }).catch((err) => {
+      setGreeting("Failed to load greeting.");
+      setErrorDetails(err.message);
+      addLog("Failed to fetch greeting: " + err.message);
+    });
+  }, []);
+
+  // Effect for handling the initial keyword setup and search
   useEffect(() => {
     if (initialKeyword.current === "") {
       initialKeyword.current = determineInitialKeyword();
       setQuery(initialKeyword.current);
-      setSearchInitiated(true);
-      addLog(`Initial keyword set: ${initialKeyword.current}`);
+      performSearch(initialKeyword.current); // Trigger initial search
     }
+  }, []);
 
-    const fetchGreeting = axios.get('http://127.0.0.1:8000/api/py/hello');
-    const fetchSearchResults = axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(initialKeyword.current)}`);
+  // Separate function for performing a search
+  const performSearch = (searchQuery: string) => {
+    setLoading(true);
+    setError(null);
 
-    Promise.all([fetchGreeting, fetchSearchResults])
-      .then(([greetingResponse, searchResponse]) => {
-        if (greetingResponse.data && greetingResponse.data.message) {
-          setGreeting(greetingResponse.data.message);
-        } else {
-          setGreeting("Unknown response format");
-        }
-
+    axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(searchQuery)}`)
+      .then((searchResponse) => {
         if (searchResponse.status !== 200) {
           addLog(`Search failed. Status: ${searchResponse.status} - ${searchResponse.statusText}`);
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
@@ -80,6 +92,8 @@ const MiddlePanel: React.FC = () => {
         if (data.length > 0) {
           setSelectedTalk(data[0]);
           addLog('For example: ' + data[0].title);
+        } else {
+          setSelectedTalk(null); // No talks found
         }
       })
       .catch((err) => {
@@ -90,7 +104,7 @@ const MiddlePanel: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  }, [setTalks]);
+  };
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -98,9 +112,8 @@ const MiddlePanel: React.FC = () => {
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      setSearchInitiated(true);
       addLog(`Manual search initiated with keyword: ${query}`);
-      setLoading(true);
+      performSearch(query); // Trigger search on Enter key
     }
   }, [query]);
 
@@ -139,13 +152,13 @@ const MiddlePanel: React.FC = () => {
           />
           <button
             onClick={() => {
-              setSearchInitiated(true);
-              setLoading(true);
+              addLog(`Manual search initiated with keyword: ${query}`);
+              performSearch(query);
             }}
             className={`${styles.button} ${styles.searchButton}`}
             disabled={loading}
           >
-            {loading ? "Search" : "Search"}
+            {"Search"}
           </button>
           {selectedTalk && (
             <>
@@ -183,7 +196,7 @@ const MiddlePanel: React.FC = () => {
         </div>
       )}
 
-      {searchInitiated && (
+      {talks.length > 0 && (
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
             {talks.map((talk, index) => (

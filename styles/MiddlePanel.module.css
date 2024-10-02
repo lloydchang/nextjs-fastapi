@@ -20,7 +20,7 @@
 }
 
 .greetingContainer {
-  width: 20px; /* Fixed width */
+  width: 30px; /* Fixed width */
   height: 60px; /* Fixed height */
   display: flex;
   align-items: center;
