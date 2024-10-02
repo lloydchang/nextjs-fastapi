@@ -5,7 +5,7 @@ import styles from '../styles/ChatInput.module.css';
 interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
-  handleChat: (isManual: boolean) => void;
+  handleChat: (input: string) => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
@@ -13,16 +13,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !isSendingRef.current) {
+      if (chatInput.trim() === '') return; // Do not send empty messages
       isSendingRef.current = true;
-      handleChat(true);
+      handleChat(chatInput);
+      setChatInput(''); // Clear input immediately
       setTimeout(() => (isSendingRef.current = false), 500); // Reset after 500ms
     }
   };
 
   const handleButtonClick = () => {
-    if (!isSendingRef.current) {
+    if (!isSendingRef.current && chatInput.trim() !== '') {
       isSendingRef.current = true;
-      handleChat(true);
+      handleChat(chatInput);
+      setChatInput(''); // Clear input immediately
       setTimeout(() => (isSendingRef.current = false), 500); // Reset after 500ms
     }
   };
