@@ -6,25 +6,43 @@ Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insigh
 [Full description as provided earlier]
 """
 
-# Import necessary modules using importlib for lazy loading
-import importlib
+# Import necessary modules from FastAPI and other libraries
 from fastapi import FastAPI, Query
+from typing import List, Dict
+import pandas as pd
+import numpy as np
+from sentence_transformers import SentenceTransformer, util
+import torch
+from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import warnings
 import os
 import pickle
 
-# Lazy import function
-def lazy_load(module_name):
-    return importlib.import_module(module_name)
+# Import custom modules
+from python.search import semantic_search
+from python.transcript import router as transcript_router  # Import transcript router
+from python.data_loader import load_dataset
+from python.embedding_utils import encode_descriptions, encode_sdg_keywords
+from python.sdg_manager import get_sdg_keywords
+from python.sdg_utils import compute_sdg_tags
+from python.model import load_model
+from python.logger import logger
+from python.cache_manager import save_cache
 
-# Import custom modules using lazy load
-transcript_router = lazy_load("python.transcript").router  # Import transcript router lazily
+# Suppress FutureWarnings from transformers and torch libraries
+logger.info("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
+warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.tokenization_utils_base")
+warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*", module="torch.storage")
 
 # Create a FastAPI app instance with customized documentation paths
+logger.info("Step 2: Creating a FastAPI app instance with customized documentation paths.")
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
 # Enable CORS middleware to handle cross-origin requests
+logger.info("Step 3: Enabling CORS middleware to allow cross-origin requests from any origin.")
 app.add_middleware(
-    lazy_load("fastapi.middleware.cors").CORSMiddleware,
+    CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # Update with specific origins in production
     allow_credentials=True,
     allow_methods=["*"],
@@ -34,105 +52,114 @@ app.add_middleware(
 # Include the transcript router
 app.include_router(transcript_router, prefix="/api/py", tags=["Transcript"])
 
-# Check if the critical cache file exists and set a global flag
+# Load the TEDx Dataset with caching mechanism using data_loader.py
+file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+cache_file_path = "./python/cache/tedx_dataset.pkl"
+data = load_dataset(file_path, cache_file_path)
+
+# Load the Sentence-BERT model for Semantic Search using model.py
+logger.info("Step 5: Loading the Sentence-BERT model for semantic search.")
+model = load_model('paraphrase-MiniLM-L6-v2')
+
+# Define the Initial SDG Keywords for All 17 SDGs using sdg_manager.py
+logger.info("Step 6: Importing the predefined list of SDG keywords for all 17 SDGs.")
+sdg_keywords = get_sdg_keywords()
+sdg_names = list(sdg_keywords.keys())
+sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
+
+# Precompute or Load Cached SDG Keyword Embeddings using cache_manager.py and embedding_utils.py
+logger.info("Step 7: Precomputing or loading cached SDG keyword embeddings.")
 sdg_embeddings_cache = "./python/cache/sdg_embeddings.pkl"
-sdg_embeddings_cache_exists = os.path.exists(sdg_embeddings_cache)
 
-# If the cache exists, skip the following functions:
-model = None
-sdg_keywords = None
-sdg_names = None
-sdg_embeddings = None
-
-if not sdg_embeddings_cache_exists:
-    # Lazy load the model only if the cache file is not present
-    def get_model():
-        model_module = lazy_load("python.model")
-        return model_module.load_model('paraphrase-MiniLM-L6-v2')
-
-    model = get_model()
-
-    # Lazy load SDG keywords only if the cache file is not present
-    def get_sdg_keywords():
-        sdg_module = lazy_load("python.sdg_manager")
-        return sdg_module.get_sdg_keywords()
-
-    sdg_keywords = get_sdg_keywords()
-    sdg_names = list(sdg_keywords.keys())
-    sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
-
-    # Compute SDG keyword embeddings only if the cache file is not present
-    def get_sdg_embeddings():
-        embedding_utils = lazy_load("python.embedding_utils")
-        return embedding_utils.encode_sdg_keywords(sdg_keyword_list, model)
-
-    sdg_embeddings = get_sdg_embeddings()
+if os.path.exists(sdg_embeddings_cache):
+    logger.info("Step 7.1: Loading cached SDG keyword embeddings.")
+    try:
+        with open(sdg_embeddings_cache, 'rb') as cache_file:
+            sdg_embeddings = pickle.load(cache_file)
+        logger.info("Cached SDG keyword embeddings loaded successfully.")
+    except Exception as e:
+        logger.error(f"Error loading cached SDG keyword embeddings: {e}")
+        sdg_embeddings = None
 else:
-    print(f"Cache file '{sdg_embeddings_cache}' found. Skipping model and SDG keyword initialization.")
-    with open(sdg_embeddings_cache, 'rb') as cache_file:
-        sdg_embeddings = pickle.load(cache_file)
-
-# Function to load dataset with caching mechanism
-def get_dataset():
-    cache_file_path = "./python/cache/tedx_dataset.pkl"
-    if os.path.exists(cache_file_path):
-        print("Dataset cache found. Skipping dataset loading.")
-        with open(cache_file_path, 'rb') as cache_file:
-            return pickle.load(cache_file)
+    logger.info("Step 7.2: Encoding SDG keywords as a matrix.")
+    if model is not None:
+        sdg_embeddings = encode_sdg_keywords(sdg_keyword_list, model)
+        if sdg_embeddings is not None:
+            try:
+                with open(sdg_embeddings_cache, 'wb') as cache_file:
+                    pickle.dump(sdg_embeddings, cache_file)
+                logger.info("SDG keyword embeddings encoded and cached successfully.")
+            except Exception as e:
+                logger.error(f"Error saving SDG keyword embeddings to cache: {e}")
+        else:
+            logger.error("Failed to encode SDG keywords.")
     else:
-        data_loader = lazy_load("python.data_loader")
-        return data_loader.load_dataset(
-            "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv", 
-            cache_file_path
-        )
+        logger.error("Model is not available. Cannot encode SDG keywords.")
+        sdg_embeddings = None
 
-data = get_dataset()
+# Precompute or Load Cached SDG Tags for Each TEDx Talk using sdg_utils.py
+logger.info("Step 8: Precomputing or loading cached SDG tags for TEDx talks.")
+sdg_tags_cache = "./python/cache/sdg_tags.pkl"
 
-# Function to compute or load SDG tags lazily
-def get_sdg_tags():
-    cache_file_path = "./python/cache/sdg_tags.pkl"
-    if os.path.exists(cache_file_path):
-        print("SDG tags cache found. Skipping SDG tag computation.")
-        with open(cache_file_path, 'rb') as cache_file:
-            return pickle.load(cache_file)
-    else:
-        if not data.empty and 'description' in data.columns and sdg_embeddings is not None:
+if os.path.exists(sdg_tags_cache):
+    logger.info("Step 8.1: Loading cached SDG tags.")
+    try:
+        with open(sdg_tags_cache, 'rb') as cache_file:
+            data['sdg_tags'] = pickle.load(cache_file)
+        logger.info("Cached SDG tags loaded successfully.")
+    except Exception as e:
+        logger.error(f"Error loading cached SDG tags: {e}")
+else:
+    logger.info("Step 8.2: Computing SDG tags.")
+    if not data.empty and 'description' in data.columns and sdg_embeddings is not None:
+        try:
             descriptions = data['description'].tolist()
-            description_vectors = encode_descriptions(descriptions)
+            description_vectors = encode_descriptions(descriptions, model)
+            # Convert to torch tensors for cosine similarity computation
             description_vectors_tensor = torch.tensor(description_vectors)
             sdg_embeddings_tensor = torch.tensor(sdg_embeddings)
             cosine_similarities = util.pytorch_cos_sim(description_vectors_tensor, sdg_embeddings_tensor)
-            sdg_utils = lazy_load("python.sdg_utils")
-            data['sdg_tags'] = sdg_utils.compute_sdg_tags(cosine_similarities, sdg_names)
-            cache_manager = lazy_load("python.cache_manager")
-            cache_manager.save_cache(data['sdg_tags'], cache_file_path)
-            return data['sdg_tags']
-        else:
-            return None
 
-sdg_tags = get_sdg_tags()
+            # Compute SDG tags using the utility function
+            data['sdg_tags'] = compute_sdg_tags(cosine_similarities, sdg_names)
 
-# Function to load description embeddings with caching
-def get_description_embeddings():
-    cache_file_path = "./python/cache/description_embeddings.pkl"
-    if os.path.exists(cache_file_path):
-        print("Description embeddings cache found. Skipping encoding.")
-        with open(cache_file_path, 'rb') as cache_file:
-            return pickle.load(cache_file)
+            # Cache the computed SDG tags
+            save_cache(data['sdg_tags'], sdg_tags_cache)
+            logger.info("SDG tags computed and cached successfully.")
+        except Exception as e:
+            logger.error(f"Step 8.3: Error computing SDG tags: {e}")
     else:
-        if model is not None and not data.empty and 'description' in data.columns:
-            embedding_utils = lazy_load("python.embedding_utils")
-            descriptions = data['description'].tolist()
-            encoded_descriptions = embedding_utils.encode_descriptions(descriptions, model)
-            cache_manager = lazy_load("python.cache_manager")
-            cache_manager.save_cache(encoded_descriptions, cache_file_path)
-            return encoded_descriptions
-        else:
-            return None
+        logger.error("Insufficient data or SDG embeddings to compute SDG tags.")
 
-description_embeddings = get_description_embeddings()
+# Precompute or Load Cached Embeddings for Each Description using embedding_utils.py and cache_manager.py
+logger.info("Step 9: Precomputing or loading cached embeddings for each description.")
+description_embeddings_cache = "./python/cache/description_embeddings.pkl"
+
+if os.path.exists(description_embeddings_cache):
+    logger.info("Step 9.1: Loading cached description embeddings.")
+    try:
+        with open(description_embeddings_cache, 'rb') as cache_file:
+            data['description_vector'] = pickle.load(cache_file)
+        logger.info("Cached description embeddings loaded successfully.")
+    except Exception as e:
+        logger.error(f"Error loading cached description embeddings: {e}")
+else:
+    logger.info("Step 9.2: Encoding descriptions.")
+    if model is not None and not data.empty and 'description' in data.columns:
+        try:
+            descriptions = data['description'].tolist()
+            encoded_descriptions = encode_descriptions(descriptions, model)
+            data['description_vector'] = encoded_descriptions
+            # Cache the encoded descriptions
+            save_cache(data['description_vector'], description_embeddings_cache)
+            logger.info("Description embeddings encoded and cached successfully.")
+        except Exception as e:
+            logger.error(f"Step 9.3: Error encoding descriptions: {e}")
+    else:
+        logger.error("Model is not available or data is insufficient to encode descriptions.")
 
 # Define a "Hello World" Endpoint for Testing
+logger.info("Step 11: Defining a 'Hello World' endpoint.")
 @app.get("/api/py/helloFastApi")
 async def hello_fast_api():
     """
@@ -141,20 +168,20 @@ async def hello_fast_api():
     return {"message": "Hello from FastAPI"}
 
 # Create a Search Endpoint for TEDx Talks Using Asynchronous Search
+logger.info("Step 12: Creating a Search endpoint for TEDx talks.")
 @app.get("/api/py/search")
-async def search(query: str = Query(..., min_length=1)) -> list[dict]:
+async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     """
     Endpoint to perform semantic search on TEDx talks based on a query.
-
+    
     Args:
         query (str): The search query provided by the user.
-
+    
     Returns:
-        list[dict]: A list of TEDx talks matching the query with relevant metadata.
+        List[Dict]: A list of TEDx talks matching the query with relevant metadata.
     """
-    semantic_search = lazy_load("python.search").semantic_search
     try:
         return await semantic_search(query, data, model, sdg_embeddings)
     except Exception as e:
-        print(f"Error in search endpoint: {e}")
+        logger.error(f"Error in search endpoint: {e}")
         return [{"error": str(e)}]
