@@ -144,11 +144,10 @@ const MiddlePanel: React.FC = () => {
 
   return (
     <div className={styles.middlePanel}>
-      {/* Display the greeting message */}
-      <h1>{greeting}</h1>
-
       {/* Search Section */}
       <div className={styles.searchContainer}>
+        {/* Display the greeting message */}
+        <h1>{greeting}</h1>
         <input
           type="text"
           placeholder="Enter a keyword"
