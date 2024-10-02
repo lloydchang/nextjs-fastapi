@@ -186,19 +186,18 @@ const MiddlePanel: React.FC = () => {
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
             {talks.map((talk, index) => (
-              <div key={index} className={styles.resultItem}>
+              <div
+                key={index}
+                className={styles.resultItem}
+                onClick={() => {
+                  setSelectedTalk(talk);
+                  setTranscript('');
+                  setTranscriptStatus('');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
                 <h3>
-                  <a
-                    href="#"
-                    className={styles.resultLink}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setSelectedTalk(talk);
-                      setTranscript(''); // Reset transcript when selecting a new talk
-                      setTranscriptStatus('');
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                  >
+                  <a href="#" className={styles.resultLink}>
                     {talk.title}
                   </a>
                   <p className={styles.sdgTags}>
