@@ -1,4 +1,5 @@
 // hooks/useMedia.ts
+
 import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface MediaState {
@@ -70,6 +71,7 @@ export const useMedia = (): UseMediaReturn => {
   }, []);
 
   const toggleMic = useCallback(() => {
+    console.log('Toggling Mic. Current State:', mediaState.isMicOn);
     mediaState.isMicOn ? stopMic() : startMic();
   }, [mediaState.isMicOn]);
 
@@ -104,11 +106,9 @@ export const useMedia = (): UseMediaReturn => {
   const togglePip = useCallback(async () => {
     if (videoRef.current) {
       try {
-        // Start the camera if it is off
         if (!mediaState.isCamOn) {
           await startCam();
         }
-
         if (!isPipOnRef.current) {
           await videoRef.current.requestPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: true }));
