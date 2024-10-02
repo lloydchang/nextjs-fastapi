@@ -123,10 +123,10 @@ else:
         cache_manager.save_cache(data['description_vector'], description_embeddings_cache)
         logger.info("Description embeddings encoded and cached successfully.")
 
-# Define a "Hello World" Endpoint for Testing
-@app.get("/api/py/helloFastApi")
-async def hello_fast_api():
-    return {"message": "Hello from FastAPI"}
+# Define a "Hello, World" Endpoint for Testing
+@app.get("/api/py/hello")
+async def hello():
+    return {"message": "Hello, World!"}
 
 # Create a Search Endpoint for TEDx Talks Using Asynchronous Search lazily
 @app.get("/api/py/search")
