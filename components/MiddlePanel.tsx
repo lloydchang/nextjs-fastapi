@@ -112,7 +112,12 @@ const MiddlePanel: React.FC = () => {
     }
   }, [handleSearch]);
 
-  const generateEmbedUrl = useCallback((url: string): string => {
+  const generateEmbedUrl = useCallback((url: string | undefined): string => {
+    if (!url || typeof url !== "string") {
+      // If the URL is undefined or not a string, return a fallback value (could be an empty string or the original URL)
+      return url ?? "";
+    }
+
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
     return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
