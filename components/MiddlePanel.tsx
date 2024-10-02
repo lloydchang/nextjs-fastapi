@@ -18,6 +18,12 @@ type Talk = {
   sdg_tags: string[];
 };
 
+type SdgMetadata = {
+  sdg: string;
+  description: string;
+  target: string;
+};
+
 // List of SDG keywords
 const sdgKeywords = [
   'poverty', 'hunger', 'health', 'education', 'gender',
@@ -32,12 +38,15 @@ const MiddlePanel: React.FC = () => {
   const initialKeyword = useRef<string>(""); // No initial value
   const [query, setQuery] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loadingGreeting, setLoadingGreeting] = useState<boolean>(true); // Separate loading state for greeting
+  const [loadingMetadata, setLoadingMetadata] = useState<boolean>(true); // Separate loading state for metadata
+  const [searchLoading, setSearchLoading] = useState<boolean>(false); // Separate loading state for search
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorDetails, setErrorDetails] = useState<string>('');
-  const [greeting, setGreeting] = useState<string>("Fetching greeting...");
+  const [greeting, setGreeting] = useState<string>(""); // Greeting will be set once fetched
+  const [metadata, setMetadata] = useState<SdgMetadata[]>([]); // State for additional fetch
 
   // Fetch greeting from /api/py/hello
   useEffect(() => {
@@ -51,11 +60,33 @@ const MiddlePanel: React.FC = () => {
         }
       } catch (error) {
         setGreeting("Failed to fetch greeting.");
+      } finally {
+        setLoadingGreeting(false); // Set loading state for greeting to false
       }
     };
 
     fetchGreeting();
   }, []);
+
+  // Fetch SDG metadata from /api/py/sdg_metadata independently
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/py/sdg_metadata');
+        if (response.status === 200 && Array.isArray(response.data)) {
+          setMetadata(response.data); // Set fetched SDG metadata
+        } else {
+          setMetadata([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch SDG metadata:", error);
+      } finally {
+        setLoadingMetadata(false); // Set loading state for metadata to false
+      }
+    };
+
+    fetchMetadata();
+  }, []); // Independent fetch effect
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
@@ -69,7 +100,7 @@ const MiddlePanel: React.FC = () => {
   const handleSearch = useCallback(async () => {
     setError(null);
     setTalks([]);
-    setLoading(true);
+    setSearchLoading(true);
     setSelectedTalk(null);
     setErrorDetails('');
 
@@ -95,7 +126,7 @@ const MiddlePanel: React.FC = () => {
       setError("Failed to fetch search results. Please check if the backend server is running.");
       setErrorDetails(err.message);
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   }, [query, setTalks]);
 
@@ -124,30 +155,12 @@ const MiddlePanel: React.FC = () => {
     }
   }, [handleSearch]);
 
-  const generateEmbedUrl = useCallback((url: string | undefined): string => {
-    if (!url || typeof url !== "string") {
-      return url ?? "";
-    }
-
-    const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
-    const match = url.match(tedRegex);
-    return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
-  }, []);
-
-  const openTranscriptInNewTab = () => {
-    if (selectedTalk) {
-      const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
-      window.open(transcriptUrl, '_blank');
-      addLog(`Opened transcript in a new tab: ${transcriptUrl}`);
-    }
-  };
-
   return (
     <div className={styles.middlePanel}>
       {/* Search Section */}
       <div className={styles.searchContainer}>
         {/* Display the greeting message */}
-        <h1>{greeting}</h1>
+        <h1>{loadingGreeting ? "Fetching Greeting..." : greeting}</h1>
         <input
           type="text"
           placeholder="Enter a keyword"
@@ -159,70 +172,36 @@ const MiddlePanel: React.FC = () => {
         <button
           onClick={handleSearch}
           className={`${styles.button} ${styles.searchButton}`}
-          disabled={loading}
+          disabled={searchLoading}
         >
-          {loading ? "Searching…" : "Search"}
+          {searchLoading ? "Searching…" : "Search"}
         </button>
-        {selectedTalk && (
-          <>
-            <button
-              onClick={openTranscriptInNewTab} // Open transcript URL in a new tab
-              className={`${styles.button} ${styles.tedButton}`}
-            >
-              Transcript
-            </button>
-          </>
-        )}
-        {loading && (
-          <div className={styles.loadingSpinnerContainer}>
-            <Image
-              src={SDGWheel}
-              alt="Loading..."
-              width={24}
-              height={24}
-              className={styles.loadingSpinner}
-            />
-          </div>
+      </div>
+
+      {/* Independent SDG Metadata Section */}
+      <div className={styles.sdgMetadata}>
+        {loadingMetadata ? (
+          <p>Fetching SDG Metadata...</p>
+        ) : (
+          <ul>
+            {metadata.map((item, index) => (
+              <li key={index}>
+                <strong>{item.sdg}</strong>: {item.description} (Target: {item.target})
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 
-      {/* Now Playing Section */}
-      {selectedTalk && (
-        <div className={styles.nowPlaying}>
-          <iframe
-            src={generateEmbedUrl(selectedTalk.url)}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            className={styles.videoFrame}
-          />
-        </div>
-      )}
-
       {/* Search Results Section */}
       {searchInitiated && (
-        <div className={styles.scrollableContainer}>
-          <div className={styles.resultsContainer}>
-            {talks.map((talk, index) => (
-              <div
-                key={index}
-                className={styles.resultItem}
-                onClick={() => {
-                  setSelectedTalk(talk);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              >
-                <h3>
-                  <a href="#" className={styles.resultLink}>
-                    {talk.title}
-                  </a>
-                  <p className={styles.sdgTags}>
-                    {talk.sdg_tags && talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
-                  </p>
-                </h3>
-              </div>
-            ))}
-          </div>
+        <div className={styles.resultsContainer}>
+          {talks.map((talk, index) => (
+            <div key={index} className={styles.resultItem}>
+              <h3>{talk.title}</h3>
+              <p>{talk.sdg_tags.join(', ')}</p>
+            </div>
+          ))}
         </div>
       )}
 
