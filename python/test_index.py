@@ -1,4 +1,4 @@
-# api/test_index.py
+# python/test_index.py
 
 import pytest
 from httpx import AsyncClient
@@ -18,18 +18,18 @@ async def client():
 
 @pytest.mark.asyncio
 async def test_hello_fast_api(client):
-    response = await client.get("/api/py/helloFastApi")
+    response = await client.get("/python/py/helloFastApi")
     assert response.status_code == 200
     assert response.json() == {"message": "Hello from FastAPI!"}
 
 @pytest.mark.asyncio
 async def test_search_endpoint(client):
-    response = await client.get("/api/py/search/?query=climate+change")
+    response = await client.get("/python/py/search/?query=climate+change")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 @pytest.mark.asyncio
 async def test_transcript_app_mount(client):
-    response = await client.get("/api/py/transcript/get-transcript/?url=https://example.com")
+    response = await client.get("/python/py/transcript/get-transcript/?url=https://example.com")
     assert response.status_code == 200
     assert "status" in response.json()

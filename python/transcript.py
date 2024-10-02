@@ -1,8 +1,8 @@
-# api/transcript.py
+# python/transcript.py
 
 from fastapi import APIRouter, HTTPException, Query, Response
 import httpx  # Use httpx to simulate curl-like behavior
-from api.logger import logger
+from python.logger import logger
 
 router = APIRouter()
 

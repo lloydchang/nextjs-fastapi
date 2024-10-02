@@ -1,9 +1,9 @@
-# api/transcript_utils.py
+# python/transcript_utils.py
 
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional, Tuple
-from api.logger import logger
+from python/logger import logger
 
 # Define headers to simulate a browser request
 HEADERS = {

@@ -1,8 +1,8 @@
-# api/sdg_utils.py
+# python/sdg_utils.py
 
 import torch
 from typing import List
-from api.logger import logger  # Import the centralized logger
+from python.logger import logger  # Import the centralized logger
 
 def compute_sdg_tags(cosine_similarities: torch.Tensor, sdg_names: List[str]) -> List[List[str]]:
     """
