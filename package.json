@@ -3,10 +3,10 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip3 install -r requirements.txt.example 1>&2 2>/dev/null; python3 -m uvicorn api.index:app --reload",
+    "fastapi-dev": "python3 -m uvicorn api.index:app --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
-    "build": "next build",
+    "build": "next build; pip3 install -r requirements.txt.example 1>&2 2>/dev/null",
     "start": "next start",
     "lint": "next lint"
   },
