@@ -8,8 +8,8 @@ import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import { useChatContext } from '../context/ChatContext';
-import DebugPanel from './DebugPanel'; // Import DebugPanel
-import axios from 'axios'; // Import axios
+import DebugPanel from './DebugPanel';
+import axios from 'axios';
 
 // TypeScript Types
 type Talk = {
@@ -35,12 +35,30 @@ const MiddlePanel: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
-  const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
-  const [errorDetails, setErrorDetails] = useState<string>(''); // State for error details
+  const [logs, setLogs] = useState<string[]>([]);
+  const [errorDetails, setErrorDetails] = useState<string>('');
+  const [greeting, setGreeting] = useState<string>("");
 
-  // Helper function to add logs
+  // Fetch greeting from /api/py/helloFastApi
+  useEffect(() => {
+    const fetchGreeting = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/py/helloFastApi');
+        if (response.data && response.data.message) {
+          setGreeting(response.data.message); // Use the `message` field from the response
+        } else {
+          setGreeting("Unknown response format");
+        }
+      } catch (error) {
+        setGreeting("Failed to fetch greeting.");
+      }
+    };
+
+    fetchGreeting();
+  }, []);
+
   const addLog = (message: string) => {
-    setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
+    setLogs((prevLogs) => [...prevLogs, message]);
   };
 
   const determineInitialKeyword = () => {
@@ -108,7 +126,6 @@ const MiddlePanel: React.FC = () => {
 
   const generateEmbedUrl = useCallback((url: string | undefined): string => {
     if (!url || typeof url !== "string") {
-      // If the URL is undefined or not a string, return a fallback value (could be an empty string or the original URL)
       return url ?? "";
     }
 
@@ -127,6 +144,9 @@ const MiddlePanel: React.FC = () => {
 
   return (
     <div className={styles.middlePanel}>
+      {/* Display the greeting message */}
+      <h1>{greeting}</h1>
+
       {/* Search Section */}
       <div className={styles.searchContainer}>
         <input
