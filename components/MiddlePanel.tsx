@@ -37,7 +37,7 @@ const MiddlePanel: React.FC = () => {
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorDetails, setErrorDetails] = useState<string>('');
-  const [greeting, setGreeting] = useState<string>("");
+  const [greeting, setGreeting] = useState<string>("Fetching greeting...");
 
   // Fetch greeting from /api/py/hello
   useEffect(() => {
