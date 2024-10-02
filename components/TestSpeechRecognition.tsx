@@ -6,7 +6,7 @@ interface TestSpeechRecognitionProps {
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, onSpeechResult }) => {
-  const [speech, setSpeech] = useState<string>('');
+  const [transcript, setTranscript] = useState<string>('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const resultsCacheRef = useRef<SpeechRecognitionResult[]>([]);
   const isRecognitionActiveRef = useRef<boolean>(false);  // Flag to track recognition state
@@ -32,7 +32,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
 
       recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
         resultsCacheRef.current = Array.from(event.results);
-        updateSpeech();
+        updateTranscript();
       };
 
       recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -61,24 +61,24 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
     }, 100);  // Add a slight delay (100ms) to avoid transient state errors
   };
 
-  const updateSpeech = () => {
-    let interimSpeech = '';
-    let finalSpeech = '';
+  const updateTranscript = () => {
+    let interimTranscript = '';
+    let finalTranscript = '';
 
     for (let i = 0; i < resultsCacheRef.current.length; ++i) {
       if (resultsCacheRef.current[i].isFinal) {
-        finalSpeech += resultsCacheRef.current[i][0].speech;
+        finalTranscript += resultsCacheRef.current[i][0].transcript;
       } else {
-        interimSpeech += resultsCacheRef.current[i][0].speech;
+        interimTranscript += resultsCacheRef.current[i][0].transcript;
       }
     }
 
-    setSpeech(interimSpeech);
+    setTranscript(interimTranscript);
 
-    if (finalSpeech) {
-      onSpeechResult(finalSpeech);
+    if (finalTranscript) {
+      onSpeechResult(finalTranscript);
       resultsCacheRef.current = resultsCacheRef.current.filter(result => !result.isFinal);
-      updateSpeech();
+      updateTranscript();
     }
   };
 
@@ -93,7 +93,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
   return (
     <div>
       <p><strong>{isMicOn ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
-      <p><strong>Interim Results:</strong> {speech}</p>
+      <p><strong>Interim Results:</strong> {transcript}</p>
     </div>
   );
 };
