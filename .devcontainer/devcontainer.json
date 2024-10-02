@@ -1,0 +1,55 @@
+{
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": "."
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "20",
+            "additionalVersions": "18"
+        },
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.12.7",
+            "installJupyterlab": "true",
+            "configureJupyterlabAllowOrigin": "*",
+            "useOryxIfAvailable": "false"
+        },
+        "ghcr.io/devcontainers/features/sshd:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "latest",
+            "ppa": "false"
+        },
+        "ghcr.io/devcontainers/features/git-lfs:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "version": "latest"
+        },
+    },
+    "overrideFeatureInstallOrder": [
+        "ghcr.io/devcontainers/features/common-utils",
+        "ghcr.io/devcontainers/features/git",
+        "ghcr.io/devcontainers/features/node",
+        "ghcr.io/devcontainers/features/python",
+        "ghcr.io/devcontainers/features/sshd",
+        "ghcr.io/devcontainers/features/git-lfs",
+        "ghcr.io/devcontainers/features/github-cli"
+    ],
+
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+
+    // Configure tool-specific properties.
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+            // Set *default* container specific settings.json values on container create.
+            "settings": {
+                "python.defaultInterpreterPath": "/home/codespace/.python/current/bin/python3",
+                "terminal.integrated.shell.linux": "/bin/zsh"
+            }
+        }
+    }
+}
