@@ -15,7 +15,7 @@ const VideoStream: React.FC<VideoStreamProps> = React.memo(({ isCamOn, videoRef 
       className={styles.video}
       autoPlay
       playsInline
-      muted
+      muted={!isCamOn}  // Mute the video if the camera is off
       style={{ display: isCamOn ? 'block' : 'none' }}
     />
   );
