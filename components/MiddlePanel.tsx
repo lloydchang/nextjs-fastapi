@@ -37,68 +37,20 @@ const MiddlePanel: React.FC = () => {
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorDetails, setErrorDetails] = useState<string>('');
-  const [greeting, setGreeting] = useState<string>("Fetching greeting...");
+  const [greeting, setGreeting] = useState<string>("Searching…");
 
-  // Fetch greeting from /api/py/hello
-  useEffect(() => {
-    const fetchGreeting = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/py/hello');
-        if (response.data && response.data.message) {
-          setGreeting(response.data.message); // Use the `message` field from the response
-        } else {
-          setGreeting("Unknown response format");
-        }
-      } catch (error) {
-        setGreeting("Failed to fetch greeting.");
-      }
-    };
-
-    fetchGreeting();
-  }, []);
-
+  // Function to add a log message
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
   };
 
+  // Function to determine the initial keyword randomly
   const determineInitialKeyword = () => {
     const randomIndex = Math.floor(Math.random() * sdgKeywords.length);
     return sdgKeywords[randomIndex];
   };
 
-  const handleSearch = useCallback(async () => {
-    setError(null);
-    setTalks([]);
-    setLoading(true);
-    setSelectedTalk(null);
-    setErrorDetails('');
-
-    addLog('Initiating Search...');
-    try {
-      const response = await axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
-      if (response.status !== 200) {
-        addLog(`Search failed. Status: ${response.status} - ${response.statusText}`);
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      let data: Talk[] = response.data;
-      data = data.sort(() => Math.random() - 0.5);
-
-      setTalks(data);
-      addLog('Search results retrieved: ' + data.length + ' talks found.');
-
-      if (data.length > 0) {
-        setSelectedTalk(data[0]);
-        addLog('For example: ' + data[0].title);
-      }
-    } catch (err) {
-      addLog("Failed to fetch search results.");
-      setError("Failed to fetch search results. Please check if the backend server is running.");
-      setErrorDetails(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [query, setTalks]);
-
+  // Fetch both greeting and search data in parallel
   useEffect(() => {
     if (initialKeyword.current === "") {
       initialKeyword.current = determineInitialKeyword();
@@ -106,13 +58,43 @@ const MiddlePanel: React.FC = () => {
       setSearchInitiated(true);
       addLog(`Initial keyword set: ${initialKeyword.current}`);
     }
-  }, []);
 
-  useEffect(() => {
-    if (searchInitiated) {
-      handleSearch();
-    }
-  }, [searchInitiated, handleSearch]);
+    // Execute both API calls in parallel
+    const fetchGreeting = axios.get('http://127.0.0.1:8000/api/py/hello');
+    const fetchSearchResults = axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(initialKeyword.current)}`);
+
+    Promise.all([fetchGreeting, fetchSearchResults])
+      .then(([greetingResponse, searchResponse]) => {
+        if (greetingResponse.data && greetingResponse.data.message) {
+          setGreeting(greetingResponse.data.message);
+        } else {
+          setGreeting("Unknown response format");
+        }
+
+        if (searchResponse.status !== 200) {
+          addLog(`Search failed. Status: ${searchResponse.status} - ${searchResponse.statusText}`);
+          throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
+        }
+
+        let data: Talk[] = searchResponse.data;
+        data = data.sort(() => Math.random() - 0.5);
+        setTalks(data);
+        addLog('Search results retrieved: ' + data.length + ' talks found.');
+
+        if (data.length > 0) {
+          setSelectedTalk(data[0]);
+          addLog('For example: ' + data[0].title);
+        }
+      })
+      .catch((err) => {
+        setError("Failed to fetch data. Please check if the backend server is running.");
+        setErrorDetails(err.message);
+        addLog("Failed to fetch data: " + err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [setTalks]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -120,9 +102,11 @@ const MiddlePanel: React.FC = () => {
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleSearch();
+      setSearchInitiated(true);
+      addLog(`Manual search initiated with keyword: ${query}`);
+      setLoading(true);
     }
-  }, [handleSearch]);
+  }, [query]);
 
   const generateEmbedUrl = useCallback((url: string | undefined): string => {
     if (!url || typeof url !== "string") {
@@ -157,7 +141,10 @@ const MiddlePanel: React.FC = () => {
           className={styles.searchInput}
         />
         <button
-          onClick={handleSearch}
+          onClick={() => {
+            setSearchInitiated(true);
+            setLoading(true);
+          }}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={loading}
         >
