@@ -41,9 +41,6 @@ const MiddlePanel: React.FC = () => {
   const [transcriptStatus, setTranscriptStatus] = useState<string>(''); // Track transcript scraping status
   const [transcript, setTranscript] = useState<string>(''); // Store retrieved transcript
 
-  const videoRef = useRef<HTMLIFrameElement>(null); // Ref to track video state
-  const rotationTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for rotation timeout
-
   // Helper function to add logs
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
@@ -63,8 +60,8 @@ const MiddlePanel: React.FC = () => {
     setErrorDetails('');
     setTranscript('');
     setTranscriptStatus('');
-    addLog('Initiating Search...');
 
+    addLog('Initiating Search...');
     try {
       const response = await axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(query)}`);
       if (response.status !== 200) {
@@ -105,38 +102,6 @@ const MiddlePanel: React.FC = () => {
     }
   }, [searchInitiated, handleSearch]);
 
-  // Handle rotation through search results if video is not playing
-  useEffect(() => {
-    const checkIfVideoPlaying = () => {
-      if (videoRef.current) {
-        const videoElement = videoRef.current.contentWindow?.document.querySelector('video');
-        if (!videoElement || videoElement.paused) {
-          addLog('Video is not playing. Rotating to next search result...');
-          rotateToNextTalk();
-        }
-      }
-    };
-
-    if (selectedTalk) {
-      rotationTimeout.current = setTimeout(checkIfVideoPlaying, 5000); // Check after 5 seconds
-    }
-
-    return () => {
-      if (rotationTimeout.current) {
-        clearTimeout(rotationTimeout.current);
-      }
-    };
-  }, [selectedTalk]);
-
-  const rotateToNextTalk = useCallback(() => {
-    if (talks.length > 0) {
-      const currentIndex = talks.findIndex((talk) => talk.url === selectedTalk?.url);
-      const nextIndex = (currentIndex + 1) % talks.length;
-      setSelectedTalk(talks[nextIndex]);
-      addLog(`Switched to talk: ${talks[nextIndex].title}`);
-    }
-  }, [talks, selectedTalk]);
-
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   }, []);
@@ -149,8 +114,10 @@ const MiddlePanel: React.FC = () => {
 
   const generateEmbedUrl = useCallback((url: string | undefined): string => {
     if (!url || typeof url !== "string") {
+      // If the URL is undefined or not a string, return a fallback value (could be an empty string or the original URL)
       return url ?? "";
     }
+
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
     return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
@@ -166,6 +133,7 @@ const MiddlePanel: React.FC = () => {
 
   return (
     <div className={styles.middlePanel}>
+      {/* Search Section */}
       <div className={styles.searchContainer}>
         <input
           type="text"
@@ -185,7 +153,7 @@ const MiddlePanel: React.FC = () => {
         {selectedTalk && (
           <>
             <button
-              onClick={openTranscriptInNewTab}
+              onClick={openTranscriptInNewTab} // Open transcript URL in a new tab
               className={`${styles.button} ${styles.tedButton}`}
             >
               Transcript
@@ -205,6 +173,7 @@ const MiddlePanel: React.FC = () => {
         )}
       </div>
 
+      {/* Now Playing Section */}
       {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
@@ -213,11 +182,11 @@ const MiddlePanel: React.FC = () => {
             height="400px"
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
-            ref={videoRef} // Reference to the video iframe
           />
         </div>
       )}
 
+      {/* Search Results Section */}
       {searchInitiated && (
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
