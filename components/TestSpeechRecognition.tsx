@@ -46,21 +46,14 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event);
-        setIsListening(false);
-        isRecognitionActiveRef.current = false;
-        restartRecognitionIfNeeded();
+        handleRecognitionError(event);
       };
 
       recognition.onend = () => {
-        console.log('Speech recognition ended.');
-        setIsListening(false);
-        isRecognitionActiveRef.current = false;
-        restartRecognitionIfNeeded();
+        handleRecognitionEnd();
       };
 
       recognitionRef.current = recognition; // Save the recognition instance
-      console.log('Speech recognition instance created:', recognition);
     };
 
     const processRecognitionResults = (event: SpeechRecognitionEvent) => {
@@ -88,8 +81,20 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         setInterimResults(interimTranscript.trim());
         onInterimUpdate(interimTranscript.trim());
       }
+    };
 
-      // Do not clean up the instance here
+    const handleRecognitionError = (event: any) => {
+      console.error('Speech recognition error:', event);
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+      restartRecognitionIfNeeded();
+    };
+
+    const handleRecognitionEnd = () => {
+      console.log('Speech recognition ended.');
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+      restartRecognitionIfNeeded();
     };
 
     const restartRecognitionIfNeeded = () => {
@@ -98,8 +103,6 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current.start();
         isRecognitionActiveRef.current = true;
         setIsListening(true);
-      } else if (!isMicOn) {
-        console.log('Mic is off, not restarting recognition.');
       }
     };
 
@@ -107,13 +110,12 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop(); // Stop recognition
         recognitionRef.current.onstart = null;
         recognitionRef.current.onresult = null;
         recognitionRef.current.onerror = null;
         recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
         recognitionRef.current = null; // Clean up the recognition instance
-        console.log('Speech recognition instance cleaned up.');
       }
     };
   }, [onSpeechResult, onInterimUpdate]);
@@ -125,8 +127,6 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current.start(); // Start recognition when mic is on
         isRecognitionActiveRef.current = true;
         setIsListening(true);
-      } else {
-        console.log('Recognition is already active.');
       }
     } else if (recognitionRef.current) {
       console.log('Mic is turned off. Stopping recognition...');
