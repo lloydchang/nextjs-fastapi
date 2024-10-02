@@ -11,7 +11,6 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { updateFinalResult, updateInterimResult, trimOverlap } from '../utils/chatUtils';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -28,12 +27,11 @@ const LeftPanel: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
-    async (input: string, isManual = false, isFinal = false) => {
-      // If input is a manual message, do not trim it
-      const messageToSend = isManual ? input : input.trim();
+    async (input: string, isManual = false) => {
+      const messageToSend = input.trim();
       
       if (messageToSend) {
-        const prefix = isManual ? "" : isFinal ? "🎙️ " : "🎤 ";
+        const prefix = isManual ? "" : "🎙️ ";
         const formattedMessage = `${prefix}${messageToSend}`;
         await sendActionToChatbot(formattedMessage);
       }
@@ -70,8 +68,7 @@ const LeftPanel: React.FC = () => {
           />
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
-            onSpeechResult={(finalResults) => handleChat(finalResults, false, true)} // Use 🎙️ for final
-            onInterimUpdate={(interimResult) => handleChat(interimResult, false, false)} // Use 🎤 for interim
+            onSpeechResult={(result) => handleChat(result, false)}
           />
         </div>
       </div>
