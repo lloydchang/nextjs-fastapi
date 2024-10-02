@@ -13,7 +13,7 @@ interface ControlButtonsProps {
   togglePip: () => void;
   isMemOn: boolean;
   toggleMem: () => void;
-  eraseMemory: () => void; // Ensure eraseMemory is passed in
+  eraseMemory: () => void; 
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -40,16 +40,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   return (
     <div className={styles.container}>
 
-      {/* Erase Memory Button */}
-      <button
-        type="button"
-        onClick={eraseMemory} // Ensure eraseMemory is called here
-        className={`${styles.button} ${styles.eraseButton}`}
-        aria-label={eraseButtonText}
-      >
-        {eraseButtonText}
-      </button>
-
       {/* Microphone Button */}
       <button
         type="button"
@@ -59,6 +49,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={micButtonText}
       >
         {micButtonText}
+      </button>
+
+      {/* Erase Button */}
+      <button
+        type="button"
+        onClick={eraseMemory} 
+        className={`${styles.button} ${styles.eraseButton}`}
+        aria-label={eraseButtonText}
+      >
+        {eraseButtonText}
       </button>
 
       {/* Memory Button */}
