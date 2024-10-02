@@ -53,7 +53,7 @@ const LeftPanel: React.FC = () => {
       <div className={styles.content}>
         <h1 className={styles.title}><b>Ideas change everything</b></h1>
         <div className={styles.chatInterface} ref={chatContainerRef}>
-          <h3 className={styles.chatHeader}><b>Chat with TEDxSDG</b></h3>
+          <h3 className={styles.chatHeader}>Chat with <span className={styles.tedx}>TEDx</span><span className={styles.sdg}>SDG</span></h3>
           <HeavyChatMessages messages={messages} />
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
           <ControlButtons
