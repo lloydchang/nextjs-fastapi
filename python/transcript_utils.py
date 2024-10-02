@@ -3,7 +3,7 @@
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional, Tuple
-from python/logger import logger
+from python.logger import logger
 
 # Define headers to simulate a browser request
 HEADERS = {
