@@ -101,7 +101,6 @@ export const useMedia = (): UseMediaReturn => {
     isMicOnRef.current = false;
   }, []);
 
-  // Updated togglePip function to start camera if it's off
   const togglePip = useCallback(async () => {
     if (videoRef.current) {
       try {
@@ -127,7 +126,7 @@ export const useMedia = (): UseMediaReturn => {
 
   const toggleMem = useCallback(() => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
-  }, [mediaState.isMemOn]);
+  }, []);
 
   useEffect(() => {
     return () => {
