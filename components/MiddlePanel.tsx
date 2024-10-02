@@ -35,11 +35,8 @@ const MiddlePanel: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
-  const [transcriptSaved, setTranscriptSaved] = useState<boolean>(false);
   const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
   const [errorDetails, setErrorDetails] = useState<string>(''); // State for error details
-  const [transcriptStatus, setTranscriptStatus] = useState<string>(''); // Track transcript scraping status
-  const [transcript, setTranscript] = useState<string>(''); // Store retrieved transcript
 
   // Helper function to add logs
   const addLog = (message: string) => {
