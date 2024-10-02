@@ -13,18 +13,19 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !isSendingRef.current) {
-      if (chatInput.trim() === '') return; // Do not send empty messages
+      if (chatInput === '') return; // Do not send empty messages
       isSendingRef.current = true;
       handleChat(true);
-      setChatInput(''); // Clear input immediately
+      setChatInput(''); // Clear input immediately if desired
       setTimeout(() => (isSendingRef.current = false), 500); // Reset after 500ms
     }
   };
 
   const handleButtonClick = () => {
-    if (!isSendingRef.current) {
+    if (!isSendingRef.current && chatInput !== '') {
       isSendingRef.current = true;
       handleChat(true);
+      setChatInput(''); // Clear input immediately if desired
       setTimeout(() => (isSendingRef.current = false), 500); // Reset after 500ms
     }
   };
