@@ -37,46 +37,25 @@ const MiddlePanel: React.FC = () => {
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorDetails, setErrorDetails] = useState<string>('');
-  const [greeting, setGreeting] = useState<string>("");
+  const [greeting, setGreeting] = useState<string>("Fetching greeting...");
 
-  // Fetch greeting and initial search results simultaneously
+  // Fetch greeting from /api/py/hello
   useEffect(() => {
-    const fetchGreetingAndSearch = async () => {
+    const fetchGreeting = async () => {
       try {
-        const greetingPromise = axios.get('http://127.0.0.1:8000/api/py/hello');
-        const keyword = initialKeyword.current || determineInitialKeyword();
-        initialKeyword.current = keyword;
-
-        // Fetch initial search results using a random keyword
-        const searchPromise = axios.get(`http://127.0.0.1:8000/api/py/search?query=${encodeURIComponent(keyword)}`);
-
-        const [greetingResponse, searchResponse] = await Promise.all([greetingPromise, searchPromise]);
-
-        // Handle greeting response
-        if (greetingResponse.data && greetingResponse.data.message) {
-          setGreeting(greetingResponse.data.message);
+        const response = await axios.get('http://127.0.0.1:8000/api/py/hello');
+        if (response.data && response.data.message) {
+          setGreeting(response.data.message); // Use the `message` field from the response
         } else {
           setGreeting("Unknown response format");
         }
-
-        // Handle search response
-        if (searchResponse.data && Array.isArray(searchResponse.data)) {
-          const data: Talk[] = searchResponse.data.sort(() => Math.random() - 0.5);
-          setTalks(data);
-          if (data.length > 0) {
-            setSelectedTalk(data[0]);
-            addLog(`Initial search results retrieved: ${data.length} talks found.`);
-          }
-        }
       } catch (error) {
         setGreeting("Failed to fetch greeting.");
-        setError("Failed to fetch initial data. Please check if the backend server is running.");
-        setErrorDetails((error as Error).message);
       }
     };
 
-    fetchGreetingAndSearch();
-  }, [setTalks]);
+    fetchGreeting();
+  }, []);
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
@@ -114,11 +93,26 @@ const MiddlePanel: React.FC = () => {
     } catch (err) {
       addLog("Failed to fetch search results.");
       setError("Failed to fetch search results. Please check if the backend server is running.");
-      setErrorDetails((err as Error).message);
+      setErrorDetails(err.message);
     } finally {
       setLoading(false);
     }
   }, [query, setTalks]);
+
+  useEffect(() => {
+    if (initialKeyword.current === "") {
+      initialKeyword.current = determineInitialKeyword();
+      setQuery(initialKeyword.current);
+      setSearchInitiated(true);
+      addLog(`Initial keyword set: ${initialKeyword.current}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (searchInitiated) {
+      handleSearch();
+    }
+  }, [searchInitiated, handleSearch]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -172,7 +166,7 @@ const MiddlePanel: React.FC = () => {
         {selectedTalk && (
           <>
             <button
-              onClick={openTranscriptInNewTab}
+              onClick={openTranscriptInNewTab} // Open transcript URL in a new tab
               className={`${styles.button} ${styles.tedButton}`}
             >
               Transcript
@@ -191,6 +185,50 @@ const MiddlePanel: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Now Playing Section */}
+      {selectedTalk && (
+        <div className={styles.nowPlaying}>
+          <iframe
+            src={generateEmbedUrl(selectedTalk.url)}
+            width="100%"
+            height="400px"
+            allow="autoplay; fullscreen; encrypted-media"
+            className={styles.videoFrame}
+          />
+        </div>
+      )}
+
+      {/* Search Results Section */}
+      {searchInitiated && (
+        <div className={styles.scrollableContainer}>
+          <div className={styles.resultsContainer}>
+            {talks.map((talk, index) => (
+              <div
+                key={index}
+                className={styles.resultItem}
+                onClick={() => {
+                  setSelectedTalk(talk);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                <h3>
+                  <a href="#" className={styles.resultLink}>
+                    {talk.title}
+                  </a>
+                  <p className={styles.sdgTags}>
+                    {talk.sdg_tags && talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
+                  </p>
+                </h3>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && <p className={styles.errorText}>{error}</p>}
+      
+      <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} />
     </div>
   );
 };
