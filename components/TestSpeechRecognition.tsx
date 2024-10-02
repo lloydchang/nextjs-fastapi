@@ -8,24 +8,24 @@ interface TestSpeechRecognitionProps {
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, onSpeechResult }) => {
   const [transcript, setTranscript] = useState<string>('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const resultsCacheRef = useRef<SpeechRecognitionResult[]>([]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
       recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            onSpeechResult(event.results[i][0].transcript);
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
+        resultsCacheRef.current = Array.from(event.results);
+        updateTranscript();
+      };
+
+      recognitionRef.current.onend = () => {
+        if (isMicOn) {
+          recognitionRef.current?.start();
         }
-        setTranscript(interimTranscript);
       };
 
       recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -38,7 +38,28 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
         recognitionRef.current.stop();
       }
     };
-  }, [onSpeechResult]);
+  }, [isMicOn, onSpeechResult]);
+
+  const updateTranscript = () => {
+    let interimTranscript = '';
+    let finalTranscript = '';
+
+    for (let i = 0; i < resultsCacheRef.current.length; ++i) {
+      if (resultsCacheRef.current[i].isFinal) {
+        finalTranscript += resultsCacheRef.current[i][0].transcript;
+      } else {
+        interimTranscript += resultsCacheRef.current[i][0].transcript;
+      }
+    }
+
+    setTranscript(interimTranscript);
+
+    if (finalTranscript) {
+      onSpeechResult(finalTranscript);
+      resultsCacheRef.current = resultsCacheRef.current.filter(result => !result.isFinal);
+      updateTranscript();
+    }
+  };
 
   useEffect(() => {
     if (isMicOn && recognitionRef.current) {
