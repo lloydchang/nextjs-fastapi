@@ -14,14 +14,39 @@
   padding: 10px;
   margin-bottom: 0px;
   font-size: 0.7em;
+  
+  /* Set a fixed total width or use max-width as needed */
+  width: 700px; /* Example fixed width */
+}
+
+.greetingContainer {
+  width: 20px; /* Fixed width */
+  height: 60px; /* Fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-color: black;
+  border-radius: 10px;
+  box-sizing: border-box; /* Ensure padding/border are included in width */
+}
+
+.searchRowContainer {
+  width: 100px; /* Fixed width */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px; /* Fixed height */
+  box-sizing: border-box; /* Ensure padding/border are included in width */
 }
 
 .searchInput {
-  flex: 1;
+  flex: 1; /* Allows the input to take available space within the fixed container */
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #ccc;
   color: black;
+  box-sizing: border-box; /* Ensure padding/border are included in width */
 }
 
 .button {
@@ -106,6 +131,7 @@
   border-radius: 5px;
   background-color: #000000;
   transition: background-color 0.3s ease;
+  cursor: pointer; /* Ensures the cursor indicates interactivity */
 }
 
 .resultItem:hover {
@@ -148,17 +174,29 @@
   z-index: 0;
 }
 
-.resultItem {
-  cursor: pointer;
-  z-index: 1;
-}
+/* Remove duplicate .resultItem and .resultLink selectors if present */
 
-.resultLink {
-  cursor: pointer;
-  z-index: 1;
-}
+@media (max-width: 800px) {
+  .searchContainer {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.resultsContainer {
-  position: relative;
-  z-index: 1;
+  .greetingContainer,
+  .searchRowContainer {
+    width: 100%;
+  }
+
+  .searchRowContainer {
+    gap: 5px;
+  }
+
+  .searchInput {
+    padding: 8px;
+  }
+
+  .button {
+    padding: 8px 12px;
+  }
 }
