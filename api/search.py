@@ -8,7 +8,9 @@ import torch
 import asyncio
 from api.logger import logger  # Import the centralized logger
 
-async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransformer, sdg_embeddings, top_n: int = 10) -> List[Dict]:
+number_of_results = 100
+
+async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransformer, sdg_embeddings, top_n: int = number_of_results) -> List[Dict]:
     """
     Performs semantic search on the TEDx dataset.
 

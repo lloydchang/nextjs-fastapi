@@ -29,8 +29,6 @@ const sdgKeywords = [
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
   const { sendActionToChatbot } = useChatContext();
-
-  // Track whether the initial keyword has been set
   const initialKeyword = useRef<string>(""); // No initial value
   const [query, setQuery] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -48,136 +46,18 @@ const MiddlePanel: React.FC = () => {
     setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
   };
 
-  // Function to determine the initial keyword based on randomization
   const determineInitialKeyword = () => {
     const randomIndex = Math.floor(Math.random() * sdgKeywords.length);
     return sdgKeywords[randomIndex];
   };
 
-  // Function to scrape the transcript using axios
-  const scrapeTranscript = async (url: string) => {
-    addLog('Starting to scrape transcript...');
-    const transcriptUrl = `http://localhost:8000/api/py/scrape-transcript/`; // Adjust if needed
-    try {
-      const response = await axios.post(transcriptUrl, { url }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      addLog(`Scraping initiated: ${response.data.message}`);
-      setTranscriptStatus(response.data.message);
-    } catch (err) {
-      addLog("Error initiating transcript scraping.");
-      if (axios.isAxiosError(err)) {
-        addLog(`Axios error: ${err.message}`);
-        if (err.response) {
-          addLog(`Error Response Status: ${err.response.status}`);
-          addLog(`Error Response Data: ${JSON.stringify(err.response.data)}`);
-        }
-      } else {
-        addLog(`Unexpected error: ${err}`);
-      }
-      setError("Failed to initiate transcript scraping.");
-      setErrorDetails(err.message);
-    }
-  };
-
-  // Function to retrieve the transcript
-  const retrieveTranscript = async (url: string) => {
-    addLog('Attempting to retrieve transcript...');
-    const getTranscriptUrl = `http://localhost:8000/api/py/get-transcript/?url=${encodeURIComponent(url)}`;
-    try {
-      const response = await axios.get(getTranscriptUrl);
-      if (response.data.status === "completed") {
-        setTranscript(response.data.transcript);
-        addLog("Transcript retrieved successfully.");
-        setTranscriptStatus("completed");
-      } else if (response.data.status === "error") {
-        setTranscriptStatus("error");
-        setError("Failed to retrieve transcript.");
-        setErrorDetails(response.data.message);
-        addLog(`Transcript retrieval error: ${response.data.message}`);
-      } else {
-        setTranscriptStatus("not found");
-        addLog("Transcript not found yet.");
-      }
-    } catch (err) {
-      addLog("Error retrieving transcript.");
-      if (axios.isAxiosError(err)) {
-        addLog(`Axios error: ${err.message}`);
-        if (err.response) {
-          addLog(`Error Response Status: ${err.response.status}`);
-          addLog(`Error Response Data: ${JSON.stringify(err.response.data)}`);
-        }
-      } else {
-        addLog(`Unexpected error: ${err}`);
-      }
-      setError("Failed to retrieve transcript.");
-      setErrorDetails(err.message);
-    }
-  };
-
-  // Function to send the transcript to the chatbot
-  const sendTranscriptToChatbot = async (transcriptText: string) => {
-    addLog('Sending transcript to chatbot...');
-    if (selectedTalk) {
-      const formattedMessage = `🎙️ Transcript of "${selectedTalk.title}": ${transcriptText}`;
-      addLog('Sending Message to Chatbot: ' + formattedMessage);
-      try {
-        await sendActionToChatbot(formattedMessage);
-        addLog('Message Sent Successfully');
-        setTranscriptSaved(true);
-      } catch (err) {
-        addLog("Failed to send message to chatbot.");
-        setError("Failed to send the transcript to the chatbot.");
-        setErrorDetails(err.message); // Set error details
-      }
-    } else {
-      addLog("No selected talk available to send.");
-    }
-  };
-
-  // Define the function to handle transcript scraping and sending
-  const handleTranscript = useCallback(async () => {
-    if (selectedTalk) {
-      try {
-        // Initiate scraping
-        await scrapeTranscript(selectedTalk.url);
-        
-        // Polling to check when transcript is available
-        const pollInterval = 5000; // 5 seconds
-        const maxAttempts = 12; // Poll for 1 minute
-        let attempts = 0;
-
-        const pollTranscript = setInterval(async () => {
-          attempts += 1;
-          addLog(`Polling attempt ${attempts} for transcript...`);
-          await retrieveTranscript(selectedTalk.url);
-          
-          if (transcriptStatus === "completed" || attempts >= maxAttempts) {
-            clearInterval(pollTranscript);
-            if (transcriptStatus === "completed") {
-              await sendTranscriptToChatbot(transcript);
-            } else {
-              addLog("Transcript scraping timed out.");
-              setError("Transcript scraping timed out. Please try again later.");
-            }
-          }
-        }, pollInterval);
-      } catch (err) {
-        addLog("Error in handling transcript process.");
-      }
-    }
-  }, [selectedTalk, transcript, transcriptStatus]);
-
-  // Define the search function with result randomization
   const handleSearch = useCallback(async () => {
     setError(null);
     setTalks([]);
     setLoading(true);
     setSelectedTalk(null);
-    setTranscriptSaved(false); // Reset save state on new search
-    setErrorDetails(''); // Reset error details on new search
+    setTranscriptSaved(false);
+    setErrorDetails('');
     setTranscript('');
     setTranscriptStatus('');
 
@@ -189,8 +69,6 @@ const MiddlePanel: React.FC = () => {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
       let data: Talk[] = response.data;
-
-      // Randomize the order of the results
       data = data.sort(() => Math.random() - 0.5);
 
       setTalks(data);
@@ -203,13 +81,12 @@ const MiddlePanel: React.FC = () => {
     } catch (err) {
       addLog("Failed to fetch search results.");
       setError("Failed to fetch search results. Please check if the backend server is running.");
-      setErrorDetails(err.message); // Set error details
+      setErrorDetails(err.message);
     } finally {
       setLoading(false);
     }
   }, [query, setTalks]);
 
-  // Set the initial keyword when the component mounts
   useEffect(() => {
     if (initialKeyword.current === "") {
       initialKeyword.current = determineInitialKeyword();
@@ -219,7 +96,6 @@ const MiddlePanel: React.FC = () => {
     }
   }, []);
 
-  // Run the search after setting the query
   useEffect(() => {
     if (searchInitiated) {
       handleSearch();
@@ -230,17 +106,17 @@ const MiddlePanel: React.FC = () => {
     setQuery(e.target.value);
   }, []);
 
-  const generateEmbedUrl = useCallback((url: string): string => {
-    const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
-    const match = url.match(tedRegex);
-    return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
-  }, []);
-
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   }, [handleSearch]);
+
+  const generateEmbedUrl = useCallback((url: string): string => {
+    const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
+    const match = url.match(tedRegex);
+    return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
+  }, []);
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
@@ -272,22 +148,10 @@ const MiddlePanel: React.FC = () => {
         {selectedTalk && (
           <>
             <button
-              onClick={handleTranscript} // Call handleTranscript to separate logic
-              className={`${styles.button} ${styles.chatButton}`}
-            >
-              Chat
-            </button>
-            <button
               onClick={openTranscriptInNewTab} // Open transcript URL in a new tab
               className={`${styles.button} ${styles.tedButton}`}
             >
-              View Transcript
-            </button>
-            <button
-              onClick={() => window.open(selectedTalk.url, '_blank')}
-              className={`${styles.button} ${styles.tedButton}`}
-            >
-              Play in New Tab
+              Transcript
             </button>
           </>
         )}
@@ -298,7 +162,7 @@ const MiddlePanel: React.FC = () => {
               alt="Loading..."
               width={24}
               height={24}
-              className={styles.loadingSpinner} // Add class to Image for rotation
+              className={styles.loadingSpinner}
             />
           </div>
         )}
@@ -314,42 +178,41 @@ const MiddlePanel: React.FC = () => {
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
           />
-          {transcriptSaved && <p className={styles.successMessage}>Transcript sent successfully!</p>}
-          {transcript && <p className={styles.transcriptText}>{transcript}</p>}
         </div>
       )}
 
       {/* Search Results Section */}
       {searchInitiated && (
-        <div className={styles.resultsContainer}>
-          {talks.map((talk, index) => (
-            <div key={index} className={styles.resultItem}>
-              <h3>
-                <a
-                  href="#"
-                  className={styles.resultLink}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSelectedTalk(talk);
-                    setTranscript(''); // Reset transcript when selecting a new talk
-                    setTranscriptStatus('');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                >
-                  {talk.title}
-                </a>
-                <p className={styles.sdgTags}>
-                  {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
-                </p>
-              </h3>
-            </div>
-          ))}
+        <div className={styles.scrollableContainer}>
+          <div className={styles.resultsContainer}>
+            {talks.map((talk, index) => (
+              <div key={index} className={styles.resultItem}>
+                <h3>
+                  <a
+                    href="#"
+                    className={styles.resultLink}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedTalk(talk);
+                      setTranscript(''); // Reset transcript when selecting a new talk
+                      setTranscriptStatus('');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                  >
+                    {talk.title}
+                  </a>
+                  <p className={styles.sdgTags}>
+                    {talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
+                  </p>
+                </h3>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {error && <p className={styles.errorText}>{error}</p>}
       
-      {/* Render Debug Panel */}
       <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} />
     </div>
   );
