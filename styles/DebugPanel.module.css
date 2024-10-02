@@ -1,12 +1,11 @@
 /* styles/DebugPanel.module.css */
 
 .debugPanel {
-    position: fixed; /* Ensure it is fixed in the viewport */
-    top: 0; /* Position at the top */
-    right: 0; /* Position on the right, overrides left */
-    left: auto; /* Ensure left is not interfering */
+    position: fixed; /* Ensure the panel is fixed in the viewport */
+    top: 0; /* Initial position */
+    left: 0; /* Initial position */
     width: 400px; /* Set desired width */
-    max-height: 900px; /* Set a max height */
+    max-height: 500px; /* Set a max height */
     background-color: rgba(0, 0, 0, 0.9); /* Dark background for contrast */
     color: #fff; /* White text color for readability */
     padding: 20px; /* Padding for spacing */
@@ -15,16 +14,29 @@
     display: flex; /* Use flexbox for layout */
     flex-direction: column; /* Arrange children in a column */
     transition: height 0.3s ease, width 0.3s ease; /* Smooth transition for height and width */
-}
-
-.dragHandle {
+    cursor: default; /* Default cursor for text selection */
+  }
+  
+  .debugPanel.hidden {
+    height: 150px; /* Height of the toggle button when hidden */
+    width: 150px; /* Width adjusts to fit content */
+    background-color: rgba(0, 0, 0, 0); /* Darker background */
+  }
+  
+  .dragHandle {
     cursor: grab; /* Change cursor to indicate draggable area */
     padding: 5px; /* Padding for the draggable handle */
-    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker background for visibility */
-}
-
-.toggleButton {
-    background-color: #4caf50; /* Green background for the button */
+    background-color: rgba(0, 0, 0, 0.0); /* Lighter background */
+    border-radius: 15px; /* Rounded corners */
+    width: 110px; /* Fixed width */
+    user-select: none; /* Prevent text selection while dragging */
+  }
+  
+  .dragHandle:active {
+    cursor: grabbing; /* Change cursor when actively dragging */
+  }
+  
+  .toggleButton {
     border: 0px solid #444; /* Thinner border */
     color: white; /* White text color */
     padding: 15px; /* Padding for the button */
@@ -34,40 +46,36 @@
     margin-top: 10px; /* Space below the button */
     font-size: 16px; /* Larger font size */
     border-radius: 15px; /* Rectangular corners */
-}
-
-.logContainer {
-    max-height: 800px; /* Max height for logs section */
+    background-color: rgba(0, 0, 0, 0.0); /* Darker background */
+  }
+  
+  .logContainer {
+    max-height: 400px; /* Max height for logs section */
     overflow-y: auto; /* Scrollable content */
     padding: 15px; /* Padding for the log area */
     border-top: 1px solid #444; /* Top border to separate from button */
-    background-color: rgba(0, 0, 0, 0.8); /* Darker background for logs */
-}
-
-.logItem {
+    background-color: rgba(0, 0, 0, 0.5); /* Darker background */
+  }
+  
+  .logItem {
     margin-bottom: 10px; /* Spacing between log items */
     font-family: monospace; /* Monospace font for code-like appearance */
     font-size: 14px; /* Slightly larger font size for readability */
     white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
-}
-
-.noLogsMessage {
-    color: #ccc; /* Lighter color for hidden logs message */
-    text-align: center; /* Center align the message */
-    margin-top: 10px; /* Margin above the message */
-}
-
-.curlCommand {
+  }
+  
+  .curlCommand {
     font-family: monospace; /* Monospace font for command */
-    background-color: rgba(255, 255, 255, 0.1); /* Light background for visibility */
+    background-color: rgba(0, 0, 0, 0.5); /* Slightly darker background */
     padding: 10px; /* Padding for the command display */
     margin-top: 10px; /* Space above the command */
     white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
     word-wrap: break-word; /* Break words when necessary */
-}
-
-/* Additional styles to manage height */
-.debugPanel.hidden {
-    height: 150px; /* Height of the toggle button when hidden */
-    width: 150px; /* Width adjusts to fit content */
-}
+  }
+  
+  .noLogsMessage {
+    color: #ccc; /* Lighter color for hidden logs message */
+    text-align: center; /* Center align the message */
+    margin-top: 10px; /* Margin above the message */
+  }
+  
