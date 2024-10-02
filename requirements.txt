@@ -1,8 +1,0 @@
-fastapi
-pandas
-sentence_transformers
-torch
-uvicorn
-numpy
-beautifulsoup4
-requests
