@@ -1,28 +1,7 @@
 # api/index.py
 
-"""
-Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
-"""
-
-# Import necessary modules from FastAPI and other libraries
-from fastapi import FastAPI, Query
-from typing import List, Dict
-import os
-import pickle
-import warnings
-import importlib  # Added for lazy loading
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-# Import custom modules lazily using importlib
-def lazy_load(module_name):
-    return importlib.import_module(module_name)
-
-# Suppress FutureWarnings from transformers and torch libraries
-logger = lazy_load("python.logger").logger
-logger.info("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
-warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.tokenization_utils_base")
-warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*", module="torch.storage")
-
 # Create a FastAPI app instance
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
@@ -34,6 +13,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Define a "Hello, World!" Endpoint for Testing
+@app.get("/api/py/hello")
+async def hello():
+    return {"message": "Hello, World!"}
+
+"""
+Title: Impact: Accelerating Progress Towards Global Goals with AI-Powered Insights
+"""
+
+# Import necessary modules from FastAPI and other libraries
+from fastapi import Query
+from typing import List, Dict
+import os
+import pickle
+import warnings
+import importlib  # Added for lazy loading
+
+# Import custom modules lazily using importlib
+def lazy_load(module_name):
+    return importlib.import_module(module_name)
+
+# Suppress FutureWarnings from transformers and torch libraries
+logger = lazy_load("python.logger").logger
+logger.info("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
+warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.tokenization_utils_base")
+warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*", module="torch.storage")
 
 # File paths for data and cache
 file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
@@ -122,11 +128,6 @@ else:
         cache_manager = lazy_load("python.cache_manager")
         cache_manager.save_cache(data['description_vector'], description_embeddings_cache)
         logger.info("Description embeddings encoded and cached successfully.")
-
-# Define a "Hello, World!" Endpoint for Testing
-@app.get("/api/py/hello")
-async def hello():
-    return {"message": "Hello, World!"}
 
 # Create a Search Endpoint for TEDx Talks Using Asynchronous Search lazily
 @app.get("/api/py/search")
