@@ -39,11 +39,11 @@ const MiddlePanel: React.FC = () => {
   const [errorDetails, setErrorDetails] = useState<string>('');
   const [greeting, setGreeting] = useState<string>("");
 
-  // Fetch greeting from /api/py/helloFastApi
+  // Fetch greeting from /api/py/hello
   useEffect(() => {
     const fetchGreeting = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/py/helloFastApi');
+        const response = await axios.get('http://127.0.0.1:8000/api/py/hello');
         if (response.data && response.data.message) {
           setGreeting(response.data.message); // Use the `message` field from the response
         } else {
