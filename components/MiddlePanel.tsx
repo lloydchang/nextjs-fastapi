@@ -68,7 +68,7 @@ const MiddlePanel: React.FC = () => {
     fetchGreeting();
   }, []);
 
-  // Fetch SDG metadata from /api/py/sdg_metadata
+  // Fetch SDG metadata from /api/py/sdg_metadata independently
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
@@ -155,30 +155,11 @@ const MiddlePanel: React.FC = () => {
     }
   }, [handleSearch]);
 
-  // Generate the embedded TED Talk URL
-  const generateEmbedUrl = useCallback((url: string | undefined): string => {
-    if (!url || typeof url !== "string") {
-      return url ?? "";
-    }
-
-    const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
-    const match = url.match(tedRegex);
-    return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
-  }, []);
-
-  // Open the transcript for the selected TED talk
-  const openTranscriptInNewTab = () => {
-    if (selectedTalk) {
-      const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
-      window.open(transcriptUrl, '_blank');
-      addLog(`Opened transcript in a new tab: ${transcriptUrl}`);
-    }
-  };
-
   return (
     <div className={styles.middlePanel}>
       {/* Search Section */}
       <div className={styles.searchContainer}>
+        {/* Display the greeting message */}
         <h1>{loadingGreeting ? "Fetching Greeting..." : greeting}</h1>
         <input
           type="text"
@@ -195,28 +176,9 @@ const MiddlePanel: React.FC = () => {
         >
           {searchLoading ? "Searching…" : "Search"}
         </button>
-        <button
-            onClick={openTranscriptInNewTab}
-            className={`${styles.button} ${styles.tedButton}`}
-          >
-            Transcript
-          </button>
       </div>
 
-      {/* Now Playing Section for Selected TED Talk */}
-      {selectedTalk && (
-        <div className={styles.nowPlaying}>
-          <iframe
-            src={generateEmbedUrl(selectedTalk.url)}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            className={styles.videoFrame}
-          />
-        </div>
-      )}
-
-      {/* SDG Metadata Section */}
+      {/* Independent SDG Metadata Section */}
       <div className={styles.sdgMetadata}>
         {loadingMetadata ? (
           <p>Fetching SDG Metadata...</p>
@@ -231,6 +193,7 @@ const MiddlePanel: React.FC = () => {
         )}
       </div>
 
+      {/* Search Results Section */}
       {searchInitiated && (
         <div className={styles.resultsContainer}>
           {talks.map((talk, index) => (
