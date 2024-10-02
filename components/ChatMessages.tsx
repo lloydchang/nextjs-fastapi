@@ -1,7 +1,6 @@
 // components/ChatMessages.tsx
-
 import React, { useEffect, useRef } from 'react';
-import { Message } from '../hooks/useChat';
+import { Message } from '../types';
 import styles from '../styles/ChatMessages.module.css';
 
 interface ChatMessagesProps {
@@ -9,29 +8,29 @@ interface ChatMessagesProps {
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
-  // Create a reference for the messages container
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to the bottom whenever messages change
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
+    scrollToBottom();
   }, [messages]);
 
   return (
-    <div className={styles.messagesContainer} ref={messagesContainerRef}>
-      {messages.map((msg, index) => (
+    <div className={styles.messagesContainer}>
+      {messages.map((msg) => (
         <div
-          key={index}
-          className={`${styles.message} ${
-            msg.sender === 'user' ? styles.userMessage : styles.botMessage
-          }`}
+          key={msg.id}
+          className={
+            msg.type === 'user' ? styles.userMessage : styles.botMessage
+          }
         >
-          {/* The `.text` class should be inside the `.userMessage` or `.botMessage` wrapper */}
-          <span className={styles.text}>{msg.text}</span>
+          {msg.text}
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </div>
   );
 };
