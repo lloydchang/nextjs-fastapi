@@ -128,3 +128,12 @@ else:
 async def hello():
     return {"message": "Hello, World!"}
 
+# Create a Search Endpoint for TEDx Talks Using Asynchronous Search lazily
+@app.get("/api/py/search")
+async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
+    try:
+        search_module = lazy_load("python.search")
+        return await search_module.semantic_search(query, data, model, sdg_embeddings)
+    except Exception as e:
+        logger.error(f"Error in search endpoint: {e}")
+        return [{"error": str(e)}]
