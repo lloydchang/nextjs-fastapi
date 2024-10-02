@@ -1,12 +1,10 @@
-fastapi
-# httpx
-# logger
-# numpy
-# pandas
-# pipreqs
-# pytest
-# pytest_asyncio
-# requests
-# sentence_transformers
-# torch
-uvicorn
+beautifulsoup4==4.12.3
+fastapi==0.115.0
+httpx==0.27.2
+numpy==2.1.1
+pandas==2.2.3
+pytest==8.3.3
+pytest_asyncio==0.24.0
+Requests==2.32.3
+sentence_transformers==3.1.1
+torch==2.4.0
