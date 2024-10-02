@@ -35,10 +35,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include the transcript router lazily
-transcript_router = lazy_load("python.transcript").router
-app.include_router(transcript_router, prefix="/api/py", tags=["Transcript"])
-
 # File paths for data and cache
 file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
 cache_file_path = "./python/cache/tedx_dataset.pkl"
