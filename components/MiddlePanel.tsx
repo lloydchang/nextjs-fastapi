@@ -8,8 +8,8 @@ import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import { useChatContext } from '../context/ChatContext';
-import DebugPanel from './DebugPanel'; // Import DebugPanel
-import axios from 'axios'; // Import axios
+import DebugPanel from './DebugPanel';
+import axios from 'axios';
 
 // TypeScript Types
 type Talk = {
@@ -29,24 +29,22 @@ const sdgKeywords = [
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
   const { sendActionToChatbot } = useChatContext();
-  const initialKeyword = useRef<string>(""); // No initial value
+  const initialKeyword = useRef<string>("");
   const [query, setQuery] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchInitiated, setSearchInitiated] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [transcriptSaved, setTranscriptSaved] = useState<boolean>(false);
-  const [logs, setLogs] = useState<string[]>([]); // State to hold logs for DebugPanel
-  const [errorDetails, setErrorDetails] = useState<string>(''); // State for error details
-  const [transcriptStatus, setTranscriptStatus] = useState<string>(''); // Track transcript scraping status
-  const [transcript, setTranscript] = useState<string>(''); // Store retrieved transcript
+  const [logs, setLogs] = useState<string[]>([]);
+  const [errorDetails, setErrorDetails] = useState<string>('');
+  const [transcriptStatus, setTranscriptStatus] = useState<string>('');
+  const [transcript, setTranscript] = useState<string>('');
 
-  const videoRef = useRef<HTMLIFrameElement>(null); // Ref to track video state
-  const rotationTimeout = useRef<NodeJS.Timeout | null>(null); // Ref for rotation timeout
+  const rotationTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Helper function to add logs
   const addLog = (message: string) => {
-    setLogs((prevLogs) => [...prevLogs, message]); // Update logs state
+    setLogs((prevLogs) => [...prevLogs, message]);
   };
 
   const determineInitialKeyword = () => {
@@ -105,20 +103,17 @@ const MiddlePanel: React.FC = () => {
     }
   }, [searchInitiated, handleSearch]);
 
-  // Handle rotation through search results if video is not playing
+  // Handle rotation through search results if no interaction detected
   useEffect(() => {
-    const checkIfVideoPlaying = () => {
-      if (videoRef.current) {
-        const videoElement = videoRef.current.contentWindow?.document.querySelector('video');
-        if (!videoElement || videoElement.paused) {
-          addLog('Video is not playing. Rotating to next search result...');
-          rotateToNextTalk();
-        }
-      }
+    const initiateRotationTimeout = () => {
+      rotationTimeout.current = setTimeout(() => {
+        addLog('No interaction detected. Rotating to next talk...');
+        rotateToNextTalk();
+      }, 10000); // Rotate if no interaction within 10 seconds
     };
 
     if (selectedTalk) {
-      rotationTimeout.current = setTimeout(checkIfVideoPlaying, 5000); // Check after 5 seconds
+      initiateRotationTimeout();
     }
 
     return () => {
@@ -213,7 +208,6 @@ const MiddlePanel: React.FC = () => {
             height="400px"
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
-            ref={videoRef} // Reference to the video iframe
           />
         </div>
       )}
