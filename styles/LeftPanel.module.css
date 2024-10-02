@@ -76,6 +76,14 @@
   margin-bottom: 10px;
 }
 
+.chatHeader .tedx {
+  color: #eb0028; /* TEDx red */
+}
+
+.chatHeader .sdg {
+  color: gray; /* SDG gray */
+}
+
 .error {
   color: red;
   margin-bottom: 10px;
