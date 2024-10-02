@@ -62,7 +62,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       </button>
 
       {/* Camera Button */}
-      <button
+      {/* Hidden: Do not render Camera Button */}
+      {/* <button
         type="button"
         onClick={isCamOn ? stopCam : startCam}
         className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
@@ -70,10 +71,11 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={camButtonText}
       >
         {camButtonText}
-      </button>
+      </button> */}
 
       {/* Pip Button */}
-      <button
+      {/* Hidden: Do not render Pip Button */}
+      {/* <button
         type="button"
         onClick={togglePip}
         className={`${styles.button} ${!isPipOn ? styles.startButton : styles.stopButton}`}
@@ -81,10 +83,11 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={pipButtonText}
       >
         {pipButtonText}
-      </button>
+      </button> */}
 
       {/* Memory Button */}
-      <button
+      {/* Hidden: Do not render Memory Button */}
+      {/* <button
         type="button"
         onClick={toggleMem}
         className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
@@ -92,7 +95,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={memButtonText}
       >
         {memButtonText}
-      </button>
+      </button> */}
 
     </div>
   );
