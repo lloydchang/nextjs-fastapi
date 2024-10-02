@@ -53,10 +53,7 @@ const MiddlePanel: React.FC = () => {
     setTalks([]);
     setLoading(true);
     setSelectedTalk(null);
-    setTranscriptSaved(false);
     setErrorDetails('');
-    setTranscript('');
-    setTranscriptStatus('');
 
     addLog('Initiating Search...');
     try {
@@ -193,8 +190,6 @@ const MiddlePanel: React.FC = () => {
                 className={styles.resultItem}
                 onClick={() => {
                   setSelectedTalk(talk);
-                  setTranscript('');
-                  setTranscriptStatus('');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
               >
