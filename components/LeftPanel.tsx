@@ -29,14 +29,17 @@ const LeftPanel: React.FC = () => {
 
   const handleChat = useCallback(
     async (input: string, isManual = false, isFinal = false) => {
-      if (input.trim()) {
+      // If input is a manual message, do not trim it
+      const messageToSend = isManual ? input : input.trim();
+      
+      if (messageToSend) {
         const prefix = isManual ? "" : isFinal ? "🎙️ " : "🎤 ";
-        const formattedMessage = `${prefix}${input.trim()}`;
+        const formattedMessage = `${prefix}${messageToSend}`;
         await sendActionToChatbot(formattedMessage);
       }
     },
     [sendActionToChatbot]
-  );
+  ); 
 
   return (
     <div className={styles.container}>
