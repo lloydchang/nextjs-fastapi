@@ -76,7 +76,7 @@ const MiddlePanel: React.FC = () => {
 
       if (data.length > 0) {
         setSelectedTalk(data[0]);
-        addLog('Selected Talk: ' + data[0].title);
+        addLog('For example: ' + data[0].title);
       }
     } catch (err) {
       addLog("Failed to fetch search results.");
