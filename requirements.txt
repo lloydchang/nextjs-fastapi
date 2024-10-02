@@ -1,6 +1,6 @@
 fastapi
-httpx
-logger
+# httpx
+# logger
 # numpy
 # pandas
 # pipreqs
