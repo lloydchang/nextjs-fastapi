@@ -30,35 +30,14 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 }) => {
   console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
 
-  const camButtonText = isCamOn ? 'Stop Cam 📷' : 'Start Cam 📷';
-  const micButtonText = isMicOn ? 'Stop Mic 🎤' : 'Start Mic 🎤';
-  const pipButtonText = isPipOn ? 'Stop PiP 📹' : 'Start PiP 📹';
-  const memButtonText = isMemOn ? 'Stop Memory 🧠' : 'Start Memory 🧠';
-  const eraseButtonText = 'Erase Memory 🗑️';
+  const micButtonText = isMicOn ? '🎤' : '🎤';
+  const eraseButtonText = '🗑️';
+  const memButtonText = isMemOn ? '🧠' : '🧠';
+  const camButtonText = isCamOn ? '📷' : '📷';
+  const pipButtonText = isPipOn ? '📹' : '📹';
 
   return (
     <div className={styles.container}>
-      {/* Camera Button */}
-      <button
-        type="button"
-        onClick={isCamOn ? stopCam : startCam}
-        className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
-        aria-pressed={isCamOn}
-        aria-label={camButtonText}
-      >
-        {camButtonText}
-      </button>
-
-      {/* PiP Button */}
-      <button
-        type="button"
-        onClick={togglePip}
-        className={`${styles.button} ${!isPipOn ? styles.startButton : styles.stopButton}`}
-        aria-pressed={isPipOn}
-        aria-label={pipButtonText}
-      >
-        {pipButtonText}
-      </button>
 
       {/* Microphone Button */}
       <button
@@ -69,6 +48,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={micButtonText}
       >
         {micButtonText}
+      </button>
+
+      {/* Erase Memory Button */}
+      <button
+        type="button"
+        onClick={eraseMemory} // Ensure eraseMemory is called here
+        className={`${styles.button} ${styles.eraseButton}`}
+        aria-label={eraseButtonText}
+      >
+        {eraseButtonText}
       </button>
 
       {/* Memory Button */}
@@ -82,15 +71,28 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {memButtonText}
       </button>
 
-      {/* Erase Memory Button */}
+      {/* Camera Button */}
       <button
         type="button"
-        onClick={eraseMemory} // Ensure eraseMemory is called here
-        className={`${styles.button} ${styles.eraseButton}`}
-        aria-label={eraseButtonText}
+        onClick={isCamOn ? stopCam : startCam}
+        className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
+        aria-pressed={isCamOn}
+        aria-label={camButtonText}
       >
-        {eraseButtonText}
+        {camButtonText}
       </button>
+
+      {/* Pip Button */}
+      <button
+        type="button"
+        onClick={togglePip}
+        className={`${styles.button} ${!isPipOn ? styles.startButton : styles.stopButton}`}
+        aria-pressed={isPipOn}
+        aria-label={pipButtonText}
+      >
+        {pipButtonText}
+      </button>
+
     </div>
   );
 };

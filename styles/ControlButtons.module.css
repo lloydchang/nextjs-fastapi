@@ -16,17 +16,18 @@
 }
 
 .startButton {
-  background-color: #4caf50; /* Green */
+  background-color: rgba(0, 235, 40, 0.25); /* Green */
   color: white;
 }
 
 .stopButton {
-  background-color: #f44336; /* Red */
+  background-color: #f44336; /* TED Red */
+  background-color: rgba(235, 0, 40, 0.25);
   color: white;
 }
 
 .eraseButton {
-  background-color: #eb0028;
+  background-color: rgba(0, 0, 0, 0.25);
   color: black;
 }
 
