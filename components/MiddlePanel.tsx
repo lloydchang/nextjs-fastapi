@@ -145,7 +145,7 @@ const MiddlePanel: React.FC = () => {
             className={`${styles.button} ${styles.searchButton}`}
             disabled={loading}
           >
-            {loading ? "Searching…" : "Search"}
+            {loading ? "Search" : "Search"}
           </button>
           {selectedTalk && (
             <>
