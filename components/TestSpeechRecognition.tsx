@@ -53,7 +53,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
           console.log('Final result received:', finalTranscript.trim());
           setResults((prev) => prev + finalTranscript.trim() + ' ');
           onSpeechResult(finalTranscript.trim());
-          setInterimResults('');
+          setInterimResults(''); // Clear interim results when final result is received
         }
 
         if (interimTranscript) {
@@ -69,8 +69,8 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         isRecognitionActiveRef.current = false; // Set recognition active flag to false
         if (isMicOn) {
           console.log('Restarting recognition due to error.');
-          if (!isRecognitionActiveRef.current) { // Only restart if not already active
-            recognition.start();
+          if (!isRecognitionActiveRef.current) {
+            recognition.start(); // Restart only if not active
             isRecognitionActiveRef.current = true;
             setIsListening(true);
           }
@@ -83,8 +83,8 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         isRecognitionActiveRef.current = false; // Set recognition active flag to false
         if (isMicOn) {
           console.log('Restarting recognition as mic is still on.');
-          if (!isRecognitionActiveRef.current) { // Only restart if not already active
-            recognition.start();
+          if (!isRecognitionActiveRef.current) {
+            recognition.start(); // Restart only if not active
             isRecognitionActiveRef.current = true;
             setIsListening(true);
           }
