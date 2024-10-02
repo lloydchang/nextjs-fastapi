@@ -37,20 +37,17 @@ const MiddlePanel: React.FC = () => {
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [errorDetails, setErrorDetails] = useState<string>('');
-  const [greeting, setGreeting] = useState<string>("Searching…");
+  const [greeting, setGreeting] = useState<string>("Hi!");
 
-  // Function to add a log message
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
   };
 
-  // Function to determine the initial keyword randomly
   const determineInitialKeyword = () => {
     const randomIndex = Math.floor(Math.random() * sdgKeywords.length);
     return sdgKeywords[randomIndex];
   };
 
-  // Fetch both greeting and search data in parallel
   useEffect(() => {
     if (initialKeyword.current === "") {
       initialKeyword.current = determineInitialKeyword();
@@ -59,7 +56,6 @@ const MiddlePanel: React.FC = () => {
       addLog(`Initial keyword set: ${initialKeyword.current}`);
     }
 
-    // Execute both API calls in parallel
     const fetchGreeting = axios.get('http://127.0.0.1:8000/api/py/hello');
     const fetchSearchResults = axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(initialKeyword.current)}`);
 
@@ -128,38 +124,40 @@ const MiddlePanel: React.FC = () => {
 
   return (
     <div className={styles.middlePanel}>
-      {/* Search Section */}
       <div className={styles.searchContainer}>
-        {/* Display the greeting message */}
-        <h1>{greeting}</h1>
-        <input
-          type="text"
-          placeholder="Enter a keyword"
-          value={query}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-          className={styles.searchInput}
-        />
-        <button
-          onClick={() => {
-            setSearchInitiated(true);
-            setLoading(true);
-          }}
-          className={`${styles.button} ${styles.searchButton}`}
-          disabled={loading}
-        >
-          {loading ? "Searching…" : "Search"}
-        </button>
-        {selectedTalk && (
-          <>
-            <button
-              onClick={openTranscriptInNewTab} // Open transcript URL in a new tab
-              className={`${styles.button} ${styles.tedButton}`}
-            >
-              Transcript
-            </button>
-          </>
-        )}
+        <div className={styles.greetingContainer}>
+          <h1 className={styles.greetingText}>{greeting}</h1>
+        </div>
+        <div className={styles.searchRowContainer}>
+          <input
+            type="text"
+            placeholder="Enter a keyword"
+            value={query}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            className={styles.searchInput}
+          />
+          <button
+            onClick={() => {
+              setSearchInitiated(true);
+              setLoading(true);
+            }}
+            className={`${styles.button} ${styles.searchButton}`}
+            disabled={loading}
+          >
+            {loading ? "Searching…" : "Search"}
+          </button>
+          {selectedTalk && (
+            <>
+              <button
+                onClick={openTranscriptInNewTab}
+                className={`${styles.button} ${styles.tedButton}`}
+              >
+                Transcript
+              </button>
+            </>
+          )}
+        </div>
         {loading && (
           <div className={styles.loadingSpinnerContainer}>
             <Image
@@ -173,7 +171,6 @@ const MiddlePanel: React.FC = () => {
         )}
       </div>
 
-      {/* Now Playing Section */}
       {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
@@ -186,7 +183,6 @@ const MiddlePanel: React.FC = () => {
         </div>
       )}
 
-      {/* Search Results Section */}
       {searchInitiated && (
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
