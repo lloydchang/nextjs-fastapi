@@ -1,4 +1,4 @@
-# scrape_with_requests.py
+# python/scrape_with_requests.py
 
 import requests
 

@@ -1,4 +1,4 @@
-# scrape_test.py
+# python/scrape_test.py
 
 import requests
 from bs4 import BeautifulSoup

@@ -20,15 +20,15 @@ import os
 import pickle
 
 # Import custom modules
-from api.search import semantic_search
-from api.transcript import router as transcript_router  # Import transcript router
-from api.data_loader import load_dataset
-from api.embedding_utils import encode_descriptions, encode_sdg_keywords
-from api.sdg_manager import get_sdg_keywords
-from api.sdg_utils import compute_sdg_tags
-from api.model import load_model
-from api.logger import logger
-from api.cache_manager import save_cache
+from python.search import semantic_search
+from python.transcript import router as transcript_router  # Import transcript router
+from python.data_loader import load_dataset
+from python.embedding_utils import encode_descriptions, encode_sdg_keywords
+from python.sdg_manager import get_sdg_keywords
+from python.sdg_utils import compute_sdg_tags
+from python.model import load_model
+from python.logger import logger
+from python.cache_manager import save_cache
 
 # Suppress FutureWarnings from transformers and torch libraries
 logger.info("Step 1.1: Suppressing `FutureWarning` in transformers and torch libraries.")
@@ -53,8 +53,8 @@ app.add_middleware(
 app.include_router(transcript_router, prefix="/api/py", tags=["Transcript"])
 
 # Load the TEDx Dataset with caching mechanism using data_loader.py
-file_path = "./api/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-cache_file_path = "./api/cache/tedx_dataset.pkl"
+file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+cache_file_path = "./python/cache/tedx_dataset.pkl"
 data = load_dataset(file_path, cache_file_path)
 
 # Load the Sentence-BERT model for Semantic Search using model.py
@@ -69,7 +69,7 @@ sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
 
 # Precompute or Load Cached SDG Keyword Embeddings using cache_manager.py and embedding_utils.py
 logger.info("Step 7: Precomputing or loading cached SDG keyword embeddings.")
-sdg_embeddings_cache = "./api/cache/sdg_embeddings.pkl"
+sdg_embeddings_cache = "./python/cache/sdg_embeddings.pkl"
 
 if os.path.exists(sdg_embeddings_cache):
     logger.info("Step 7.1: Loading cached SDG keyword embeddings.")
@@ -99,7 +99,7 @@ else:
 
 # Precompute or Load Cached SDG Tags for Each TEDx Talk using sdg_utils.py
 logger.info("Step 8: Precomputing or loading cached SDG tags for TEDx talks.")
-sdg_tags_cache = "./api/cache/sdg_tags.pkl"
+sdg_tags_cache = "./python/cache/sdg_tags.pkl"
 
 if os.path.exists(sdg_tags_cache):
     logger.info("Step 8.1: Loading cached SDG tags.")
@@ -133,7 +133,7 @@ else:
 
 # Precompute or Load Cached Embeddings for Each Description using embedding_utils.py and cache_manager.py
 logger.info("Step 9: Precomputing or loading cached embeddings for each description.")
-description_embeddings_cache = "./api/cache/description_embeddings.pkl"
+description_embeddings_cache = "./python/cache/description_embeddings.pkl"
 
 if os.path.exists(description_embeddings_cache):
     logger.info("Step 9.1: Loading cached description embeddings.")

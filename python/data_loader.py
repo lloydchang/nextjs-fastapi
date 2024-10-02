@@ -1,8 +1,8 @@
-# api/data_loader.py
+# python/data_loader.py
 
 import pandas as pd
-from api.logger import logger
-from api.cache_manager import load_cache, save_cache
+from python.logger import logger
+from python.cache_manager import load_cache, save_cache
 
 def load_dataset(file_path: str, cache_file_path: str) -> pd.DataFrame:
     """

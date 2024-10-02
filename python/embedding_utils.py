@@ -1,8 +1,8 @@
-# api/embedding_utils.py
+# python/embedding_utils.py
 
 from typing import List, Optional
 from sentence_transformers import SentenceTransformer
-from api.logger import logger  # Import the centralized logger
+from python.logger import logger  # Import the centralized logger
 
 def encode_descriptions(descriptions: List[str], model: SentenceTransformer) -> List[List[float]]:
     """

@@ -1,4 +1,4 @@
-# api/search.py
+# python/search.py
 
 from typing import List, Dict
 import pandas as pd
@@ -6,7 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import torch
 import asyncio
-from api.logger import logger  # Import the centralized logger
+from python.logger import logger  # Import the centralized logger
 
 number_of_results = 100
 

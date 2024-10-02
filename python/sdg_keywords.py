@@ -1,4 +1,4 @@
-# api/sdg_keywords.py
+# python/sdg_keywords.py
 
 sdg_keywords = {
     "SDG1": ["poverty", "income", "livelihood", "financial inclusion"],
