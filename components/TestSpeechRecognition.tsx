@@ -18,7 +18,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
   const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
-  const noInterimTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Store the timeout reference
+  const isRecognitionActiveRef = useRef<boolean>(false); // Track if recognition is currently active
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -29,6 +29,12 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
       recognition.continuous = true; // Continuous listening mode
       recognition.interimResults = true; // Capture interim results
       recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        console.log('Speech recognition started.');
+        setIsListening(true);
+        isRecognitionActiveRef.current = true; // Set recognition active flag to true
+      };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         let interimTranscript = '';
@@ -44,47 +50,44 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         }
 
         if (finalTranscript) {
-          setResults(finalTranscript.trim());
+          console.log('Final result received:', finalTranscript.trim());
+          setResults((prev) => prev + finalTranscript.trim() + ' ');
           onSpeechResult(finalTranscript.trim());
           setInterimResults('');
-          // Clear timeout when final result is received
-          if (noInterimTimeoutRef.current) {
-            clearTimeout(noInterimTimeoutRef.current);
-          }
         }
 
         if (interimTranscript) {
+          console.log('Interim result received:', interimTranscript.trim());
           setInterimResults(interimTranscript.trim());
           onInterimUpdate(interimTranscript.trim());
-          // Restart timeout if there are interim results
-          if (noInterimTimeoutRef.current) {
-            clearTimeout(noInterimTimeoutRef.current); // Clear any existing timeout
-          }
-          // Set a timeout to restart recognition if no interim results for 3 seconds
-          noInterimTimeoutRef.current = setTimeout(() => {
-            console.log('No interim results for 3 seconds. Restarting...');
-            recognition.stop(); // Stop recognition
-            recognition.start(); // Restart recognition
-          }, 3000); // 3 seconds
         }
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
         setIsListening(false);
-        // Restart recognition on error
+        isRecognitionActiveRef.current = false; // Set recognition active flag to false
         if (isMicOn) {
-          recognition.start();
-          setIsListening(true);
+          console.log('Restarting recognition due to error.');
+          if (!isRecognitionActiveRef.current) { // Only restart if not already active
+            recognition.start();
+            isRecognitionActiveRef.current = true;
+            setIsListening(true);
+          }
         }
       };
 
       recognition.onend = () => {
-        console.log('Speech recognition ended. Restarting...');
+        console.log('Speech recognition ended.');
         setIsListening(false);
+        isRecognitionActiveRef.current = false; // Set recognition active flag to false
         if (isMicOn) {
-          recognition.start(); // Restart speech recognition if mic is still on
-          setIsListening(true);
+          console.log('Restarting recognition as mic is still on.');
+          if (!isRecognitionActiveRef.current) { // Only restart if not already active
+            recognition.start();
+            isRecognitionActiveRef.current = true;
+            setIsListening(true);
+          }
         }
       };
 
@@ -95,24 +98,29 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.onend = null;
+        recognitionRef.current.onstart = null;
         recognitionRef.current.onresult = null;
         recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
         recognitionRef.current = null; // Clean up the recognition instance
-      }
-      if (noInterimTimeoutRef.current) {
-        clearTimeout(noInterimTimeoutRef.current); // Clean up the timeout
       }
     };
   }, [onSpeechResult, onInterimUpdate, isMicOn]);
 
   useEffect(() => {
     if (isMicOn && recognitionRef.current) {
-      recognitionRef.current.start(); // Start recognition when mic is on
-      setIsListening(true);
+      console.log('Mic is turned on. Starting recognition...');
+      if (!isRecognitionActiveRef.current) {
+        recognitionRef.current.start(); // Start recognition when mic is on
+        isRecognitionActiveRef.current = true;
+        setIsListening(true);
+      }
     } else if (recognitionRef.current) {
+      console.log('Mic is turned off. Stopping recognition...');
       recognitionRef.current.stop(); // Stop recognition when mic is off
       setIsListening(false);
+      isRecognitionActiveRef.current = false;
     }
   }, [isMicOn]);
 
