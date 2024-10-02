@@ -1,5 +1,5 @@
 // components/LeftPanel.tsx
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
@@ -11,7 +11,7 @@ import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
 import TestSpeechRecognition from './TestSpeechRecognition';
-import { Message } from '../types';
+import { updateFinalResult, updateInterimResult, trimOverlap } from '../utils/chatUtils';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <p>Loading messages...</p>,
@@ -20,48 +20,23 @@ const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
 
 const LeftPanel: React.FC = () => {
   const { mediaState, videoRef, audioRef, startCam, stopCam, toggleMic, togglePip, toggleMem } = useMedia();
-  const { messages: botMessages, sendActionToChatbot, clearChatHistory } = useChat();
+  const { messages, setMessages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
 
   const [chatInput, setChatInput] = useState<string>('');
-  const [combinedMessages, setCombinedMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Function to handle user chat
   const handleChat = useCallback(
-    (input: string) => {
+    async (input: string, isManual = false, isFinal = false) => {
       if (input.trim()) {
-        // Create user message
-        const userMessage: Message = {
-          id: generateUniqueId(),
-          type: 'user',
-          text: input.trim(),
-        };
-
-        // Add user message to combined messages immediately
-        setCombinedMessages(prev => [...prev, userMessage]);
-
-        // Send message to chatbot asynchronously
-        sendActionToChatbot(userMessage.text);
+        const prefix = isManual ? "" : isFinal ? "🎙️ " : "🎤 ";
+        const formattedMessage = `${prefix}${input.trim()}`;
+        await sendActionToChatbot(formattedMessage);
       }
     },
     [sendActionToChatbot]
   );
-
-  // Effect to append bot messages to combined messages
-  useEffect(() => {
-    if (botMessages.length === 0) return;
-    
-    const latestBotMessage = botMessages[botMessages.length - 1];
-    setCombinedMessages(prev => [...prev, latestBotMessage]);
-  }, [botMessages]);
-
-  // Function to clear chat history
-  const handleClearChat = useCallback(() => {
-    clearChatHistory();
-    setCombinedMessages([]);
-  }, [clearChatHistory]);
 
   return (
     <div className={styles.container}>
@@ -76,8 +51,8 @@ const LeftPanel: React.FC = () => {
         <h1 className={styles.title}><b>Ideas change everything</b></h1>
         <div className={styles.chatInterface} ref={chatContainerRef}>
           <h3 className={styles.chatHeader}><b>Chat with TEDxSDG</b></h3>
-          <HeavyChatMessages messages={combinedMessages} />
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
+          <HeavyChatMessages messages={messages} />
+          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
           <ControlButtons
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
@@ -88,12 +63,12 @@ const LeftPanel: React.FC = () => {
             togglePip={togglePip}
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
-            eraseMemory={handleClearChat}
+            eraseMemory={clearChatHistory}
           />
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
-            onSpeechResult={(finalResults) => handleChat(finalResults)}
-            onInterimUpdate={(interimResult) => handleChat(interimResult)}
+            onSpeechResult={(finalResults) => handleChat(finalResults, false, true)} // Use 🎙️ for final
+            onInterimUpdate={(interimResult) => handleChat(interimResult, false, false)} // Use 🎤 for interim
           />
         </div>
       </div>
@@ -102,8 +77,3 @@ const LeftPanel: React.FC = () => {
 };
 
 export default React.memo(LeftPanel);
-
-// Utility to generate unique IDs
-const generateUniqueId = (): string => {
-  return Math.random().toString(36).substr(2, 9);
-};
