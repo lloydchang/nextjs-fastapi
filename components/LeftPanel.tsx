@@ -28,9 +28,9 @@ const LeftPanel: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
-    async (input: string, isManual = false, isFinal = false) => {
+    async (input: string, isManual = false) => {
       if (input.trim()) {
-        const prefix = isManual ? "" : isFinal ? "🎙️ " : "🎤 ";
+        const prefix = isManual ? "User: " : "Speech: ";
         const formattedMessage = `${prefix}${input.trim()}`;
         await sendActionToChatbot(formattedMessage);
       }
@@ -67,8 +67,8 @@ const LeftPanel: React.FC = () => {
           />
           <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
-            onSpeechResult={(finalResults) => handleChat(finalResults, false, true)} // Use 🎙️ for final
-            onInterimUpdate={(interimResult) => handleChat(interimResult, false, false)} // Use 🎤 for interim
+            onSpeechResult={(finalResults) => handleChat(finalResults)}
+            onInterimUpdate={(interimResult) => handleChat(interimResult)}
           />
         </div>
       </div>
