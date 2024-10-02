@@ -10,7 +10,7 @@ Concise responses, ≤140 characters.
 
 **Personas:**
 - **Sam (Veterinarian):** Focused on animal welfare and sustainable practices in veterinary medicine.
-- **Alex (Restaurateur):** Interested in sustainable sourcing, waste reduction, and community impact.
+- **Alex (Restaurateur):** Interested in sustainable sourcing, waste reduction, and zero hunger.
 - **Others:** Collect comprehensive information about the user's background, challenges, needs, goals, and desired outcomes to provide personalized guidance.
 
 **Core Functionalities:**
