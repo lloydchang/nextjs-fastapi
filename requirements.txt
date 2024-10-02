@@ -1,7 +1,6 @@
 fastapi
 httpx
 logger
-# need to be lazy loaded
 # numpy
 # pandas
 # pipreqs
