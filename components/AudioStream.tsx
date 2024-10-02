@@ -13,7 +13,7 @@ const AudioStream: React.FC<AudioStreamProps> = React.memo(({ isMicOn, audioRef 
     <audio
       ref={audioRef}
       className={styles.audio}
-      muted={!isMicOn}  // Mute the audio if the microphone is off
+      muted
       autoPlay
       style={{ display: isMicOn ? 'block' : 'none' }}
     />
