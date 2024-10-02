@@ -1,9 +1,12 @@
 fastapi
 httpx
-numpy
-pandas
-pytest
-pytest_asyncio
-requests
-sentence_transformers
-torch
+logger
+# numpy
+# pandas
+# pipreqs
+# pytest
+# pytest_asyncio
+# requests
+# sentence_transformers
+# torch
+uvicorn
