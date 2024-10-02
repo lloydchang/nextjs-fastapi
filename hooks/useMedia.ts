@@ -19,10 +19,11 @@ interface UseMediaReturn {
   toggleMem: () => void;
 }
 
+// Default media state
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: false, // Initialize mic as off
+    isMicOn: true,
     isPipOn: false,
     isMemOn: true,
   });

@@ -30,6 +30,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 }) => {
   console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
 
+  // On : Off button text
   const micButtonText = isMicOn ? '🎤' : '🎤';
   const eraseButtonText = '🗑️';
   const memButtonText = isMemOn ? '🧠' : '🧠';
@@ -38,6 +39,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 
   return (
     <div className={styles.container}>
+
+      {/* Erase Memory Button */}
+      <button
+        type="button"
+        onClick={eraseMemory} // Ensure eraseMemory is called here
+        className={`${styles.button} ${styles.eraseButton}`}
+        aria-label={eraseButtonText}
+      >
+        {eraseButtonText}
+      </button>
 
       {/* Microphone Button */}
       <button
@@ -48,16 +59,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label={micButtonText}
       >
         {micButtonText}
-      </button>
-
-      {/* Erase Memory Button */}
-      <button
-        type="button"
-        onClick={eraseMemory} // Ensure eraseMemory is called here
-        className={`${styles.button} ${styles.eraseButton}`}
-        aria-label={eraseButtonText}
-      >
-        {eraseButtonText}
       </button>
 
       {/* Memory Button */}
