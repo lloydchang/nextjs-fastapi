@@ -177,7 +177,12 @@ async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
         search_module = lazy_load("python.search", "semantic_search")
         logger.info(f"Search Module Loaded: {search_module is not None}")
         result = await search_module(query, data, model, sdg_embeddings)
-        logger.info(f"Search result: {result}")
+        # Only show the title of the first dictionary entry in the list
+        if result and isinstance(result, list) and len(result) > 0:
+            first_entry_title = result[0].get("title", "No title available")  # Get the 'title' field
+            logger.info(f"Search result: {first_entry_title}")
+        else:
+            logger.info("No valid result available")
         return result
     except Exception as e:
         logger.error(f"Error in search endpoint: {e}")
