@@ -1,17 +1,11 @@
 // services/serviceConfig.ts
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 import { serviceKeys } from './serviceKeys';
 
-// if nothing appears in the console, it means that the serviceKeys object is empty
 console.log("Service Keys in serviceConfig.ts:", serviceKeys);
 
-// uncomment to test
-// hardcoding this test
-// serviceKeys['OPENAI_API_KEY'] = 'sk-test-openai-key';
-// serviceKeys['OPENAI_API_BASE_URL'] = 'https://api.openai.com/v1/completions';
+serviceKeys['OPENAI_API_KEY'] = 'sk-test-openai-key';
+serviceKeys['OPENAI_API_BASE_URL'] = 'https://api.openai.com/v1/completions';
 
 console.log("Service Keys in serviceConfig.ts:", serviceKeys);
 
