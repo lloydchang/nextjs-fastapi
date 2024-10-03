@@ -1,5 +1,7 @@
 // services/serviceKeys.ts
 
+console.log("Loaded environment variables:", process.env);
+
 export const serviceKeys = {};
 
 // Define the keys you want to add conditionally
@@ -24,3 +26,5 @@ keysToCheck.forEach(key => {
         serviceKeys[key] = value;
     }
 });
+
+console.log("Service Keys in serviceConfig.ts:", serviceKeys);

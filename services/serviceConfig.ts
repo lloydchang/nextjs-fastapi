@@ -2,6 +2,16 @@
 
 import { serviceKeys } from './serviceKeys';
 
+console.log("Service Keys in serviceConfig.ts:", serviceKeys);
+
+serviceKeys['OPENAI_API_KEY'] = 'sk-test-openai-key';
+serviceKeys['OPENAI_API_BASE_URL'] = 'https://api.openai.com/v1/completions';
+
+console.log("Service Keys in serviceConfig.ts:", serviceKeys);
+
+// Log serviceKeys to inspect values
+console.log("Loaded serviceKeys:", serviceKeys);
+
 export const services = [
     { model: 'aws-bedrock', url: serviceKeys.AWS_API_BASE_URL, apiKey: serviceKeys.AWS_API_KEY }, // AWS Bedrock
     { model: 'azure-openai', url: serviceKeys.AZURE_API_BASE_URL, apiKey: serviceKeys.AZURE_API_KEY }, // Azure OpenAI
@@ -16,3 +26,5 @@ export const services = [
     { model: 'oracle-llama', url: serviceKeys.ORACLE_API_BASE_URL, apiKey: serviceKeys.ORACLE_API_KEY }, // Oracle Cloud
     { model: 'text-embedding-3-small', url: serviceKeys.OPENAI_API_BASE_URL, apiKey: serviceKeys.OPENAI_API_KEY }, // OpenAI Embeddings
 ];
+
+console.log("Services configured:", services);
