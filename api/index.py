@@ -177,7 +177,21 @@ async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
         search_module = lazy_load("python.search", "semantic_search")
         logger.info(f"Search Module Loaded: {search_module is not None}")
         result = await search_module(query, data, model, sdg_embeddings)
-        logger.info(f"Search result: {result}")
+        # Check if 'result' is a non-empty list
+        if result and isinstance(result, list):
+            total_results = len(result)
+            logger.info(f"Search results retrieved: {total_results} talks found.")
+            
+            # Specify how many example titles you want to display
+            example_count = 1  # You can adjust this number as needed
+            example_titles = [entry.get("title", "No title available") for entry in result[:example_count]]
+            
+            if example_titles:
+                logger.info("For example:")
+                for title in example_titles:
+                    logger.info(f"- {title}")
+        else:
+            logger.info("No valid result available.")
         return result
     except Exception as e:
         logger.error(f"Error in search endpoint: {e}")
