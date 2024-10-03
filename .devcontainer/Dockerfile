@@ -12,4 +12,4 @@ EXPOSE 3000
 EXPOSE 8000
 EXPOSE 11434
 
-CMD ["bin/cmd.sh"]
+CMD ["cmd.sh"]
