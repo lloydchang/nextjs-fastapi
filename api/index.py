@@ -52,8 +52,6 @@ warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.
 file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
 cache_file_path = "./python/cache/tedx_dataset.pkl"
 sdg_embeddings_cache = "./python/cache/sdg_embeddings.pkl"
-sdg_tags_cache = "./python/cache/sdg_tags.pkl"
-description_embeddings_cache = "./python/cache/description_embeddings.pkl"
 
 # Background task to load the necessary resources
 async def load_resources():

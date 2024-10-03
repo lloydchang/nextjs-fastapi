@@ -4,7 +4,6 @@ from typing import List, Dict
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
-import torch
 import asyncio
 from python.logger import logger  # Import the centralized logger
 
@@ -32,7 +31,7 @@ async def semantic_search(query: str, data: pd.DataFrame, model: SentenceTransfo
     # Check if the model and required data are available
     if model is None or 'description_vector' not in data.columns:
         logger.error(f"Model is None: {model is None}, 'description_vector' in data columns: {'description_vector' in data.columns}")
-        logger.error("Model or data not available. Columns found: {list(data.columns)}")
+        logger.error("Model or data not available. Make sure 'description_vector' column is present in the dataset.")
         return [{"error": "Model or data not available. Make sure 'description_vector' column is present in the dataset."}]
 
     try:
