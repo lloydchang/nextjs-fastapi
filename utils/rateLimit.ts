@@ -10,6 +10,7 @@ import rateLimit from 'next-rate-limit';
 const limiter = rateLimit({
   interval: 60 * 1000, // 1 minute
   uniqueTokenPerInterval: 500, // Max 500 unique tokens per interval
+  tokensPerInterval: 100, // Allow 100 requests per IP address per minute
 });
 
 export default limiter;
