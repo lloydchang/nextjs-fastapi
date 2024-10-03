@@ -2,162 +2,94 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { systemPrompt } from '../../../utils/systemPrompt';
+import { generateFromGoogleVertexAI } from '../../../lib/google-vertex-ai';
+import { generateFromOllamaLLaMA } from '../../../lib/ollama-llama';
+import { ChatbotRequestBody, ResponseSegment } from '../../../types';
 
-// Define the structure of the request body
-type ChatbotRequestBody = {
-  model: string;
-  prompt: string;
-  temperature: number;
-};
-
-// Environment variables
-const {
-  GOOGLE_GEMINI_ENDPOINT,
-  GOOGLE_GEMINI_API_KEY,
-  LOCAL_LLAMA_ENDPOINT,
-  DEFAULT_MODEL,
-  FALLBACK_MODEL,
-} = process.env;
-
-// Utility function to send POST requests to chatbot endpoints
-const sendToEndpoint = async (
-  endpoint: string,
-  requestBody: ChatbotRequestBody,
-  apiKey?: string
-): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  // If an API key is provided, include it in the headers (adjust header name as needed)
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`;
-  }
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Server responded with status: ${response.status} - ${response.statusText}`);
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('Failed to access the response body stream.');
-
-  return reader;
-};
-
-// Handler for the API route
+/**
+ * Handler for the POST request to the /api/chat endpoint.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { input, context } = await request.json();
 
     if (typeof input !== 'string') {
-      return NextResponse.json({ error: 'Invalid input format. "input" must be a string.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid input format. "input" must be a string.' },
+        { status: 400 }
+      );
     }
 
-    // Prepare the initial request body
+    // Prepare the prompt
+    const prompt = context
+      ? `${systemPrompt}\n${context}\n\n### New Input:\nUser: ${input}\nAssistant:`
+      : `${systemPrompt}\n### New Input:\nUser: ${input}\nAssistant:`;
+
+    // Prepare the request body
     const requestBody: ChatbotRequestBody = {
-      model: DEFAULT_MODEL || 'google-gemini-1.5',
-      prompt: context
-        ? `${systemPrompt}\n${context}\n\n### New Input:\nUser: ${input}\nAssistant:`
-        : `${systemPrompt}\n### New Input:\nUser: ${input}\nAssistant:`,
+      model: process.env.DEFAULT_MODEL || 'google-gemini-1.5',
+      prompt: prompt,
       temperature: 0.0,
     };
 
+    // Regular expression to detect sentence endings
     const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
-    let reader: ReadableStreamDefaultReader<Uint8Array>;
-    let buffer = ''; // Buffer to accumulate complete segments
+
+    // Initialize buffer and context
+    let buffer = '';
     let currentContext: string | null = context || null;
 
-    // Attempt to connect to Google Gemini first
+    let generatedText: string = '';
+
+    // Attempt to generate content using Google Vertex AI (Gemini)
     try {
-      if (!GOOGLE_GEMINI_ENDPOINT || !GOOGLE_GEMINI_API_KEY) {
-        throw new Error('Google Gemini endpoint or API key is not configured.');
+      if (!process.env.GOOGLE_GEMINI_MODEL || !process.env.GOOGLE_VERTEX_AI_LOCATION) {
+        throw new Error('Google Vertex AI model or location is not configured.');
       }
-      reader = await sendToEndpoint(GOOGLE_GEMINI_ENDPOINT, requestBody, GOOGLE_GEMINI_API_KEY);
-    } catch (remoteError) {
-      console.warn('Google Gemini API failed, falling back to local LLaMA model:', remoteError);
+      generatedText = await generateFromGoogleVertexAI(process.env.GOOGLE_GEMINI_MODEL, requestBody.prompt);
+    } catch (vertexError) {
+      console.warn('Google Vertex AI (Gemini) API failed, falling back to local Ollama LLaMA model:', vertexError);
 
-      // Modify the request body for local LLaMA
-      requestBody.model = FALLBACK_MODEL || 'llama3.2';
+      // Modify the request body for local LLaMA if necessary
+      const llamaPrompt = requestBody.prompt; // Modify if your LLaMA API expects a different format
 
-      // Attempt to connect to local LLaMA model
+      // Attempt to generate content using Ollama LLaMA
       try {
-        if (!LOCAL_LLAMA_ENDPOINT) {
-          throw new Error('Local LLaMA endpoint is not configured.');
+        if (!process.env.LOCAL_LLAMA_ENDPOINT) {
+          throw new Error('Local Ollama LLaMA endpoint is not configured.');
         }
-        reader = await sendToEndpoint(LOCAL_LLAMA_ENDPOINT, requestBody);
-      } catch (localError) {
-        console.error('Both remote and local chatbot services failed:', localError);
+
+        generatedText = await generateFromOllamaLLaMA(process.env.LOCAL_LLAMA_ENDPOINT, llamaPrompt);
+      } catch (llamaError) {
+        console.error('Both Google Vertex AI (Gemini) and Ollama LLaMA models failed:', llamaError);
         return NextResponse.json(
-          { error: 'Failed to connect to chatbot services.' },
+          { error: 'Failed to generate content using both Google Vertex AI (Gemini) and Ollama LLaMA models.' },
           { status: 500 }
         );
       }
     }
 
+    // Split the generated text into segments (sentences)
+    const segments = generatedText.split(/(?<=[.!?])\s+/); // Split into sentences
+
     // Create a ReadableStream to stream data back to the client
-    const stream = new ReadableStream({
-      async start(controller) {
-        const decoder = new TextDecoder('utf-8');
-        let done = false;
-
-        while (!done) {
-          const { value, done: streamDone } = await reader.read();
-          const chunk = value ? decoder.decode(value, { stream: true }) : '';
-
-          if (chunk) {
-            try {
-              const parsed = JSON.parse(chunk);
-              if (parsed.response) {
-                buffer += parsed.response;
-
-                // Check if buffer has a complete segment
-                if (sentenceEndRegex.test(buffer)) {
-                  const completeSegment = buffer.trim();
-                  buffer = ''; // Clear buffer for next segment
-
-                  // Update context if provided
-                  if (parsed.context) {
-                    currentContext = parsed.context;
-                  }
-
-                  // Create a JSON object for the segment
-                  const segment = {
-                    message: completeSegment,
-                    context: currentContext,
-                  };
-
-                  // Encode the segment and enqueue it
-                  controller.enqueue(new TextEncoder().encode(JSON.stringify(segment) + '\n'));
-                }
-              }
-              done = parsed.done || streamDone;
-            } catch (e) {
-              console.error('Error parsing chunk:', chunk, e);
-            }
-          } else {
-            done = true;
+    const stream = new ReadableStream<ResponseSegment>({
+      start(controller) {
+        segments.forEach((segment) => {
+          const message = segment.trim();
+          if (message) {
+            const responseSegment: ResponseSegment = {
+              message: message,
+              context: currentContext,
+            };
+            controller.enqueue(responseSegment);
           }
-        }
-
-        // Ensure remaining buffer (if any) is sent to the client
-        if (buffer.length > 0) {
-          const finalSegment = {
-            message: buffer.trim(),
-            context: currentContext,
-          };
-          controller.enqueue(new TextEncoder().encode(JSON.stringify(finalSegment) + '\n'));
-        }
-
+        });
         controller.close();
       },
     });
 
+    // Stream the response as JSON
     return new NextResponse(stream, {
       headers: {
         'Content-Type': 'application/json',
