@@ -39,6 +39,14 @@ const sdgTitleMap: Record<string, string> = {
   'sdg17': 'SDG 17: Partnerships for the Goals'
 };
 
+// Updated initial keyword logic with randomization
+const determineInitialKeyword = () => {
+  const randomNumber = Math.floor(Math.random() * 18); // Generates a number between 0 and 17
+  return randomNumber === 0 
+    ? "TED AI" 
+    : ['poverty', 'hunger', 'health', 'education', 'gender', 'water', 'energy', 'work', 'industry', 'inequality', 'city', 'consumption', 'climate', 'ocean', 'land', 'peace', 'partnership'][randomNumber - 1];
+};
+
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
   const { sendActionToChatbot } = useChatContext();
@@ -53,11 +61,6 @@ const MiddlePanel: React.FC = () => {
 
   const addLog = (message: string) => {
     setLogs((prevLogs) => [...prevLogs, message]);
-  };
-
-  const determineInitialKeyword = () => {
-    // You can randomize this or use a fixed initial keyword
-    return 'sdg1'; // Start with sdg1 for simplicity
   };
 
   // Initial greeting fetch
@@ -79,7 +82,7 @@ const MiddlePanel: React.FC = () => {
   // Effect for handling the initial keyword setup and search
   useEffect(() => {
     if (initialKeyword.current === "") {
-      initialKeyword.current = determineInitialKeyword();
+      initialKeyword.current = determineInitialKeyword(); // Use the new randomization logic here
       setQuery(initialKeyword.current);
       performSearch(initialKeyword.current); // Trigger initial search
     }
