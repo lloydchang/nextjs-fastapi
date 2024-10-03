@@ -9,6 +9,7 @@ import { streamResponseWithLogs, sendCompleteResponse } from './handlers/handleR
 import { streamErrorMessage, returnErrorResponse } from './handlers/handleErrors';
 import { checkRateLimit } from '../../../utils/rateLimit';
 import { sanitizeInput } from '../../../utils/stringUtils';
+import { systemPrompt } from '../../../utils/systemPrompt'; // Import the centralized system prompt
 
 validateEnv();
 
@@ -45,8 +46,8 @@ export async function POST(request: NextRequest) {
     logMessages.push(`Sanitized input: ${sanitizedInput}`);
 
     const prompt = context
-      ? `${config.systemPrompt}\n${context}\n\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`
-      : `${config.systemPrompt}\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`;
+      ? `${systemPrompt}\n${context}\n\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`
+      : `${systemPrompt}\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`;
 
     const requestBody = { model: config.primaryModel, prompt: prompt, temperature: config.temperature };
 
