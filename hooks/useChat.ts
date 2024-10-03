@@ -74,11 +74,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
           body: JSON.stringify({ input: input.trim(), context: fullContext }),
         });
 
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json(); // Read the entire response as JSON
+        const data = await response.json();
         console.log('API Response:', data); // Debug log
 
         if (Array.isArray(data)) {
@@ -90,14 +86,12 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
             }
           }
         } else {
-          console.error('Unexpected response format:', data);
           setMessages((prev) => [
             ...prev,
-            { id: `error-${Date.now()}`, sender: 'bot', text: `Error: Unexpected response format` },
+            { id: `error-${Date.now()}`, sender: 'bot', text: `Error: ${data.message || 'Unexpected response format'}` },
           ]);
         }
       } catch (error) {
-        console.error('Error communicating with chatbot:', error);
         setMessages((prev) => [
           ...prev,
           { id: `error-${Date.now()}`, sender: 'bot', text: `Error: ${error.message || 'Unknown error occurred'}` },
