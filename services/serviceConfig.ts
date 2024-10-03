@@ -1,18 +1,20 @@
 // services/serviceConfig.ts
 
 import { serviceKeys } from './serviceKeys';
+import { serviceUrls } from './serviceUrls';
+import { ServiceConfig } from './types';
 
 export const services = [
-  { model: 'aws-bedrock', endpoint: 'https://bedrock.aws.com/v1/completions', apiKey: serviceKeys.aws }, // AWS Bedrock
-  { model: 'azure-openai', endpoint: 'https://api.openai.azure.com/v1/completions', apiKey: serviceKeys.azure }, // Azure OpenAI
-  { model: 'claude-v2', endpoint: 'https://api.anthropic.com/v1/complete', apiKey: serviceKeys.anthropic }, // Anthropic
-  { model: 'cohere-model', endpoint: 'https://api.cohere.ai/v1/generate', apiKey: serviceKeys.cohere }, // Cohere
-  { model: 'google-gemini-1.5', endpoint: 'https://api.google.com/v1/chat/gemini', apiKey: serviceKeys.google }, // Google Cloud
-  { model: 'gpt-4', endpoint: 'https://api.openai.com/v1/completions', apiKey: serviceKeys.openAi }, // OpenAI
-  { model: 'groq-accelerator', endpoint: 'https://api.groq.com/v1/generate', apiKey: serviceKeys.groq }, // Groq
-  { model: 'huggingface', endpoint: 'https://api-inference.huggingface.co/models/gpt', apiKey: serviceKeys.huggingFace }, // Hugging Face
-  { model: 'llama3.2', endpoint: 'http://localhost:11434/api/generate', apiKey: serviceKeys.ollama }, // Local LLaMA
-  { model: 'openrouter', endpoint: 'https://openrouter.ai/api/v1/completions', apiKey: serviceKeys.openRouter }, // OpenRouter
-  { model: 'oracle-llama', endpoint: 'https://api.oracle.com/v1/generative-ai', apiKey: serviceKeys.oracle }, // Oracle Cloud
-  { model: 'text-embedding-3-small', endpoint: 'https://api.openai.com/v1/embeddings', apiKey: serviceKeys.openAi }, // OpenAI Embeddings
+    { model: 'aws-bedrock', url: serviceUrls.AWS_API_BASE_URL, apiKey: serviceKeys.AWS_API_KEY }, // AWS Bedrock
+    { model: 'azure-openai', url: serviceUrls.AZURE_API_BASE_URL, apiKey: serviceKeys.AZURE_API_KEY }, // Azure OpenAI
+    { model: 'claude-v2', url: serviceUrls.ANTHROPIC_API_BASE_URL, apiKey: serviceKeys.ANTHROPIC_API_KEY }, // Anthropic
+    { model: 'cohere-model', url: serviceUrls.COHERE_API_BASE_URL, apiKey: serviceKeys.COHERE_API_KEY }, // Cohere
+    { model: 'google-gemini-1.5', url: serviceUrls.GOOGLE_API_BASE_URL, apiKey: serviceKeys.GOOGLE_API_KEY }, // Google Cloud
+    { model: 'gpt-4', url: serviceUrls.OPENAI_API_BASE_URL, apiKey: serviceKeys.OPENAI_API_KEY }, // OpenAI
+    { model: 'groq-accelerator', url: serviceUrls.GROQ_API_BASE_URL, apiKey: serviceKeys.GROQ_API_KEY }, // Groq
+    { model: 'huggingface', url: serviceUrls.HUGGINGFACE_API_BASE_URL, apiKey: serviceKeys.HUGGINGFACE_API_KEY }, // Hugging Face
+    { model: 'llama3.2', url: serviceUrls.OLLAMA_API_BASE_URL, apiKey: serviceKeys.OLLAMA_API_KEY }, // Local LLaMA
+    { model: 'openrouter', url: serviceUrls.OPENROUTER_API_BASE_URL, apiKey: serviceKeys.OPENROUTER_API_KEY }, // OpenRouter
+    { model: 'oracle-llama', url: serviceUrls.ORACLE_API_BASE_URL, apiKey: serviceKeys.ORACLE_API_KEY }, // Oracle Cloud
+    { model: 'text-embedding-3-small', url: serviceUrls.OPENAI_API_BASE_URL, apiKey: serviceKeys.OPENAI_API_KEY }, // OpenAI Embeddings
 ];
