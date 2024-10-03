@@ -1,13 +1,10 @@
 // tests/testChat.ts
 
-const { initiateChat } = require('../services/chatService');
-
+import { initiateChat } from '../services/chatService';
 
 const testChat = async () => {
   try {
-    await initiateChat('Hello, LLaMA!', null, (message: string, newContext: Record<string, unknown>) => {
-      console.log(message);
-      console.log(newContext);
+    await initiateChat('Hello, LLaMA!', null, (message, newContext) => {
       console.log('Bot Response:', message);
     });
   } catch (error) {
