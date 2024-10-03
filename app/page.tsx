@@ -10,8 +10,6 @@
 
 'use client'; // Mark as Client Component
 
-// console.log("Loaded environment variables:", process.env);
-
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { TalkProvider } from '../context/TalkContext';

@@ -1,22 +1,22 @@
 // services/serviceKeys.ts
 
-// console.log("Loaded environment variables:", process.env);
+console.log("Loaded environment variables:", process.env);
 
 export const serviceKeys = {};
 
 // Define the keys you want to add conditionally
 const keysToCheck = [
-    'NEXT_PUBLIC_ANTHROPIC_API_KEY',
-    'NEXT_PUBLIC_AWS_API_KEY',
-    'NEXT_PUBLIC_AZURE_API_KEY',
-    'NEXT_PUBLIC_COHERE_API_KEY',
-    'NEXT_PUBLIC_GOOGLE_API_KEY',
-    'NEXT_PUBLIC_GROQ_API_KEY',
-    'NEXT_PUBLIC_HUGGINGFACE_API_KEY',
-    'NEXT_PUBLIC_OLLAMA_API_KEY',
-    'NEXT_PUBLIC_OPENAI_API_KEY',
-    'NEXT_PUBLIC_OPENROUTER_API_KEY',
-    'NEXT_PUBLIC_ORACLE_API_KEY'
+    'ANTHROPIC_API_KEY',
+    'AWS_API_KEY',
+    'AZURE_API_KEY',
+    'COHERE_API_KEY',
+    'GOOGLE_API_KEY',
+    'GROQ_API_KEY',
+    'HUGGINGFACE_API_KEY',
+    'OLLAMA_API_KEY',
+    'OPENAI_API_KEY',
+    'OPENROUTER_API_KEY',
+    'ORACLE_API_KEY'
 ];
 
 // Dynamically add valid keys to the serviceKeys object
@@ -26,3 +26,5 @@ keysToCheck.forEach(key => {
         serviceKeys[key] = value;
     }
 });
+
+console.log("Service Keys in serviceConfig.ts:", serviceKeys);
