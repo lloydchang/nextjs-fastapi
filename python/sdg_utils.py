@@ -24,7 +24,7 @@ def compute_sdg_tags(cosine_similarities: torch.Tensor, sdg_names: List[str]) ->
                 top_n = row.topk(1).indices
                 sdg_indices = top_n
 
-            sdg_tags = [sdg_names[i] for i in sdg_indices]
+            sdg_tags = [f"sdg{i.item() + 1}" for i in sdg_indices]  # Generates tags like 'sdg1', 'sdg2', etc.
             sdg_tags_list.append(sdg_tags)
         logger.info("SDG tags computed successfully.")
     except Exception as e:

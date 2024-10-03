@@ -18,13 +18,26 @@ type Talk = {
   sdg_tags: string[];
 };
 
-// List of SDG keywords
-const sdgKeywords = [
-  'poverty', 'hunger', 'health', 'education', 'gender',
-  'water', 'energy', 'work', 'industry', 'inequality',
-  'city', 'consumption', 'climate', 'ocean', 'land',
-  'peace', 'partnership'
-];
+// SDG title mapping
+const sdgTitleMap: Record<string, string> = {
+  'sdg1': 'SDG 1: No Poverty',
+  'sdg2': 'SDG 2: Zero Hunger',
+  'sdg3': 'SDG 3: Good Health and Well-Being',
+  'sdg4': 'SDG 4: Quality Education',
+  'sdg5': 'SDG 5: Gender Equality',
+  'sdg6': 'SDG 6: Clean Water and Sanitation',
+  'sdg7': 'SDG 7: Affordable and Clean Energy',
+  'sdg8': 'SDG 8: Decent Work and Economic Growth',
+  'sdg9': 'SDG 9: Industry, Innovation, and Infrastructure',
+  'sdg10': 'SDG 10: Reduced Inequalities',
+  'sdg11': 'SDG 11: Sustainable Cities and Communities',
+  'sdg12': 'SDG 12: Responsible Consumption and Production',
+  'sdg13': 'SDG 13: Climate Action',
+  'sdg14': 'SDG 14: Life Below Water',
+  'sdg15': 'SDG 15: Life on Land',
+  'sdg16': 'SDG 16: Peace, Justice, and Strong Institutions',
+  'sdg17': 'SDG 17: Partnerships for the Goals'
+};
 
 const MiddlePanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
@@ -43,8 +56,8 @@ const MiddlePanel: React.FC = () => {
   };
 
   const determineInitialKeyword = () => {
-    const randomIndex = Math.floor(Math.random() * sdgKeywords.length);
-    return sdgKeywords[randomIndex];
+    // You can randomize this or use a fixed initial keyword
+    return 'sdg1'; // Start with sdg1 for simplicity
   };
 
   // Initial greeting fetch
@@ -213,7 +226,7 @@ const MiddlePanel: React.FC = () => {
                     {talk.title}
                   </a>
                   <p className={styles.sdgTags}>
-                    {talk.sdg_tags && talk.sdg_tags.length > 0 ? talk.sdg_tags.join(', ') : ''}
+                    {talk.sdg_tags && talk.sdg_tags.length > 0 ? talk.sdg_tags.map(tag => sdgTitleMap[tag]).join(', ') : ''}
                   </p>
                 </h3>
               </div>

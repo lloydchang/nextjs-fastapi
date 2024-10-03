@@ -106,7 +106,7 @@ async def load_resources():
         logger.info("Computing SDG embeddings.")
         sdg_manager = lazy_load("python.sdg_manager", "get_sdg_keywords")
         sdg_keywords = sdg_manager()
-        sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
+        sdg_keyword_list = [keywords for keywords in sdg_keywords.keys()]  # Only take the keys (sdg1, sdg2, etc.)
         embedding_utils = lazy_load("python.embedding_utils", "encode_sdg_keywords")
         sdg_embeddings = await asyncio.to_thread(embedding_utils, sdg_keyword_list, model)
         if sdg_embeddings:
