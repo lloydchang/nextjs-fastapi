@@ -1,4 +1,4 @@
-// services/sendToUrl.ts
+// services/sendToEndpoint.ts
 
 type ChatbotRequestBody = {
     model: string;
@@ -6,12 +6,12 @@ type ChatbotRequestBody = {
     temperature: number;
   };
   
-  // Function to send the request to a specific Url
-  export const sendToUrl = async (Url: string, requestBody: ChatbotRequestBody, apiKey?: string) => {
+  // Function to send the request to a specific endpoint
+  export const sendToEndpoint = async (endpoint: string, requestBody: ChatbotRequestBody, apiKey?: string) => {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
     if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
   
-    const response = await fetch(Url, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody),
