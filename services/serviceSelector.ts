@@ -13,18 +13,16 @@ const noValidServiceErrorMessage = 'No valid services available. Please check yo
 // Filter services based on valid keys and exclude keys starting with 'your_'
 const validServices = services.filter((service) => {
   const apiKey = service.apiKey;
-  const url = service.url; // Assume you have a 'url' property in your service object
 
-  // Check if the API key is valid and URL is defined
-  const isValid = apiKey && !apiKey.startsWith('your_') && url && !url.startsWith('your_');
+  // Check if the API key is valid
+  const isValid = apiKey && !apiKey.startsWith('your_');
 
   // Log attempts to filter services
   console.log(`Examining service: ${service.model}`);
-  console.log(`API Key valid: ${isValid ? 'Yes' : 'No'}`);
-  console.log(`URL valid: ${url ? 'Yes' : 'No'}`);
+  console.log(`API Key valid: ${isValid}`);
 
   if (!isValid) {
-    console.log(`Service ${service.model} excluded due to invalid API Key or URL.`);
+    console.log(`Service ${service.model} excluded due to invalid API Key.`);
   }
   
   return isValid;
