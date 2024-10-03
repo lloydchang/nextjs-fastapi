@@ -15,3 +15,13 @@ export function isDefaultPlaceholder(value: string): boolean {
     );
   }
   
+  /**
+   * Sanitizes input by removing any unwanted HTML tags.
+   * 
+   * @param input - The input string to be sanitized.
+   * @returns A sanitized string with HTML tags removed.
+   */
+  export function sanitizeInput(input: string): string {
+    return input.replace(/<[^>]*>?/gm, '');
+  }
+  
