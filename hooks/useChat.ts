@@ -1,12 +1,11 @@
 // hooks/useChat.ts
+
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { sendMessageToChatbot } from '../services/chatService'; // Import the chat service
 
 export interface Message {
   id: string; // Add a unique ID for each message
-  sender: string;
+  sender: 'user' | 'bot'; // Specify sender as 'user' or 'bot' for clarity
   text: string;
-  isInterim?: boolean;
 }
 
 interface UseChatProps {
@@ -17,7 +16,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   const LOCAL_STORAGE_KEY = 'chatMemory'; // Local storage key for messages
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentContext, setCurrentContext] = useState<string | null>(null); // Track context as a full string
-  const isSendingRef = useRef(false); // Ref to track if message is already being sent
+  const isSendingRef = useRef(false); // Ref to track if a message is already being sent
 
   // Ref to hold the latest messages for context
   const messagesRef = useRef<Message[]>([]);
@@ -83,17 +82,42 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       try {
         console.log('Sending prompt to chatbot service:', input);
         const fullContext = getConversationContext(); // Include full context each time
-        const reply = await sendMessageToChatbot(input, fullContext, (message, newContext) => {
-          // Update state with the new context and add message
-          const replyId = `${Date.now()}-${Math.random()}`; // Unique ID for bot message
-          setMessages((prev) => [...prev, { id: replyId, sender: 'bot', text: message }]);
-          setCurrentContext(newContext);
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ input: input.trim(), context: fullContext }),
         });
 
-        // Handle the non-streaming response mode
-        if (reply) {
-          const replyId = `${Date.now()}-${Math.random()}`;
-          setMessages((prev) => [...prev, { id: replyId, sender: 'bot', text: reply }]);
+        if (!response.body) {
+          throw new Error('ReadableStream not supported in this browser.');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let done = false;
+
+        while (!done) {
+          const { value, done: streamDone } = await reader.read();
+          done = streamDone;
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true });
+            const messagesChunk = chunk.split('\n').filter(Boolean);
+            for (const msg of messagesChunk) {
+              try {
+                const parsed: { message: string; context: string | null } = JSON.parse(msg);
+                if (parsed.message) {
+                  const replyId = `${Date.now()}-${Math.random()}`; // Unique ID for bot message
+                  setMessages((prev) => [...prev, { id: replyId, sender: 'bot', text: parsed.message }]);
+                  setCurrentContext(parsed.context);
+                }
+              } catch (e) {
+                console.error('Error parsing message:', msg, e);
+              }
+            }
+          }
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
