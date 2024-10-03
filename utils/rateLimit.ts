@@ -1,16 +1,27 @@
 // File: utils/rateLimit.ts
 
-import rateLimit from 'next-rate-limit';
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 
-/**
- * Initializes and exports the rate limiter.
- * 
- * The limiter allows a certain number of requests per IP address within a specified interval.
- */
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 500, // Max 500 unique tokens per interval
-  tokensPerInterval: 100, // Allow 100 requests per IP address per minute
+const rateLimitEnabled = process.env.RATE_LIMIT_ENABLED === 'true'; // Read from environment
+
+// Create a rate limiter instance
+const rateLimiter = new RateLimiterMemory({
+  points: 100, // Allow 100 requests
+  duration: 60, // Per 60 seconds (1 minute)
 });
 
-export default limiter;
+/**
+ * Check if rate limiting is enabled and enforce it if so.
+ * @param ip - The IP address of the requester.
+ * @param points - The number of allowed points (requests) in a time window.
+ * @returns - Promise that resolves if allowed or rejects with rate limit error.
+ */
+export async function checkRateLimit(ip: string, points: number = 100): Promise<void> {
+  if (!rateLimitEnabled) {
+    console.log(`Rate limiting disabled. Skipping rate limit check for IP: ${ip}`);
+    return; // Skip rate limiting if disabled
+  }
+
+  console.log(`Rate limiting enabled. Checking rate limit for IP: ${ip}`);
+  await rateLimiter.consume(ip, points); // Enforce rate limiting if enabled
+}
