@@ -8,6 +8,7 @@ import os
 import pickle
 import warnings
 import asyncio
+import numpy as np
 
 # Create a FastAPI app instance
 app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
@@ -52,6 +53,7 @@ warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.
 file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
 cache_file_path = "./python/cache/tedx_dataset.pkl"
 sdg_embeddings_cache = "./python/cache/sdg_embeddings.pkl"
+description_embeddings_cache = "./python/cache/description_embeddings.pkl"
 
 # Background task to load the necessary resources
 async def load_resources():
@@ -73,6 +75,20 @@ async def load_resources():
     model = lazy_load("python.model", "load_model")('paraphrase-MiniLM-L6-v2')
     logger.info(f"Sentence-BERT model loaded successfully! Model: {model is not None}")
 
+    # Check if 'description_vector' is present, if not, compute and add it
+    if 'description_vector' not in data.columns:
+        logger.info("'description_vector' column missing. Computing description embeddings.")
+        embedding_utils = lazy_load("python.embedding_utils", "encode_descriptions")
+        description_vectors = await asyncio.to_thread(embedding_utils, data['description'].tolist(), model)
+        
+        # Assign the computed vectors to the 'description_vector' column
+        data['description_vector'] = description_vectors
+
+        # Save the updated dataset with description embeddings to cache
+        with open(cache_file_path, 'wb') as cache_file:
+            pickle.dump(data, cache_file)
+        logger.info("Description vectors computed and added to the dataset. Data cached successfully.")
+
     # Load or compute SDG Embeddings
     logger.info("Loading or computing SDG embeddings.")
     if os.path.exists(sdg_embeddings_cache):
@@ -90,7 +106,7 @@ async def load_resources():
         sdg_keywords = sdg_manager()
         sdg_keyword_list = [" ".join(keywords) for keywords in sdg_keywords.values()]
         embedding_utils = lazy_load("python.embedding_utils", "encode_sdg_keywords")
-        sdg_embeddings = embedding_utils(sdg_keyword_list, model)
+        sdg_embeddings = await asyncio.to_thread(embedding_utils, sdg_keyword_list, model)
         if sdg_embeddings:
             with open(sdg_embeddings_cache, 'wb') as cache_file:
                 pickle.dump(sdg_embeddings, cache_file)
