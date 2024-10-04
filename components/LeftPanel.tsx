@@ -72,10 +72,10 @@ const LeftPanel: React.FC = () => {
             toggleMem={toggleMem}
             eraseMemory={clearChatHistory}
           />
-          <TestSpeechRecognition
+          {/* <TestSpeechRecognition
             isMicOn={mediaState.isMicOn}
             onSpeechResult={(result) => handleChat(result, false)}
-          />
+          /> */}
         </div>
       </div>
     </div>
