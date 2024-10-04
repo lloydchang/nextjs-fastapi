@@ -198,6 +198,9 @@ const MiddlePanel: React.FC = () => {
             />
           </div>
         )}
+      </div>
+
+      <div className={styles.errorContainer}>
         {error && <p className={styles.errorText}>{error}</p>}
       </div>
 
