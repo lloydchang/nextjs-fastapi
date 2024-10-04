@@ -51,20 +51,35 @@ export async function POST(request: NextRequest) {
 
     const requestBody = { model: config.primaryModel, prompt: prompt, temperature: config.temperature };
 
-    try {
-      generatedText = await generateTextWithPrimaryModel(requestBody, config, logMessages);
-    } catch (primaryError) {
-      logMessages.push(`Primary model failed: ${primaryError.message}`);
-      if (config.fallbackModel && config.llamaEndpoint) {
-        try {
-          generatedText = await generateTextWithFallbackModel(requestBody.prompt, config, logMessages);
-        } catch (fallbackError) {
-          logMessages.push(`Fallback model failed: ${fallbackError.message}`);
-          return returnErrorResponse(`${fallbackError.message}`, 500, logMessages, config);
-        }
-      } else {
-        return returnErrorResponse('No fallback is configured.', 500, logMessages, config);
+    // Check environment variables before calling the primary model
+    const requiredEnvVars = [
+      process.env.DEFAULT_MODEL,
+      process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      process.env.GOOGLE_GEMINI_MODEL,
+      process.env.GOOGLE_VERTEX_AI_LOCATION,
+      process.env.GOOGLE_CLOUD_PROJECT
+    ];
+
+    const isEnvValid = requiredEnvVars.every(envVar => envVar && !envVar.includes('your'));
+
+    if (!isEnvValid) {
+      logMessages.push('Skipping primary model due to invalid environment configuration.');
+    } else {
+      try {
+        generatedText = await generateTextWithPrimaryModel(requestBody, config, logMessages);
+      } catch (primaryError) {
+        logMessages.push(`Primary model failed: ${primaryError.message}`);
       }
+    }
+    if (config.fallbackModel && config.llamaEndpoint) {
+      try {
+        generatedText = await generateTextWithFallbackModel(requestBody.prompt, config, logMessages);
+      } catch (fallbackError) {
+        logMessages.push(`Fallback model failed: ${fallbackError.message}`);
+        return returnErrorResponse(`${fallbackError.message}`, 500, logMessages, config);
+      }
+    } else {
+      return returnErrorResponse('No fallback is configured.', 500, logMessages, config);
     }
 
     return config.streamEnabled
