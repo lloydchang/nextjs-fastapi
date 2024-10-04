@@ -59,12 +59,12 @@
 }
 
 .searchButton {
-  background-color: #2196f3;
+  background-color: #0070f3;
   color: white;
 }
 
 .searchButton:hover {
-  background-color: #1976d2;
+  background-color: #2196f3;
   color: #ffffff; 
   transform: translateY(-2px); 
 }
@@ -75,12 +75,12 @@
 }
 
 .tedButton {
-  background-color: #eb0028;
+  background-color: #c20022;
   color: white;
 }
 
 .tedButton:hover {
-  background-color: #c20022;
+  background-color: #eb0028;
   transform: translateY(-2px);
 }
 
