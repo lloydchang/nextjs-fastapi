@@ -25,36 +25,50 @@ export async function generateFromOllamaLLaMA(endpoint: string, prompt: string, 
 
     const reader = response.body?.getReader();
     const decoder = new TextDecoder('utf-8');
-    let done = false;
     let completeText = '';
+
+    // Use a buffer to accumulate data and split on newline boundaries
+    let buffer = '';
+    let done = false;
 
     // Read the response stream and process each chunk
     while (!done) {
-      const { value, done: streamDone } = await reader?.read()!;
+      const { value, done: streamDone } = await reader!.read();
       done = streamDone;
 
       if (value) {
         const chunk = decoder.decode(value, { stream: true });
-        const messages = chunk.split('} {').map((msg, index, arr) => {
-          // Correct the JSON format by adding braces if needed
-          if (arr.length > 1) {
-            if (index === 0) return msg + '}';
-            if (index === arr.length - 1) return '{' + msg;
-            return '{' + msg + '}';
-          }
-          return msg;
-        });
+        buffer += chunk; // Accumulate chunks in the buffer
 
-        for (const msg of messages) {
-          try {
-            const parsed = JSON.parse(msg.trim());
-            if (parsed.response) {
-              completeText += parsed.response;
+        // Process buffer by splitting on newline delimiters
+        let lines = buffer.split('\n');
+        buffer = lines.pop()!; // Save the last (possibly incomplete) line in the buffer
+
+        // Process each complete line
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const parsed = JSON.parse(line.trim());
+              if (parsed.response) {
+                completeText += parsed.response;
+              }
+            } catch (parseError) {
+              console.error('Error parsing LLaMA response segment:', line, parseError);
             }
-          } catch (e) {
-            console.error('Error parsing LLaMA response segment:', msg, e);
           }
         }
+      }
+    }
+
+    // Handle any remaining content in the buffer after stream ends
+    if (buffer.trim()) {
+      try {
+        const remainingParsed = JSON.parse(buffer.trim());
+        if (remainingParsed.response) {
+          completeText += remainingParsed.response;
+        }
+      } catch (finalParseError) {
+        console.error('Error parsing remaining LLaMA response segment:', buffer, finalParseError);
       }
     }
 
