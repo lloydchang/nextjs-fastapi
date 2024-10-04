@@ -111,6 +111,12 @@
   }
 }
 
+.errorContainer {
+  margin-top: -10px; /* Add spacing above */
+  margin-bottom: 0px; /* Add spacing below */
+  text-align: center; /* Center the text inside */
+}
+
 .nowPlaying {
   margin-bottom: 20px;
 }
