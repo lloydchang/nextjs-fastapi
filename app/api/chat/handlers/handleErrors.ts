@@ -1,56 +1,37 @@
 // File: app/api/chat/handlers/handleErrors.ts
 
 import { NextResponse } from 'next/server';
-import { Config } from '../../../utils/config';
-import { ResponseSegment } from '../../../types';
+import logger from '../utils/logger';
 
 /**
- * Return a stream error message along with logs if enabled.
+ * Streams an error message to the client and logs the error.
+ * 
+ * @param {string} errorMessage - The error message to be streamed.
+ * @param {Array} logMessages - Array of log messages for debugging.
+ * @param {any} config - Application configuration settings.
+ * @returns {NextResponse} - The streamed error response.
  */
-export function streamErrorMessage(error: string, logs: string[], config: Config) {
-  const stream = new ReadableStream<ResponseSegment>({
-    start(controller) {
-      const errorSegment: ResponseSegment = { message: `Error: ${error}`, context: null };
-      controller.enqueue(JSON.stringify(errorSegment) + '\n');
-
-      if (config.logsInResponse) {
-        logs.forEach((log) => {
-          const logSegment: ResponseSegment = { message: `[Log]: ${log}`, context: null };
-          controller.enqueue(JSON.stringify(logSegment) + '\n');
-        });
-      }
-
-      controller.close();
-    },
-  });
-
-  return new NextResponse(stream, {
-    status: 500,
-    headers: {
-      'Content-Type': 'application/json',
-      'Transfer-Encoding': 'chunked',
-    },
-  });
+export function streamErrorMessage(errorMessage: string, logMessages: string[], config: any): NextResponse {
+  logger.error(errorMessage);
+  if (config.logsInResponse) {
+    return NextResponse.json({ error: errorMessage, logs: logMessages }, { status: 429 });
+  }
+  return NextResponse.json({ error: errorMessage }, { status: 429 });
 }
 
 /**
- * Returns a standard JSON error response.
+ * Returns a complete error response.
+ * 
+ * @param {string} error - The error message to be returned.
+ * @param {number} status - The HTTP status code.
+ * @param {Array} logMessages - Array of log messages.
+ * @param {any} config - Application configuration settings.
+ * @returns {NextResponse} - The complete error response.
  */
-export function returnErrorResponse(error: string, status: number, logs: string[], config: Config) {
-  const responseSegments: ResponseSegment[] = [
-    { message: `Error: ${error}`, context: null }
-  ];
-
+export function returnErrorResponse(error: string, status: number, logMessages: string[], config: any): NextResponse {
+  logger.error(error);
   if (config.logsInResponse) {
-    logs.forEach((log) => {
-      responseSegments.push({ message: `[Log]: ${log}`, context: null });
-    });
+    return NextResponse.json({ error, logs: logMessages }, { status });
   }
-
-  return new NextResponse(JSON.stringify(responseSegments), {
-    status: status,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  return NextResponse.json({ error }, { status });
 }

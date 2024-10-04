@@ -1,6 +1,9 @@
-// utils/systemPrompt.ts
-// Centralized system prompt for the TEDxSDG AI chatbot
+// File: app/api/chat/utils/systemPrompt.ts
 
+/**
+ * Centralized system prompt for the TEDxSDG AI chatbot.
+ * This prompt defines the chatbot's role, communication style, and persona details.
+ */
 export const systemPrompt = `
 **Role:**
 TEDxSDG AI - Turning ideas into SDG-aligned plans. Guide users through planning, funding, and impact assessment.

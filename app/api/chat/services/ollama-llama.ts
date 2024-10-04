@@ -1,4 +1,4 @@
-// File: lib/ollama-llama.ts
+// File: app/api/chat/services/ollama-llama.ts
 
 /**
  * Sends a POST request to the local LLaMA model endpoint via Ollama and retrieves the response.
@@ -12,7 +12,7 @@ export async function generateFromOllamaLLaMA(endpoint: string, prompt: string, 
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt, model }),
@@ -60,7 +60,7 @@ export async function generateFromOllamaLLaMA(endpoint: string, prompt: string, 
       }
     }
 
-    // Handle any remaining content in the buffer after stream ends
+    // Handle any remaining content in the buffer after the stream ends
     if (buffer.trim()) {
       try {
         const remainingParsed = JSON.parse(buffer.trim());

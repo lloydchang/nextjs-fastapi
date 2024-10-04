@@ -1,6 +1,13 @@
-// File: lib/google-vertex-ai.ts
+// File: app/api/chat/services/google-vertex-ai.ts
 
 import { VertexAI } from '@google-cloud/vertexai';
+import { requiredEnvVars, validateAndLogEnvVars } from '../utils/envUtils';
+import logger from '../utils/logger';
+
+if (!validateAndLogEnvVars(requiredEnvVars, [])) {
+  logger.error('Environment configuration errors.');
+  throw new Error('Invalid environment configuration.');
+}
 
 /**
  * Initializes and exports the Vertex AI client.
@@ -19,23 +26,14 @@ const vertexAI = new VertexAI({
  */
 export async function generateFromGoogleVertexAI(modelId: string, prompt: string): Promise<string> {
   try {
-    // Get the specified generative model
-    const generativeModel = vertexAI.getGenerativeModel({
-      model: modelId,
-    });
-
-    // Generate content based on the prompt
+    const generativeModel = vertexAI.getGenerativeModel({ model: modelId });
     const response = await generativeModel.generateContent(prompt);
-
-    // Wait for the response
     const contentResponse = await response.response;
-
-    // Extract the generated text
     const generatedText = contentResponse.text || '';
 
     return generatedText;
   } catch (error) {
-    console.error('Error generating content from Google Vertex AI:', error);
+    logger.error('Error generating content from Google Vertex AI:', error);
     throw error;
   }
 }
