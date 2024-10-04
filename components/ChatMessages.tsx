@@ -14,10 +14,27 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
 
   // Auto-scroll to the bottom whenever messages change
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    const container = messagesContainerRef.current;
+
+    // Use requestAnimationFrame for smoother scroll update
+    if (container) {
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
     }
   }, [messages]);
+
+  // Use an additional useEffect to handle initial page load and container height adjustment
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+
+    // Ensuring container is visible and correctly sized on initial render
+    if (container) {
+      container.style.opacity = '1';
+      container.style.visibility = 'visible';
+      container.style.height = '90vh'; // Ensure it uses the defined height
+    }
+  }, []);
 
   return (
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
