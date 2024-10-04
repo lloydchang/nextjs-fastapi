@@ -58,4 +58,17 @@ export async function generateFromOllamaLlama(endpoint: string, prompt: string, 
     if (buffer.trim()) {
       try {
         const remainingParsed = JSON.parse(buffer.trim());
-        if (remainingParsed.response
+        if (remainingParsed.response) {
+          completeText += remainingParsed.response;
+        }
+      } catch (finalParseError) {
+        console.error('Error parsing remaining Llama response segment:', buffer, finalParseError);
+      }
+    }
+
+    return completeText.trim();
+  } catch (error) {
+    console.error('Error generating content from Ollama Llama:', error);
+    throw error;
+  }
+}

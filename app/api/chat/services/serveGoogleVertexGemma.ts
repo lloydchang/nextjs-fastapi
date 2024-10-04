@@ -4,10 +4,10 @@ import { VertexAI } from '@google-cloud/vertexai';
 import { optionalVars as optionalEnvVars, validateAndLogEnvVars } from '../utils/validate';
 import logger from '../utils/log';
 
-if (!validateAndLogEnvVars(optionalEnvVars, [])) {
-  logger.error('Environment configuration errors.');
-  throw new Error('Invalid environment configuration.');
-}
+// if (!validateAndLogEnvVars(optionalEnvVars, [])) {
+//   logger.error('Environment configuration errors.');
+//   throw new Error('Invalid environment configuration.');
+// }
 
 /**
  * Initializes and exports the Vertex AI client.
