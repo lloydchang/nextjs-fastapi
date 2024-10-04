@@ -115,7 +115,7 @@ const MiddlePanel: React.FC = () => {
       .catch((err) => {
         setError("Failed to fetch talks.");
         setErrorDetails(err.message);
-        addLog("Failed to fetch talks: " + err.message);
+        addLog("Failed to fetch data: " + err.message);
       })
       .finally(() => {
         setLoading(false);
@@ -154,9 +154,9 @@ const MiddlePanel: React.FC = () => {
   return (
     <div className={styles.middlePanel}>
       <div className={styles.searchContainer}>
-        <div className={styles.greetingContainer}>
+        {/* <div className={styles.greetingContainer}>
           <h1 className={styles.greetingText}>{greeting}</h1>
-        </div>
+        </div> */}
         <div className={styles.searchRowContainer}>
           <input
             type="text"
