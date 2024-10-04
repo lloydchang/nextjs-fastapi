@@ -1,10 +1,10 @@
-// File: app/api/chat/services/google-vertex-ai.ts
+// File: app/api/chat/services/serveGoogleVertexAIGemma.ts
 
 import { VertexAI } from '@google-cloud/vertexai';
-import { requiredEnvVars, validateAndLogEnvVars } from '../utils/envUtils';
+import { optionalVars as optionalEnvVars, validateAndLogEnvVars } from '../utils/validateEnv'; // Updated import
 import logger from '../utils/logger';
 
-if (!validateAndLogEnvVars(requiredEnvVars, [])) {
+if (!validateAndLogEnvVars(optionalEnvVars, [])) {
   logger.error('Environment configuration errors.');
   throw new Error('Invalid environment configuration.');
 }
@@ -19,14 +19,25 @@ const vertexAI = new VertexAI({
 
 /**
  * Generates content using the Google Vertex AI (Gemini) API.
- * 
  * @param modelId - The ID of the generative model to use.
  * @param prompt - The text prompt to generate content from.
  * @returns The generated text.
  */
-export async function generateFromGoogleVertexAI(modelId: string, prompt: string): Promise<string> {
+export async function generateFromGoogleVertexAI({
+  model,
+  prompt,
+  project,
+  location,
+  credentials,
+}: {
+  model: string;
+  prompt: string;
+  project: string;
+  location: string;
+  credentials: string;
+}): Promise<string> {
   try {
-    const generativeModel = vertexAI.getGenerativeModel({ model: modelId });
+    const generativeModel = vertexAI.getGenerativeModel({ model });
     const response = await generativeModel.generateContent(prompt);
     const contentResponse = await response.response;
     const generatedText = contentResponse.text || '';

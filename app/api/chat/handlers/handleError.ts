@@ -1,11 +1,10 @@
-// File: app/api/chat/handlers/handleErrors.ts
+// File: app/api/chat/handlers/handleError.ts
 
 import { NextResponse } from 'next/server';
-import logger from '../utils/logger';
+import logger from '../utils/log';
 
 /**
  * Streams an error message to the client and logs the error.
- * 
  * @param {string} errorMessage - The error message to be streamed.
  * @param {Array} logMessages - Array of log messages for debugging.
  * @param {any} config - Application configuration settings.
@@ -21,7 +20,6 @@ export function streamErrorMessage(errorMessage: string, logMessages: string[], 
 
 /**
  * Returns a complete error response.
- * 
  * @param {string} error - The error message to be returned.
  * @param {number} status - The HTTP status code.
  * @param {Array} logMessages - Array of log messages.
