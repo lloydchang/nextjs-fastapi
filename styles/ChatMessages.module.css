@@ -1,13 +1,12 @@
 /* styles/ChatMessages.module.css */
 
 .messagesContainer {
-  max-height: 300px; /* Maintain maximum height for the message container */
-  overflow-y: auto; /* Enable vertical scrolling */
-  padding: 10px;
-  background-color: rgba(0, 0, 0, 0.0); /* Set translucent black background */
+  height: 60vh;
+  overflow-y: auto; /* Enable vertical scrolling when content overflows */
+  padding: 0px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 60px;
   scroll-behavior: smooth; /* Smooth scrolling */
 }
 
