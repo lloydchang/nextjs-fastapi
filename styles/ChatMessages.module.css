@@ -3,10 +3,7 @@
 .messagesContainer {
   height: 60vh;
   overflow-y: auto; /* Enable vertical scrolling when content overflows */
-  padding: 0px;
-  border: 1px solid #ddd;
   border-radius: 5px;
-  margin-bottom: 60px;
   scroll-behavior: smooth; /* Smooth scrolling */
 }
 
