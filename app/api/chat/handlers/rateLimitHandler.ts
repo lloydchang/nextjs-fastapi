@@ -36,7 +36,7 @@ export async function handleRateLimit(request: NextRequest, config: AppConfig): 
       return streamErrorMessage('Too many requests. Please try again later.', [], config);
     }
   } else {
-    logger.info('Rate limiting is disabled.');
+    logger.info('Rate limiting is off.');
   }
 
   return null;
