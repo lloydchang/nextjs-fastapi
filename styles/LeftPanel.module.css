@@ -59,8 +59,9 @@
 .title {
   background-color: rgba(0, 0, 0, 0.5);;
   color: gray;
-  font-size: 2rem;
-  margin-bottom: 20px;
+  font-size: 0.7rem;
+  margin-bottom: 0px;
+  margin-top: 0px;
   text-align: center;
 }
 
