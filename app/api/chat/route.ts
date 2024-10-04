@@ -1,104 +1,166 @@
 // File: app/api/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateEnv, optionalVars as optionalEnvVars, validateAndLogEnvVars } from './utils/validate';
 import { getConfig } from './utils/config';
 import { handleTextWithAmazonBedrockTitan } from './handlers/handleAmazonBedrockTitan';
-import { handleTextWithGoogleVertexGemmaModel } from './handlers/handleGoogleVertexGemma';
+import { handleTextWithGoogleVertexGeminiModel } from './handlers/handleGoogleVertexGemini';
 import { handleTextWithOllamaGemmaModel } from './handlers/handleOllamaGemma';
 import { handleTextWithOllamaLlamaModel } from './handlers/handleOllamaLlama';
-import { streamResponseWithLogs, sendCompleteResponse } from './handlers/handleResponse';
-import { streamErrorMessage, returnErrorResponse } from './handlers/handleError';
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/log';
-import { handleRateLimit } from './handlers/handleRateLimit';
-
-validateEnv();
+import { validateEnvVars } from './utils/validate'; // Import validateEnvVars function
 
 const config = getConfig();
 
+let hasWarnedAmazonBedrockTitan = false; // Warning flag for Amazon Bedrock Titan
+let hasWarnedGoogleVertexGemini = false;   // Warning flag for Google Vertex Gemini
+let hasWarnedOllamaGemma = false;    // Warning flag for Ollama Gemma
+let hasWarnedOllamaLlama = false;     // Warning flag for Ollama Llama
+
 export async function POST(request: NextRequest) {
-  let handledText: string[] = [];
+  const encoder = new TextEncoder();
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
 
   try {
-    // Handle rate limiting
-    const rateLimitResult = await handleRateLimit(request, config);
-    if (rateLimitResult) return rateLimitResult;
+    const requestBody = await request.json();
+    logger.info(`Received request body: ${JSON.stringify(requestBody)}`);
+    
+    const { messages } = requestBody;
 
-    const { input, context } = await request.json();
-    if (typeof input !== 'string') {
-      logger.error('Invalid input format: "input" must be a string.');
-      return streamErrorMessage('Invalid input format. "input" must be a string.', [], config);
+    if (!Array.isArray(messages)) {
+      const errorResponse = { error: 'Invalid request format. "messages" must be provided.' };
+      logger.error(`Request body validation failed: ${JSON.stringify(errorResponse)}`);
+      return NextResponse.json(errorResponse, { status: 400 });
     }
 
-    const sanitizedInput = sanitizeInput(input);
-    logger.info(`Sanitized input: ${sanitizedInput}`);
+    // Construct prompt
+    const sanitizedMessages = messages
+      .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${sanitizeInput(msg.content)}`)
+      .join('\n');
+      
+    const prompt = `${systemPrompt}\n\n${sanitizedMessages}\nAssistant:`;
 
-    const prompt = context
-      ? `${systemPrompt}\n${context}\n\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`
-      : `${systemPrompt}\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`;
+    if (!prompt || prompt.trim() === '') {
+      const errorResponse = { error: 'The constructed prompt is empty.' };
+      logger.error(`Prompt validation failed: ${JSON.stringify(errorResponse)}`);
+      return NextResponse.json(errorResponse, { status: 400 });
+    }
 
-    const promises = [];
+    const handledText: string[] = [];
+    const promises: { name: string, promise: Promise<void> }[] = [];
 
-    if (config.amazonBedrockTitanModel && config.amazonBedrockTitanEndpoint) {
-      promises.push(
-        handleTextWithAmazonBedrockTitan({ prompt, model: config.amazonBedrockTitanModel }, config)
-          .then((result) => handledText.push(result))
-          .catch((error) => {
-            logger.error(`Amazon Bedrock Titan model failed: ${error.message}`);
-            handledText.push(`Amazon Bedrock Titan failed: ${error.message}`);
+    // Amazon Bedrock Titan Handler
+    const amazonBedrockTitanOptionalVars = ['AMAZON_BEDROCK_TITAN_MODEL', 'AMAZON_BEDROCK_TITAN_ENDPOINT'];
+    const isAmazonBedrockTitanValid = validateEnvVars(amazonBedrockTitanOptionalVars);
+    
+    if (isAmazonBedrockTitanValid) {
+      promises.push({
+        name: 'Amazon Bedrock Titan',
+        promise: handleTextWithAmazonBedrockTitan({ prompt, model: config.amazonBedrockTitanModel }, config)
+          .then(result => {
+            handledText.push(result);
+            logger.info(`Amazon Bedrock Titan response: ${result}`);
           })
-      );
+          .catch(error => logger.warn(`Amazon Bedrock Titan model failed: ${error.message}`))
+      });
     } else {
-      handledText.push('No Amazon Bedrock Titan is configured.');
+      if (!isAmazonBedrockTitanValid && !hasWarnedAmazonBedrockTitan) {
+        logger.debug(`Optional environment variables for Amazon Bedrock Titan are missing or contain placeholders: ${amazonBedrockTitanOptionalVars.join(', ')}`);
+        hasWarnedAmazonBedrockTitan = true;
+      }
     }
 
-    if (validateAndLogEnvVars(optionalEnvVars, [])) {
-      const requestBody = { model: config.googleVertexGemmaModel, prompt, temperature: config.temperature };
-      promises.push(
-        handleTextWithGoogleVertexGemmaModel(requestBody, config, [])
-          .then((result) => handledText.push(result))
-          .catch((error) => {
-            logger.error(`GoogleVertexGemma model failed: ${error.message}`);
-            handledText.push(`GoogleVertexGemma failed: ${error.message}`);
+    // Google Vertex Gemini Handler
+    const googleVertexGeminiOptionalVars = [
+      'GOOGLE_VERTEX_GEMINI_MODEL',
+      'GOOGLE_VERTEX_GEMINI_LOCATION',
+      'GOOGLE_APPLICATION_CREDENTIALS',
+      'GOOGLE_CLOUD_PROJECT',
+    ];
+    const isGoogleVertexGeminiValid = validateEnvVars(googleVertexGeminiOptionalVars);
+    
+    if (isGoogleVertexGeminiValid) {
+      promises.push({
+        name: 'Google Vertex Gemini',
+        promise: handleTextWithGoogleVertexGeminiModel({ prompt, model: config.googleVertexGeminiModel, temperature: config.temperature }, config)
+          .then(result => {
+            handledText.push(result);
+            logger.info(`Google Vertex Gemini response: ${result}`);
           })
-      );
-    }
-
-    if (config.ollamaGemmaModel && config.ollamaGemmaEndpoint) {
-      promises.push(
-        handleTextWithOllamaGemmaModel(prompt, config, [])
-          .then((result) => handledText.push(result))
-          .catch((error) => {
-            logger.error(`OllamaGemma model failed: ${error.message}`);
-            handledText.push(`OllamaGemma failed: ${error.message}`);
-          })
-      );
+          .catch(error => logger.warn(`Google Vertex Gemini model failed: ${error.message}`))
+      });
     } else {
-      handledText.push('No OllamaGemma is configured.');
+      if (!isGoogleVertexGeminiValid && !hasWarnedGoogleVertexGemini) {
+        logger.debug(`Optional environment variables for Google Vertex Gemini are missing or contain placeholders: ${googleVertexGeminiOptionalVars.join(', ')}`);
+        hasWarnedGoogleVertexGemini = true;
+      }
     }
 
-    if (config.ollamaLLAMAModel && config.ollamaLlamaEndpoint) {
-      promises.push(
-        handleTextWithOllamaLlamaModel(prompt, config, [])
-          .then((result) => handledText.push(result))
-          .catch((error) => {
-            logger.error(`OllamaLlama model failed: ${error.message}`);
-            handledText.push(`OllamaLlama failed: ${error.message}`);
+    // Ollama Gemma Handler
+    const ollamaGemmaVars = ['OLLAMA_GEMMA_ENDPOINT', 'OLLAMA_GEMMA_MODEL'];
+    const isOllamaGemmaValid = validateEnvVars(ollamaGemmaVars);
+    
+    if (isOllamaGemmaValid) {
+      promises.push({
+        name: 'Ollama Gemma',
+        promise: handleTextWithOllamaGemmaModel({ prompt, model: config.ollamaGemmaModel }, config)
+          .then(result => {
+            handledText.push(result);
+            logger.info(`Ollama Gemma response: ${result}`);
           })
-      );
+          .catch(error => logger.warn(`Ollama Gemma model failed: ${error.message}`))
+      });
     } else {
-      handledText.push('No OllamaLlama is configured.');
+      if (!isOllamaGemmaValid && !hasWarnedOllamaGemma) {
+        logger.debug(`Optional environment variables for Ollama Gemma are missing or contain placeholders: ${ollamaGemmaVars.join(', ')}`);
+        hasWarnedOllamaGemma = true;
+      }
     }
 
-    await Promise.allSettled(promises);
+    // Ollama Llama Handler
+    const ollamaLlamaVars = ['OLLAMA_LLAMA_ENDPOINT', 'OLLAMA_LLAMA_MODEL'];
+    const isOllamaLlamaValid = validateEnvVars(ollamaLlamaVars);
+    
+    if (isOllamaLlamaValid) {
+      promises.push({
+        name: 'Ollama Llama',
+        promise: handleTextWithOllamaLlamaModel({ prompt, model: config.ollamaLlamaModel }, config)
+          .then(result => {
+            handledText.push(result);
+            logger.info(`Ollama Llama response: ${result}`);
+          })
+          .catch(error => logger.warn(`Ollama Llama model failed: ${error.message}`))
+      });
+    } else {
+      if (!isOllamaLlamaValid && !hasWarnedOllamaLlama) {
+        logger.debug(`Optional environment variables for Ollama Llama are missing or contain placeholders: ${ollamaLlamaVars.join(', ')}`);
+        hasWarnedOllamaLlama = true;
+      }
+    }
 
-    return config.streamEnabled
-      ? streamResponseWithLogs(handledText.join('\n'), [], context, config)
-      : sendCompleteResponse(handledText.join('\n'), [], context, config);
-  } catch (error) {
-    logger.error(`Internal Server Error: ${error.message}`);
-    return returnErrorResponse('Internal Server Error', 500, [], config);
+    // Use Promise.allSettled to handle individual errors without failing the whole process
+    const results = await Promise.allSettled(promises.map(p => p.promise));
+
+    results.forEach((result, index) => {
+      const modelName = promises[index].name;
+      if (result.status === 'fulfilled') {
+        // logger.info(`Fulfilled attempt to ${modelName}.`);
+      } else {
+        logger.error(`Failed attempt to ${modelName}: ${result.reason}`);
+      }
+    });
+
+    // Return the combined results as the message
+    return NextResponse.json({
+      message: handledText.join('\n'),
+    });
+    
+  } catch (error: any) {
+    const statusCode = error.status || 500;
+    const errorMessage = error.message || 'Internal Server Error';
+    logger.error(`Error in POST /api/chat: ${errorMessage}`);
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
 }

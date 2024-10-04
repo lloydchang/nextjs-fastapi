@@ -1,5 +1,6 @@
-// components/LeftPanel.tsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+// File: components/LeftPanel.tsx
+
+import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
@@ -27,13 +28,14 @@ const LeftPanel: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
-    async (input: string, isManual = false) => {
+    (input: string, isManual = false) => {
       const messageToSend = input.trim();
       
       if (messageToSend) {
         const prefix = isManual ? "" : "🎙️ ";
         const formattedMessage = `${prefix}${messageToSend}`;
-        await sendActionToChatbot(formattedMessage);
+        sendActionToChatbot(formattedMessage); // Directly send to the chatbot
+        setChatInput(''); // Clear input after sending
       }
     },
     [sendActionToChatbot]
@@ -53,7 +55,11 @@ const LeftPanel: React.FC = () => {
         <div className={styles.chatInterface} ref={chatContainerRef}>
           <h3 className={styles.chatHeader}>Chat with <span className={styles.tedx}>TEDx</span><span className={styles.sdg}>SDG</span></h3>
           <HeavyChatMessages messages={messages} />
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
+          <ChatInput 
+            chatInput={chatInput} 
+            setChatInput={setChatInput} 
+            handleChat={() => handleChat(chatInput, true)} 
+          />
           <ControlButtons
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}

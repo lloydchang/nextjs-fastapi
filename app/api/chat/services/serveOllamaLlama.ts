@@ -1,74 +1,55 @@
 // File: app/api/chat/services/serveOllamaLlama.ts
 
+import { validateEnvVars } from '../utils/validate';
+import { streamResponseBody } from '../utils/stream';
+import logger from '../utils/log';
+import { systemPrompt } from '../utils/prompt'; // Import systemPrompt
+
+let hasWarnedOllamaLlama = false;
+
 /**
- * Sends a POST request to the local Ollama Llama model endpoint and retrieves the response.
- * @param endpoint - The local Ollama Llama API endpoint.
- * @param prompt - The text prompt to send to the Llama model.
- * @param model - The model name to use for generation.
- * @returns The generated text from the Llama model.
+ * Sends a POST request to the local Ollama Llama model endpoint and retrieves the streaming response.
+ * @param params - Object containing the endpoint, prompt, and model.
+ * @returns The generated text from the Ollama Llama model.
  */
-export async function generateFromOllamaLlama(endpoint: string, prompt: string, model: string): Promise<string> {
+export async function generateFromOllamaLlama(params: {
+  endpoint: string;
+  prompt: string;
+  model: string;
+}): Promise<string | null> {
+  const optionalVars = ['OLLAMA_LLAMA_MODEL', 'OLLAMA_LLAMA_ENDPOINT'];
+  const isValid = validateEnvVars(optionalVars);
+  if (!isValid) {
+    if (!hasWarnedOllamaLlama) {
+      logger.warn(`Optional environment variables for Ollama Llama are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      hasWarnedOllamaLlama = true;
+    }
+    return null;
+  }
+
+  const { endpoint, prompt, model } = params;
+  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
+  logger.debug(`Sending request to Ollama Llama: Endpoint = ${endpoint}, Model = ${model}, Prompt = ${combinedPrompt}`);
+
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt, model }),
+      body: JSON.stringify({ prompt: combinedPrompt, model }),
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`Ollama Llama Server responded with status: ${response.status} - ${response.statusText}. Body: ${errorBody}`);
+      logger.warn(`Ollama Llama Service responded with status: ${response.status} - ${response.statusText}`);
+      return null;
     }
 
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let completeText = '';
-
-    let buffer = '';
-    let done = false;
-
-    while (!done) {
-      const { value, done: streamDone } = await reader!.read();
-      done = streamDone;
-
-      if (value) {
-        const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-
-        let lines = buffer.split('\n');
-        buffer = lines.pop()!;
-
-        for (const line of lines) {
-          if (line.trim()) {
-            try {
-              const parsed = JSON.parse(line.trim());
-              if (parsed.response) {
-                completeText += parsed.response;
-              }
-            } catch (parseError) {
-              console.error('Error parsing Llama response segment:', line, parseError);
-            }
-          }
-        }
-      }
-    }
-
-    if (buffer.trim()) {
-      try {
-        const remainingParsed = JSON.parse(buffer.trim());
-        if (remainingParsed.response) {
-          completeText += remainingParsed.response;
-        }
-      } catch (finalParseError) {
-        console.error('Error parsing remaining Llama response segment:', buffer, finalParseError);
-      }
-    }
-
+    const completeText = await streamResponseBody(response);
+    logger.debug(`Generated Text from Ollama Llama: ${completeText.trim()}`);
     return completeText.trim();
   } catch (error) {
-    console.error('Error generating content from Ollama Llama:', error);
-    throw error;
+    logger.warn('Error generating content from Ollama Llama:', error);
+    return null;
   }
 }

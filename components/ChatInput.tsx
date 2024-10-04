@@ -1,4 +1,5 @@
-// components/ChatInput.tsx
+// File: components/ChatInput.tsx
+
 import React, { useRef } from 'react';
 import styles from '../styles/ChatInput.module.css';
 
@@ -16,8 +17,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
       if (chatInput === '') return; // Do not send empty messages
       isSendingRef.current = true;
       handleChat(true);
-      setChatInput(''); // Clear input immediately if desired
-      setTimeout(() => (isSendingRef.current = false), 500); // Reset after 500ms
+      setChatInput(''); // Clear input immediately
+      // Reset isSendingRef immediately
+      isSendingRef.current = false;
     }
   };
 
@@ -25,8 +27,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
     if (!isSendingRef.current && chatInput !== '') {
       isSendingRef.current = true;
       handleChat(true);
-      setChatInput(''); // Clear input immediately if desired
-      setTimeout(() => (isSendingRef.current = false), 500); // Reset after 500ms
+      setChatInput(''); // Clear input immediately
+      // Reset isSendingRef immediately
+      isSendingRef.current = false;
     }
   };
 

@@ -1,5 +1,11 @@
 // File: app/api/chat/services/serveAmazonBedrockTitan.ts
 
+import { validateEnvVars } from '../utils/validate';
+import logger from '../utils/log';
+import { systemPrompt } from '../utils/prompt'; // Import systemPrompt
+
+let hasWarnedAmazonBedrockTitan = false;
+
 /**
  * Sends a POST request to the Amazon Bedrock Titan endpoint and retrieves the response.
  * @param endpoint - The local Amazon Bedrock Titan API endpoint.
@@ -7,26 +13,40 @@
  * @param model - The model name to use for generation.
  * @returns The generated text from the Amazon Bedrock Titan model.
  */
-export async function generateFromAmazonBedrockTitan(endpoint: string, prompt: string, model: string): Promise<string> {
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt, model }),
-      });
-  
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`Amazon Bedrock Titan Server responded with status: ${response.status} - ${response.statusText}. Body: ${errorBody}`);
-      }
-  
-      const responseBody = await response.json();
-      return responseBody.text.trim();
-    } catch (error) {
-      console.error('Error generating content from Amazon Bedrock Titan:', error);
-      throw error;
+export async function generateFromAmazonBedrockTitan(endpoint: string, prompt: string, model: string): Promise<string | null> {
+  const optionalVars = ['AMAZON_BEDROCK_TITAN_MODEL', 'AMAZON_BEDROCK_TITAN_ENDPOINT'];
+  const isValid = validateEnvVars(optionalVars);
+  if (!isValid) {
+    if (!hasWarnedAmazonBedrockTitan) {
+      logger.warn(`Optional environment variables for Amazon Bedrock Titan are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      hasWarnedAmazonBedrockTitan = true;
     }
+    return null;
   }
-  
+
+  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
+  logger.debug(`Sending request to Amazon Bedrock Titan: Endpoint = ${endpoint}, Model = ${model}, Prompt = ${combinedPrompt}`);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt: combinedPrompt, model }),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      logger.warn(`Amazon Bedrock Titan Service responded with status: ${response.status} - ${response.statusText}. Body: ${errorBody}`);
+      return null;
+    }
+
+    const responseBody = await response.json();
+    logger.debug(`Generated Text from Amazon Bedrock Titan: ${responseBody.text.trim()}`);
+    return responseBody.text.trim();
+  } catch (error) {
+    logger.warn('Error generating content from Amazon Bedrock Titan:', error);
+    return null;
+  }
+}
