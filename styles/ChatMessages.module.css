@@ -3,7 +3,7 @@
 .messagesContainer {
   height: 90vh; /* Set fixed height to prevent initial resizing */
   overflow-y: auto; /* Enable vertical scrolling when content overflows */
-  border-radius: 5px;
+  border-radius: 0px;
   scroll-behavior: smooth; /* Smooth scrolling */
   display: flex; /* Added display flex to handle children */
   flex-direction: column; /* Column layout for message alignment */
@@ -14,7 +14,7 @@
 }
 
 .message {
-  margin-bottom: 10px;
+  margin-bottom: 0px;
   display: flex;
   flex-direction: column;
   transform: translateY(10px); /* Prevent stretch effect */

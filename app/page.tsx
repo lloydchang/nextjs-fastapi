@@ -1,13 +1,5 @@
 // app/page.tsx
 
-// moved from
-// pages/index.tsx
-// to
-// app/page.tsx
-// because of Next.js 14
-
-// app/page.tsx
-
 'use client'; // Mark as Client Component
 
 import React, { Suspense } from 'react';
@@ -17,19 +9,19 @@ import { ChatProvider } from '../context/ChatContext'; // Import ChatProvider
 import './globals.css'; // Global CSS styles
 import ErrorBoundary from '../components/ErrorBoundary';
 
-// Dynamically load all panels
+// Dynamically load all panels without displaying loading text
 const LeftPanel = dynamic(() => import('../components/LeftPanel'), {
-  loading: () => <p>Loading Left Panel...</p>,
+  loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder to prevent transitions
   ssr: true,
 });
 
 const MiddlePanel = dynamic(() => import('../components/MiddlePanel'), {
-  loading: () => <p>Loading Middle Panel...</p>,
+  loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
   ssr: true,
 });
 
 const RightPanel = dynamic(() => import('../components/RightPanel'), {
-  loading: () => <p>Loading Right Panel...</p>,
+  loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
   ssr: true,
 });
 
@@ -39,17 +31,17 @@ const Home: React.FC = () => {
       <TalkProvider>
         <div className="container">
           {/* Use Suspense and ErrorBoundary for each panel */}
-          <Suspense fallback={<p>Loading Left Panel...</p>}>
+          <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
               <LeftPanel />
             </ErrorBoundary>
           </Suspense>
-          <Suspense fallback={<p>Loading Middle Panel...</p>}>
+          <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
               <MiddlePanel />
             </ErrorBoundary>
           </Suspense>
-          <Suspense fallback={<p>Loading Right Panel...</p>}>
+          <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
               <RightPanel />
             </ErrorBoundary>
