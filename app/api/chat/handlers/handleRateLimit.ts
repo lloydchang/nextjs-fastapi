@@ -1,9 +1,9 @@
-// File: app/api/chat/handlers/rateLimitHandler.ts
+// File: app/api/chat/handlers/handleRateLimit.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import logger from '../utils/logger';
+import logger from '../utils/log';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
-import { streamErrorMessage } from './handleErrors';
+import { streamErrorMessage } from './handleError';
 import { AppConfig } from '../utils/config';
 
 /**

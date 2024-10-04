@@ -1,4 +1,4 @@
-// File: app/api/chat/utils/validateEnv.ts
+// File: app/api/chat/utils/validate.ts
 
 /**
  * List of required environment variables for the application.
@@ -7,19 +7,18 @@
 const requiredVars: string[] = [];
 
 /**
- * Shared list of optional environment variables for the application.
+ * List of optional environment variables for the application.
  * If these variables are missing, the application will log a warning but continue to run.
  */
 const optionalVars: string[] = [
-  'AMAZON_BEDROCK_TITAN_MODEL',        // Amazon Bedrock Titan Model ID
-  'GOOGLE_VERTEX_AI_GEMINI_MODEL',      // Google Vertex AI Gemini Model ID
-  'GOOGLE_APPLICATION_CREDENTIALS',     // Google Cloud Application Credentials
-  'GOOGLE_VERTEX_AI_ENDPOINT',          // Google Vertex AI Endpoint
-  'GOOGLE_VERTEX_AI_LOCATION',          // Google Vertex AI Location
-  'GOOGLE_CLOUD_PROJECT',               // Google Cloud Project ID
-  'OLLAMA_GEMMA_MODEL',                 // Ollama Gemma Model
-  'OLLAMA_LLAMA_MODEL',                 // Ollama Llama Model
-  'OLLAMA_LLAMA_ENDPOINT',              // Ollama Llama Model Endpoint
+  'AMAZON_BEDROCK_TITAN_MODEL',
+  'GOOGLE_VERTEX_MODEL',
+  'GOOGLE_APPLICATION_CREDENTIALS',
+  'GOOGLE_VERTEX_LOCATION',
+  'GOOGLE_CLOUD_PROJECT',
+  'OLLAMA_GEMMA_MODEL',
+  'OLLAMA_LLAMA_MODEL',
+  'OLLAMA_LLAMA_ENDPOINT',
 ];
 
 /**
@@ -45,7 +44,6 @@ export function validateEnv() {
 
 /**
  * Validates and logs the environment variables from a provided list.
- * If any variables are missing or have default placeholder values, logs an error.
  * @param envVars - A list of environment variable names to validate.
  * @returns A boolean indicating if all the specified environment variables are properly configured.
  */
@@ -62,5 +60,4 @@ export function validateAndLogEnvVars(envVars: string[]): boolean {
   return true;
 }
 
-// Export the variables to use them elsewhere if needed
 export { requiredVars, optionalVars };

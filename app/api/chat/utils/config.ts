@@ -1,7 +1,7 @@
 // File: app/api/chat/utils/config.ts
 
 /**
- * Application configuration interface.
+ * Configuration file for application settings and environment variables.
  */
 export interface AppConfig {
   logsInResponse: boolean;
@@ -9,10 +9,17 @@ export interface AppConfig {
   primaryModel: string;
   fallbackModel: string;
   googleCredentials: string | undefined;
-  googleModel: string | undefined;
+  googleVertexGemmaModel: string | undefined;
   googleProject: string | undefined;
   googleLocation: string | undefined;
-  llamaEndpoint: string | undefined;
+  amazonBedrockTitanModel: string | undefined;
+  amazonBedrockTitanEndpoint: string | undefined;
+  ollamaGemmaModel: string | undefined;
+  ollamaGemmaEndpoint: string | undefined;
+  ollamaLLAMAModel: string | undefined;
+  ollamaLlamaEndpoint: string | undefined;
+  streamEnabled: boolean;
+  temperature: number;
 }
 
 /**
@@ -23,12 +30,19 @@ export const getConfig = (): AppConfig => {
   return {
     logsInResponse: process.env.LOGS_IN_RESPONSE === 'true',
     rateLimitEnabled: process.env.RATE_LIMIT_ENABLED === 'true',
-    primaryModel: process.env.DEFAULT_MODEL || '',
-    fallbackModel: process.env.FALLBACK_MODEL || '',
+    primaryModel: process.env.GOOGLE_VERTEX_MODEL || '',
+    fallbackModel: process.env.OLLAMA_LLAMA_MODEL || '',
     googleCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-    googleModel: process.env.GOOGLE_GEMINI_MODEL,
+    googleVertexGemmaModel: process.env.GOOGLE_VERTEX_MODEL,
     googleProject: process.env.GOOGLE_CLOUD_PROJECT,
-    googleLocation: process.env.GOOGLE_VERTEX_AI_LOCATION,
-    llamaEndpoint: process.env.LOCAL_LLAMA_ENDPOINT,
+    googleLocation: process.env.GOOGLE_VERTEX_LOCATION,
+    amazonBedrockTitanModel: process.env.AMAZON_BEDROCK_TITAN_MODEL,
+    amazonBedrockTitanEndpoint: process.env.AMAZON_BEDROCK_TITAN_ENDPOINT,
+    ollamaGemmaModel: process.env.OLLAMA_GEMMA_MODEL,
+    ollamaGemmaEndpoint: process.env.OLLAMA_GEMMA_ENDPOINT,
+    ollamaLLAMAModel: process.env.OLLAMA_LLAMA_MODEL,
+    ollamaLlamaEndpoint: process.env.OLLAMA_LLAMA_ENDPOINT,
+    streamEnabled: process.env.STREAM_ENABLED === 'true',
+    temperature: parseFloat(process.env.TEMPERATURE || '1.0'),
   };
 };

@@ -1,13 +1,18 @@
 // File: app/api/chat/handlers/handleResponse.ts
 
 import { NextResponse } from 'next/server';
-import { Config } from '../../../../utils/config';
-import { ResponseSegment } from '../../../../types';
+import { AppConfig } from '../utils/config';
+import { ResponseSegment } from '../types';
 
 /**
  * Stream response with logs if enabled.
+ * @param text - The text to be streamed as the response.
+ * @param logs - An array of log messages to include in the response.
+ * @param context - Context information for the response.
+ * @param config - Application configuration settings.
+ * @returns The streamed response.
  */
-export function streamResponseWithLogs(text: string, logs: string[], context: string | null, config: Config) {
+export function streamResponseWithLogs(text: string, logs: string[], context: string | null, config: AppConfig) {
   const segments = text.split(/(?<=[.!?])\s+/);
 
   const stream = new ReadableStream<ResponseSegment>({
@@ -40,8 +45,13 @@ export function streamResponseWithLogs(text: string, logs: string[], context: st
 
 /**
  * Send a complete response with logs if enabled.
+ * @param text - The complete text to be sent in the response.
+ * @param logs - An array of log messages to include in the response.
+ * @param context - Context information for the response.
+ * @param config - Application configuration settings.
+ * @returns The complete JSON response.
  */
-export function sendCompleteResponse(text: string, logs: string[], context: string | null, config: Config) {
+export function sendCompleteResponse(text: string, logs: string[], context: string | null, config: AppConfig) {
   const segments = text.split(/(?<=[.!?])\s+/);
 
   const responseSegments: ResponseSegment[] = [];

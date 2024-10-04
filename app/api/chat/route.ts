@@ -1,26 +1,25 @@
 // File: app/api/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateEnv } from './utils/validateEnv';
+import { validateEnv, optionalVars as optionalEnvVars, validateAndLogEnvVars } from './utils/validate';
 import { getConfig } from './utils/config';
-import { generateTextWithPrimaryModel } from './handlers/generatePrimary';
-import { generateTextWithFallbackModel } from './handlers/generateFallback';
+import { handleTextWithAmazonBedrockTitan } from './handlers/handleAmazonBedrockTitan';
+import { handleTextWithGoogleVertexGemmaModel } from './handlers/handleGoogleVertexGemma';
+import { handleTextWithOllamaGemmaModel } from './handlers/handleOllamaGemma';
+import { handleTextWithOllamaLlamaModel } from './handlers/handleOllamaLlama';
 import { streamResponseWithLogs, sendCompleteResponse } from './handlers/handleResponse';
-import { streamErrorMessage, returnErrorResponse } from './handlers/handleErrors';
-import { sanitizeInput } from './utils/stringUtils';
-import { systemPrompt } from './utils/systemPrompt';
-import { requiredEnvVars, validateAndLogEnvVars } from './utils/envUtils';
-import logger from './utils/logger';
-import { generateFromGoogleVertexAI } from './services/google-vertex-ai';
-import { generateFromOllamaLLaMA } from './services/ollama-llama';
-import { handleRateLimit } from './handlers/rateLimitHandler';
+import { streamErrorMessage, returnErrorResponse } from './handlers/handleError';
+import { sanitizeInput } from './utils/sanitize';
+import { systemPrompt } from './utils/prompt';
+import logger from './utils/log';
+import { handleRateLimit } from './handlers/handleRateLimit';
 
 validateEnv();
 
 const config = getConfig();
 
 export async function POST(request: NextRequest) {
-  let generatedText = '';
+  let handledText: string[] = [];
 
   try {
     // Handle rate limiting
@@ -40,32 +39,64 @@ export async function POST(request: NextRequest) {
       ? `${systemPrompt}\n${context}\n\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`
       : `${systemPrompt}\n### New Input:\nUser: ${sanitizedInput}\nAssistant:`;
 
-    const requestBody = { model: config.primaryModel, prompt: prompt, temperature: config.temperature };
+    const promises = [];
 
-    if (!validateAndLogEnvVars(requiredEnvVars, [])) {
-      logger.warn('Skipping primary model due to invalid environment configuration.');
+    if (config.amazonBedrockTitanModel && config.amazonBedrockTitanEndpoint) {
+      promises.push(
+        handleTextWithAmazonBedrockTitan({ prompt, model: config.amazonBedrockTitanModel }, config)
+          .then((result) => handledText.push(result))
+          .catch((error) => {
+            logger.error(`Amazon Bedrock Titan model failed: ${error.message}`);
+            handledText.push(`Amazon Bedrock Titan failed: ${error.message}`);
+          })
+      );
     } else {
-      try {
-        generatedText = await generateTextWithPrimaryModel(requestBody, config, []);
-      } catch (primaryError) {
-        logger.error(`Primary model failed: ${primaryError.message}`);
-      }
+      handledText.push('No Amazon Bedrock Titan is configured.');
     }
 
-    if (config.fallbackModel && config.llamaEndpoint) {
-      try {
-        generatedText = await generateTextWithFallbackModel(requestBody.prompt, config, []);
-      } catch (fallbackError) {
-        logger.error(`Fallback model failed: ${fallbackError.message}`);
-        return returnErrorResponse(`${fallbackError.message}`, 500, [], config);
-      }
-    } else {
-      return returnErrorResponse('No fallback is configured.', 500, [], config);
+    if (validateAndLogEnvVars(optionalEnvVars, [])) {
+      const requestBody = { model: config.googleVertexGemmaModel, prompt, temperature: config.temperature };
+      promises.push(
+        handleTextWithGoogleVertexGemmaModel(requestBody, config, [])
+          .then((result) => handledText.push(result))
+          .catch((error) => {
+            logger.error(`GoogleVertexGemma model failed: ${error.message}`);
+            handledText.push(`GoogleVertexGemma failed: ${error.message}`);
+          })
+      );
     }
+
+    if (config.ollamaGemmaModel && config.ollamaGemmaEndpoint) {
+      promises.push(
+        handleTextWithOllamaGemmaModel(prompt, config, [])
+          .then((result) => handledText.push(result))
+          .catch((error) => {
+            logger.error(`OllamaGemma model failed: ${error.message}`);
+            handledText.push(`OllamaGemma failed: ${error.message}`);
+          })
+      );
+    } else {
+      handledText.push('No OllamaGemma is configured.');
+    }
+
+    if (config.ollamaLLAMAModel && config.ollamaLlamaEndpoint) {
+      promises.push(
+        handleTextWithOllamaLlamaModel(prompt, config, [])
+          .then((result) => handledText.push(result))
+          .catch((error) => {
+            logger.error(`OllamaLlama model failed: ${error.message}`);
+            handledText.push(`OllamaLlama failed: ${error.message}`);
+          })
+      );
+    } else {
+      handledText.push('No OllamaLlama is configured.');
+    }
+
+    await Promise.allSettled(promises);
 
     return config.streamEnabled
-      ? streamResponseWithLogs(generatedText, [], context, config)
-      : sendCompleteResponse(generatedText, [], context, config);
+      ? streamResponseWithLogs(handledText.join('\n'), [], context, config)
+      : sendCompleteResponse(handledText.join('\n'), [], context, config);
   } catch (error) {
     logger.error(`Internal Server Error: ${error.message}`);
     return returnErrorResponse('Internal Server Error', 500, [], config);
