@@ -92,8 +92,8 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
 
   return (
     <div>
-      <p><strong>{isMicOn ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
-      <p><strong>Interim Results:</strong> {transcript}</p>
+      <p><strong>{isMicOn ? 'Listening 👂' : 'Not Listening 🙉 '}</strong>
+      <strong>Interim Results:</strong> {transcript}</p>
     </div>
   );
 };
