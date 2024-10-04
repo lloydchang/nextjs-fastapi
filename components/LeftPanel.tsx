@@ -51,9 +51,9 @@ const LeftPanel: React.FC = () => {
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
       <div className={styles.content}>
-        <h1 className={styles.title}><b>Ideas change everything</b></h1>
+        {/* <h1 className={styles.title}><b>Ideas change everything</b></h1> */}
         <div className={styles.chatInterface} ref={chatContainerRef}>
-          <h3 className={styles.chatHeader}>Chat with <span className={styles.tedx}>TEDx</span><span className={styles.sdg}>SDG</span></h3>
+          {/* <h3 className={styles.chatHeader}>Chat with <span className={styles.tedx}>TEDx</span><span className={styles.sdg}>SDG</span></h3> */}
           <HeavyChatMessages messages={messages} />
           <ChatInput 
             chatInput={chatInput} 
