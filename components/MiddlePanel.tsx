@@ -198,6 +198,7 @@ const MiddlePanel: React.FC = () => {
             />
           </div>
         )}
+        {error && <p className={styles.errorText}>{error}</p>}
       </div>
 
       {selectedTalk && (
@@ -238,8 +239,6 @@ const MiddlePanel: React.FC = () => {
         </div>
       )}
 
-      {error && <p className={styles.errorText}>{error}</p>}
-      
       <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} />
     </div>
   );
