@@ -73,7 +73,7 @@ const MiddlePanel: React.FC = () => {
         setGreeting("Unknown response format");
       }
     }).catch((err) => {
-      setGreeting("Failed to load greeting.");
+      setGreeting("Failed to fetch greeting.");
       setErrorDetails(err.message);
       addLog("Failed to fetch greeting: " + err.message);
     });
@@ -113,9 +113,9 @@ const MiddlePanel: React.FC = () => {
         }
       })
       .catch((err) => {
-        setError("Failed to fetch data. Please check if the backend server is running.");
+        setError("Failed to fetch talks.");
         setErrorDetails(err.message);
-        addLog("Failed to fetch data: " + err.message);
+        addLog("Failed to fetch talks: " + err.message);
       })
       .finally(() => {
         setLoading(false);
