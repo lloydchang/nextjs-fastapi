@@ -1,4 +1,4 @@
-// File: components/LeftPanel.tsx
+// components/LeftPanel.tsx
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -11,10 +11,9 @@ import ChatInput from './ChatInput';
 import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
-import TestSpeechRecognition from './TestSpeechRecognition';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
-  loading: () => <p>Loading messages...</p>,
+  loading: () => <div className={styles.emptyPlaceholder}></div>,
   ssr: false,
 });
 
@@ -39,7 +38,7 @@ const LeftPanel: React.FC = () => {
       }
     },
     [sendActionToChatbot]
-  ); 
+  );
 
   return (
     <div className={styles.container}>
@@ -51,9 +50,7 @@ const LeftPanel: React.FC = () => {
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
       <div className={styles.content}>
-        {/* <h1 className={styles.title}><b>Ideas change everything</b></h1> */}
         <div className={styles.chatInterface} ref={chatContainerRef}>
-          {/* <h3 className={styles.chatHeader}>Chat with <span className={styles.tedx}>TEDx</span><span className={styles.sdg}>SDG</span></h3> */}
           <HeavyChatMessages messages={messages} />
           <ChatInput 
             chatInput={chatInput} 
@@ -72,10 +69,6 @@ const LeftPanel: React.FC = () => {
             toggleMem={toggleMem}
             eraseMemory={clearChatHistory}
           />
-          {/* <TestSpeechRecognition
-            isMicOn={mediaState.isMicOn}
-            onSpeechResult={(result) => handleChat(result, false)}
-          /> */}
         </div>
       </div>
     </div>
