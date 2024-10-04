@@ -23,20 +23,19 @@ const rateLimiter = new RateLimiterMemory({
  * @returns The rate limit response or null if rate limit is not triggered.
  */
 export async function handleRateLimit(request: NextRequest, config: AppConfig): Promise<NextResponse | null> {
+  if (!config.rateLimitEnabled) {
+    return null;
+  }
+
   const forwarded = request.headers.get('x-forwarded-for');
   const ip = forwarded ? forwarded.split(/, /)[0] : request.headers.get('x-real-ip') || request.ip || 'unknown';
-  logger.info(`Client IP: ${ip}`);
 
-  if (config.rateLimitEnabled) {
-    try {
-      await rateLimiter.consume(ip, 1); // Consuming 1 point per request
-      logger.info(`Rate limiting: Allowed request from IP ${ip}`);
-    } catch {
-      logger.warn(`Rate limiting: Blocked request from IP ${ip}`);
-      return streamErrorMessage('Too many requests. Please try again later.', [], config);
-    }
-  } else {
-    logger.info('Rate limiting is off.');
+  try {
+    await rateLimiter.consume(ip, 1); // Consuming 1 point per request
+    logger.info(`Rate limiting: Allowed request from IP ${ip}`);
+  } catch {
+    logger.warn(`Rate limiting: Blocked request from IP ${ip}`);
+    return streamErrorMessage('Too many requests. Please try again later.', [], config);
   }
 
   return null;

@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip install -r requirements.txt 2>&1 >/dev/null; python3 -m uvicorn api.index:app --reload",
+    "fastapi-dev": "pip install -r requirements.txt 2>&1 >/dev/null; python3 -m uvicorn python.api.index:app --reload",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",
@@ -33,6 +33,7 @@
     "rimraf": "^4.4.1",
     "sharp": "^0.33.5",
     "tailwindcss": "3.4.12",
+    "undici": "^6.19.8",
     "winston": "^3.14.2"
   },
   "devDependencies": {
