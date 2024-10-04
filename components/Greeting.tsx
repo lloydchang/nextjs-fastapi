@@ -7,6 +7,8 @@ import axios from 'axios';
 
 const Greeting: React.FC = () => {
   const [greeting, setGreeting] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true); // New loading state
+  const [error, setError] = useState<string | null>(null); // State for error handling
 
   // Fetch greeting from /api/py/hello
   useEffect(() => {
@@ -14,21 +16,32 @@ const Greeting: React.FC = () => {
       try {
         const response = await axios.get('http://127.0.0.1:8000/api/py/hello');
         if (response.data && response.data.message) {
-          setGreeting(response.data.message); // Use the `message` field from the response
+          setGreeting(response.data.message);
         } else {
           setGreeting("Unknown response format");
         }
       } catch (error) {
-        setGreeting("Failed to fetch greeting.");
+        setError("Failed to fetch greeting.");
+      } finally {
+        setLoading(false); // Set loading to false once the fetch is complete
       }
     };
 
     fetchGreeting();
   }, []);
 
+  // Render loading state or error state
+  if (loading) {
+    return <div></div>; // Display loading message
+  }
+
+  if (error) {
+    return <div>{error}</div>; // Display error message if fetching fails
+  }
+
   return (
     <div>
-      <h1>{greeting}</h1>
+      <h1>{greeting}</h1> {/* Display the fetched greeting */}
     </div>
   );
 };
