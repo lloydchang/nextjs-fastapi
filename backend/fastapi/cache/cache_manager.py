@@ -3,7 +3,7 @@
 import pickle
 import os
 from typing import Any, Optional
-from python.logger import logger  # Import the centralized logger
+from backend.fastapi.logger import logger  # Import the centralized logger
 
 # Ensure the cache directory exists
 CACHE_DIRECTORY = './python/cache'
