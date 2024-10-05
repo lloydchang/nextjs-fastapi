@@ -32,3 +32,4 @@ git add .
 git commit -m "Refactor: Move remaining components and their styles to appropriate Atomic Design categories."
 
 echo "Reorganization of remaining components and styles completed successfully!"
+what 
