@@ -1,7 +1,7 @@
 // components/templates/ProjectPlan.tsx
 
 import React, { useEffect, useState } from 'react';
-import styles from '../styles/templates/ProjectPlan.module.css';
+import styles from '../../styles/components/templates/ProjectPlan.module.css';
 
 interface ProjectPlanProps {
   messages: string[];

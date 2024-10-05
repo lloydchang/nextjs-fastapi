@@ -1,7 +1,7 @@
 // File: components/atoms/ChatInput.tsx
 
 import React, { useRef } from 'react';
-import styles from '../styles/ChatInput.module.css';
+import styles from '../../styles/components/atoms/ChatInput.module.css';
 
 interface ChatInputProps {
   chatInput: string;

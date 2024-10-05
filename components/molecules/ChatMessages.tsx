@@ -1,8 +1,8 @@
-// components/atoms/ChatMessages.tsx
+// components/molecules/ChatMessages.tsx
 
 import React, { useEffect, useRef } from 'react';
 import { Message } from '../hooks/useChat';
-import styles from '../styles/molecules/ChatMessages.module.css';
+import styles from '../../styles/components/molecules/ChatMessages.module.css';
 
 interface ChatMessagesProps {
   messages: Message[];

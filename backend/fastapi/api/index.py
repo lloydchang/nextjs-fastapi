@@ -51,11 +51,14 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.t
 warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*", module="torch.storage")
 
 # File paths for data and cache
-file_path = "./backend/fastapi/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-cache_file_path = "./backend/fastapi/cache/tedx_dataset.pkl"
-sdg_embeddings_cache = "./backend/fastapi/cache/sdg_embeddings.pkl"
-sdg_tags_cache = "./backend/fastapi/cache/sdg_tags.pkl"  # Path for SDG tags cache
-description_embeddings_cache = "./backend/fastapi/cache/description_embeddings.pkl"
+file_path = "backend/fastapi/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+cache_file_path = "backend/fastapi/cache/tedx_dataset.pkl"
+sdg_embeddings_cache = "backend/fastapi/cache/sdg_embeddings.pkl"
+sdg_tags_cache = "backend/fastapi/cache/sdg_tags.pkl"  # Path for SDG tags cache
+description_embeddings_cache = "backend/fastapi/cache/description_embeddings.pkl"
+
+current_directory = os.getcwd()
+print(f"Current Directory: {current_directory}")
 
 # Background task to load the necessary resources
 async def load_resources():
@@ -74,7 +77,7 @@ async def load_resources():
 
     # Load the Sentence-BERT model
     logger.info("Loading the Sentence-BERT model for semantic search.")
-    model = lazy_load("backend.fastapi.models.model_definitions.model_definitions", "load_model")('paraphrase-MiniLM-L6-v2')
+    model = lazy_load("backend.fastapi.models.model_definitions", "load_model")('paraphrase-MiniLM-L6-v2')
     logger.info(f"Sentence-BERT model loaded successfully! Model: {model is not None}")
 
     # Check if 'description_vector' is present, if not, compute and add it
