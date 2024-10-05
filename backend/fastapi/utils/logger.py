@@ -1,4 +1,4 @@
-# python/logger.py
+# File: backend/fastapi/utils/logger.py
 
 import logging
 import sys

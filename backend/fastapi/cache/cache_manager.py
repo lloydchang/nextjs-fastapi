@@ -1,4 +1,4 @@
-# python/cache_manager.py
+# File: backend/fastapi/cache/cache_manager.py
 
 import pickle
 import os
@@ -6,7 +6,7 @@ from typing import Any, Optional
 from backend.fastapi.logger import logger  # Import the centralized logger
 
 # Ensure the cache directory exists
-CACHE_DIRECTORY = './python/cache'
+CACHE_DIRECTORY = './backend/fastapi/cache'
 
 
 def ensure_cache_directory_exists():
