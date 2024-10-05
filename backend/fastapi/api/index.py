@@ -12,7 +12,7 @@ import numpy as np
 import torch  # Import torch to work with Tensors
 
 # Create a FastAPI app instance
-app = FastAPI(docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
+app = FastAPI(docs_url="/api/docs", openapi_url="/api/openapi.json")
 
 # Enable CORS middleware to handle cross-origin requests
 app.add_middleware(
@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # Define a "Hello, World!" Endpoint for Testing
-@app.get("/api/py/hello")
+@app.get("/api/hello")
 async def hello():
     return {"message": "Hello, World!"}
 
