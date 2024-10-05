@@ -1,4 +1,4 @@
-// components/ErrorBoundary.tsx
+// components/organisms/ErrorBoundary.tsx
 
 import React, { Component, ReactNode } from 'react';
 

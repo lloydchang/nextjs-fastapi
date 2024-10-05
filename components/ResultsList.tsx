@@ -1,4 +1,4 @@
-// components/ResultsList.tsx
+// components/molecules/ResultsList.tsx
 
 'use client';
 

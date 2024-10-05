@@ -1,7 +1,7 @@
-// components/TestSpeechRecognition.tsx
+// components/atoms/TestSpeechRecognition.tsx
 
 import React, { useEffect, useState, useRef } from 'react';
-import styles from '../styles/TestSpeechRecognition.module.css';
+import styles from '../styles/atoms/TestSpeechRecognition.module.css';
 
 interface TestSpeechRecognitionProps {
   isMicOn: boolean; // Prop to control mic state
