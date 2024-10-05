@@ -11,10 +11,12 @@ interface HandlerInput {
 export async function handleTextWithOpenAIO1Model(input: HandlerInput, config: any): Promise<string> {
   const { prompt, model } = input;
   try {
+    logger.info(`app/api/chat/handlers/handleOpenAIO1.ts - Handling text with OpenAIO1. Prompt: ${prompt}, Model: ${model}`);
     const response = await serveOpenAIO1(prompt, model, config);
+    logger.info(`app/api/chat/handlers/handleOpenAIO1.ts - OpenAIO1 response: ${response}`);
     return response;
   } catch (error: any) {
-    logger.error(`Error in handleOpenAIO1Model: ${error.message}`);
+    logger.error(`app/api/chat/handlers/handleOpenAIO1.ts - Error: ${error.message}`);
     throw error;
   }
 }

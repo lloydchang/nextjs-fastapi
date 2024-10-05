@@ -1,8 +1,13 @@
 // File: app/api/chat/utils/stream.ts
 
+import logger from './log';
+
 export async function streamResponseBody(response: Response): Promise<string> {
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('Failed to access the response body stream.');
+  if (!reader) {
+    logger.error('app/api/chat/utils/stream.ts - Failed to access the response body stream.');
+    throw new Error('Failed to access the response body stream.');
+  }
 
   const decoder = new TextDecoder('utf-8');
   let buffer = '';
@@ -14,5 +19,6 @@ export async function streamResponseBody(response: Response): Promise<string> {
     done = streamDone;
   }
 
+  logger.info(`app/api/chat/utils/stream.ts - Streamed response body: ${buffer}`);
   return buffer;
 }

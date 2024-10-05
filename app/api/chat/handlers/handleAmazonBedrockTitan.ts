@@ -12,12 +12,14 @@ export async function handleTextWithAmazonBedrockTitan(input: HandlerInput, conf
   const { prompt, model } = input;
   const endpoint = config.amazonBedrockTitanEndpoint;
 
+  logger.info(`app/api/chat/handlers/handleAmazonBedrockTitan.ts - Handling text with Amazon Bedrock Titan. Model: ${model}, Prompt: ${prompt}`);
+
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.amazonBedrockTitanApiKey}`, // Assuming API key is required
+        'Authorization': `Bearer ${config.amazonBedrockTitanApiKey}`,
       },
       body: JSON.stringify({
         model,
@@ -30,7 +32,7 @@ export async function handleTextWithAmazonBedrockTitan(input: HandlerInput, conf
     }
 
     const data = await response.json();
-    logger.info(`Amazon Bedrock Titan raw response: ${JSON.stringify(data)}`);
+    logger.info(`app/api/chat/handlers/handleAmazonBedrockTitan.ts - Received response: ${JSON.stringify(data)}`);
 
     if (!data.response) {
       throw new Error('Amazon Bedrock Titan API did not return a "response" field.');
@@ -38,7 +40,7 @@ export async function handleTextWithAmazonBedrockTitan(input: HandlerInput, conf
 
     return data.response;
   } catch (error: any) {
-    logger.error(`Error in handleAmazonBedrockTitan: ${error.message}`);
+    logger.error(`app/api/chat/handlers/handleAmazonBedrockTitan.ts - Error: ${error.message}`);
     throw error;
   }
 }
