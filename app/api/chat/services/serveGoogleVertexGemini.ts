@@ -1,4 +1,4 @@
-// File: app/api/chat/services/serveGoogleVertexGemini.ts
+// File: app/api/chat/clients/serveGoogleVertexGemini.ts
 
 import { Vertex } from '@google-cloud/vertexai';
 import { validateEnvVars } from '../utils/validate';
@@ -39,14 +39,14 @@ export async function generateFromGoogleVertexGemini({
 
   if (!isValid) {
     if (!hasWarnedGoogleVertexGemini) {
-      logger.warn(`app/api/chat/services/serveGoogleVertexGemini.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      logger.warn(`app/api/chat/clients/serveGoogleVertexGemini.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
       hasWarnedGoogleVertexGemini = true;
     }
     return null;
   }
 
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
-  logger.info(`app/api/chat/services/serveGoogleVertexGemini.ts - Sending request to Google Vertex Gemini. Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.info(`app/api/chat/clients/serveGoogleVertexGemini.ts - Sending request to Google Vertex Gemini. Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const vertex = new Vertex({ project, location });
@@ -55,10 +55,10 @@ export async function generateFromGoogleVertexGemini({
     const contentResponse = await response.response;
     const generatedText = contentResponse.text || '';
 
-    logger.info(`app/api/chat/services/serveGoogleVertexGemini.ts - Generated text from Google Vertex Gemini: ${generatedText}`);
+    logger.info(`app/api/chat/clients/serveGoogleVertexGemini.ts - Generated text from Google Vertex Gemini: ${generatedText}`);
     return generatedText;
   } catch (error) {
-    logger.error(`app/api/chat/services/serveGoogleVertexGemini.ts - Error generating content from Google Vertex Gemini: ${error}`);
+    logger.error(`app/api/chat/clients/serveGoogleVertexGemini.ts - Error generating content from Google Vertex Gemini: ${error}`);
     return null;
   }
 }

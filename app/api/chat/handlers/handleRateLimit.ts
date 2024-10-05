@@ -1,4 +1,4 @@
-// File: app/api/chat/handlers/handleRateLimit.ts
+// File: app/api/chat/controllers/handleRateLimit.ts
 
 import { NextResponse } from 'next/server';
 import logger from '../utils/log';
@@ -14,7 +14,7 @@ export function handleRateLimit(ip: string) {
   if (record) {
     if (currentTime - record.startTime < WINDOW_SIZE) {
       if (record.count >= RATE_LIMIT) {
-        logger.warn(`app/api/chat/handlers/handleRateLimit.ts - Rate limit exceeded for IP: ${ip}`);
+        logger.warn(`app/api/chat/controllers/handleRateLimit.ts - Rate limit exceeded for IP: ${ip}`);
         return NextResponse.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
       }
       record.count += 1;
@@ -26,6 +26,6 @@ export function handleRateLimit(ip: string) {
     ipMap.set(ip, { count: 1, startTime: currentTime });
   }
 
-  logger.info(`app/api/chat/handlers/handleRateLimit.ts - IP: ${ip} request count: ${record?.count || 1}`);
+  logger.info(`app/api/chat/controllers/handleRateLimit.ts - IP: ${ip} request count: ${record?.count || 1}`);
   return null;
 }

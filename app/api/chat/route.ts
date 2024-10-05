@@ -2,12 +2,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from './utils/config';
-import { handleTextWithAmazonBedrockTitan } from './handlers/handleAmazonBedrockTitan';
-import { handleTextWithGoogleVertexGeminiModel } from './handlers/handleGoogleVertexGemini';
-import { handleTextWithOllamaGemmaModel } from './handlers/handleOllamaGemma';
-import { handleTextWithOllamaLlamaModel } from './handlers/handleOllamaLlama';
-import { handleTextWithAzureOpenAIO1Model } from './handlers/handleAzureOpenAIO1';
-import { handleTextWithOpenAIO1Model } from './handlers/handleOpenAIO1';
+import { handleTextWithAmazonBedrockTitan } from './controllers/handleAmazonBedrockTitan';
+import { handleTextWithGoogleVertexGeminiModel } from './controllers/handleGoogleVertexGemini';
+import { handleTextWithOllamaGemmaModel } from './controllers/handleOllamaGemma';
+import { handleTextWithOllamaLlamaModel } from './controllers/handleOllamaLlama';
+import { handleTextWithAzureOpenAIO1Model } from './controllers/handleAzureOpenAIO1';
+import { handleTextWithOpenAIO1Model } from './controllers/handleOpenAIO1';
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/log';

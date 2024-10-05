@@ -1,4 +1,4 @@
-// File: app/api/chat/handlers/handleResponse.ts
+// File: app/api/chat/controllers/handleResponse.ts
 
 import { NextResponse } from 'next/server';
 import { AppConfig } from '../utils/config';
@@ -16,7 +16,7 @@ import logger from '../utils/log';
 export function streamResponseWithLogs(text: string, logs: string[], context: string | null, config: AppConfig) {
   const segments = text.split(/(?<=[.!?])\s+/);
 
-  logger.info(`app/api/chat/handlers/handleResponse.ts - Streaming response. Text: ${text}, Context: ${context}, Logs: ${logs.join(' | ')}`);
+  logger.info(`app/api/chat/controllers/handleResponse.ts - Streaming response. Text: ${text}, Context: ${context}, Logs: ${logs.join(' | ')}`);
 
   const stream = new ReadableStream<ResponseSegment>({
     start(controller) {
@@ -71,7 +71,7 @@ export function sendCompleteResponse(text: string, logs: string[], context: stri
     }
   });
 
-  logger.info(`app/api/chat/handlers/handleResponse.ts - Sending complete response. Text: ${text}, Context: ${context}, Logs: ${logs.join(' | ')}`);
+  logger.info(`app/api/chat/controllers/handleResponse.ts - Sending complete response. Text: ${text}, Context: ${context}, Logs: ${logs.join(' | ')}`);
 
   return new NextResponse(JSON.stringify(responseSegments), {
     headers: {
