@@ -10,17 +10,17 @@ import './globals.css'; // Global CSS styles
 import ErrorBoundary from '../components/ErrorBoundary';
 
 // Dynamically load all panels without displaying loading text
-const LeftPanel = dynamic(() => import('../components/LeftPanel'), {
+const LeftPanel = dynamic(() => import('../components/organisms/LeftPanel'), {
   loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder to prevent transitions
   ssr: true,
 });
 
-const MiddlePanel = dynamic(() => import('../components/MiddlePanel'), {
+const MiddlePanel = dynamic(() => import('../components/organisms/MiddlePanel'), {
   loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
   ssr: true,
 });
 
-const RightPanel = dynamic(() => import('../components/RightPanel'), {
+const RightPanel = dynamic(() => import('../components/organisms/RightPanel'), {
   loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
   ssr: true,
 });

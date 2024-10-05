@@ -1,0 +1,70 @@
+/* styles/ChatMessages.module.css */
+
+.messagesContainer {
+  height: 90vh; /* Set fixed height to prevent initial resizing */
+  overflow-y: auto; /* Enable vertical scrolling when content overflows */
+  border-radius: 0px;
+  scroll-behavior: smooth; /* Smooth scrolling */
+  display: flex; /* Added display flex to handle children */
+  flex-direction: column; /* Column layout for message alignment */
+  justify-content: flex-start; /* Ensure messages start at the top */
+  opacity: 0; /* Start as hidden to avoid initial jump */
+  visibility: hidden; /* Ensure hidden state until fully loaded */
+  transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
+}
+
+.message {
+  margin-bottom: 0px;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(10px); /* Prevent stretch effect */
+  animation: fadeInUp 0.3s forwards; /* Smooth appearance animation */
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.userMessage .text {
+  color: #eb0028; /* User message color (red) */
+  align-self: flex-end; /* Align to the right */
+}
+
+.botMessage .text {
+  color: white; /* Bot message color */
+  align-self: flex-start; /* Align to the left */
+}
+
+.sender {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.text {
+  background-color: black;
+  color: white; /* Default color, overridden in specific user/bot styles */
+  padding: 8px 12px;
+  border-radius: 15px;
+  max-width: 70%;
+}
+
+/* Scrollbar styles for better UI visibility */
+.messagesContainer::-webkit-scrollbar {
+  width: 8px; /* Chrome, Safari */
+}
+
+.messagesContainer::-webkit-scrollbar-thumb {
+  background-color: #555; /* Dark gray scrollbar color */
+  border-radius: 5px;
+}
+
+.messagesContainer::-webkit-scrollbar-track {
+  background-color: transparent; /* Track color */
+}
