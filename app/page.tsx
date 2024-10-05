@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 import { TalkProvider } from '../context/TalkContext';
 import { ChatProvider } from '../context/ChatContext'; // Import ChatProvider
 import './globals.css'; // Global CSS styles
-import ErrorBoundary from '../components/ErrorBoundary';
+import ErrorBoundary from '../components/organisms/ErrorBoundary';
 
 // Dynamically load all panels without displaying loading text
 const LeftPanel = dynamic(() => import('../components/organisms/LeftPanel'), {
