@@ -1,4 +1,4 @@
-# python/model.py
+# File: backend/fastapi/models/model_definitions.py
 
 from sentence_transformers import SentenceTransformer
 from backend.fastapi.logger import logger  # Import the centralized logger

@@ -1,4 +1,4 @@
-# api/index.py
+# File: backend/fastapi/api/index.py
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,7 +34,7 @@ def lazy_load(module_name, attr=None):
     return getattr(module, attr) if attr else module
 
 # Initialize logger
-logger = lazy_load("python.logger", "logger")
+logger = lazy_load("backend.fastapi.logger", "logger")
 
 # Global variables to hold the loaded resources
 model = None
@@ -51,11 +51,11 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="transformers.t
 warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.*", module="torch.storage")
 
 # File paths for data and cache
-file_path = "./python/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
-cache_file_path = "./python/cache/tedx_dataset.pkl"
-sdg_embeddings_cache = "./python/cache/sdg_embeddings.pkl"
-sdg_tags_cache = "./python/cache/sdg_tags.pkl"  # Path for SDG tags cache
-description_embeddings_cache = "./python/cache/description_embeddings.pkl"
+file_path = "./backend/fastapi/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
+cache_file_path = "./backend/fastapi/cache/tedx_dataset.pkl"
+sdg_embeddings_cache = "./backend/fastapi/cache/sdg_embeddings.pkl"
+sdg_tags_cache = "./backend/fastapi/cache/sdg_tags.pkl"  # Path for SDG tags cache
+description_embeddings_cache = "./backend/fastapi/cache/description_embeddings.pkl"
 
 # Background task to load the necessary resources
 async def load_resources():
@@ -63,7 +63,7 @@ async def load_resources():
 
     # Load TEDx Dataset
     logger.info("Loading TEDx dataset.")
-    data_loader = lazy_load("python.data_loader", "load_dataset")
+    data_loader = lazy_load("backend.fastapi.data_loader", "load_dataset")
     data = data_loader(file_path, cache_file_path)
     logger.info(f"TEDx dataset loaded successfully! Data: {data is not None}")
 
@@ -74,13 +74,13 @@ async def load_resources():
 
     # Load the Sentence-BERT model
     logger.info("Loading the Sentence-BERT model for semantic search.")
-    model = lazy_load("python.model", "load_model")('paraphrase-MiniLM-L6-v2')
+    model = lazy_load("backend.fastapi.model", "load_model")('paraphrase-MiniLM-L6-v2')
     logger.info(f"Sentence-BERT model loaded successfully! Model: {model is not None}")
 
     # Check if 'description_vector' is present, if not, compute and add it
     if 'description_vector' not in data.columns:
         logger.info("'description_vector' column missing. Computing description embeddings.")
-        embedding_utils = lazy_load("python.embedding_utils", "encode_descriptions")
+        embedding_utils = lazy_load("backend.fastapi.embedding_utils", "encode_descriptions")
         description_vectors = await asyncio.to_thread(embedding_utils, data['description'].tolist(), model)
         
         # Assign the computed vectors to the 'description_vector' column
@@ -104,10 +104,10 @@ async def load_resources():
             sdg_embeddings = None
     else:
         logger.info("Computing SDG embeddings.")
-        sdg_manager = lazy_load("python.sdg_manager", "get_sdg_keywords")
+        sdg_manager = lazy_load("backend.fastapi.sdg_manager", "get_sdg_keywords")
         sdg_keywords = sdg_manager()
         sdg_keyword_list = [keywords for keywords in sdg_keywords.keys()]  # Only take the keys (sdg1, sdg2, etc.)
-        embedding_utils = lazy_load("python.embedding_utils", "encode_sdg_keywords")
+        embedding_utils = lazy_load("backend.fastapi.embedding_utils", "encode_sdg_keywords")
         sdg_embeddings = await asyncio.to_thread(embedding_utils, sdg_keyword_list, model)
         if sdg_embeddings:
             with open(sdg_embeddings_cache, 'wb') as cache_file:
@@ -130,13 +130,13 @@ async def load_resources():
     else:
         logger.info("Computing SDG tags.")
         if not data.empty and 'description_vector' in data.columns and sdg_embeddings is not None:
-            sdg_utils = lazy_load("python.sdg_utils")
+            sdg_utils = lazy_load("backend.fastapi.sdg_utils")
             description_vectors_tensor = torch.tensor(np.array(data['description_vector'].tolist()))  # Ensure this is a Tensor
             sdg_embeddings_tensor = torch.tensor(np.array(sdg_embeddings))  # Ensure this is a Tensor
             cosine_similarities = torch.nn.functional.cosine_similarity(description_vectors_tensor.unsqueeze(1), sdg_embeddings_tensor.unsqueeze(0), dim=-1)
 
             # Get SDG names to pass as a parameter
-            sdg_manager = lazy_load("python.sdg_manager", "get_sdg_keywords")
+            sdg_manager = lazy_load("backend.fastapi.sdg_manager", "get_sdg_keywords")
             sdg_keywords = sdg_manager()
             sdg_names = list(sdg_keywords.keys())
 
@@ -174,7 +174,7 @@ async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     # Perform the search if resources are available
     logger.info(f"Performing semantic search for the query: '{query}'.")
     try:
-        search_module = lazy_load("python.search", "semantic_search")
+        search_module = lazy_load("backend.fastapi.search", "semantic_search")
         logger.info(f"Search Module Loaded: {search_module is not None}")
         result = await search_module(query, data, model, sdg_embeddings)
         # Check if 'result' is a non-empty list
