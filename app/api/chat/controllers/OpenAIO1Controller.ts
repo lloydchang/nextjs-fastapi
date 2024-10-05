@@ -1,6 +1,6 @@
-// File: app/api/chat/controllers/OpenAIController.ts
+// File: app/api/chat/controllers/OpenAIO1Controller.ts
 
-import { OpenAIClient } from '../clients/OpenAIClient';
+import { OpenAIO1Client } from '../clients/OpenAIO1Client';
 import logger from '../utils/log';
 
 interface HandlerInput {
@@ -11,12 +11,12 @@ interface HandlerInput {
 export async function handleTextWithOpenAIO1Model(input: HandlerInput, config: any): Promise<string> {
   const { prompt, model } = input;
   try {
-    logger.info(`app/api/chat/controllers/OpenAIController.ts - Handling text with OpenAIO1. Prompt: ${prompt}, Model: ${model}`);
-    const response = await OpenAIClient(prompt, model, config);
-    logger.info(`app/api/chat/controllers/OpenAIController.ts - OpenAIO1 response: ${response}`);
+    logger.info(`app/api/chat/controllers/OpenAIO1Controller.ts - Handling text with OpenAIO1. Prompt: ${prompt}, Model: ${model}`);
+    const response = await OpenAIO1Client(prompt, model, config);
+    logger.info(`app/api/chat/controllers/OpenAIO1Controller.ts - OpenAIO1 response: ${response}`);
     return response;
   } catch (error: any) {
-    logger.error(`app/api/chat/controllers/OpenAIController.ts - Error: ${error.message}`);
+    logger.error(`app/api/chat/controllers/OpenAIO1Controller.ts - Error: ${error.message}`);
     throw error;
   }
 }
