@@ -13,12 +13,14 @@ export async function handleTextWithGoogleVertexGeminiModel(input: HandlerInput,
   const { prompt, model, temperature } = input;
   const endpoint = config.googleVertexGeminiEndpoint;
 
+  logger.info(`app/api/chat/handlers/handleGoogleVertexGemini.ts - Handling text with Google Vertex Gemini. Model: ${model}, Prompt: ${prompt}`);
+
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.googleVertexGeminiApiKey}`, // Assuming API key is required
+        'Authorization': `Bearer ${config.googleVertexGeminiApiKey}`,
       },
       body: JSON.stringify({
         model,
@@ -32,7 +34,7 @@ export async function handleTextWithGoogleVertexGeminiModel(input: HandlerInput,
     }
 
     const data = await response.json();
-    logger.info(`Google Vertex Gemini raw response: ${JSON.stringify(data)}`);
+    logger.info(`app/api/chat/handlers/handleGoogleVertexGemini.ts - Received response: ${JSON.stringify(data)}`);
 
     if (!data.response) {
       throw new Error('Google Vertex Gemini API did not return a "response" field.');
@@ -40,7 +42,7 @@ export async function handleTextWithGoogleVertexGeminiModel(input: HandlerInput,
 
     return data.response;
   } catch (error: any) {
-    logger.error(`Error in handleGoogleVertexGeminiModel: ${error.message}`);
+    logger.error(`app/api/chat/handlers/handleGoogleVertexGemini.ts - Error: ${error.message}`);
     throw error;
   }
 }

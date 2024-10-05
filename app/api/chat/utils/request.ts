@@ -22,8 +22,8 @@ export async function makeRequest(
     retries = 3 
   } = options;
 
-  logger.info(`Making ${method} request to ${endpoint}`);
-  logger.info(`Request Payload: ${JSON.stringify(payload, null, 2)}`);
+  logger.info(`app/api/chat/utils/request.ts - Making ${method} request to ${endpoint}`);
+  logger.info(`app/api/chat/utils/request.ts - Request Payload: ${JSON.stringify(payload, null, 2)}`);
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
@@ -35,12 +35,12 @@ export async function makeRequest(
         headersTimeout: timeout,
       });
 
-      logger.info(`Response Status: ${statusCode} ${statusMessage}`);
+      logger.info(`app/api/chat/utils/request.ts - Response Status: ${statusCode} ${statusMessage}`);
       const responseText = await body.text();
-      logger.info(`Response Body: ${responseText}`);
+      logger.info(`app/api/chat/utils/request.ts - Response Body: ${responseText}`);
       return responseText;
     } catch (error) {
-      logger.error(`Attempt ${attempt} failed: ${error.message}`);
+      logger.error(`app/api/chat/utils/request.ts - Attempt ${attempt} failed: ${error.message}`);
       if (attempt === retries) {
         throw error;
       }

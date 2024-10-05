@@ -14,18 +14,18 @@ let hasWarnedAmazonBedrockTitan = false;
  * @returns The generated text from the Amazon Bedrock Titan model.
  */
 export async function generateFromAmazonBedrockTitan(endpoint: string, prompt: string, model: string): Promise<string | null> {
-  const optionalVars = ['AMAZON_BEDROCK_TITAN_MODEL', 'AMAZON_BEDROCK_TITAN_ENDPOINT'];
+  const optionalVars = ['AMAZON_BEDROCK_TITAN_TEXT_MODEL', 'AMAZON_BEDROCK_TITAN_ENDPOINT'];
   const isValid = validateEnvVars(optionalVars);
   if (!isValid) {
     if (!hasWarnedAmazonBedrockTitan) {
-      logger.warn(`Optional environment variables for Amazon Bedrock Titan are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      logger.warn(`app/api/chat/services/serveAmazonBedrockTitan.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
       hasWarnedAmazonBedrockTitan = true;
     }
     return null;
   }
 
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
-  logger.debug(`Sending request to Amazon Bedrock Titan: Endpoint = ${endpoint}, Model = ${model}, Prompt = ${combinedPrompt}`);
+  logger.info(`app/api/chat/services/serveAmazonBedrockTitan.ts - Sending request to Amazon Bedrock Titan. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const response = await fetch(endpoint, {
@@ -38,15 +38,16 @@ export async function generateFromAmazonBedrockTitan(endpoint: string, prompt: s
 
     if (!response.ok) {
       const errorBody = await response.text();
-      logger.warn(`Amazon Bedrock Titan Service responded with status: ${response.status} - ${response.statusText}. Body: ${errorBody}`);
+      logger.warn(`app/api/chat/services/serveAmazonBedrockTitan.ts - Service responded with status: ${response.status} - ${response.statusText}. Body: ${errorBody}`);
       return null;
     }
 
     const responseBody = await response.json();
-    logger.debug(`Generated Text from Amazon Bedrock Titan: ${responseBody.text.trim()}`);
-    return responseBody.text.trim();
+    const resultText = responseBody.text.trim();
+    logger.info(`app/api/chat/services/serveAmazonBedrockTitan.ts - Generated Text: ${resultText}`);
+    return resultText;
   } catch (error) {
-    logger.warn('Error generating content from Amazon Bedrock Titan:', error);
+    logger.warn(`app/api/chat/services/serveAmazonBedrockTitan.ts - Error generating content from Amazon Bedrock Titan: ${error}`);
     return null;
   }
 }

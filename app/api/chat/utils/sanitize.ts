@@ -1,7 +1,9 @@
 // File: app/api/chat/utils/sanitize.ts
 
+import logger from './log';
+
 export function sanitizeInput(input: string): string {
-  // Implement sanitization logic as needed
-  // For example, escape special characters to prevent injection attacks
-  return input.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+  const sanitized = input.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+  logger.silly(`app/api/chat/utils/sanitize.ts - Sanitized input: ${sanitized}`);
+  return sanitized;
 }
