@@ -9,16 +9,16 @@ interface ProjectPlanProps {
 
 const ProjectPlan: React.FC<ProjectPlanProps> = ({ messages }) => {
   const [planContent, setPlanContent] = useState({
-    identity: "",
-    problem: "",
-    solution: "",
-    targetMarket: "",
-    competition: "",
-    revenueStreams: "",
-    marketingActivities: "",
-    expenses: "",
-    teamAndKeyRoles: "",
-    milestones: "",
+    identity: "Wooden Grain Toys manufactures high-quality hardwood toys for children aged 3-10.",
+    problem: "Parents and grandparents are looking for high-quality durable toys that will entertain kids and foster creativity.",
+    solution: "Our handcrafted toys are made from solid hardwoods and are designed with sufficient moving parts to engage young children without limiting imagination.",
+    targetMarket: "The target audience is adults, specifically parents and grandparents, who wish to give toys to their children or grandchildren.",
+    competition: "Large companies like Plastique Toys and Metal Happy Toys sell internationally. Smaller companies sell locally in shops, craft fairs, or online.",
+    revenueStreams: "Wooden Grain Toys will sell directly to customers at craft fairs and online.",
+    marketingActivities: "Email newsletters, targeted Google and Facebook ads, social media, and in-person sales at craft fairs.",
+    expenses: "Materials for toys, craft fair fees, travel costs, and inventory space for products.",
+    teamAndKeyRoles: "Currently, the only team member is the owner, Andrew Robertson. As profits increase, Wooden Grain Toys will add an employee to assist with social media and online marketing.",
+    milestones: "As the project grows, Wooden Grain Toys will advertise in target markets—especially in advance of the holiday season.",
   });
 
   useEffect(() => {
