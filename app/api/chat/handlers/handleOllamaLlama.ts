@@ -1,57 +1,43 @@
-import { NextResponse } from 'next/server';
+// File: app/api/chat/handlers/handleOllamaLlama.ts
+
+import fetch from 'node-fetch';
 import logger from '../utils/log';
 
-export async function handleTextWithOllamaLlamaModel({ prompt, model }: { prompt: string, model: string }, config: any): Promise<string> {
-  const { OLLAMA_LLAMA_ENDPOINT } = process.env;
+interface HandlerInput {
+  prompt: string;
+  model: string;
+}
 
-  if (!OLLAMA_LLAMA_ENDPOINT || !model) {
-    throw new Error('Ollama Llama: Required environment variables are missing.');
-  }
+export async function handleTextWithOllamaLlamaModel(input: HandlerInput, config: any): Promise<string | Response> {
+  const { prompt, model } = input;
+  const endpoint = config.ollamaLlamaEndpoint;
 
-  const payload = { model, prompt };
-  logger.info(`[Ollama Llama Handler] Sending payload: ${JSON.stringify(payload)}`);
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        prompt,
+      }),
+    });
 
-  const response = await fetch(OLLAMA_LLAMA_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Ollama Llama: HTTP error! status: ${response.status}`);
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('Failed to access the response body stream.');
-
-  const decoder = new TextDecoder('utf-8');
-  let buffer = '';
-  let done = false;
-  const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
-
-  while (!done) {
-    const { value, done: streamDone } = await reader.read();
-    const chunk = decoder.decode(value, { stream: true });
-
-    try {
-      const parsed = JSON.parse(chunk);
-      if (parsed.response) {
-        buffer += parsed.response;
-
-        // Check if buffer has a complete segment
-        if (sentenceEndRegex.test(buffer)) {
-          const completeSegment = buffer.trim();
-          buffer = ''; // Clear buffer for next segment
-
-          logger.info(`[Ollama Llama Handler] Processed segment: ${completeSegment}`);
-        }
-      }
-      done = parsed.done || streamDone;
-    } catch (e) {
-      logger.error('Error parsing chunk:', chunk, e);
+    if (!response.ok) {
+      throw new Error(`Ollama Llama API error: ${response.statusText}`);
     }
-  }
 
-  // Return final buffer if there's remaining text
-  return buffer.trim();
+    const data = await response.json();
+    logger.info(`Ollama Llama raw response: ${JSON.stringify(data)}`);
+
+    if (!data.response) {
+      throw new Error('Ollama Llama API did not return a "response" field.');
+    }
+
+    return data.response;
+  } catch (error: any) {
+    logger.error(`Error in handleOllamaLlamaModel: ${error.message}`);
+    throw error;
+  }
 }

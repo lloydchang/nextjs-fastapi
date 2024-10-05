@@ -1,41 +1,29 @@
 // File: app/api/chat/handlers/handleRateLimit.ts
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import logger from '../utils/log';
-import { RateLimiterMemory } from 'rate-limiter-flexible';
-import { streamErrorMessage } from './handleError';
-import { AppConfig } from '../utils/config';
 
-/**
- * Define a rate limiter with memory storage.
- * The points and duration can be adjusted based on the application's requirements.
- */
-const rateLimiter = new RateLimiterMemory({
-  points: 100, // Number of points
-  duration: 60, // Per second(s)
-});
+const RATE_LIMIT = 100; // Example limit
+const WINDOW_SIZE = 60 * 60 * 1000; // 1 hour in milliseconds
+const ipMap = new Map<string, { count: number; startTime: number }>();
 
-/**
- * Handles rate limiting logic and IP extraction for incoming requests.
- * 
- * @param request - The incoming Next.js request object.
- * @param config - Application configuration settings.
- * @returns The rate limit response or null if rate limit is not triggered.
- */
-export async function handleRateLimit(request: NextRequest, config: AppConfig): Promise<NextResponse | null> {
-  if (!config.rateLimitEnabled) {
-    return null;
-  }
+export function handleRateLimit(ip: string) {
+  const currentTime = Date.now();
+  const record = ipMap.get(ip);
 
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(/, /)[0] : request.headers.get('x-real-ip') || request.ip || 'unknown';
-
-  try {
-    await rateLimiter.consume(ip, 1); // Consuming 1 point per request
-    logger.info(`Rate limiting: Allowed request from IP ${ip}`);
-  } catch {
-    logger.warn(`Rate limiting: Blocked request from IP ${ip}`);
-    return streamErrorMessage('Too many requests. Please try again later.', [], config);
+  if (record) {
+    if (currentTime - record.startTime < WINDOW_SIZE) {
+      if (record.count >= RATE_LIMIT) {
+        logger.warn(`Rate limit exceeded for IP: ${ip}`);
+        return NextResponse.json({ error: 'Rate limit exceeded. Please try again later.' }, { status: 429 });
+      }
+      record.count += 1;
+    } else {
+      record.count = 1;
+      record.startTime = currentTime;
+    }
+  } else {
+    ipMap.set(ip, { count: 1, startTime: currentTime });
   }
 
   return null;
