@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import asyncio
-from python.logger import logger  # Import the centralized logger
+from backend.fastapi.logger import logger  # Import the centralized logger
 
 number_of_results = 100
 
