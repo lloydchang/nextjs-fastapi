@@ -1,4 +1,4 @@
-# File: {}
+# File: backenfastapi/data/sdg_keywords.py
 
 sdg_keywords = {
     "sdg1": ["poverty", "income", "livelihood", "financial inclusion"],
