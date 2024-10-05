@@ -2,7 +2,7 @@
 
 import pandas as pd
 from backend.fastapi.utils.logger import logger
-from backend.fastapi.cache_manager import load_cache, save_cache
+from backend.fastapi.cache.cache_manager import load_cache, save_cache
 
 def load_dataset(file_path: str, cache_file_path: str) -> pd.DataFrame:
     """
