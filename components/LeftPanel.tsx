@@ -11,6 +11,7 @@ import ChatInput from './ChatInput';
 import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
+import BusinessPlan from './BusinessPlan';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <div className={styles.emptyPlaceholder}></div>, // Invisible placeholder to maintain layout
@@ -49,6 +50,12 @@ const LeftPanel: React.FC = () => {
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
       <div className={styles.content}>
+        {/* Top 40% for the Business Plan */}
+        <div className={styles.businessPlanContainer}>
+          <BusinessPlan messages={messages} />
+        </div>
+        
+        {/* Bottom 60% for the Chat Interface */}
         <div className={styles.chatInterface} ref={chatContainerRef}>
           <HeavyChatMessages messages={messages} />
           <ChatInput 
