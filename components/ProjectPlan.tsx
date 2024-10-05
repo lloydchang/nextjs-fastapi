@@ -1,13 +1,13 @@
-// components/BusinessPlan.tsx
+// components/ProjectPlan.tsx
 
 import React, { useEffect, useState } from 'react';
-import styles from '../styles/BusinessPlan.module.css';
+import styles from '../styles/ProjectPlan.module.css';
 
-interface BusinessPlanProps {
+interface ProjectPlanProps {
   messages: string[];
 }
 
-const BusinessPlan: React.FC<BusinessPlanProps> = ({ messages }) => {
+const ProjectPlan: React.FC<ProjectPlanProps> = ({ messages }) => {
   const [planContent, setPlanContent] = useState({
     identity: "",
     problem: "",
@@ -83,4 +83,4 @@ const BusinessPlan: React.FC<BusinessPlanProps> = ({ messages }) => {
   );
 };
 
-export default BusinessPlan;
+export default ProjectPlan;
