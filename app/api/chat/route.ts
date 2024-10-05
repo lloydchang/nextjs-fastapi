@@ -106,9 +106,16 @@ export async function POST(request: NextRequest) {
       promises.push({
         name: 'Ollama Gemma',
         promise: handleTextWithOllamaGemmaModel({ prompt, model: config.ollamaGemmaModel }, config)
-          .then(result => {
-            handledText.push(result);
-            logger.info(`Ollama Gemma response: ${result}`);
+          .then(async (result) => {
+            if (result instanceof Response) {
+              const responseData = await result.json();
+              const textContent = responseData.response || JSON.stringify(responseData);
+              handledText.push(textContent);
+              logger.info(`Ollama Gemma response: ${textContent}`);
+            } else {
+              handledText.push(result);
+              logger.info(`Ollama Gemma response: ${result}`);
+            }
           })
           .catch(error => logger.warn(`Ollama Gemma model failed: ${error.message}`))
       });
@@ -127,9 +134,16 @@ export async function POST(request: NextRequest) {
       promises.push({
         name: 'Ollama Llama',
         promise: handleTextWithOllamaLlamaModel({ prompt, model: config.ollamaLlamaModel }, config)
-          .then(result => {
-            handledText.push(result);
-            logger.info(`Ollama Llama response: ${result}`);
+          .then(async (result) => {
+            if (result instanceof Response) {
+              const responseData = await result.json();
+              const textContent = responseData.response || JSON.stringify(responseData);
+              handledText.push(textContent);
+              logger.info(`Ollama Llama response: ${textContent}`);
+            } else {
+              handledText.push(result);
+              logger.info(`Ollama Llama response: ${result}`);
+            }
           })
           .catch(error => logger.warn(`Ollama Llama model failed: ${error.message}`))
       });
