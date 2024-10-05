@@ -1,0 +1,55 @@
+/* styles/BusinessPlan.module.css */
+
+.planContainer {
+    padding: 15px; /* Reduce padding to fit content better */
+    background-color: rgba(244, 244, 244, 0.8); /* Translucent background with 50% opacity */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    height: auto; /* Set auto height */
+  }
+  
+  .planTitle {
+    font-size: 20px; /* Reduced font size */
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .section {
+    margin-bottom: 10px; /* Reduce space between sections */
+  }
+  
+  .sectionTitle {
+    font-size: 16px; /* Smaller font for section titles */
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px; /* Less space below the title */
+  }
+  
+  .section p {
+    font-size: 14px; /* Smaller font for paragraph content */
+    color: #555;
+    line-height: 1.4;
+    margin: 0;
+  }
+  
+  /* Add custom scrollbar styling */
+  .planContainer::-webkit-scrollbar {
+    width: 8px; /* Set the width of the scrollbar */
+  }
+  
+  .planContainer::-webkit-scrollbar-track {
+    background: #e0e0e0; /* Set the track color */
+  }
+  
+  .planContainer::-webkit-scrollbar-thumb {
+    background-color: #888; /* Scrollbar color */
+    border-radius: 10px; /* Rounded edges for the scrollbar */
+  }
+  
+  .planContainer::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Darken color on hover */
+  }
+  
