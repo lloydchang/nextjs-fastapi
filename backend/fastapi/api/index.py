@@ -34,7 +34,7 @@ def lazy_load(module_name, attr=None):
     return getattr(module, attr) if attr else module
 
 # Initialize logger
-logger = lazy_load("backend.fastapi.logger", "logger")
+logger = lazy_load("backend.fastapi.utils.logger", "logger")
 
 # Global variables to hold the loaded resources
 model = None
