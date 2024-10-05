@@ -14,7 +14,7 @@
   padding: 10px;
   margin-bottom: 0px;
   font-size: 0.7em;
-  
+
   /* Set a fixed total width or use max-width as needed */
   width: 700px; /* Example fixed width */
 }
@@ -65,8 +65,8 @@
 
 .searchButton:hover {
   background-color: #2196f3;
-  color: #ffffff; 
-  transform: translateY(-2px); 
+  color: #ffffff;
+  transform: translateY(-2px);
 }
 
 .searchButton:disabled {
@@ -178,6 +178,24 @@
   overflow-y: auto;
   position: relative;
   z-index: 0;
+}
+
+/* Scrollbar styles */
+.scrollableContainer::-webkit-scrollbar {
+  width: 12px; /* Width of the scrollbar */
+}
+
+.scrollableContainer::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb {
+  background: #2196f3; /* Scrollbar color */
+  border-radius: 10px; /* Rounded corners */
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb:hover {
+  background: #0070f3; /* Color on hover */
 }
 
 /* Remove duplicate .resultItem and .resultLink selectors if present */
