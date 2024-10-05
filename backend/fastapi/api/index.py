@@ -74,7 +74,7 @@ async def load_resources():
 
     # Load the Sentence-BERT model
     logger.info("Loading the Sentence-BERT model for semantic search.")
-    model = lazy_load("backend.fastapi.models.model_definitionss.model_definitions", "load_model")('paraphrase-MiniLM-L6-v2')
+    model = lazy_load("backend.fastapi.models.model_definitions.model_definitions", "load_model")('paraphrase-MiniLM-L6-v2')
     logger.info(f"Sentence-BERT model loaded successfully! Model: {model is not None}")
 
     # Check if 'description_vector' is present, if not, compute and add it
