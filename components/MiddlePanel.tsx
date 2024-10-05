@@ -8,7 +8,6 @@ import Image from 'next/image';
 import SDGWheel from '../public/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import { useChatContext } from '../context/ChatContext';
-import DebugPanel from './DebugPanel';
 import axios from 'axios';
 
 // TypeScript Types
@@ -55,31 +54,8 @@ const MiddlePanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [errorDetails, setErrorDetails] = useState<string>('');
-  const [greeting, setGreeting] = useState<string>("");
 
-  const addLog = (message: string) => {
-    setLogs((prevLogs) => [...prevLogs, message]);
-  };
-
-  // Initial greeting fetch
-  useEffect(() => {
-    const fetchGreeting = axios.get('http://127.0.0.1:8000/api/py/hello');
-    fetchGreeting.then((greetingResponse) => {
-      if (greetingResponse.data && greetingResponse.data.message) {
-        setGreeting(greetingResponse.data.message);
-      } else {
-        setGreeting("Unknown response format");
-      }
-    }).catch((err) => {
-      setGreeting("Failed to fetch greeting.");
-      setErrorDetails(err.message);
-      addLog("Failed to fetch greeting: " + err.message);
-    });
-  }, []);
-
-  // Effect for handling the initial keyword setup and search
+  // Initial keyword setup and search
   useEffect(() => {
     if (initialKeyword.current === "") {
       initialKeyword.current = determineInitialKeyword(); // Use the new randomization logic here
@@ -96,26 +72,21 @@ const MiddlePanel: React.FC = () => {
     axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(searchQuery)}`)
       .then((searchResponse) => {
         if (searchResponse.status !== 200) {
-          addLog(`Search failed. Status: ${searchResponse.status} - ${searchResponse.statusText}`);
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
         }
 
         let data: Talk[] = searchResponse.data;
         data = data.sort(() => Math.random() - 0.5);
         setTalks(data);
-        addLog('Search results retrieved: ' + data.length + ' talks found.');
 
         if (data.length > 0) {
           setSelectedTalk(data[0]);
-          addLog('For example: ' + data[0].title);
         } else {
           setSelectedTalk(null); // No talks found
         }
       })
       .catch((err) => {
         setError("Failed to fetch talks.");
-        setErrorDetails(err.message);
-        addLog("Failed to fetch data: " + err.message);
       })
       .finally(() => {
         setLoading(false);
@@ -128,7 +99,6 @@ const MiddlePanel: React.FC = () => {
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      addLog(`Manual search initiated with keyword: ${query}`);
       performSearch(query); // Trigger search on Enter key
     }
   }, [query]);
@@ -147,16 +117,12 @@ const MiddlePanel: React.FC = () => {
     if (selectedTalk) {
       const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
       window.open(transcriptUrl, '_blank');
-      addLog(`Opened transcript in a new tab: ${transcriptUrl}`);
     }
   };
 
   return (
     <div className={styles.middlePanel}>
       <div className={styles.searchContainer}>
-        {/* <div className={styles.greetingContainer}>
-          <h1 className={styles.greetingText}>{greeting}</h1>
-        </div> */}
         <div className={styles.searchRowContainer}>
           <input
             type="text"
@@ -167,10 +133,7 @@ const MiddlePanel: React.FC = () => {
             className={styles.searchInput}
           />
           <button
-            onClick={() => {
-              addLog(`Manual search initiated with keyword: ${query}`);
-              performSearch(query);
-            }}
+            onClick={() => performSearch(query)}
             className={`${styles.button} ${styles.searchButton}`}
             disabled={loading}
           >
@@ -241,8 +204,6 @@ const MiddlePanel: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} /> */}
     </div>
   );
 };
