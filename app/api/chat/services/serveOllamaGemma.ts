@@ -1,5 +1,3 @@
-// File: app/api/chat/services/serveOllamaGemma.ts
-
 import { validateEnvVars } from '../utils/validate';
 import logger from '../utils/log';
 import { systemPrompt } from '../utils/prompt';
@@ -15,7 +13,7 @@ export async function generateFromOllamaGemma(params: {
   const isValid = validateEnvVars(optionalVars);
   if (!isValid) {
     if (!hasWarnedOllamaGemma) {
-      logger.warn(`Optional environment variables for Ollama Gemma are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      logger.warn(`[Ollama Gemma Warning] Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
       hasWarnedOllamaGemma = true;
     }
     return null;
@@ -23,32 +21,57 @@ export async function generateFromOllamaGemma(params: {
 
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
-  logger.debug(`Sending request to Ollama Gemma: Endpoint = ${endpoint}, Model = ${model}, Prompt = ${combinedPrompt}`);
+  logger.debug(`[Ollama Gemma Service] Sending request to Ollama Gemma: Endpoint = ${endpoint}, Model = ${model}, Prompt = ${combinedPrompt}`);
 
   try {
-    // Send the request using the same logic as in the test script
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: combinedPrompt, model }),
     });
 
-    // Check for HTTP errors
     if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
+      logger.error(`[Ollama Gemma Service] HTTP error! Status: ${response.status}`);
       const text = await response.text();
-      console.error('Response text:', text);
+      logger.error(`[Ollama Gemma Service] Response text: ${text}`);
       return null;
     }
 
-    // Retrieve the response as text
-    const completeText = await response.text();
-    logger.debug(`Generated Text from Ollama Gemma: ${completeText.trim()}`);
-    return completeText.trim(); // Return the trimmed response text
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Failed to access the response body stream.');
+
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let done = false;
+    const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
+
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      const chunk = decoder.decode(value, { stream: true });
+
+      try {
+        const parsed = JSON.parse(chunk);
+        if (parsed.response) {
+          buffer += parsed.response;
+
+          // Check if buffer has a complete segment
+          if (sentenceEndRegex.test(buffer)) {
+            const completeSegment = buffer.trim();
+            buffer = ''; // Clear buffer for next segment
+
+            logger.info(`[Ollama Gemma Service] Processed segment: ${completeSegment}`);
+          }
+        }
+        done = parsed.done || streamDone;
+      } catch (e) {
+        logger.error('Error parsing chunk:', chunk, e);
+      }
+    }
+
+    // Return final buffer if there's remaining text
+    return buffer.trim();
   } catch (error) {
-    logger.warn('Error generating content from Ollama Gemma:', error);
+    logger.warn(`[Ollama Gemma Service] Error generating content from Ollama Gemma: ${error}`);
     return null;
   }
 }

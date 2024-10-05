@@ -1,86 +1,57 @@
-// File: app/api/chat/handlers/handleOllamaLlama.ts
-
-import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import { makeRequest } from '../utils/request';
-import { streamResponseBody } from '../utils/stream';
+import { NextResponse } from 'next/server';
 import logger from '../utils/log';
 
-let hasWarnedOllamaLlama = false;
+export async function handleTextWithOllamaLlamaModel({ prompt, model }: { prompt: string, model: string }, config: any): Promise<string> {
+  const { OLLAMA_LLAMA_ENDPOINT } = process.env;
 
-/**
- * Handler for processing requests using Ollama Llama model.
- */
-export async function handleTextWithOllamaLlamaModel(req: NextRequest): Promise<NextResponse> {
-  const { OLLAMA_LLAMA_ENDPOINT, OLLAMA_LLAMA_MODEL } = process.env;
+  if (!OLLAMA_LLAMA_ENDPOINT || !model) {
+    throw new Error('Ollama Llama: Required environment variables are missing.');
+  }
 
-  if (!OLLAMA_LLAMA_ENDPOINT || !OLLAMA_LLAMA_MODEL) {
-    if (!hasWarnedOllamaLlama) {
-      logger.debug(
-        'Ollama Llama: Optional environment variables are missing or contain your- placeholders: OLLAMA_LLAMA_ENDPOINT, OLLAMA_LLAMA_MODEL'
-      );
-      hasWarnedOllamaLlama = true;
+  const payload = { model, prompt };
+  logger.info(`[Ollama Llama Handler] Sending payload: ${JSON.stringify(payload)}`);
+
+  const response = await fetch(OLLAMA_LLAMA_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ollama Llama: HTTP error! status: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('Failed to access the response body stream.');
+
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  let done = false;
+  const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
+
+  while (!done) {
+    const { value, done: streamDone } = await reader.read();
+    const chunk = decoder.decode(value, { stream: true });
+
+    try {
+      const parsed = JSON.parse(chunk);
+      if (parsed.response) {
+        buffer += parsed.response;
+
+        // Check if buffer has a complete segment
+        if (sentenceEndRegex.test(buffer)) {
+          const completeSegment = buffer.trim();
+          buffer = ''; // Clear buffer for next segment
+
+          logger.info(`[Ollama Llama Handler] Processed segment: ${completeSegment}`);
+        }
+      }
+      done = parsed.done || streamDone;
+    } catch (e) {
+      logger.error('Error parsing chunk:', chunk, e);
     }
-    return NextResponse.json(
-      { error: 'Ollama Llama: Optional environment variables are missing.' },
-      { status: 500 }
-    );
   }
 
-  // Check request method
-  if (req.method !== 'POST') {
-    logger.warn(`Ollama Llama: Invalid request method: ${req.method}`);
-    return NextResponse.json(
-      { error: 'Ollama Llama: Invalid request method. Use POST.' },
-      { status: 405 }
-    );
-  }
-
-  // Check Content-Type
-  const headersList = headers();
-  const contentType = headersList.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    logger.warn(`Ollama Llama: Invalid Content-Type: ${contentType}`);
-    return NextResponse.json(
-      { error: 'Ollama Llama: Invalid Content-Type. Use application/json.' },
-      { status: 415 }
-    );
-  }
-
-  // Read and parse the request body
-  let body;
-  try {
-    body = await req.json();
-  } catch (error) {
-    logger.warn(`Ollama Llama: Failed to parse request body: ${error.message}`);
-    return NextResponse.json(
-      { error: 'Ollama Llama: Invalid JSON in request body.' },
-      { status: 400 }
-    );
-  }
-
-  if (!body || !body.prompt) {
-    logger.warn('Ollama Llama: Request body is missing the required property: prompt');
-    return NextResponse.json(
-      { error: 'Ollama Llama: Request body must contain a prompt.' },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const payload = { model: OLLAMA_LLAMA_MODEL, prompt: body.prompt };
-    logger.info(`Ollama Llama: Sending request with prompt: ${payload.prompt}`);
-
-    const responseStream = await makeRequest(OLLAMA_LLAMA_ENDPOINT, payload);
-    const generatedText = await streamResponseBody(responseStream);
-
-    logger.info(`Ollama Llama: Generated text: ${generatedText}`);
-    return NextResponse.json({ response: generatedText }, { status: 200 });
-  } catch (error) {
-    logger.warn(`Ollama Llama: Service Error: ${error.message}`);
-    return NextResponse.json(
-      { error: `Ollama Llama: Failed to generate text: ${error.message}` },
-      { status: 500 }
-    );
-  }
+  // Return final buffer if there's remaining text
+  return buffer.trim();
 }
