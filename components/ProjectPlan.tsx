@@ -28,7 +28,7 @@ const ProjectPlan: React.FC<ProjectPlanProps> = ({ messages }) => {
 
   return (
     <div className={styles.planContainer}>
-      <h1 className={styles.planTitle}>Project Plan</h1>
+      <h1 className={styles.planTitle}>Project name</h1>
       
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Identity</h2>
@@ -41,27 +41,27 @@ const ProjectPlan: React.FC<ProjectPlanProps> = ({ messages }) => {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Solution</h2>
+        <h2 className={styles.sectionTitle}>Our solution</h2>
         <p>{planContent.solution}</p>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Target Market</h2>
+        <h2 className={styles.sectionTitle}>Target market</h2>
         <p>{planContent.targetMarket}</p>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Competition</h2>
+        <h2 className={styles.sectionTitle}>The competition</h2>
         <p>{planContent.competition}</p>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Revenue Streams</h2>
+        <h2 className={styles.sectionTitle}>Revenue streams</h2>
         <p>{planContent.revenueStreams}</p>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Marketing Activities</h2>
+        <h2 className={styles.sectionTitle}>Marketing activities</h2>
         <p>{planContent.marketingActivities}</p>
       </section>
 
@@ -71,7 +71,7 @@ const ProjectPlan: React.FC<ProjectPlanProps> = ({ messages }) => {
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Team and Key Roles</h2>
+        <h2 className={styles.sectionTitle}>Team and key roles</h2>
         <p>{planContent.teamAndKeyRoles}</p>
       </section>
 
