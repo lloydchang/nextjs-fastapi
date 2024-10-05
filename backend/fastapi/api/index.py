@@ -1,4 +1,4 @@
-# File: backenfastapi/api/index.py
+# File: backend/fastapi/api/index.py
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -161,7 +161,7 @@ async def startup_event():
     asyncio.create_task(load_resources())
 
 # Create a Search Endpoint for TEDx Talks
-@app.get("/api/py/search")
+@app.get("/api/search")
 async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     # Wait until resources are fully initialized
     await resource_event.wait()
@@ -177,7 +177,7 @@ async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
     # Perform the search if resources are available
     logger.info(f"Performing semantic search for the query: '{query}'.")
     try:
-        search_module = lazy_load("backend.fastapi.search", "semantic_search")
+        search_module = lazy_load("backend.fastapi.services.search_service", "semantic_search")
         logger.info(f"Search Module Loaded: {search_module is not None}")
         result = await search_module(query, data, model, sdg_embeddings)
         # Check if 'result' is a non-empty list
