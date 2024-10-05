@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../context/TalkContext';
 import Image from 'next/image';
-import SDGWheel from '../public/SDGWheel.png';
+import SDGWheel from '../public/images/SDGWheel.png';
 import styles from '../styles/MiddlePanel.module.css';
 import { useChatContext } from '../context/ChatContext';
 import axios from 'axios';
