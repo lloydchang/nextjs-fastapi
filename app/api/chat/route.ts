@@ -2,12 +2,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from './utils/config';
-import { handleTextWithAmazonBedrockTitan } from './controllers/AmazonBedrockController';
+import { handleTextWithAmazonBedrockTitan } from './controllers/AmazonBedrockTitanController';
+import { handleTextWithAzureOpenAIO1Model } from './controllers/AzureOpenAIO1Controller';
 import { handleTextWithGoogleVertexGeminiModel } from './controllers/GoogleVertexGeminiController';
 import { handleTextWithOllamaGemmaModel } from './controllers/OllamaGemmaController';
 import { handleTextWithOllamaLlamaModel } from './controllers/OllamaLlamaController';
-import { handleTextWithAzureOpenAIO1Model } from './controllers/AzureOpenAIController';
-import { handleTextWithOpenAIO1Model } from './controllers/OpenAIController';
+import { handleTextWithOpenAIO1Model } from './controllers/OpenAIO1Controller';
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/log';
@@ -16,10 +16,10 @@ import { validateEnvVars } from './utils/validate';
 const config = getConfig();
 
 let hasWarnedAmazonBedrockTitan = false;
+let hasWarnedAzureOpenAIO1 = false;
 let hasWarnedGoogleVertexGemini = false;
 let hasWarnedOllamaGemma = false;
 let hasWarnedOllamaLlama = false;
-let hasWarnedAzureOpenAIO1 = false;
 let hasWarnedOpenAIO1 = false;
 
 export async function POST(request: NextRequest) {
@@ -68,6 +68,27 @@ export async function POST(request: NextRequest) {
       if (!isAmazonBedrockTitanValid && !hasWarnedAmazonBedrockTitan) {
         logger.silly(`app/api/chat/route.ts - Optional environment variables for Amazon Bedrock Titan are missing or contain placeholders: ${amazonBedrockTitanOptionalVars.join(', ')}`);
         hasWarnedAmazonBedrockTitan = true;
+      }
+    }
+
+    // AzureOpenAIO1 Handler
+    const azureOpenAIO1Vars = ['AZURE_OPENAI_O1_TEXT_MODEL', 'AZURE_OPENAI_O1_ENDPOINT', 'AZURE_OPENAI_O1_API_KEY'];
+    const isAzureOpenAIO1Valid = validateEnvVars(azureOpenAIO1Vars);
+    
+    if (isAzureOpenAIO1Valid) {
+      promises.push({
+        name: 'AzureOpenAIO1',
+        promise: handleTextWithAzureOpenAIO1Model({ prompt, model: config.azureOpenAIO1Model }, config)
+          .then(result => {
+            handledText.push(result);
+            logger.info(`app/api/chat/route.ts - AzureOpenAIO1 response: ${result}`);
+          })
+          .catch(error => logger.warn(`app/api/chat/route.ts - AzureOpenAIO1 model failed: ${error.message}`))
+      });
+    } else {
+      if (!isAzureOpenAIO1Valid && !hasWarnedAzureOpenAIO1) {
+        logger.silly(`app/api/chat/route.ts - Optional environment variables for AzureOpenAIO1 are missing or contain placeholders: ${azureOpenAIO1Vars.join(', ')}`);
+        hasWarnedAzureOpenAIO1 = true;
       }
     }
 
@@ -154,27 +175,6 @@ export async function POST(request: NextRequest) {
       if (!isOllamaLlamaValid && !hasWarnedOllamaLlama) {
         logger.silly(`app/api/chat/route.ts - Optional environment variables for Ollama Llama are missing or contain placeholders: ${ollamaLlamaVars.join(', ')}`);
         hasWarnedOllamaLlama = true;
-      }
-    }
-
-    // AzureOpenAIO1 Handler
-    const azureOpenAIO1Vars = ['AZURE_OPENAI_O1_TEXT_MODEL', 'AZURE_OPENAI_O1_ENDPOINT', 'AZURE_OPENAI_O1_API_KEY'];
-    const isAzureOpenAIO1Valid = validateEnvVars(azureOpenAIO1Vars);
-    
-    if (isAzureOpenAIO1Valid) {
-      promises.push({
-        name: 'AzureOpenAIO1',
-        promise: handleTextWithAzureOpenAIO1Model({ prompt, model: config.azureOpenAIO1Model }, config)
-          .then(result => {
-            handledText.push(result);
-            logger.info(`app/api/chat/route.ts - AzureOpenAIO1 response: ${result}`);
-          })
-          .catch(error => logger.warn(`app/api/chat/route.ts - AzureOpenAIO1 model failed: ${error.message}`))
-      });
-    } else {
-      if (!isAzureOpenAIO1Valid && !hasWarnedAzureOpenAIO1) {
-        logger.silly(`app/api/chat/route.ts - Optional environment variables for AzureOpenAIO1 are missing or contain placeholders: ${azureOpenAIO1Vars.join(', ')}`);
-        hasWarnedAzureOpenAIO1 = true;
       }
     }
 
