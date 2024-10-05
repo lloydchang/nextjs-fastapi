@@ -242,7 +242,7 @@ const MiddlePanel: React.FC = () => {
         </div>
       )}
 
-      <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} />
+      {/* <DebugPanel logs={logs} curlCommand="Example CURL Command" errorDetails={errorDetails} /> */}
     </div>
   );
 };
