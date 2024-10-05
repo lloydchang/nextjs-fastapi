@@ -1,17 +1,10 @@
-// File: app/api/chat/services/serveOllamaLlama.ts
-
 import { validateEnvVars } from '../utils/validate';
 import { streamResponseBody } from '../utils/stream';
 import logger from '../utils/log';
-import { systemPrompt } from '../utils/prompt'; // Import systemPrompt
+import { systemPrompt } from '../utils/prompt';
 
 let hasWarnedOllamaLlama = false;
 
-/**
- * Sends a POST request to the local Ollama Llama model endpoint and retrieves the streaming response.
- * @param params - Object containing the endpoint, prompt, and model.
- * @returns The generated text from the Ollama Llama model.
- */
 export async function generateFromOllamaLlama(params: {
   endpoint: string;
   prompt: string;
@@ -36,6 +29,8 @@ export async function generateFromOllamaLlama(params: {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({ prompt: combinedPrompt, model }),
     });

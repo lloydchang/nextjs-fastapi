@@ -1,17 +1,11 @@
 // File: app/api/chat/services/serveOllamaGemma.ts
 
 import { validateEnvVars } from '../utils/validate';
-import { streamResponseBody } from '../utils/stream';
 import logger from '../utils/log';
-import { systemPrompt } from '../utils/prompt'; // Import systemPrompt
+import { systemPrompt } from '../utils/prompt';
 
 let hasWarnedOllamaGemma = false;
 
-/**
- * Sends a POST request to the local Ollama Gemma model endpoint and retrieves the streaming response.
- * @param params - Object containing the endpoint, prompt, and model.
- * @returns The generated text from the Ollama Gemma model.
- */
 export async function generateFromOllamaGemma(params: {
   endpoint: string;
   prompt: string;
@@ -32,6 +26,7 @@ export async function generateFromOllamaGemma(params: {
   logger.debug(`Sending request to Ollama Gemma: Endpoint = ${endpoint}, Model = ${model}, Prompt = ${combinedPrompt}`);
 
   try {
+    // Send the request using the same logic as in the test script
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -40,14 +35,18 @@ export async function generateFromOllamaGemma(params: {
       body: JSON.stringify({ prompt: combinedPrompt, model }),
     });
 
+    // Check for HTTP errors
     if (!response.ok) {
-      logger.warn(`Ollama Gemma Service responded with status: ${response.status} - ${response.statusText}`);
+      console.error(`HTTP error! status: ${response.status}`);
+      const text = await response.text();
+      console.error('Response text:', text);
       return null;
     }
 
-    const completeText = await streamResponseBody(response);
+    // Retrieve the response as text
+    const completeText = await response.text();
     logger.debug(`Generated Text from Ollama Gemma: ${completeText.trim()}`);
-    return completeText.trim();
+    return completeText.trim(); // Return the trimmed response text
   } catch (error) {
     logger.warn('Error generating content from Ollama Gemma:', error);
     return null;
