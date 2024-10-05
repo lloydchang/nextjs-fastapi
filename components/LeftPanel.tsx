@@ -1,6 +1,6 @@
 // components/LeftPanel.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../public/TEDxSDG.jpg';
 import { useChat } from '../hooks/useChat';
@@ -24,22 +24,33 @@ const LeftPanel: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleChat = useCallback(
+    (input: string, isManual = false) => {
+      const messageToSend = input.trim();
+      
+      if (messageToSend) {
+        const prefix = isManual ? "" : "🎙️ ";
+        const formattedMessage = `${prefix}${messageToSend}`;
+        sendActionToChatbot(formattedMessage);
+        setChatInput(''); // Clear input after sending
+      }
+    },
+    [sendActionToChatbot]
+  );
+
   return (
     <div className={styles.container}>
       {error && <div className={styles.error}>{error}</div>}
-      <Image
-        src={BackgroundImage}
-        alt="Background"
-        fill
-        className={styles.backgroundImage}
-      />
+      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
       <div className={styles.content}>
-        <div className={styles.chatInterface}>
+        <div className={styles.chatInterface} ref={chatContainerRef}>
           <HeavyChatMessages messages={messages} />
           <ChatInput 
             chatInput={chatInput} 
