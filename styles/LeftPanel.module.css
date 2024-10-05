@@ -70,16 +70,16 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start; /* Align items to the left */
   overflow-y: hidden;
   transition: none; /* Disable transitions */
   opacity: 1; /* Ensure visibility */
   visibility: visible;
 }
 
-/* Business Plan Container */
-.businessPlanContainer {
-  width: 100%;
+/* Project Plan Container */
+.projectPlanContainer {
+  width: 100%; /* Use full width */
   height: 40%; /* Take 40% of the height */
   padding: 10px; /* Reduced padding */
   overflow-y: auto; /* Enable vertical scrolling */
@@ -87,20 +87,20 @@
 }
 
 /* Custom scrollbar styling */
-.businessPlanContainer::-webkit-scrollbar {
+.projectPlanContainer::-webkit-scrollbar {
   width: 8px; /* Set the width of the scrollbar */
 }
 
-.businessPlanContainer::-webkit-scrollbar-track {
+.projectPlanContainer::-webkit-scrollbar-track {
   background: #e0e0e0; /* Set the track color */
 }
 
-.businessPlanContainer::-webkit-scrollbar-thumb {
+.projectPlanContainer::-webkit-scrollbar-thumb {
   background-color: #888; /* Scrollbar color */
   border-radius: 10px; /* Rounded edges for the scrollbar */
 }
 
-.businessPlanContainer::-webkit-scrollbar-thumb:hover {
+.projectPlanContainer::-webkit-scrollbar-thumb:hover {
   background-color: #555; /* Darken color on hover */
 }
 
