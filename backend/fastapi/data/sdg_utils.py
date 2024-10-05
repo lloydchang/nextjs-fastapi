@@ -1,4 +1,4 @@
-# File: backenfastapi/data/sdg_utils.py
+# File: backend.fastapi/data/sdg_utils.py
 
 import torch
 from typing import List
