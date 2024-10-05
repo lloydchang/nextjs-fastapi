@@ -2,18 +2,18 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import BackgroundImage from '../public/images/TEDxSDG.jpg';
-import { useChat } from '../hooks/useChat';
+import BackgroundImage from '../../public/images/TEDxSDG.jpg';
+import { useChat } from '../../components/state/hooks/useChat';
 import dynamic from 'next/dynamic';
 import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
-import ChatInput from './ChatInput';
+import ChatInput from '../atoms/ChatInput';
 import ControlButtons from './ControlButtons';
-import styles from '../styles/LeftPanel.module.css';
-import { useMedia } from '../hooks/useMedia';
-import ProjectPlan from './ProjectPlan';
+import styles from '../../styles/components/organisms/LeftPanel.module.css';
+import { useMedia } from '../../components/state/hooks/useMedia';
+import ProjectPlan from '../templates/ProjectPlan';
 
-const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
+const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
   loading: () => <div className={styles.emptyPlaceholder}></div>, // Invisible placeholder to maintain layout
   ssr: false,
 });

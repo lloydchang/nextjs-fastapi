@@ -4,8 +4,8 @@
 
 import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import { TalkProvider } from '../context/TalkContext';
-import { ChatProvider } from '../context/ChatContext'; // Import ChatProvider
+import { TalkProvider } from '../components/state/context/TalkContext';
+import { ChatProvider } from '../components/state/context/ChatContext'; // Import ChatProvider
 import './globals.css'; // Global CSS styles
 import ErrorBoundary from '../components/organisms/ErrorBoundary';
 

@@ -1,7 +1,7 @@
 // components/organisms/VideoStream.tsx
 
 import React from 'react';
-import styles from '../styles/VideoStream.module.css';
+import styles from '../../styles/components/organisms/VideoStream.module.css';
 
 interface VideoStreamProps {
   isCamOn: boolean;

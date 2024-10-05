@@ -4,8 +4,8 @@
 
 import React from 'react';
 import Image from 'next/image';
-import SDGWheel from '../public/images/SDGWheel.png';
-import styles from '../styles/RightPanel.module.css';
+import SDGWheel from '../../public/images/SDGWheel.png';
+import styles from '../../styles/components/organisms/RightPanel.module.css';
 
 const RightPanel: React.FC = () => {
   return (

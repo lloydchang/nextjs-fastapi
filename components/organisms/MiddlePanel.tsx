@@ -3,11 +3,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useTalkContext } from '../context/TalkContext';
+import { useTalkContext } from '../state/context/TalkContext';
 import Image from 'next/image';
-import SDGWheel from '../public/images/SDGWheel.png';
-import styles from '../styles/MiddlePanel.module.css';
-import { useChatContext } from '../context/ChatContext';
+import SDGWheel from '../../public/images/SDGWheel.png';
+import styles from '../../styles/components/organisms/MiddlePanel.module.css';
+import { useChatContext } from '../state/context/ChatContext';
 import axios from 'axios';
 
 // TypeScript Types
