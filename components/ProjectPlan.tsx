@@ -28,7 +28,7 @@ const ProjectPlan: React.FC<ProjectPlanProps> = ({ messages }) => {
 
   return (
     <div className={styles.planContainer}>
-      <h1 className={styles.planTitle}>Business Plan</h1>
+      <h1 className={styles.planTitle}>Project Plan</h1>
       
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Identity</h2>

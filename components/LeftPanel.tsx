@@ -50,8 +50,8 @@ const LeftPanel: React.FC = () => {
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
       <div className={styles.content}>
-        {/* Top 40% for the Business Plan */}
-        <div className={styles.businessPlanContainer}>
+        {/* Top 40% for the Project Plan */}
+        <div className={styles.projectPlanContainer}>
           <ProjectPlan messages={messages} />
         </div>
         
