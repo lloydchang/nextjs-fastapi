@@ -1,55 +1,55 @@
 /* styles/BusinessPlan.module.css */
 
 .planContainer {
-    padding: 15px; /* Reduce padding to fit content better */
-    background-color: rgba(244, 244, 244, 0.8); /* Translucent background with 50% opacity */
+    padding: 8px; /* Minimal padding */
+    background-color: rgba(244, 244, 244, 0.8); /* Light background */
     border: 1px solid #ddd;
     border-radius: 8px;
-    margin-bottom: 15px;
-    height: auto; /* Set auto height */
+    margin-bottom: 8px;
+    height: auto; /* Flexible height */
   }
   
   .planTitle {
-    font-size: 20px; /* Reduced font size */
+    font-size: 14px; /* Smaller font size for the main title */
     font-weight: bold;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     text-align: center;
   }
   
   .section {
-    margin-bottom: 10px; /* Reduce space between sections */
+    margin-bottom: 6px; /* Tighter space between sections */
   }
   
   .sectionTitle {
-    font-size: 16px; /* Smaller font for section titles */
+    font-size: 10px; /* Very small font for section titles */
     font-weight: bold;
     color: #444;
-    margin-bottom: 5px; /* Less space below the title */
+    margin-bottom: 3px; /* Minimized space below the title */
   }
   
   .section p {
-    font-size: 14px; /* Smaller font for paragraph content */
+    font-size: 8px; /* Extremely small font for paragraph content */
     color: #555;
-    line-height: 1.4;
+    line-height: 1.1; /* Compact line height for denser text */
     margin: 0;
   }
   
-  /* Add custom scrollbar styling */
+  /* Custom scrollbar styling */
   .planContainer::-webkit-scrollbar {
-    width: 8px; /* Set the width of the scrollbar */
+    width: 4px; /* Very thin scrollbar */
   }
   
   .planContainer::-webkit-scrollbar-track {
-    background: #e0e0e0; /* Set the track color */
+    background: #e0e0e0; /* Track color */
   }
   
   .planContainer::-webkit-scrollbar-thumb {
-    background-color: #888; /* Scrollbar color */
-    border-radius: 10px; /* Rounded edges for the scrollbar */
+    background-color: #888; /* Thumb color */
+    border-radius: 10px; /* Rounded edges */
   }
   
   .planContainer::-webkit-scrollbar-thumb:hover {
-    background-color: #555; /* Darken color on hover */
+    background-color: #555; /* Darker on hover */
   }
   
