@@ -1,4 +1,4 @@
-# File: {}
+# File: backenfastapi/utils/embedding_utils.py
 
 from typing import List, Optional
 from sentence_transformers import SentenceTransformer

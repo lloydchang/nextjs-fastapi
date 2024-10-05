@@ -1,4 +1,4 @@
-# File: {}
+# File: backenfastapi/api/index.py
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,7 +63,7 @@ async def load_resources():
 
     # Load TEDx Dataset
     logger.info("Loading TEDx dataset.")
-    data_loader = lazy_load("backend.fastapi.data_loader", "load_dataset")
+    data_loader = lazy_load("backend.fastapi.data.data_loader", "load_dataset")
     data = data_loader(file_path, cache_file_path)
     logger.info(f"TEDx dataset loaded successfully! Data: {data is not None}")
 
@@ -74,13 +74,13 @@ async def load_resources():
 
     # Load the Sentence-BERT model
     logger.info("Loading the Sentence-BERT model for semantic search.")
-    model = lazy_load("backend.fastapi.model", "load_model")('paraphrase-MiniLM-L6-v2')
+    model = lazy_load("backend.fastapi.models.model_definitions", "load_model")('paraphrase-MiniLM-L6-v2')
     logger.info(f"Sentence-BERT model loaded successfully! Model: {model is not None}")
 
     # Check if 'description_vector' is present, if not, compute and add it
     if 'description_vector' not in data.columns:
         logger.info("'description_vector' column missing. Computing description embeddings.")
-        embedding_utils = lazy_load("backend.fastapi.embedding_utils", "encode_descriptions")
+        embedding_utils = lazy_load("backend.fastapi.utils.embedding_utils", "encode_descriptions")
         description_vectors = await asyncio.to_thread(embedding_utils, data['description'].tolist(), model)
         
         # Assign the computed vectors to the 'description_vector' column
@@ -104,10 +104,10 @@ async def load_resources():
             sdg_embeddings = None
     else:
         logger.info("Computing SDG embeddings.")
-        sdg_manager = lazy_load("backend.fastapi.sdg_manager", "get_sdg_keywords")
+        sdg_manager = lazy_load("backend.fastapi.services.sdg_manager", "get_sdg_keywords")
         sdg_keywords = sdg_manager()
         sdg_keyword_list = [keywords for keywords in sdg_keywords.keys()]  # Only take the keys (sdg1, sdg2, etc.)
-        embedding_utils = lazy_load("backend.fastapi.embedding_utils", "encode_sdg_keywords")
+        embedding_utils = lazy_load("backend.fastapi.utils.embedding_utils", "encode_sdg_keywords")
         sdg_embeddings = await asyncio.to_thread(embedding_utils, sdg_keyword_list, model)
         if sdg_embeddings:
             with open(sdg_embeddings_cache, 'wb') as cache_file:
@@ -130,13 +130,13 @@ async def load_resources():
     else:
         logger.info("Computing SDG tags.")
         if not data.empty and 'description_vector' in data.columns and sdg_embeddings is not None:
-            sdg_utils = lazy_load("backend.fastapi.sdg_utils")
+            sdg_utils = lazy_load("backend.fastapi.data.sdg_utils")
             description_vectors_tensor = torch.tensor(np.array(data['description_vector'].tolist()))  # Ensure this is a Tensor
             sdg_embeddings_tensor = torch.tensor(np.array(sdg_embeddings))  # Ensure this is a Tensor
             cosine_similarities = torch.nn.functional.cosine_similarity(description_vectors_tensor.unsqueeze(1), sdg_embeddings_tensor.unsqueeze(0), dim=-1)
 
             # Get SDG names to pass as a parameter
-            sdg_manager = lazy_load("backend.fastapi.sdg_manager", "get_sdg_keywords")
+            sdg_manager = lazy_load("backend.fastapi.services.sdg_manager", "get_sdg_keywords")
             sdg_keywords = sdg_manager()
             sdg_names = list(sdg_keywords.keys())
 
