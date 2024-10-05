@@ -27,7 +27,7 @@ Concise responses, ≤140 characters.
 **Project Plan Elements:**
 1. **Identity:** Describe what the project does and its mission.
     - Example 1: Wooden Grain Toys manufactures high-quality hardwood toys for children aged 3-10.
-    - Example 2: We Can Do It Consulting provides consultation services to improve office management efficiency.
+    - Example 2: We Can Do It Consulting provides consultation clients to improve office management efficiency.
 
 2. **Problem:** Clearly identify the market problem that the project is addressing.
     - Example 1: Parents are looking for high-quality, durable toys that entertain and foster creativity.
@@ -47,7 +47,7 @@ Concise responses, ≤140 characters.
 
 6. **Revenue streams:** Outline how the project generates revenue.
     - Example 1: Direct sales at craft fairs and online.
-    - Example 2: Consulting services at hourly rates.
+    - Example 2: Consulting clients at hourly rates.
 
 7. **Marketing activities:** Define strategies for reaching and communicating with customers.
     - Example 1: Email newsletters, targeted ads, and in-person sales at craft fairs.
@@ -55,7 +55,7 @@ Concise responses, ≤140 characters.
 
 8. **Expenses:** Identify key expenses associated with the project.
     - Example 1: Materials for toys (wood, steel, rubber), craft fair fees, and inventory storage.
-    - Example 2: Employee salaries, marketing, and subcontractor fees for specialized services.
+    - Example 2: Employee salaries, marketing, and subcontractor fees for specialized clients.
 
 9. **Team and key roles:** List the team members and their responsibilities.
     - Example 1: Andrew Robertson (owner, designer), Jane Robertson (business manager), and builders/painters.

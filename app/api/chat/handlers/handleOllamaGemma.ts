@@ -1,4 +1,4 @@
-// File: app/api/chat/handlers/handleOllamaGemma.ts
+// File: app/api/chat/controllers/handleOllamaGemma.ts
 
 import { NextResponse } from 'next/server';
 import logger from '../utils/log';
@@ -11,7 +11,7 @@ export async function handleTextWithOllamaGemmaModel({ prompt, model }: { prompt
   }
 
   const payload = { model, prompt };
-  logger.debug(`app/api/chat/handlers/handleOllamaGemma.ts - Sending payload: ${JSON.stringify(payload)}`);
+  logger.debug(`app/api/chat/controllers/handleOllamaGemma.ts - Sending payload: ${JSON.stringify(payload)}`);
 
   const response = await fetch(OLLAMA_GEMMA_ENDPOINT, {
     method: 'POST',
@@ -45,16 +45,16 @@ export async function handleTextWithOllamaGemmaModel({ prompt, model }: { prompt
           const completeSegment = buffer.trim();
           buffer = ''; // Clear buffer for next segment
 
-          logger.verbose(`app/api/chat/handlers/handleOllamaGemma.ts - Incoming segment: ${completeSegment}`);
+          logger.verbose(`app/api/chat/controllers/handleOllamaGemma.ts - Incoming segment: ${completeSegment}`);
         }
       }
       done = parsed.done || streamDone;
     } catch (e) {
-      logger.error('app/api/chat/handlers/handleOllamaGemma.ts - Error parsing chunk:', chunk, e);
+      logger.error('app/api/chat/controllers/handleOllamaGemma.ts - Error parsing chunk:', chunk, e);
     }
   }
 
   // Return final buffer if there's remaining text
-  logger.verbose(`app/api/chat/handlers/handleOllamaGemma.ts - Final response: ${buffer.trim()}`);
+  logger.verbose(`app/api/chat/controllers/handleOllamaGemma.ts - Final response: ${buffer.trim()}`);
   return buffer.trim();
 }
