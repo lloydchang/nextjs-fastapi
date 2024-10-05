@@ -1,13 +1,13 @@
-// File: app/api/chat/clients/serveAzureOpenAIO1.ts
+// File: app/api/chat/clients/AzureOpenAIClient.ts
 
 import fetch from 'node-fetch';
 import logger from '../utils/log';
 
-export async function serveAzureOpenAIO1(prompt: string, model: string, config: any): Promise<string> {
+export async function AzureOpenAIClient(prompt: string, model: string, config: any): Promise<string> {
   const endpoint = config.azureOpenAIO1Endpoint;
   const apiKey = config.azureOpenAIO1ApiKey;
 
-  logger.info(`app/api/chat/clients/serveAzureOpenAIO1.ts - Sending request to Azure OpenAI. Model: ${model}, Prompt: ${prompt}`);
+  logger.info(`app/api/chat/clients/AzureOpenAIClient.ts - Sending request to Azure OpenAI. Model: ${model}, Prompt: ${prompt}`);
 
   try {
     const response = await fetch(`${endpoint}/openai/deployments/${model}/completions?api-version=2023-03-15-preview`, {
@@ -28,7 +28,7 @@ export async function serveAzureOpenAIO1(prompt: string, model: string, config: 
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error(`app/api/chat/clients/serveAzureOpenAIO1.ts - API error: ${response.status} ${response.statusText} - ${errorText}`);
+      logger.error(`app/api/chat/clients/AzureOpenAIClient.ts - API error: ${response.status} ${response.statusText} - ${errorText}`);
       throw new Error(`AzureOpenAIO1 API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
@@ -39,10 +39,10 @@ export async function serveAzureOpenAIO1(prompt: string, model: string, config: 
     }
 
     const result = data.choices[0].text.trim();
-    logger.info(`app/api/chat/clients/serveAzureOpenAIO1.ts - Received response: ${result}`);
+    logger.info(`app/api/chat/clients/AzureOpenAIClient.ts - Received response: ${result}`);
     return result;
   } catch (error: any) {
-    logger.error(`app/api/chat/clients/serveAzureOpenAIO1.ts - Error: ${error.message}`);
+    logger.error(`app/api/chat/clients/AzureOpenAIClient.ts - Error: ${error.message}`);
     throw error;
   }
 }

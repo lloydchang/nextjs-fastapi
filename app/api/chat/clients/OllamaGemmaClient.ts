@@ -1,4 +1,4 @@
-// File: app/api/chat/clients/serveOllamaGemma.ts
+// File: app/api/chat/clients/OllamaGemmaClient.ts
 
 import { validateEnvVars } from '../utils/validate';
 import logger from '../utils/log';
@@ -12,7 +12,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
 
   if (!isValid) {
     if (!hasWarnedOllamaGemma) {
-      logger.warn(`app/api/chat/clients/serveOllamaGemma.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      logger.warn(`app/api/chat/clients/OllamaGemmaClient.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
       hasWarnedOllamaGemma = true;
     }
     return null;
@@ -20,7 +20,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
 
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
-  logger.info(`app/api/chat/clients/serveOllamaGemma.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.info(`app/api/chat/clients/OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const response = await fetch(endpoint, {
@@ -30,9 +30,9 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
     });
 
     if (!response.ok) {
-      logger.error(`app/api/chat/clients/serveOllamaGemma.ts - HTTP error! Status: ${response.status}`);
+      logger.error(`app/api/chat/clients/OllamaGemmaClient.ts - HTTP error! Status: ${response.status}`);
       const text = await response.text();
-      logger.error(`app/api/chat/clients/serveOllamaGemma.ts - Response text: ${text}`);
+      logger.error(`app/api/chat/clients/OllamaGemmaClient.ts - Response text: ${text}`);
       return null;
     }
 
@@ -56,19 +56,19 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
           if (sentenceEndRegex.test(buffer)) {
             const completeSegment = buffer.trim();
             buffer = '';
-            logger.info(`app/api/chat/clients/serveOllamaGemma.ts - Processed segment: ${completeSegment}`);
+            logger.info(`app/api/chat/clients/OllamaGemmaClient.ts - Processed segment: ${completeSegment}`);
           }
         }
         done = parsed.done || streamDone;
       } catch (e) {
-        logger.error('app/api/chat/clients/serveOllamaGemma.ts - Error parsing chunk:', chunk, e);
+        logger.error('app/api/chat/clients/OllamaGemmaClient.ts - Error parsing chunk:', chunk, e);
       }
     }
 
-    logger.info(`app/api/chat/clients/serveOllamaGemma.ts - Final response: ${buffer.trim()}`);
+    logger.info(`app/api/chat/clients/OllamaGemmaClient.ts - Final response: ${buffer.trim()}`);
     return buffer.trim();
   } catch (error) {
-    logger.warn(`app/api/chat/clients/serveOllamaGemma.ts - Error generating content from Ollama Gemma: ${error}`);
+    logger.warn(`app/api/chat/clients/OllamaGemmaClient.ts - Error generating content from Ollama Gemma: ${error}`);
     return null;
   }
 }

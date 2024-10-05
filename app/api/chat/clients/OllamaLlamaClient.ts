@@ -1,4 +1,4 @@
-// File: app/api/chat/clients/serveOllamaLlama.ts
+// File: app/api/chat/clients/OllamaLlamaClient.ts
 
 import { validateEnvVars } from '../utils/validate';
 import logger from '../utils/log';
@@ -12,7 +12,7 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
 
   if (!isValid) {
     if (!hasWarnedOllamaLlama) {
-      logger.warn(`app/api/chat/clients/serveOllamaLlama.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
+      logger.warn(`app/api/chat/clients/OllamaLlamaClient.ts - Optional environment variables are missing or contain invalid placeholders: ${optionalVars.join(', ')}`);
       hasWarnedOllamaLlama = true;
     }
     return null;
@@ -20,7 +20,7 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
 
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
-  logger.info(`app/api/chat/clients/serveOllamaLlama.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.info(`app/api/chat/clients/OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const response = await fetch(endpoint, {
@@ -30,9 +30,9 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     });
 
     if (!response.ok) {
-      logger.error(`app/api/chat/clients/serveOllamaLlama.ts - HTTP error! Status: ${response.status}`);
+      logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - HTTP error! Status: ${response.status}`);
       const text = await response.text();
-      logger.error(`app/api/chat/clients/serveOllamaLlama.ts - Response text: ${text}`);
+      logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - Response text: ${text}`);
       return null;
     }
 
@@ -56,19 +56,19 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
           if (sentenceEndRegex.test(buffer)) {
             const completeSegment = buffer.trim();
             buffer = '';
-            logger.info(`app/api/chat/clients/serveOllamaLlama.ts - Processed segment: ${completeSegment}`);
+            logger.info(`app/api/chat/clients/OllamaLlamaClient.ts - Processed segment: ${completeSegment}`);
           }
         }
         done = parsed.done || streamDone;
       } catch (e) {
-        logger.error('app/api/chat/clients/serveOllamaLlama.ts - Error parsing chunk:', chunk, e);
+        logger.error('app/api/chat/clients/OllamaLlamaClient.ts - Error parsing chunk:', chunk, e);
       }
     }
 
-    logger.info(`app/api/chat/clients/serveOllamaLlama.ts - Final response: ${buffer.trim()}`);
+    logger.info(`app/api/chat/clients/OllamaLlamaClient.ts - Final response: ${buffer.trim()}`);
     return buffer.trim();
   } catch (error) {
-    logger.warn(`app/api/chat/clients/serveOllamaLlama.ts - Error generating content from Ollama Llama: ${error}`);
+    logger.warn(`app/api/chat/clients/OllamaLlamaClient.ts - Error generating content from Ollama Llama: ${error}`);
     return null;
   }
 }
