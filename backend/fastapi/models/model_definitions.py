@@ -1,7 +1,7 @@
 # File: backend/fastapi/models/model_definitions.py
 
 from sentence_transformers import SentenceTransformer
-from backend.fastapi.logger import logger  # Import the centralized logger
+from backend.fastapi.utils.logger import logger  # Import the centralized logger
 
 def load_model(model_name: str = 'paraphrase-MiniLM-L6-v2') -> SentenceTransformer:
     """

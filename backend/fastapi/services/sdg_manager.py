@@ -1,7 +1,7 @@
 # File: backend/fastapi/services/sdg_manager.py
 
 from typing import List, Dict
-from backend.fastapi.logger import logger  # Import the centralized logger
+from backend.fastapi.utils.logger import logger  # Import the centralized logger
 
 def get_sdg_keywords() -> Dict[str, List[str]]:
     """

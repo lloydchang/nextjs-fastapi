@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 from sentence_transformers import SentenceTransformer
-from backend.fastapi.logger import logger  # Import the centralized logger
+from backend.fastapi.utils.logger import logger  # Import the centralized logger
 
 def encode_descriptions(descriptions: List[str], model: SentenceTransformer) -> List[List[float]]:
     """
