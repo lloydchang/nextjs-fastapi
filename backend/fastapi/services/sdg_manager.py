@@ -1,4 +1,4 @@
-# File: backend/fastapi/services/sdg_manager.py
+# File: {}
 
 from typing import List, Dict
 from backend.fastapi.utils.logger import logger  # Import the centralized logger
