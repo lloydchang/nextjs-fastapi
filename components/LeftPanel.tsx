@@ -11,7 +11,7 @@ import ChatInput from './ChatInput';
 import ControlButtons from './ControlButtons';
 import styles from '../styles/LeftPanel.module.css';
 import { useMedia } from '../hooks/useMedia';
-import BusinessPlan from './BusinessPlan';
+import ProjectPlan from './ProjectPlan';
 
 const HeavyChatMessages = dynamic(() => import('./ChatMessages'), {
   loading: () => <div className={styles.emptyPlaceholder}></div>, // Invisible placeholder to maintain layout
@@ -52,7 +52,7 @@ const LeftPanel: React.FC = () => {
       <div className={styles.content}>
         {/* Top 40% for the Business Plan */}
         <div className={styles.businessPlanContainer}>
-          <BusinessPlan messages={messages} />
+          <ProjectPlan messages={messages} />
         </div>
         
         {/* Bottom 60% for the Chat Interface */}
