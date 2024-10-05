@@ -1,6 +1,7 @@
 // File: app/api/chat/handlers/handleOllamaGemma.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { makeRequest } from '../utils/request';
 import { streamResponseBody } from '../utils/stream';
 import logger from '../utils/log';
@@ -26,8 +27,38 @@ export async function handleTextWithOllamaGemmaModel(req: NextRequest): Promise<
     );
   }
 
-  // Read the request body as JSON
-  const body = await req.json();
+  // Check request method
+  if (req.method !== 'POST') {
+    logger.warn(`Ollama Gemma: Invalid request method: ${req.method}`);
+    return NextResponse.json(
+      { error: 'Ollama Gemma: Invalid request method. Use POST.' },
+      { status: 405 }
+    );
+  }
+
+  // Check Content-Type
+  const headersList = headers();
+  const contentType = headersList.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    logger.warn(`Ollama Gemma: Invalid Content-Type: ${contentType}`);
+    return NextResponse.json(
+      { error: 'Ollama Gemma: Invalid Content-Type. Use application/json.' },
+      { status: 415 }
+    );
+  }
+
+  // Read and parse the request body
+  let body;
+  try {
+    body = await req.json();
+  } catch (error) {
+    logger.warn(`Ollama Gemma: Failed to parse request body: ${error.message}`);
+    return NextResponse.json(
+      { error: 'Ollama Gemma: Invalid JSON in request body.' },
+      { status: 400 }
+    );
+  }
+
   if (!body || !body.prompt) {
     logger.warn('Ollama Gemma: Request body is missing the required property: prompt');
     return NextResponse.json(
