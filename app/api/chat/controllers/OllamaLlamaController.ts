@@ -4,16 +4,16 @@ import { NextResponse } from 'next/server';
 import logger from '../utils/log';
 
 export async function handleTextWithOllamaLlamaModel({ prompt, model }: { prompt: string, model: string }, config: any): Promise<string> {
-  const { OLLAMA_LLAMA_ENDPOINT } = process.env;
+  const { OLLAMA_GEMMA_ENDPOINT } = process.env;
 
-  if (!OLLAMA_LLAMA_ENDPOINT || !model) {
+  if (!OLLAMA_GEMMA_ENDPOINT || !model) {
     throw new Error('Ollama Llama: Required environment variables are missing.');
   }
 
   const payload = { model, prompt };
   logger.debug(`app/api/chat/controllers/OllamaLlamaController.ts - Sending payload: ${JSON.stringify(payload)}`);
 
-  const response = await fetch(OLLAMA_LLAMA_ENDPOINT, {
+  const response = await fetch(OLLAMA_GEMMA_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
