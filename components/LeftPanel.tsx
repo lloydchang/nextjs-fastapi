@@ -23,7 +23,6 @@ const LeftPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
