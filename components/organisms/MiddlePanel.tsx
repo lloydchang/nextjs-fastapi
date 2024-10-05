@@ -69,7 +69,7 @@ const MiddlePanel: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    axios.get(`http://localhost:8000/api/py/search?query=${encodeURIComponent(searchQuery)}`)
+    axios.get(`http://localhost:8000/api/search?query=${encodeURIComponent(searchQuery)}`)
       .then((searchResponse) => {
         if (searchResponse.status !== 200) {
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
