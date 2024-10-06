@@ -10,10 +10,6 @@ import styles from '../../styles/components/organisms/RightPanel.module.css';
 const RightPanel: React.FC = () => {
   return (
     <div className={styles.rightPanel}>
-      <div className={styles.footer}>
-        <Image src={SDGWheel} alt="SDG Wheel" width={50} height={50} />
-        <p>Powered by Sustainable Development Goals</p>
-      </div>
       <iframe
         src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
         width="100%"
