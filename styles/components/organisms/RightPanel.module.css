@@ -3,12 +3,224 @@
 .rightPanel {
   flex: 1;
   padding: 0px;
-  background-color: #ffffff;
+  background-color: #000000;
   overflow-y: auto;
 }
 
-.iframe {
+.searchContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 0px;
+  font-size: 0.7em;
+
+  /* Set a fixed total width or use max-width as needed */
+  width: 700px; /* Example fixed width */
+}
+
+.greetingContainer {
+  width: 30px; /* Fixed width */
+  height: 60px; /* Fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background-color: black;
+  border-radius: 10px;
+  box-sizing: border-box; /* Ensure padding/border are included in width */
+}
+
+.searchRowContainer {
+  width: 100px; /* Fixed width */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px; /* Fixed height */
+  box-sizing: border-box; /* Ensure padding/border are included in width */
+}
+
+.searchInput {
+  flex: 1; /* Allows the input to take available space within the fixed container */
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  color: black;
+  box-sizing: border-box; /* Ensure padding/border are included in width */
+}
+
+.button {
+  padding: 10px 15px;
   border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.searchButton {
+  background-color: #0070f3;
+  color: white;
+}
+
+.searchButton:hover {
+  background-color: #2196f3;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.searchButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.tedButton {
+  background-color: #c20022;
+  color: white;
+}
+
+.tedButton:hover {
+  background-color: #eb0028;
+  transform: translateY(-2px);
+}
+
+/* Container to keep the spinner centered */
+.loadingSpinnerContainer {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  height: 24px;
+  width: 24px;
+}
+
+/* Spinner animation */
+.loadingSpinner {
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite; /* The rotation animation */
+  transform-origin: 50% 50%; /* Ensure it spins from the center */
+}
+
+/* Define the keyframes for the rotation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start position */
+  }
+  100% {
+    transform: rotate(360deg); /* End position */
+  }
+}
+
+.errorContainer {
+  margin-top: -10px; /* Add spacing above */
+  margin-bottom: 0px; /* Add spacing below */
+  text-align: center; /* Center the text inside */
+}
+
+.nowPlaying {
+  margin-bottom: 10px;
+}
+
+.videoFrame {
   border-radius: 0px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.resultsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resultItem {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #000000;
+  transition: background-color 0.3s ease;
+  cursor: pointer; /* Ensures the cursor indicates interactivity */
+}
+
+.resultItem:hover {
+  background-color: #f1f1f1;
+}
+
+.resultLink {
+  color: #2196f3;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.resultLink:hover {
+  text-decoration: underline;
+}
+
+.sdgTags {
+  color: #757575;
+  font-size: 0.9em;
+}
+
+.errorText {
+  color: #f44336;
+  text-align: center;
+}
+
+.successMessage {
+  color: #4caf50;
+  text-align: center;
+}
+
+.alignLeft {
+  text-align: left;
+}
+
+.scrollableContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 0;
+}
+
+/* Scrollbar styles */
+.scrollableContainer::-webkit-scrollbar {
+  width: 12px; /* Width of the scrollbar */
+}
+
+.scrollableContainer::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb {
+  background: #2196f3; /* Scrollbar color */
+  border-radius: 10px; /* Rounded corners */
+}
+
+.scrollableContainer::-webkit-scrollbar-thumb:hover {
+  background: #0070f3; /* Color on hover */
+}
+
+/* Remove duplicate .resultItem and .resultLink selectors if present */
+
+@media (max-width: 800px) {
+  .searchContainer {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .greetingContainer,
+  .searchRowContainer {
+    width: 100%;
+  }
+
+  .searchRowContainer {
+    gap: 5px;
+  }
+
+  .searchInput {
+    padding: 8px;
+  }
+
+  .button {
+    padding: 8px 12px;
+  }
 }

@@ -39,7 +39,7 @@ body {
 /* Container grid layout */
 .container {
   display: grid;
-  grid-template-columns: 3fr 2fr 1fr; /* Left panel is 3fr, middle is 2fr, right is 1fr */
+  grid-template-columns: 3fr 3fr; /* Left panel is 3fr, right is 3fr */
   width: 100vw; /* Full screen width */
   height: 100vh; /* Full screen height */
   padding: 0px; /* No padding around the container */
@@ -53,15 +53,6 @@ body {
   display: flex;
   flex-direction: column;
   transition: none; /* Disable transitions for left panel */
-}
-
-/* Styling for the middle panel */
-.middle-panel {
-  background-color: #e9ecef;
-  padding: 0px; /* No padding inside the middle panel */
-  display: flex;
-  flex-direction: column;
-  transition: none; /* Disable transitions for middle panel */
 }
 
 /* Styling for the right panel */
