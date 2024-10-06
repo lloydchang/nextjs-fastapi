@@ -122,6 +122,36 @@ async def load_resources():
             logger.error("Failed to encode SDG keywords.")
             sdg_embeddings = None
 
+    # Compute or load SDG Tags
+    logger.info("Loading or computing SDG tags.")
+    if os.path.exists(sdg_tags_cache):
+        logger.info("Loading cached SDG tags.")
+        try:
+            with open(sdg_tags_cache, 'rb') as cache_file:
+                data['sdg_tags'] = pickle.load(cache_file)
+            logger.info("SDG tags loaded from cache.")
+        except Exception as e:
+            logger.error(f"Error loading cached SDG tags: {e}")
+    else:
+        logger.info("Computing SDG tags.")
+        if not data.empty and 'description_vector' in data.columns and sdg_embeddings is not None:
+            sdg_utils = lazy_load("python.sdg_utils")
+            description_vectors_tensor = torch.tensor(np.array(data['description_vector'].tolist()))  # Ensure this is a Tensor
+            sdg_embeddings_tensor = torch.tensor(np.array(sdg_embeddings))  # Ensure this is a Tensor
+            cosine_similarities = torch.nn.functional.cosine_similarity(description_vectors_tensor.unsqueeze(1), sdg_embeddings_tensor.unsqueeze(0), dim=-1)
+
+            # Get SDG names to pass as a parameter
+            sdg_manager = lazy_load("python.sdg_manager", "get_sdg_keywords")
+            sdg_keywords = sdg_manager()
+            sdg_names = list(sdg_keywords.keys())
+
+            # Call compute_sdg_tags with cosine similarities and sdg_names
+            data['sdg_tags'] = sdg_utils.compute_sdg_tags(cosine_similarities, sdg_names)
+
+            with open(sdg_tags_cache, 'wb') as cache_file:
+                pickle.dump(data['sdg_tags'], cache_file)
+            logger.info("SDG tags computed and cached successfully.")
+
     # Set the resources initialized flag and notify waiting coroutines
     resources_initialized = True
     resource_event.set()  # Signal that resources are ready
