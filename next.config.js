@@ -27,6 +27,23 @@ const nextConfig = {
       },
     ];
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+      };
+      
+      // Ignore problematic packages
+      config.externals = [...(config.externals || []), 
+        '@mapbox/node-pre-gyp', 
+        '@tensorflow/tfjs-node'
+      ];
+    }
+    return config;
+  },
   typescript: {
     ignoreBuildErrors: true,  // Disable TypeScript build errors during development
   },
