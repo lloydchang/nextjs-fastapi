@@ -2,9 +2,9 @@
 
 /**
  * Utility to get the filename and line number for logging.
- * It captures the call stack and identifies the caller file and line number.
+ * Captures the call stack and identifies the caller file and line number.
  */
-export const getCallerFile = () => {
+export const getCallerFile = (): string => {
     const oldStackTrace = Error.prepareStackTrace;
     try {
       const err = new Error();
@@ -14,17 +14,15 @@ export const getCallerFile = () => {
       Error.prepareStackTrace = (_, stack) => stack;
       const stack = err.stack as unknown as NodeJS.CallSite[];
   
-      // Iterate through stack frames to identify the correct caller
       for (const stackFrame of stack) {
         currentFile = stackFrame.getFileName();
-        if (callerFile && currentFile !== callerFile) {
-          // Return the file and line number of the calling file
+        if (callerFile && currentFile !== callerFile && currentFile) {
           return `${stackFrame.getFileName()}:${stackFrame.getLineNumber()}`;
         }
         callerFile = currentFile;
       }
     } catch (e) {
-      return undefined;
+      return 'unknown:0';
     } finally {
       Error.prepareStackTrace = oldStackTrace;
     }

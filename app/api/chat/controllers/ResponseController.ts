@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import { AppConfig } from '../utils/config';
 import { ResponseSegment } from '../types';
-import logger from '../utils/log';
+import logger from '../utils/logger';
 
 /**
  * Stream response with logs if enabled.

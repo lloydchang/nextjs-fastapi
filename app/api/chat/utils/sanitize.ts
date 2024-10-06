@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/sanitize.ts
 
-import logger from './log';
+import logger from './logger';
 
 export function sanitizeInput(input: string): string {
   const sanitized = input.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');

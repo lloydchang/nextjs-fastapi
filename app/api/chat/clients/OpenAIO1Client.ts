@@ -1,7 +1,7 @@
 // File: app/api/chat/clients/OpenAIClient.ts
 
 import fetch from 'node-fetch';
-import logger from '../utils/log';
+import logger from '../utils/logger';
 
 export async function OpenAIClient(prompt: string, model: string, config: any): Promise<string> {
   const endpoint = `https://api.openai.com/v1/engines/${model}/completions`;

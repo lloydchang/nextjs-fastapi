@@ -1,39 +1,63 @@
 // File: app/api/chat/controllers/AzureOpenAIO1Controller.ts
 
 import { NextResponse } from 'next/server';
-import logger from '../utils/log';
+import logger from '../utils/logger';
+import { getConfig } from '../utils/config';
 
-export async function handleTextWithAzureOpenAIO1Model({ prompt, model }: { prompt: string; model: string }, config: any): Promise<string> {
-  const { AZURE_OPENAI_O1_ENDPOINT } = process.env;
+export async function handleTextWithAzureOpenAIO1TextModel({ userPrompt, textModel }: { userPrompt: string; textModel: string }, config: any): Promise<string> {
+  const { azureOpenAIO1Endpoint } = getConfig(); // Get the Azure OpenAI O1 endpoint from config
 
-  if (!AZURE_OPENAI_O1_ENDPOINT || !model) {
-    throw new Error('Azure OpenAI O1: Required environment variables are missing.');
+  // Debugging logs for endpoint and inputs
+  logger.debug(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - Loaded config: ${JSON.stringify(config)}`);
+  logger.debug(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - AZURE_OPENAI_O1_ENDPOINT: ${azureOpenAIO1Endpoint}`);
+  logger.debug(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - Text model provided: ${textModel}`);
+  logger.debug(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - User prompt: ${userPrompt}`);
+
+  // Check if required environment variables are set
+  if (!azureOpenAIO1Endpoint || !textModel) {
+    logger.error('app/api/chat/controllers/AzureOpenAIO1Controller.ts - Missing required environment variables:');
+    if (!azureOpenAIO1Endpoint) {
+      logger.error('Azure OpenAI O1 endpoint is missing.');
+    }
+    if (!textModel) {
+      logger.error('Text model is missing.');
+    }
+    return ''; // Return an empty string or a suitable fallback instead of throwing an error
   }
 
-  const payload = { model, prompt };
+  const payload = { textModel, userPrompt };
   logger.debug(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - Sending payload: ${JSON.stringify(payload)}`);
 
-  const response = await fetch(AZURE_OPENAI_O1_ENDPOINT, {
+  // Sending request to the Azure OpenAI O1 endpoint
+  const response = await fetch(azureOpenAIO1Endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 
+  // Check for HTTP errors
   if (!response.ok) {
-    throw new Error(`Azure OpenAI O1: HTTP error! status: ${response.status}`);
+    logger.error(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - HTTP error! status: ${response.status}`);
+    return ''; // Return an empty string or a suitable fallback instead of throwing an error
   }
 
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('Failed to access the response body stream.');
+  if (!reader) {
+    logger.error('app/api/chat/controllers/AzureOpenAIO1Controller.ts - Failed to access the response body stream.');
+    return ''; // Return an empty string or a suitable fallback instead of throwing an error
+  }
 
   const decoder = new TextDecoder('utf-8');
   let buffer = '';
   let done = false;
   const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
 
+  // Reading the response stream
   while (!done) {
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
+
+    logger.debug(`app/api/chat/controllers/AzureOpenAIO1Controller.ts - Received chunk: ${chunk}`);
 
     try {
       const parsed = JSON.parse(chunk);

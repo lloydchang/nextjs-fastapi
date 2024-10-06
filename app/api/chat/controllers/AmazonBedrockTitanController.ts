@@ -1,47 +1,63 @@
 // File: app/api/chat/controllers/AmazonBedrockTitanController.ts
 
-import fetch from 'node-fetch';
-import logger from '../utils/log';
+import { NextResponse } from 'next/server';
+import logger from '../utils/logger';
+import { getConfig } from '../utils/config';
 
-interface HandlerInput {
-  prompt: string;
-  model: string;
-}
+export async function handleTextWithAmazonBedrockTitanTextModel({ userPrompt, textModel }: { userPrompt: string; textModel: string }, config: any): Promise<string> {
+  const { amazonBedrockTitanEndpoint } = getConfig(); // Get the Amazon Bedrock Titan endpoint from config
 
-export async function handleTextWithAmazonBedrockTitan({ prompt, model }: HandlerInput, config: any): Promise<string> {
-  const endpoint = config.AMAZON_BEDROCK_TITAN_ENDPOINT;
+  // Debugging logs for endpoint and inputs
+  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Loaded config: ${JSON.stringify(config)}`);
+  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - AMAZON_BEDROCK_TITAN_ENDPOINT: ${amazonBedrockTitanEndpoint}`);
+  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Text model provided: ${textModel}`);
+  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - User prompt: ${userPrompt}`);
 
-  if (!endpoint || !model) {
-    throw new Error('Amazon Bedrock Titan: Required environment variables are missing.');
+  // Check if required environment variables are set
+  if (!amazonBedrockTitanEndpoint || !textModel) {
+    logger.error('app/api/chat/controllers/AmazonBedrockTitanController.ts - Missing required environment variables:');
+    if (!amazonBedrockTitanEndpoint) {
+      logger.error('Amazon Bedrock Titan endpoint is missing.');
+    }
+    if (!textModel) {
+      logger.error('Text model is missing.');
+    }
+    return ''; // Return an empty string or a suitable fallback instead of throwing an error
   }
 
-  const payload = { model, prompt };
+  const payload = { textModel, userPrompt };
   logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Sending payload: ${JSON.stringify(payload)}`);
 
-  const response = await fetch(endpoint, {
+  // Sending request to the Amazon Bedrock Titan endpoint
+  const response = await fetch(amazonBedrockTitanEndpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.AMAZON_BEDROCK_TITAN_API_KEY}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 
+  // Check for HTTP errors
   if (!response.ok) {
-    throw new Error(`Amazon Bedrock Titan API error: ${response.statusText}`);
+    logger.error(`app/api/chat/controllers/AmazonBedrockTitanController.ts - HTTP error! status: ${response.status}`);
+    return ''; // Return an empty string or a suitable fallback instead of throwing an error
   }
 
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('Failed to access the response body stream.');
+  if (!reader) {
+    logger.error('app/api/chat/controllers/AmazonBedrockTitanController.ts - Failed to access the response body stream.');
+    return ''; // Return an empty string or a suitable fallback instead of throwing an error
+  }
 
   const decoder = new TextDecoder('utf-8');
   let buffer = '';
   let done = false;
   const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
 
+  // Reading the response stream
   while (!done) {
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
+
+    logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Received chunk: ${chunk}`);
 
     try {
       const parsed = JSON.parse(chunk);
