@@ -35,11 +35,32 @@ const nextConfig = {
         path: false,
         os: false,
       };
-      
+
+      // Add loaders to process HTML and other custom file types
+      config.module.rules.push(
+        {
+          test: /\.html$/,
+          use: ['html-loader'], // Loader for HTML files
+        },
+        {
+          test: /\.(png|jpe?g|gif|svg)$/,  // Image file loader
+          use: [
+            {
+              loader: 'file-loader',
+              options: {
+                name: '[name].[hash].[ext]',
+                outputPath: 'static/images/',
+              },
+            },
+          ],
+        }
+      );
+
       // Ignore problematic packages
-      config.externals = [...(config.externals || []), 
-        '@mapbox/node-pre-gyp', 
-        '@tensorflow/tfjs-node'
+      config.externals = [
+        ...(config.externals || []),
+        '@mapbox/node-pre-gyp',
+        '@tensorflow/tfjs-node',
       ];
     }
     return config;
