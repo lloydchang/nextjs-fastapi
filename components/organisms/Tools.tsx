@@ -17,12 +17,12 @@ const Tools: React.FC<ToolsProps> = ({ messages }) => {
 
   return (
     <div className="tools-container">
-      {/* Conditionally render "Tools" or "Close" button at the right-most part of the left panel */}
+      {/* Conditionally render "Tools" or strikethrough "Close" button at the right-most part of the left panel */}
       <button
         className={`right-edge-button ${isIframeVisible ? 'close-button-active' : ''}`}
         onClick={toggleIframe}
       >
-        {isIframeVisible ? 'Close' : 'Tools'}
+        {isIframeVisible ? <s>Tools</s> : 'Tools'}
       </button>
 
       {/* Layered Modal with the Iframe */}

@@ -1,4 +1,4 @@
-// components/organisms/RightPanel.tsx
+// File: app/components/organisms/RightPanel.tsx
 
 'use client';
 
@@ -69,7 +69,7 @@ const RightPanel: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    axios.get(`http://localhost:8000/api/search?query=${encodeURIComponent(searchQuery)}`)
+    axios.get(`/api/search?query=${encodeURIComponent(searchQuery)}`)  // Updated to use Next.js internal API route
       .then((searchResponse) => {
         if (searchResponse.status !== 200) {
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);

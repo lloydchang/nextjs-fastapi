@@ -1,3 +1,5 @@
+// File: next.config.js
+
 const path = require('path');
 
 /** @type {import('next').NextConfig} */
@@ -32,6 +34,8 @@ const nextConfig = {
         tls: false,
       };
 
+      config.resolve.alias['@tensorflow/tfjs-node'] = '@tensorflow/tfjs';
+
       // Use shim for TensorFlow Node.js modules
       // config.resolve.alias = {
       //   ...config.resolve.alias,
@@ -46,10 +50,10 @@ const nextConfig = {
     });
 
     // Ignore TensorFlow.js Node-specific warnings
-    config.module.rules.push({
-      test: /@tensorflow[\\/]tfjs-node[\\/]/,
-      use: 'null-loader',
-    });
+    // config.module.rules.push({
+    //   test: /@tensorflow[\\/]tfjs-node[\\/]/,
+    //   use: 'null-loader',
+    // });
 
     return config;
   },
