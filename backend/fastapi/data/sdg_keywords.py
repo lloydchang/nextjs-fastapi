@@ -1,4 +1,4 @@
-# File: backend.fastapi/data/sdg_keywords.py
+# File: backend/fastapi/data/sdg_keywords.py
 
 sdg_keywords = {
     "sdg1": ["poverty", "income", "livelihood", "financial inclusion"],
