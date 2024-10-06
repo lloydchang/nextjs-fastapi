@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import logger from '../utils/log';
 
-export async function handleTextWithOllamaLlamaModel({ prompt, model }: { prompt: string, model: string }, config: any): Promise<string> {
+export async function handleTextWithOllamaLlamaModel({ prompt, model }: { prompt: string; model: string }, config: any): Promise<string> {
   const { OLLAMA_LLAMA_ENDPOINT } = process.env;
 
   if (!OLLAMA_LLAMA_ENDPOINT || !model) {
