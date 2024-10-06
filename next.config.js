@@ -29,6 +29,7 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Configure fallback for unsupported Node.js modules in client-side
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -36,40 +37,27 @@ const nextConfig = {
         os: false,
       };
 
-      // Add loaders to process HTML and other custom file types
-      config.module.rules.push(
-        {
-          test: /\.html$/,
-          use: ['html-loader'], // Loader for HTML files
-        },
-        {
-          test: /\.(png|jpe?g|gif|svg)$/,  // Image file loader
-          use: [
-            {
-              loader: 'file-loader',
-              options: {
-                name: '[name].[hash].[ext]',
-                outputPath: 'static/images/',
-              },
-            },
-          ],
-        }
-      );
+      // Add the html-loader to process .html files correctly
+      config.module.rules.push({
+        test: /\.html$/,
+        use: ['html-loader'],
+      });
 
-      // Ignore problematic packages
+      // Mark certain problematic modules as externals to prevent bundling
       config.externals = [
         ...(config.externals || []),
         '@mapbox/node-pre-gyp',
         '@tensorflow/tfjs-node',
       ];
     }
+
     return config;
   },
   typescript: {
-    ignoreBuildErrors: true,  // Disable TypeScript build errors during development
+    ignoreBuildErrors: true,  // Optional: Disable TypeScript build errors during development
   },
   eslint: {
-    ignoreDuringBuilds: true,  // Optional: Disable ESLint during build (if needed)
+    ignoreDuringBuilds: true,  // Optional: Disable ESLint during build if not required
   },
 };
 
