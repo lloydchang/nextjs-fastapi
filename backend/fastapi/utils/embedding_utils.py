@@ -1,4 +1,4 @@
-# File: backend.fastapi/utils/embedding_utils.py
+# File: backend/fastapi/utils/embedding_utils.py
 
 from typing import List, Optional
 from sentence_transformers import SentenceTransformer
