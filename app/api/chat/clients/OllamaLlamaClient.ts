@@ -1,7 +1,7 @@
 // File: app/api/chat/clients/OllamaLlamaClient.ts
 
 import { validateEnvVars } from '../utils/validate';
-import logger from '../utils/log';
+import logger from '../utils/logger';
 import { systemPrompt } from '../utils/prompt';
 
 let hasWarnedOllamaLlama = false;

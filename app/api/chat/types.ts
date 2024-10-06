@@ -1,6 +1,6 @@
 // File: app/api/chat/types.ts
 
-import logger from './utils/log';
+import logger from './utils/logger';
 
 /**
  * Interface representing a response segment for streamed responses.

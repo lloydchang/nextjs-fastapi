@@ -1,39 +1,63 @@
 // File: app/api/chat/controllers/OllamaGemmaController.ts
 
 import { NextResponse } from 'next/server';
-import logger from '../utils/log';
+import logger from '../utils/logger';
+import { getConfig } from '../utils/config';
 
-export async function handleTextWithOllamaGemmaModel({ prompt, model }: { prompt: string; model: string }, config: any): Promise<string> {
-  const { OLLAMA_GEMMA_ENDPOINT } = process.env;
+export async function handleTextWithOllamaGemmaTextModel({ userPrompt, textModel }: { userPrompt: string; textModel: string }, config: any): Promise<string> {
+  const { ollamaGemmaEndpoint } = getConfig(); // Get the Ollama Gemma endpoint from config
 
-  if (!OLLAMA_GEMMA_ENDPOINT || !model) {
-    throw new Error('Ollama Gemma: Required environment variables are missing.');
+  // Debugging logs for endpoint and inputs
+  logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Loaded config: ${JSON.stringify(config)}`);
+  logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - OLLAMA_GEMMA_ENDPOINT: ${ollamaGemmaEndpoint}`);
+  logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - Text model provided: ${textModel}`);
+  logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - User prompt: ${userPrompt}`);
+
+  // Check if optional environment variables are set
+  if (!ollamaGemmaEndpoint || !textModel) {
+    logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Missing optional environment variables:');
+    if (!ollamaGemmaEndpoint) {
+      logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Ollama Gemma endpoint is missing.');
+    }
+    if (!textModel) {
+      logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Ollama Gemma text model is missing.');
+    }
+    return;
   }
 
-  const payload = { model, prompt };
+  const payload = { textModel, userPrompt };
   logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - Sending payload: ${JSON.stringify(payload)}`);
 
-  const response = await fetch(OLLAMA_GEMMA_ENDPOINT, {
+  // Sending request to the Ollama Gemma endpoint
+  const response = await fetch(ollamaGemmaEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 
+  // Check for HTTP errors
   if (!response.ok) {
-    throw new Error(`Ollama Gemma: HTTP error! status: ${response.status}`);
+    logger.error(`app/api/chat/controllers/OllamaGemmaController.ts - HTTP error! status: ${response.status}`);
+    return;
   }
 
   const reader = response.body?.getReader();
-  if (!reader) throw new Error('Failed to access the response body stream.');
+  if (!reader) {
+    logger.error('app/api/chat/controllers/OllamaGemmaController.ts - Failed to access the response body stream.');
+    return;
+  }
 
   const decoder = new TextDecoder('utf-8');
   let buffer = '';
   let done = false;
   const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
 
+  // Reading the response stream
   while (!done) {
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
+
+    logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - Received chunk: ${chunk}`);
 
     try {
       const parsed = JSON.parse(chunk);

@@ -1,7 +1,7 @@
 // File: app/api/chat/controllers/RateLimitController.ts
 
 import { NextResponse } from 'next/server';
-import logger from '../utils/log';
+import logger from '../utils/logger';
 
 const RATE_LIMIT = 100; // Example limit
 const WINDOW_SIZE = 60 * 60 * 1000; // 1 hour in milliseconds

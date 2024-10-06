@@ -2,7 +2,7 @@
 
 import { Vertex } from '@google-cloud/vertexai';
 import { validateEnvVars } from '../utils/validate';
-import logger from '../utils/log';
+import logger from '../utils/logger';
 import { systemPrompt } from '../utils/prompt'; // Import systemPrompt
 
 let hasWarnedGoogleVertexGemini = false;

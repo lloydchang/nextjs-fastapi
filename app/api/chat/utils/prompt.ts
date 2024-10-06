@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/prompt.ts
 
-import logger from './log';
+import logger from './logger';
 
 export const systemPrompt = ``;
 
