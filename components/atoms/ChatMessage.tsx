@@ -1,7 +1,7 @@
 // components/atoms/ChatMessage.tsx
 
 import React from 'react';
-import styles from '../styles/ChatMessage.module.css';
+import styles from '../../styles/components/atoms/ChatMessage.module.css';
 
 interface ChatMessageProps {
   sender: string;
