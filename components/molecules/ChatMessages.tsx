@@ -28,7 +28,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   useEffect(() => {
     const container = messagesContainerRef.current;
 
-    // Ensuring container is visible and correctly sized on initial render
     if (container) {
       container.style.opacity = '1';
       container.style.visibility = 'visible';
@@ -38,17 +37,21 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
 
   return (
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
-      {messages.map((msg, index) => (
-        <div
-          key={index}
-          className={`${styles.message} ${
-            msg.sender === 'user' ? styles.userMessage : styles.botMessage
-          }`}
-        >
-          {/* The `.text` class should be inside the `.userMessage` or `.botMessage` wrapper */}
-          <span className={styles.text}>{msg.text}</span>
-        </div>
-      ))}
+      {messages.map((msg, index) => {
+        // Determine if a message is interim and only render it conditionally
+        const isInterim = msg.isInterim && msg.sender === 'user';
+
+        return (
+          <div
+            key={index}
+            className={`${styles.message} ${
+              msg.sender === 'user' ? styles.userMessage : styles.botMessage
+            } ${isInterim ? styles.interim : ''}`}
+          >
+            <span className={styles.text}>{msg.text}</span>
+          </div>
+        );
+      })}
     </div>
   );
 };

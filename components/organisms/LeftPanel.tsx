@@ -1,4 +1,4 @@
-// components/organisms/LeftPanel.tsx
+// File: components/organisms/LeftPanel.tsx
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -11,7 +11,7 @@ import ChatInput from '../atoms/ChatInput';
 import ControlButtons from './ControlButtons';
 import styles from '../../styles/components/organisms/LeftPanel.module.css';
 import { useMedia } from '../../components/state/hooks/useMedia';
-import ProjectPlan from '../templates/ProjectPlan';
+import Tools from '../organisms/Tools';
 
 const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
   loading: () => <div className={styles.emptyPlaceholder}></div>, // Invisible placeholder to maintain layout
@@ -50,12 +50,12 @@ const LeftPanel: React.FC = () => {
       </div>
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
       <div className={styles.content}>
-        {/* Top 40% for the Project Plan */}
-        <div className={styles.projectPlanContainer}>
-          <ProjectPlan messages={messages} />
+        {/* Top 10% for the Tools */}
+        <div className={styles.toolsContainer}>
+          <Tools messages={messages} />
         </div>
         
-        {/* Bottom 60% for the Chat Interface */}
+        {/* Bottom 90% for the Chat Interface */}
         <div className={styles.chatInterface} ref={chatContainerRef}>
           <HeavyChatMessages messages={messages} />
           <ChatInput 
