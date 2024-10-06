@@ -43,12 +43,6 @@ const nextConfig = {
         use: ['html-loader'],
       });
 
-      // Mark certain problematic modules as externals to prevent bundling
-      config.externals = [
-        ...(config.externals || []),
-        '@mapbox/node-pre-gyp',
-        '@tensorflow/tfjs-node',
-      ];
     }
 
     return config;
