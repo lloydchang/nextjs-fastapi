@@ -40,6 +40,6 @@ export function getConfig() {
     winstonLogLevel: process.env.WINSTON_LOG_LEVEL || 'info',
   };
 
-  logger.info('app/api/chat/utils/config.ts - Loaded configuration');
+  // logger.silly('app/api/chat/utils/config.ts - Loaded configuration');
   return config;
 }

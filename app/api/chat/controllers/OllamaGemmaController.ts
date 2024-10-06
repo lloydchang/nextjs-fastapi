@@ -25,7 +25,12 @@ export async function handleTextWithOllamaGemmaTextModel({ userPrompt, textModel
     return;
   }
 
-  const payload = { textModel, userPrompt };
+  // Adjust the payload structure to match API expectations
+  const payload = {
+    model: textModel, // Ensure this key matches the expected API field
+    prompt: userPrompt.trim(), // Optionally trim whitespace for cleaner input
+  };
+  
   logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - Sending payload: ${JSON.stringify(payload)}`);
 
   // Sending request to the Ollama Gemma endpoint
@@ -41,6 +46,7 @@ export async function handleTextWithOllamaGemmaTextModel({ userPrompt, textModel
     return;
   }
 
+  // Initialize buffer and create a reader for the response body
   const reader = response.body?.getReader();
   if (!reader) {
     logger.error('app/api/chat/controllers/OllamaGemmaController.ts - Failed to access the response body stream.');
@@ -48,9 +54,8 @@ export async function handleTextWithOllamaGemmaTextModel({ userPrompt, textModel
   }
 
   const decoder = new TextDecoder('utf-8');
-  let buffer = '';
+  let buffer = ''; // Initialize buffer
   let done = false;
-  const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
 
   // Reading the response stream
   while (!done) {
@@ -60,19 +65,12 @@ export async function handleTextWithOllamaGemmaTextModel({ userPrompt, textModel
     logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - Received chunk: ${chunk}`);
 
     try {
-      const parsed = JSON.parse(chunk);
+      const parsed = JSON.parse(chunk); // Parse the chunk
       if (parsed.response) {
-        buffer += parsed.response;
-
-        // Check if buffer has a complete segment
-        if (sentenceEndRegex.test(buffer)) {
-          const completeSegment = buffer.trim();
-          buffer = ''; // Clear buffer for next segment
-
-          logger.verbose(`app/api/chat/controllers/OllamaGemmaController.ts - Incoming segment: ${completeSegment}`);
-        }
+        buffer += parsed.response; // Accumulate the response text
+        logger.verbose(`app/api/chat/controllers/OllamaGemmaController.ts - Incoming segment: ${parsed.response}`);
       }
-      done = parsed.done || streamDone;
+      done = parsed.done || streamDone; // Check if done flag is set
     } catch (e) {
       logger.error('app/api/chat/controllers/OllamaGemmaController.ts - Error parsing chunk:', chunk, e);
     }

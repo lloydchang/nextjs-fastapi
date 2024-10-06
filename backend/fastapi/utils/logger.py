@@ -25,8 +25,8 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 
 # Test log messages using default levels and colors
-logger.critical("This is a critical message.")
-logger.error("This is an error message.")
-logger.warning("This is a warning message.")
-logger.info("This is an info message.")
-logger.debug("This is a debug message.")
+# logger.critical("This is a critical message.")
+# logger.error("This is an error message.")
+# logger.warning("This is a warning message.")
+# logger.info("This is an info message.")
+# logger.debug("This is a debug message.")

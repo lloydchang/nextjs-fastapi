@@ -2,27 +2,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from './utils/config';
-import { handleTextWithAmazonBedrockTitanTextModel } from './controllers/AmazonBedrockTitanController';
-import { handleTextWithAzureOpenAIO1TextModel } from './controllers/AzureOpenAIO1Controller';
-import { handleTextWithGoogleVertexGeminiTextModel } from './controllers/GoogleVertexGeminiController';
 import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaController';
-import { handleTextWithOllamaLlamaTextModel } from './controllers/OllamaLlamaController';
-import { handleTextWithOpenAIO1TextModel } from './controllers/OpenAIO1Controller';
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/logger';
 import { validateEnvVars } from './utils/validate';
 
 const config = getConfig();
-
-let warnings = {
-  AmazonBedrockTitan: false,
-  AzureOpenAIO1: false,
-  GoogleVertexGemini: false,
-  OllamaGemma: false,
-  OllamaLlama: false,
-  OpenA1: false,
-};
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,59 +44,22 @@ export async function POST(request: NextRequest) {
 
     const modelHandlers = [
       {
-        name: 'Amazon Bedrock Titan',
-        handler: handleTextWithAmazonBedrockTitanTextModel,
-        textModelKey: 'amazonBedrockTitanTextModel',
-        shouldWarn: () => !validateEnvVars(['AMAZON_BEDROCK_TITAN_TEXT_MODEL', 'AMAZON_BEDROCK_TITAN_ENDPOINT']),
-      },
-      {
-        name: 'Azure OpenAI O1',
-        handler: handleTextWithAzureOpenAIO1TextModel,
-        textModelKey: 'azureOpenAIO1TextModel',
-        shouldWarn: () => !validateEnvVars(['AZURE_OPENAI_O1_TEXT_MODEL', 'AZURE_OPENAI_O1_ENDPOINT', 'AZURE_OPENAI_O1_API_KEY']),
-      },
-      {
-        name: 'Google Vertex Gemini',
-        handler: handleTextWithGoogleVertexGeminiTextModel,
-        textModelKey: 'googleVertexGeminiTextModel',
-        shouldWarn: () => !validateEnvVars(['GOOGLE_VERTEX_GEMINI_TEXT_MODEL', 'GOOGLE_VERTEX_GEMINI_LOCATION', 'GOOGLE_APPLICATION_CREDENTIALS', 'GOOGLE_CLOUD_PROJECT']),
-      },
-      {
         name: 'Ollama Gemma',
         handler: handleTextWithOllamaGemmaTextModel,
         textModelKey: 'ollamaGemmaTextModel',
         shouldWarn: () => !validateEnvVars(['OLLAMA_GEMMA_ENDPOINT', 'OLLAMA_GEMMA_TEXT_MODEL']),
       },
-      {
-        name: 'Ollama Llama',
-        handler: handleTextWithOllamaLlamaTextModel,
-        textModelKey: 'ollamaLlamaTextModel',
-        shouldWarn: () => !validateEnvVars(['OLLAMA_LLAMA_ENDPOINT', 'OLLAMA_LLAMA_TEXT_MODEL']),
-      },
-      {
-        name: 'OpenAIO1',
-        handler: handleTextWithOpenAIO1TextModel,
-        textModelKey: 'openAIO1TextModel',
-        shouldWarn: () => !validateEnvVars(['OPENAI_O1_TEXT_MODEL', 'OPENAI_O1_API_KEY']),
-      },
+      // Add other models as needed...
     ];
 
     for (const { name, handler, shouldWarn, textModelKey } of modelHandlers) {
-      logger.silly(`app/api/chat/route.ts - Checking environment variables for ${name}`);
-      if (shouldWarn()) {
-        if (!warnings[name]) {
-          logger.silly(`app/api/chat/route.ts - Optional environment variables for ${name} are missing or contain placeholders.`);
-          warnings[name] = true;
-        }
-        continue;
-      }
-
       logger.debug(`app/api/chat/route.ts - Invoking handler for ${name}`);
       const textModel = config[textModelKey]; // Directly access the configuration key
+
       logger.debug(`app/api/chat/route.ts - Prompt: ${prompt}, Text Model: ${textModel || 'Not Found'}`);
 
       promises.push(
-        handler({ prompt, textModel }, config)
+        handler({ userPrompt: prompt, textModel }, config) // Pass userPrompt here
           .then(result => {
             handledText.push(result);
             logger.info(`app/api/chat/route.ts - ${name} response: ${result}`);
@@ -131,7 +80,7 @@ export async function POST(request: NextRequest) {
       logger.error(`app/api/chat/route.ts - No responses aggregated: ${JSON.stringify(errorResponse)}`);
       return NextResponse.json(errorResponse, { status: 500 });
     }
-    
+
   } catch (error: any) {
     const statusCode = error.status || 500;
     const errorMessage = error.message || 'Internal Server Error';
