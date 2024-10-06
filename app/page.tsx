@@ -33,17 +33,23 @@ const Home: React.FC = () => {
           {/* Use Suspense and ErrorBoundary for each panel */}
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
-              <LeftPanel />
+              <div className="left-panel">
+                <LeftPanel />
+              </div>
             </ErrorBoundary>
           </Suspense>
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
-              <MiddlePanel />
+              <div className="middle-panel">
+                <MiddlePanel />
+              </div>
             </ErrorBoundary>
           </Suspense>
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
-              <RightPanel />
+              <div className="right-panel">
+                <RightPanel />
+              </div>
             </ErrorBoundary>
           </Suspense>
         </div>
