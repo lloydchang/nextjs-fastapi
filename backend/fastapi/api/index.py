@@ -26,7 +26,12 @@ app.add_middleware(
 # Define a "Hello, World!" Endpoint for Testing
 @app.get("/api/hello")
 async def hello():
-    return {"message": "Hello, World!"}
+    return {
+        "message": "Hello, World!",
+        "openai_o1_text_model": os.getenv("OPENAI_O1_TEXT_MODEL"),
+        "ollama_gemma_endpoint": os.getenv("OLLAMA_GEMMA_ENDPOINT"),
+        "winston_log_level": os.getenv("WINSTON_LOG_LEVEL"),
+    }
 
 # Lazy Load Utility
 def lazy_load(module_name, attr=None):
@@ -40,7 +45,7 @@ logger = lazy_load("backend.fastapi.utils.logger", "logger")
 model = None
 data = None
 sdg_embeddings = None
-resources_initialized = False  # New flag to track if resources are fully initialized
+resources_initialized = False  # Flag to track if resources are fully initialized
 
 # Event to wait for resource initialization
 resource_event = asyncio.Event()
@@ -54,11 +59,8 @@ warnings.filterwarnings("ignore", category=FutureWarning, message=".*torch.load.
 file_path = "backend/fastapi/data/github-mauropelucchi-tedx_dataset-update_2024-details.csv"
 cache_file_path = "backend/fastapi/cache/tedx_dataset.pkl"
 sdg_embeddings_cache = "backend/fastapi/cache/sdg_embeddings.pkl"
-sdg_tags_cache = "backend/fastapi/cache/sdg_tags.pkl"  # Path for SDG tags cache
+sdg_tags_cache = "backend/fastapi/cache/sdg_tags.pkl"
 description_embeddings_cache = "backend/fastapi/cache/description_embeddings.pkl"
-
-current_directory = os.getcwd()
-print(f"Current Directory: {current_directory}")
 
 # Background task to load the necessary resources
 async def load_resources():
@@ -120,36 +122,6 @@ async def load_resources():
             logger.error("Failed to encode SDG keywords.")
             sdg_embeddings = None
 
-    # Compute or load SDG Tags
-    logger.info("Loading or computing SDG tags.")
-    if os.path.exists(sdg_tags_cache):
-        logger.info("Loading cached SDG tags.")
-        try:
-            with open(sdg_tags_cache, 'rb') as cache_file:
-                data['sdg_tags'] = pickle.load(cache_file)
-            logger.info("SDG tags loaded from cache.")
-        except Exception as e:
-            logger.error(f"Error loading cached SDG tags: {e}")
-    else:
-        logger.info("Computing SDG tags.")
-        if not data.empty and 'description_vector' in data.columns and sdg_embeddings is not None:
-            sdg_utils = lazy_load("backend.fastapi.data.sdg_utils")
-            description_vectors_tensor = torch.tensor(np.array(data['description_vector'].tolist()))  # Ensure this is a Tensor
-            sdg_embeddings_tensor = torch.tensor(np.array(sdg_embeddings))  # Ensure this is a Tensor
-            cosine_similarities = torch.nn.functional.cosine_similarity(description_vectors_tensor.unsqueeze(1), sdg_embeddings_tensor.unsqueeze(0), dim=-1)
-
-            # Get SDG names to pass as a parameter
-            sdg_manager = lazy_load("backend.fastapi.services.sdg_manager", "get_sdg_keywords")
-            sdg_keywords = sdg_manager()
-            sdg_names = list(sdg_keywords.keys())
-
-            # Call compute_sdg_tags with cosine similarities and sdg_names
-            data['sdg_tags'] = sdg_utils.compute_sdg_tags(cosine_similarities, sdg_names)
-
-            with open(sdg_tags_cache, 'wb') as cache_file:
-                pickle.dump(data['sdg_tags'], cache_file)
-            logger.info("SDG tags computed and cached successfully.")
-
     # Set the resources initialized flag and notify waiting coroutines
     resources_initialized = True
     resource_event.set()  # Signal that resources are ready
@@ -163,38 +135,17 @@ async def startup_event():
 # Create a Search Endpoint for TEDx Talks
 @app.get("/api/search")
 async def search(query: str = Query(..., min_length=1)) -> List[Dict]:
-    # Wait until resources are fully initialized
-    await resource_event.wait()
+    await resource_event.wait()  # Wait until resources are fully initialized
     logger.info(f"Search request received: Model is None: {model is None}, Data is None: {data is None}")
 
     if model is None or data is None:
         logger.error("Model or data not available.")
         return [{"error": "Model or data not available."}]
 
-    # Log the types and content of the variables
-    logger.info(f"Model Type: {type(model)}; Data Type: {type(data)}")
-
-    # Perform the search if resources are available
     logger.info(f"Performing semantic search for the query: '{query}'.")
     try:
         search_module = lazy_load("backend.fastapi.services.search_service", "semantic_search")
-        logger.info(f"Search Module Loaded: {search_module is not None}")
         result = await search_module(query, data, model, sdg_embeddings)
-        # Check if 'result' is a non-empty list
-        if result and isinstance(result, list):
-            total_results = len(result)
-            logger.info(f"Search results retrieved: {total_results} talks found.")
-            
-            # Specify how many example titles you want to display
-            example_count = 1  # You can adjust this number as needed
-            example_titles = [entry.get("title", "No title available") for entry in result[:example_count]]
-            
-            if example_titles:
-                logger.info("For example:")
-                for title in example_titles:
-                    logger.info(f"- {title}")
-        else:
-            logger.info("No valid result available.")
         return result
     except Exception as e:
         logger.error(f"Error in search endpoint: {e}")

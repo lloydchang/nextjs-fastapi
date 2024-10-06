@@ -14,15 +14,11 @@ export async function POST(request: NextRequest) {
   try {
     logger.debug(`app/api/chat/route.ts - Handling POST request`);
 
-    const requestBody = await request.json();
-    logger.debug(`app/api/chat/route.ts - Received request body: ${JSON.stringify(requestBody)}`);
-
-    const { messages } = requestBody;
+    const { messages } = await request.json();
+    logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
 
     if (!Array.isArray(messages)) {
-      const errorResponse = { error: 'Invalid request format. "messages" must be provided.' };
-      logger.error(`app/api/chat/route.ts - Request body validation failed: ${JSON.stringify(errorResponse)}`);
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
     }
 
     const sanitizedMessages = messages
@@ -31,60 +27,28 @@ export async function POST(request: NextRequest) {
 
     const prompt = `${systemPrompt}\n\n${sanitizedMessages}\nAssistant:`;
 
-    if (!prompt || prompt.trim() === '') {
-      const errorResponse = { error: 'The constructed prompt is empty.' };
-      logger.error(`app/api/chat/route.ts - Prompt validation failed: ${JSON.stringify(errorResponse)}`);
-      return NextResponse.json(errorResponse, { status: 400 });
+    if (!prompt.trim()) {
+      return NextResponse.json({ error: 'The constructed prompt is empty.' }, { status: 400 });
     }
 
     logger.debug(`app/api/chat/route.ts - Constructed prompt: ${prompt}`);
 
-    const handledText: string[] = [];
-    const promises: Promise<void>[] = [];
+    const results = await Promise.allSettled([
+      handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: config.ollamaGemmaTextModel }, config),
+      // Add more handlers as needed...
+    ]);
 
-    const modelHandlers = [
-      {
-        name: 'Ollama Gemma',
-        handler: handleTextWithOllamaGemmaTextModel,
-        textModelKey: 'ollamaGemmaTextModel',
-        shouldWarn: () => !validateEnvVars(['OLLAMA_GEMMA_ENDPOINT', 'OLLAMA_GEMMA_TEXT_MODEL']),
-      },
-      // Add other models as needed...
-    ];
+    const responses = results
+      .filter((res) => res.status === 'fulfilled')
+      .map((res: any) => res.value);
 
-    for (const { name, handler, shouldWarn, textModelKey } of modelHandlers) {
-      logger.debug(`app/api/chat/route.ts - Invoking handler for ${name}`);
-      const textModel = config[textModelKey]; // Directly access the configuration key
-
-      logger.debug(`app/api/chat/route.ts - Prompt: ${prompt}, Text Model: ${textModel || 'Not Found'}`);
-
-      promises.push(
-        handler({ userPrompt: prompt, textModel }, config) // Pass userPrompt here
-          .then(result => {
-            handledText.push(result);
-            logger.info(`app/api/chat/route.ts - ${name} response: ${result}`);
-          })
-          .catch(error => logger.warn(`app/api/chat/route.ts - ${name} model failed: ${error.message}`))
-      );
-    }
-
-    await Promise.allSettled(promises);
-
-    if (handledText.length > 0) {
-      logger.info(`app/api/chat/route.ts - Aggregated handledText: ${handledText.join('\n')}`);
-      return NextResponse.json({
-        message: handledText.join('\n'),
-      });
+    if (responses.length > 0) {
+      return NextResponse.json({ message: responses.join('\n') });
     } else {
-      const errorResponse = { error: 'No valid responses from any model.' };
-      logger.error(`app/api/chat/route.ts - No responses aggregated: ${JSON.stringify(errorResponse)}`);
-      return NextResponse.json(errorResponse, { status: 500 });
+      return NextResponse.json({ error: 'No valid responses from any model.' }, { status: 500 });
     }
-
-  } catch (error: any) {
-    const statusCode = error.status || 500;
-    const errorMessage = error.message || 'Internal Server Error';
-    logger.error(`app/api/chat/route.ts - Error in POST /api/chat: ${errorMessage}`);
-    return NextResponse.json({ error: errorMessage }, { status: statusCode });
+  } catch (error) {
+    logger.error(`app/api/chat/route.ts - Error: ${error.message}`);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.status || 500 });
   }
 }
