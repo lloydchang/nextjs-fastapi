@@ -1,6 +1,5 @@
 // File: app/api/chat/clients/AzureOpenAIClient.ts
 
-import fetch from 'node-fetch';
 import logger from '../utils/logger';
 
 export async function AzureOpenAIClient(prompt: string, model: string, config: any): Promise<string> {
