@@ -1,57 +1,57 @@
-// File: next.config.js
+const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/py/:path*",
-        destination:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:8000/api/py/:path*"
-            : "/api/",
-      },
-      {
-        source: "/docs",
-        destination:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:8000/api/py/docs"
-            : "/api/py/docs",
-      },
-      {
-        source: "/openapi.json",
-        destination:
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:8000/api/py/openapi.json"
-            : "/api/py/openapi.json",
-      },
-    ];
-  },
   webpack: (config, { isServer }) => {
+    // Ignore .cs files using null-loader
+    config.module.rules.push({
+      test: /\.cs$/,
+      use: 'null-loader',
+    });
+
+    // Client-side specific configurations
     if (!isServer) {
-      // Configure fallback for unsupported Node.js modules in client-side
+      // Exclude @mapbox/node-pre-gyp from the client-side build
+      config.externals = [
+        ...(config.externals || []),
+        { '@mapbox/node-pre-gyp': 'commonjs @mapbox/node-pre-gyp' }
+      ];
+
+      // Configure fallback for unsupported Node.js modules
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         path: false,
         os: false,
+        crypto: false,
+        http: false,
+        https: false,
+        stream: false,
+        zlib: false,
+        net: false,
+        tls: false,
       };
 
-      // Add the html-loader to process .html files correctly
-      config.module.rules.push({
-        test: /\.html$/,
-        use: ['html-loader'],
-      });
-
+      // Use shim for TensorFlow Node.js modules
+      // config.resolve.alias = {
+      //   ...config.resolve.alias,
+      //   '@tensorflow/tfjs-node': path.resolve(__dirname, 'tensorflow-shim.js'),
+      // };
     }
 
+    // Ignore .html files using null-loader
+    config.module.rules.push({
+      test: /\.html$/,
+      use: 'null-loader',
+    });
+
+    // Ignore TensorFlow.js Node-specific warnings
+    config.module.rules.push({
+      test: /@tensorflow[\\/]tfjs-node[\\/]/,
+      use: 'null-loader',
+    });
+
     return config;
-  },
-  typescript: {
-    ignoreBuildErrors: true,  // Optional: Disable TypeScript build errors during development
-  },
-  eslint: {
-    ignoreDuringBuilds: true,  // Optional: Disable ESLint during build if not required
   },
 };
 
