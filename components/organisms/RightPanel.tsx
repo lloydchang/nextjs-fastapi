@@ -10,7 +10,10 @@ import styles from '../../styles/components/organisms/RightPanel.module.css';
 const RightPanel: React.FC = () => {
   return (
     <div className={styles.rightPanel}>
-      <h1>and SDGs</h1>
+      <div className={styles.footer}>
+        <Image src={SDGWheel} alt="SDG Wheel" width={50} height={50} />
+        <p>Powered by Sustainable Development Goals</p>
+      </div>
       <iframe
         src="https://lloydchang.github.io/open-sdg-open-sdg-site-starter-site/reporting-status/" 
         width="100%"
@@ -19,10 +22,6 @@ const RightPanel: React.FC = () => {
         loading="lazy"
         title="SDG Reporting Status"
       />
-      <div className={styles.footer}>
-        <Image src={SDGWheel} alt="SDG Wheel" width={50} height={50} />
-        <p>Powered by Sustainable Development Goals</p>
-      </div>
     </div>
   );
 };
