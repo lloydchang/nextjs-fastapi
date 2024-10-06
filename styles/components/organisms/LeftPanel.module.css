@@ -3,24 +3,22 @@
 .container {
   position: relative;
   width: 100%;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
-  opacity: 1; /* Ensure full opacity on load */
-  transition: none; /* Prevent transitions */
+  justify-content: center;
+  align-items: center;
 }
 
 /* Placeholder for dynamic loading */
 .emptyPlaceholder {
   width: 100%;
-  height: 90vh; /* Maintain space equivalent to the chat messages container */
+  height: 90vh;
   display: flex;
-  opacity: 0; /* Ensure placeholder is invisible */
-  visibility: hidden; /* Prevent flicker by hiding placeholder */
+  opacity: 0;
+  visibility: hidden;
 }
 
-/* Background image styling */
 .backgroundImage {
   position: absolute;
   top: 0;
@@ -29,89 +27,56 @@
   height: 100%;
   object-fit: cover;
   z-index: -2;
-  transition: none; /* Prevent flickering */
 }
 
-/* Overlay styling */
 .overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Fixed overlay */
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: -1;
-  opacity: 1; /* Ensure overlay visibility */
-  visibility: visible;
 }
 
-/* Video and Audio Streams */
 .videoStream,
 .videoStreamHidden {
   position: absolute;
-  top: 0px;
-  right: 0px;
+  top: 0;
+  right: 0;
   width: 100%;
   height: 100%;
-  border-radius: 0px;
   overflow: hidden;
-  transition: none; /* Disable transitions for streams */
 }
 
 .videoStreamHidden {
   display: none;
 }
 
-/* Content Container */
-.content {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* Stacked Layout Styles */
+.toolsLayer {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: calc(100% - 40px);
+  max-width: 600px;
+  z-index: 2;
+  display: flex;
+  padding: 0px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chatLayer {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  width: calc(100% - 40px);
+  max-width: 600px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start; /* Align items to the left */
-  overflow-y: hidden;
-  transition: none; /* Disable transitions */
-  opacity: 1; /* Ensure visibility */
-  visibility: visible;
-}
-
-/* Tools Container */
-.toolsContainer {
-  width: 100%; /* Use full width */
-  height: 10%; /* Take 10% of the height */
-  padding: 0px; /* Reduced padding */
-  overflow-y: auto; /* Enable vertical scrolling */
-  scroll-behavior: smooth; /* Smooth scrolling */
-}
-
-/* Custom scrollbar styling */
-.toolsContainer::-webkit-scrollbar {
-  width: 8px; /* Set the width of the scrollbar */
-}
-
-.toolsContainer::-webkit-scrollbar-track {
-  background: #e0e0e0; /* Set the track color */
-}
-
-.toolsContainer::-webkit-scrollbar-thumb {
-  background-color: #888; /* Scrollbar color */
-  border-radius: 10px; /* Rounded edges for the scrollbar */
-}
-
-.toolsContainer::-webkit-scrollbar-thumb:hover {
-  background-color: #555; /* Darken color on hover */
-}
-
-/* Chat Interface Container */
-.chatInterface {
-  width: 100%;
-  height: 90%; /* Take the remaining 90% of the height */
-  max-width: 600px; /* Set a maximum width to prevent stretching */
-  min-width: 300px; /* Prevent shrinking below a minimum width */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
+  border-radius: 8px;
+  padding: 0px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

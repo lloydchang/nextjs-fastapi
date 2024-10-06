@@ -14,7 +14,7 @@ import { useMedia } from '../../components/state/hooks/useMedia';
 import Tools from '../organisms/Tools';
 
 const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
-  loading: () => <div className={styles.emptyPlaceholder}></div>, // Invisible placeholder to maintain layout
+  loading: () => <div className={styles.emptyPlaceholder}></div>,
   ssr: false,
 });
 
@@ -29,12 +29,11 @@ const LeftPanel: React.FC = () => {
   const handleChat = useCallback(
     (input: string, isManual = false) => {
       const messageToSend = input.trim();
-      
       if (messageToSend) {
         const prefix = isManual ? "" : "🎙️ ";
         const formattedMessage = `${prefix}${messageToSend}`;
         sendActionToChatbot(formattedMessage);
-        setChatInput(''); // Clear input after sending
+        setChatInput('');
       }
     },
     [sendActionToChatbot]
@@ -45,37 +44,33 @@ const LeftPanel: React.FC = () => {
       {error && <div className={styles.error}>{error}</div>}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
+
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
         <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       </div>
+      
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
-      <div className={styles.content}>
-        {/* Top 10% for the Tools */}
-        <div className={styles.toolsContainer}>
-          <Tools messages={messages} />
-        </div>
-        
-        {/* Bottom 90% for the Chat Interface */}
-        <div className={styles.chatInterface} ref={chatContainerRef}>
-          <HeavyChatMessages messages={messages} />
-          <ChatInput 
-            chatInput={chatInput} 
-            setChatInput={setChatInput} 
-            handleChat={() => handleChat(chatInput, true)} 
-          />
-          <ControlButtons
-            isCamOn={mediaState.isCamOn}
-            isMicOn={mediaState.isMicOn}
-            toggleMic={toggleMic}
-            startCam={startCam}
-            stopCam={stopCam}
-            isPipOn={mediaState.isPipOn}
-            togglePip={togglePip}
-            isMemOn={mediaState.isMemOn}
-            toggleMem={toggleMem}
-            eraseMemory={clearChatHistory}
-          />
-        </div>
+
+      {/* Stacked Layout */}
+      <div className={styles.toolsLayer}>
+        <Tools messages={messages} />
+      </div>
+      
+      <div className={styles.chatLayer} ref={chatContainerRef}>
+        <HeavyChatMessages messages={messages} />
+        <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
+        <ControlButtons
+          isCamOn={mediaState.isCamOn}
+          isMicOn={mediaState.isMicOn}
+          toggleMic={toggleMic}
+          startCam={startCam}
+          stopCam={stopCam}
+          isPipOn={mediaState.isPipOn}
+          togglePip={togglePip}
+          isMemOn={mediaState.isMemOn}
+          toggleMem={toggleMem}
+          eraseMemory={clearChatHistory}
+        />
       </div>
     </div>
   );
