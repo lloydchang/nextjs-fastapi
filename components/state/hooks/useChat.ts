@@ -1,4 +1,4 @@
-// hooks/useChat.ts
+// File: hooks/useChat.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface Message {
