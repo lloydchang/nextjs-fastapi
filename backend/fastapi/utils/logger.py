@@ -3,10 +3,10 @@
 import logging
 import sys
 
-# Configure logging
+# Configure logging to include filename and line number
 logging.basicConfig(
     level=logging.INFO,  # Change to DEBUG for more detailed logs
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout)
     ]
