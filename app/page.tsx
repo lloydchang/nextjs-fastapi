@@ -15,11 +15,6 @@ const LeftPanel = dynamic(() => import('../components/organisms/LeftPanel'), {
   ssr: true,
 });
 
-const MiddlePanel = dynamic(() => import('../components/organisms/MiddlePanel'), {
-  loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
-  ssr: true,
-});
-
 const RightPanel = dynamic(() => import('../components/organisms/RightPanel'), {
   loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
   ssr: true,
@@ -34,11 +29,6 @@ const Home: React.FC = () => {
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
               <LeftPanel />
-            </ErrorBoundary>
-          </Suspense>
-          <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
-            <ErrorBoundary>
-              <MiddlePanel />
             </ErrorBoundary>
           </Suspense>
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
