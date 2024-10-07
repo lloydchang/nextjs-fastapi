@@ -41,6 +41,7 @@ const sdgTitleMap: Record<string, string> = {
 // Updated initial keyword logic with randomization
 const determineInitialKeyword = () => {
   const randomNumber = Math.floor(Math.random() * 18); // Generates a number between 0 and 17
+  console.log(`[DEBUG] Generated random number: ${randomNumber}`);
   return randomNumber === 0 
     ? "TED AI" 
     : ['poverty', 'hunger', 'health', 'education', 'gender', 'water', 'energy', 'work', 'industry', 'inequality', 'city', 'consumption', 'climate', 'ocean', 'land', 'peace', 'partnership'][randomNumber - 1];
@@ -57,8 +58,10 @@ const RightPanel: React.FC = () => {
 
   // Initial keyword setup and search
   useEffect(() => {
+    console.log("[DEBUG] useEffect triggered for initial keyword setup.");
     if (initialKeyword.current === "") {
       initialKeyword.current = determineInitialKeyword(); // Use the new randomization logic here
+      console.log(`[DEBUG] Initial keyword set to: ${initialKeyword.current}`);
       setQuery(initialKeyword.current);
       performSearch(initialKeyword.current); // Trigger initial search
     }
@@ -66,57 +69,72 @@ const RightPanel: React.FC = () => {
 
   // Separate function for performing a search
   const performSearch = (searchQuery: string) => {
+    console.log(`[DEBUG] Performing search with query: ${searchQuery}`);
     setLoading(true);
     setError(null);
 
     axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`)
       .then((searchResponse) => {
+        console.log(`[DEBUG] Received response: `, searchResponse);
         if (searchResponse.status !== 200) {
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
         }
 
         let data: Talk[] = searchResponse.data;
+        console.log(`[DEBUG] Fetched talks data: `, data);
         data = data.sort(() => Math.random() - 0.5);
         setTalks(data);
 
         if (data.length > 0) {
           setSelectedTalk(data[0]);
+          console.log(`[DEBUG] Selected talk: `, data[0]);
         } else {
           setSelectedTalk(null); // No talks found
+          console.log("[DEBUG] No talks found for the query.");
         }
       })
       .catch((err) => {
+        console.error(`[DEBUG] Error fetching talks: ${err}`);
         setError("Failed to fetch talks.");
       })
       .finally(() => {
+        console.log("[DEBUG] Search process completed.");
         setLoading(false);
       });
   };
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(`[DEBUG] Input changed to: ${e.target.value}`);
     setQuery(e.target.value);
   }, []);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      console.log(`[DEBUG] Enter key pressed, triggering search for query: ${query}`);
       performSearch(query); // Trigger search on Enter key
     }
   }, [query]);
 
   const generateEmbedUrl = useCallback((url: string | undefined): string => {
     if (!url || typeof url !== "string") {
+      console.warn(`[DEBUG] Invalid URL provided: ${url}`);
       return url ?? "";
     }
 
     const tedRegex = /https:\/\/www\.ted\.com\/talks\/([\w_]+)/;
     const match = url.match(tedRegex);
-    return match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
+    const embedUrl = match ? `https://embed.ted.com/talks/${match[1]}?subtitle=en` : url;
+    console.log(`[DEBUG] Generated embed URL: ${embedUrl}`);
+    return embedUrl;
   }, []);
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
       const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
+      console.log(`[DEBUG] Opening transcript in new tab: ${transcriptUrl}`);
       window.open(transcriptUrl, '_blank');
+    } else {
+      console.warn("[DEBUG] No talk selected for transcript.");
     }
   };
 
@@ -187,6 +205,7 @@ const RightPanel: React.FC = () => {
                 key={index}
                 className={styles.resultItem}
                 onClick={() => {
+                  console.log(`[DEBUG] Selected talk: ${talk.title}`);
                   setSelectedTalk(talk);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
