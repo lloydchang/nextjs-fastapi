@@ -72,25 +72,47 @@ const RightPanel: React.FC = () => {
     console.log(`[DEBUG] Performing search with query: ${searchQuery}`);
     setLoading(true);
     setError(null);
-
+  
     axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`)
       .then((searchResponse) => {
         console.log(`[DEBUG] Received response: `, searchResponse);
         if (searchResponse.status !== 200) {
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
         }
-
-        let data: Talk[] = searchResponse.data;
-        console.log(`[DEBUG] Fetched talks data: `, data);
-        data = data.sort(() => Math.random() - 0.5);
-        setTalks(data);
-
-        if (data.length > 0) {
-          setSelectedTalk(data[0]);
-          console.log(`[DEBUG] Selected talk: `, data[0]);
+  
+        const responseData = searchResponse.data;
+  
+        if (responseData.results && Array.isArray(responseData.results)) {
+          // Case 1: Successful Search with Results
+          let data: Talk[] = responseData.results.map((result: any) => ({
+            title: result.presenter,
+            url: `https://www.ted.com/talks/${result.slug}`,
+            sdg_tags: [] // Assuming `sdg_tags` is not provided in the response
+          }));
+          console.log(`[DEBUG] Fetched talks data: `, data);
+          data = data.sort(() => Math.random() - 0.5);
+          setTalks(data);
+  
+          if (data.length > 0) {
+            setSelectedTalk(data[0]);
+            console.log(`[DEBUG] Selected talk: `, data[0]);
+          } else {
+            setSelectedTalk(null); // No talks found
+            console.log("[DEBUG] No talks found for the query.");
+          }
+        } else if (responseData.detail && Array.isArray(responseData.detail)) {
+          // Case 2: Error Response with Validation Error
+          console.error(`[DEBUG] Validation error in search query: ${responseData.detail[0].msg}`);
+          setError(`Search query error: ${responseData.detail[0].msg}`);
+        } else if (responseData.message === "No results found.") {
+          // Case 3: No Results Found
+          console.log(`[DEBUG] No results found for query: ${searchQuery}`);
+          setError("No results found.");
+          setTalks([]);
+          setSelectedTalk(null);
         } else {
-          setSelectedTalk(null); // No talks found
-          console.log("[DEBUG] No talks found for the query.");
+          // Unexpected Response Format
+          throw new Error("Unexpected response format received.");
         }
       })
       .catch((err) => {
@@ -101,7 +123,7 @@ const RightPanel: React.FC = () => {
         console.log("[DEBUG] Search process completed.");
         setLoading(false);
       });
-  };
+  };  
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     console.log(`[DEBUG] Input changed to: ${e.target.value}`);
