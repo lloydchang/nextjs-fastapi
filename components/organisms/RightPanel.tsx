@@ -12,7 +12,7 @@ import axios from 'axios';
 
 // TypeScript Types
 type Talk = {
-  title: string;
+  title: string;  // Use 'title' instead of 'presenter'
   url: string;
   sdg_tags: string[];
 };
@@ -72,7 +72,7 @@ const RightPanel: React.FC = () => {
     console.log(`[DEBUG] Performing search with query: ${searchQuery}`);
     setLoading(true);
     setError(null);
-  
+    
     axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`)
       .then((searchResponse) => {
         console.log(`[DEBUG] Received response: `, searchResponse);
@@ -84,11 +84,22 @@ const RightPanel: React.FC = () => {
   
         if (responseData.results && Array.isArray(responseData.results)) {
           // Case 1: Successful Search with Results
-          let data: Talk[] = responseData.results.map((result: any) => ({
-            title: result.presenter,
-            url: `https://www.ted.com/talks/${result.slug}`,
-            sdg_tags: [] // Assuming `sdg_tags` is not provided in the response
-          }));
+          let data: Talk[] = responseData.results.map((result: any) => {
+            // Create title from slug by replacing underscores with spaces
+            const title = result.slug.replace(/_/g, ' ');
+  
+            const talk = {
+              title: title,  // Use modified slug as title
+              url: `https://www.ted.com/talks/${result.slug}`,
+              sdg_tags: result.sdg_tags || [] // Ensure sdg_tags is an array even if not present
+            };
+  
+            // Log the talk data for debugging
+            console.log(`[DEBUG] Talk Data - Title: ${talk.title}, URL: ${talk.url}, SDG Tags: ${talk.sdg_tags}`);
+  
+            return talk;
+          });
+  
           console.log(`[DEBUG] Fetched talks data: `, data);
           data = data.sort(() => Math.random() - 0.5);
           setTalks(data);
@@ -234,7 +245,7 @@ const RightPanel: React.FC = () => {
               >
                 <h3>
                   <a href="#" className={styles.resultLink}>
-                    {talk.title}
+                    {talk.title} {/* Use 'title' here */}
                   </a>
                   <p className={styles.sdgTags}>
                     {talk.sdg_tags && talk.sdg_tags.length > 0 ? talk.sdg_tags.map(tag => sdgTitleMap[tag]).join(', ') : ''}
