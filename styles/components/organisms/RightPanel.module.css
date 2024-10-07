@@ -136,6 +136,7 @@
   border: 1px solid #ddd;
   border-radius: 5px;
   background-color: #000000;
+  color: white;
   transition: background-color 0.3s ease;
   cursor: pointer; /* Ensures the cursor indicates interactivity */
 }
