@@ -69,7 +69,7 @@ const RightPanel: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    axios.get(`/api/search?query=${encodeURIComponent(searchQuery)}`)  // Updated to use Next.js internal API route
+    axios.get(`http://localhost:8000/api/search?query=${encodeURIComponent(searchQuery)}`)  // Updated to use Next.js internal API route
       .then((searchResponse) => {
         if (searchResponse.status !== 200) {
           throw new Error(`Error: ${searchResponse.status} - ${searchResponse.statusText}`);
