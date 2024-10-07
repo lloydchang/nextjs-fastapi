@@ -1,7 +1,2 @@
 fastapi
-numpy
 uvicorn
-pandas
-numpy
-scikit-learn
-colorlog
