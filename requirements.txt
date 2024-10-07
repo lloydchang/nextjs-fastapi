@@ -2,3 +2,7 @@
 
 fastapi
 uvicorn
+aiofiles
+msgpack
+numpy
+joblib
