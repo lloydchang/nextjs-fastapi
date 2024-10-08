@@ -9,9 +9,10 @@
   flex-direction: column; /* Column layout for message alignment */
   justify-content: flex-start; /* Ensure messages start at the top */
   opacity: 0; /* Start as hidden to avoid initial jump */
-  overflow-y: auto; /* enable vertical scrollbar */
+  overflow-y: auto; /* Enable vertical scrollbar */
   visibility: hidden; /* Ensure hidden state until fully loaded */
   transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
+  z-index: 1000; /* Ensure the container is on the top layer */
 }
 
 .message {
@@ -20,6 +21,7 @@
   flex-direction: column;
   transform: translateY(10px); /* Prevent stretch effect */
   animation: fadeInUp 0.3s forwards; /* Smooth appearance animation */
+  z-index: 1001; /* Set messages to be on the top layer */
 }
 
 @keyframes fadeInUp {
