@@ -1,7 +1,8 @@
 // File: components/state/context/ChatContext.tsx
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { Message, useChat } from '../hooks/useChat';
+import { Message } from '../hooks/useChat'; // Ensure this path is correct
+import { useChat } from '../hooks/useChat';
 
 // Define the ChatContextProps type
 interface ChatContextProps {
