@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
 
         if (!config.ollamaGemmaTextModel) {
             logger.error("app/api/chat/route.ts - Ollama Gemma Text Model is not defined in the configuration.");
-            return NextResponse.json({ error: 'Ollama Gemma Text Model is not defined in the configuration.' }, { status: 500 });
+            const errorResponse = { error: 'Ollama Gemma Text Model is not defined in the configuration.', details: 'Please check the server configuration for model availability, such as your .env.local file.' };
+            logger.debug(`app/api/chat/route.ts - Sending response: ${JSON.stringify(errorResponse)}`);
+            return NextResponse.json(errorResponse, { status: 500 });
         }
 
         const results = await Promise.allSettled([
@@ -48,16 +50,20 @@ export async function POST(request: NextRequest) {
         if (responses.length > 0) {
             return NextResponse.json({ message: responses.join('\n') });
         } else {
-            return NextResponse.json({ error: 'No valid responses from any model.', details: 'The models returned empty results.' }, { status: 500 });
+            const errorResponse = { error: 'No valid responses from any model.', details: 'The models returned empty results.' };
+            logger.debug(`app/api/chat/route.ts - Sending response: ${JSON.stringify(errorResponse)}`);
+            return NextResponse.json(errorResponse, { status: 500 });
         }
     } catch (error) {
-        logger.error(`app/api/chat/route.ts - Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        return NextResponse.json(
-            {
-                error: error instanceof Error ? error.message : 'Internal Server Error',
-                details: error instanceof Error ? error.stack || 'No stack trace available' : 'Unknown error occurred.',
-            },
-            { status: 500 }
-        );
+        const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
+        const errorDetails = error instanceof Error ? error.stack || 'No stack trace available' : 'Unknown error occurred.';
+        logger.error(`app/api/chat/route.ts - Error: ${errorMessage}`);
+        
+        const errorResponse = {
+            error: errorMessage,
+            details: errorDetails,
+        };
+        logger.debug(`app/api/chat/route.ts - Sending response: ${JSON.stringify(errorResponse)}`);
+        return NextResponse.json(errorResponse, { status: 500 });
     }
 }

@@ -1,5 +1,3 @@
-// File: components/organisms/ChatPanel.tsx
-
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../../public/images/TEDxSDG.jpg';
@@ -40,10 +38,27 @@ const ChatPanel: React.FC = () => {
           setError(null); // Clear any previous errors on successful send
           setErrorDetails(null); // Clear error details
         } catch (err: any) {
-          const errorMessage = err.response?.data?.error || 'Unexpected error occurred. Please try again.';
-          const details = err.response?.data?.details || 'No additional details available.';
-          setError(errorMessage);
-          setErrorDetails(details);
+          console.error('API Error Object:', err); // Log the entire error object
+
+          // Check if response and data are defined
+          if (err.response) {
+            console.error('Error Response:', err.response); // Log the full response object
+
+            if (err.response.data) {
+              console.error('Error Response Data:', err.response.data); // Log the response data
+              const { error, details } = err.response.data;
+              setError(error || 'Unknown error occurred.');
+              setErrorDetails(details || 'No additional details available.');
+            } else {
+              console.error('Response does not contain data.');
+              setError('Failed to parse server response.');
+              setErrorDetails('No details available.');
+            }
+          } else {
+            console.error('Error does not contain a response field.');
+            setError('Failed to communicate with server.');
+            setErrorDetails('Unknown error occurred.');
+          }
         }
       }
     },

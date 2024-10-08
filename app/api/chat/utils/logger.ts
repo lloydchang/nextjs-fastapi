@@ -14,7 +14,7 @@ addColors(colors);
  * Creates a centralized logger using the `winston` library.
  */
 const logger = createLogger({
-  level: process.env.WINSTON_LOGGER_LEVEL || 'info', // Default log level to 'silly' if not set
+  level: process.env.WINSTON_LOGGER_LEVEL || 'debug', // Default log level to 'silly' if not set
   format: format.combine(
     format((info) => {
       info.level = info.level.toUpperCase(); // Convert log level to uppercase
