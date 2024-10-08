@@ -9,12 +9,12 @@ import './globals.css'; // Global CSS styles
 import ErrorBoundary from '../components/organisms/ErrorBoundary';
 
 // Dynamically load all panels without displaying loading text
-const RightPanel = dynamic(() => import('../components/organisms/RightPanel'), {
+const TalkPanel = dynamic(() => import('../components/organisms/TalkPanel'), {
   loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder to prevent transitions
   ssr: true,
 });
 
-const LeftPanel = dynamic(() => import('../components/organisms/LeftPanel'), {
+const ChatPanel = dynamic(() => import('../components/organisms/ChatPanel'), {
   loading: () => <div style={{ height: '100vh', opacity: 0 }} />, // Invisible placeholder
   ssr: true,
 });
@@ -27,12 +27,12 @@ const Home: React.FC = () => {
           {/* Use Suspense and ErrorBoundary for each panel */}
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
-              <RightPanel />
+              <TalkPanel />
             </ErrorBoundary>
           </Suspense>
           <Suspense fallback={<div style={{ height: '100vh', opacity: 0 }} />}>
             <ErrorBoundary>
-              <LeftPanel />
+              <ChatPanel />
             </ErrorBoundary>
           </Suspense>
         </div>

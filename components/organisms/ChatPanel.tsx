@@ -1,4 +1,4 @@
-// File: components/organisms/LeftPanel.tsx
+// File: components/organisms/ChatPanel.tsx
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -9,7 +9,7 @@ import VideoStream from './VideoStream';
 import AudioStream from './AudioStream';
 import ChatInput from '../atoms/ChatInput';
 import ControlButtons from './ControlButtons';
-import styles from '../../styles/components/organisms/LeftPanel.module.css';
+import styles from '../../styles/components/organisms/ChatPanel.module.css';
 import { useMedia } from '../../components/state/hooks/useMedia';
 import Tools from './Tools';
 
@@ -18,7 +18,7 @@ const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
   ssr: false,
 });
 
-const LeftPanel: React.FC = () => {
+const ChatPanel: React.FC = () => {
   const { mediaState, videoRef, audioRef, startCam, stopCam, toggleMic, togglePip, toggleMem } = useMedia();
   const { messages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
 
@@ -40,7 +40,7 @@ const LeftPanel: React.FC = () => {
   );
 
   return (
-    <div className={`${styles.container} ${styles['left-panel']}`}>
+    <div className={`${styles.container} ${styles['Chat-panel']}`}>
       {error && <div className={styles.error}>{error}</div>}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
@@ -75,4 +75,4 @@ const LeftPanel: React.FC = () => {
   );
 };
 
-export default React.memo(LeftPanel);
+export default React.memo(ChatPanel);

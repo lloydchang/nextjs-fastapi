@@ -1,4 +1,4 @@
-// File: components/organisms/RightPanel.tsx
+// File: components/organisms/TalkPanel.tsx
 
 'use client';
 
@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTalkContext } from '../state/context/TalkContext';
 import Image from 'next/image';
 import SDGWheel from '../../public/images/SDGWheel.png';
-import styles from '../../styles/components/organisms/RightPanel.module.css';
+import styles from '../../styles/components/organisms/TalkPanel.module.css';
 import { useChatContext } from '../state/context/ChatContext';
 import axios from 'axios';
 import { Talk } from '../state/types'; // Use shared Talk type from centralized types file
@@ -38,7 +38,7 @@ const determineInitialKeyword = () => {
     : ['poverty', 'hunger', 'health', 'education', 'gender', 'water', 'energy', 'work', 'industry', 'inequality', 'city', 'consumption', 'climate', 'ocean', 'land', 'peace', 'partnership'][randomNumber - 1];
 };
 
-const RightPanel: React.FC = () => {
+const TalkPanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
   const { sendActionToChatbot } = useChatContext();
   const initialKeyword = useRef<string>("");
@@ -47,7 +47,7 @@ const RightPanel: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
 
-  const panelRef = useRef<HTMLDivElement | null>(null); // Reference for RightPanel
+  const panelRef = useRef<HTMLDivElement | null>(null); // Reference for TalkPanel
   const listRef = useRef<HTMLDivElement | null>(null);  // Reference for ResultsList
 
   useEffect(() => {
@@ -115,7 +115,7 @@ const RightPanel: React.FC = () => {
   };
 
   return (
-    <div ref={panelRef} className={`${styles.rightPanel} ${styles['right-panel']}`}>
+    <div ref={panelRef} className={`${styles.TalkPanel} ${styles['Talk-panel']}`}>
       <div className={styles.searchContainer}>
         <div className={styles.searchRowContainer}>
           <input
@@ -159,7 +159,7 @@ const RightPanel: React.FC = () => {
                 className={styles.resultItem} 
                 onClick={() => {
                   setSelectedTalk(talk);
-                  if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll RightPanel to top only
+                  if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll TalkPanel to top only
                   // Removed the scroll for listRef
                 }}>
                 <h3>
@@ -175,4 +175,4 @@ const RightPanel: React.FC = () => {
   );
 };
 
-export default React.memo(RightPanel);
+export default React.memo(TalkPanel);
