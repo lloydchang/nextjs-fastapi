@@ -2,7 +2,7 @@
 
 .tools-container {
   position: absolute;       /* Use absolute positioning */
-  bottom: -126px;           /* Position container at the bottom of the page */
+  bottom: -140px;           /* Adjusted: Move container further down */
   right: -18px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
