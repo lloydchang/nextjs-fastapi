@@ -13,6 +13,11 @@ const config = getConfig();
 
 const lastResponses: { [key: string]: string } = {};
 
+// Helper function to randomize the order of personas
+function shuffleArray<T>(array: T[]): T[] {
+  return array.sort(() => Math.random() - 0.5);
+}
+
 async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
   const encoder = new TextEncoder();
   return new ReadableStream({
@@ -54,48 +59,39 @@ export async function POST(request: NextRequest) {
     conversationContext = `${systemPrompt}\n\n${conversationContext}\nAssistant:`;
     logger.silly(`app/api/chat/route.ts - Initialized conversation context: ${conversationContext}`);
 
+    const responseFunctions = [
+      { persona: 'Eliza', generate: () => generateElizaResponse([...messages]) },
+      { persona: 'Alice', generate: () => generateAliceResponse([...messages]) },
+      {
+        persona: 'Gemma',
+        generate: () =>
+          config.ollamaGemmaTextModel
+            ? handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration."),
+      },
+    ];
+
+    // Shuffle the response order
+    const shuffledResponses = shuffleArray(responseFunctions);
+
+    // Execute the requests in random order
+    const results = await Promise.allSettled(shuffledResponses.map((res) => res.generate()));
+
     const responses: Array<{ persona: string, message: string }> = [];
 
-    const [elizaResult, aliceResult, gemmaResult] = await Promise.allSettled([
-      generateElizaResponse([...messages]),
-      generateAliceResponse([...messages]),
-      config.ollamaGemmaTextModel
-        ? handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config)
-        : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration."),
-    ]);
-
-    if (elizaResult.status === 'fulfilled') {
-      const newResponse = elizaResult.value;
-      if (newResponse !== lastResponses['Eliza']) {
-        responses.push({ persona: 'Eliza', message: newResponse });
-        lastResponses['Eliza'] = newResponse;
+    results.forEach((result, index) => {
+      const { persona } = shuffledResponses[index];
+      if (result.status === 'fulfilled') {
+        const newResponse = result.value;
+        if (newResponse !== lastResponses[persona]) {
+          responses.push({ persona, message: newResponse });
+          lastResponses[persona] = newResponse;
+        }
+      } else {
+        const errorResponse = `${persona} is unavailable: ${result.reason}`;
+        responses.push({ persona, message: errorResponse });
       }
-    } else {
-      const elizaError = `Eliza is unavailable: ${elizaResult.reason}`;
-      responses.push({ persona: 'Eliza', message: elizaError });
-    }
-
-    if (aliceResult.status === 'fulfilled') {
-      const newResponse = aliceResult.value;
-      if (newResponse !== lastResponses['Alice']) {
-        responses.push({ persona: 'Alice', message: newResponse });
-        lastResponses['Alice'] = newResponse;
-      }
-    } else {
-      const aliceError = `Alice is unavailable: ${aliceResult.reason}`;
-      responses.push({ persona: 'Alice', message: aliceError });
-    }
-
-    if (gemmaResult.status === 'fulfilled') {
-      const newResponse = gemmaResult.value;
-      if (newResponse !== lastResponses['Gemma']) {
-        responses.push({ persona: 'Gemma', message: newResponse });
-        lastResponses['Gemma'] = newResponse;
-      }
-    } else {
-      const gemmaError = `Gemma is unavailable: ${gemmaResult.reason}`;
-      responses.push({ persona: 'Gemma', message: gemmaError });
-    }
+    });
 
     const combinedStream = await createCombinedStream(responses);
     return new NextResponse(combinedStream, {
