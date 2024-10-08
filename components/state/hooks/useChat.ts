@@ -1,4 +1,5 @@
 // File: components/state/hooks/useChat.ts
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface Message {
@@ -92,7 +93,9 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          // Parse the error response to extract message and details
+          const errorData = await response.json();
+          throw new Error(JSON.stringify({ message: errorData.error, details: errorData.details }));
         }
 
         const data = await response.json();
@@ -104,20 +107,37 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         } else {
           throw new Error(data.message || 'Unexpected response format');
         }
-      } catch (error) { 
+      } catch (error) {
         // Error handling with type narrowing
         if (error instanceof Error) {
           console.error('Error generating content from API:', {
             input: input.trim(),
             error: error.message,
           });
+
+          // Parse the error message to extract detailed information
+          let parsedError;
+          try {
+            parsedError = JSON.parse(error.message);
+          } catch (parseError) {
+            parsedError = { message: 'Unknown error', details: 'Failed to parse server error.' };
+          }
+
+          // Separate chat bubbles for error and details
           const errorId = `error-${Date.now()}`;
+          const detailsId = `details-${Date.now()}`;
+
           setMessages((prev) => [
             ...prev,
             {
               id: errorId,
               sender: 'bot',
-              text: `Error: ${error.message}`, // Display error in chat
+              text: `Error: ${parsedError.message}`, // Error message bubble
+            },
+            {
+              id: detailsId,
+              sender: 'bot',
+              text: `Details: ${parsedError.details}`, // Error details bubble
             },
           ]);
         } else {

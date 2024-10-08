@@ -68,7 +68,7 @@ export function getConfig(): AppConfig {
     streamEnabled: process.env.STREAM_ENABLED === 'true',
     temperature: parseFloat(process.env.TEMPERATURE || '0.0'),
     rateLimitEnabled: process.env.RATE_LIMIT_ENABLED === 'true',
-    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'info',
+    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'debug',
     logsInResponse: process.env.LOGS_IN_RESPONSE === 'true', // <-- Set the value based on environment variable
   };
 }
