@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     try {
         logger.debug(`app/api/chat/route.ts - Handling POST request`);
 
+        // Parse and validate the request body
         const { messages } = await request.json();
         logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
 
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
         }
 
+        // Construct conversation context
         let conversationContext = messages
             .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${sanitizeInput(msg.content)}`)
             .join('\n');
@@ -51,22 +53,45 @@ export async function POST(request: NextRequest) {
 
         const responses: Array<{ persona: string, message: string }> = [];
 
-        logger.debug(`app/api/chat/route.ts - Generating Eliza's response`);
-        const elizaResponse = await generateElizaResponse([...messages]);  // Ensure this is awaited
-        responses.push({ persona: 'Eliza', message: elizaResponse });
-        conversationContext += `\nEliza: ${elizaResponse}`;
+        // Perform all persona calls in parallel
+        const [elizaResult, aliceResult, gemmaResult] = await Promise.allSettled([
+            generateElizaResponse([...messages]),  // Eliza's response
+            generateAliceResponse([...messages]),  // Alice's response
+            config.ollamaGemmaTextModel
+                ? handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config)
+                : Promise.resolve("Out of office.")  // Gemma's response if not configured
+        ]);
 
-        logger.debug(`app/api/chat/route.ts - Generating Alice's response`);
-        const aliceResponse = await generateAliceResponse([...messages]);  // Ensure this is awaited
-        responses.push({ persona: 'Alice', message: aliceResponse });
-        conversationContext += `\nAlice: ${aliceResponse}`;
-
-        let gemmaResponse = "I'm unavailable.";
-        if (config.ollamaGemmaTextModel) {
-            gemmaResponse = await handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config);
+        // Handle Eliza's response
+        if (elizaResult.status === 'fulfilled') {
+            responses.push({ persona: 'Eliza', message: elizaResult.value });
+            conversationContext += `\nEliza: ${elizaResult.value}`;
+        } else {
+            const elizaError = `Eliza is unavailable: ${elizaResult.reason}`;
+            logger.error(`app/api/chat/route.ts - ${elizaError}`);
+            responses.push({ persona: 'Eliza', message: elizaError });
         }
-        responses.push({ persona: 'Gemma', message: gemmaResponse });
 
+        // Handle Alice's response
+        if (aliceResult.status === 'fulfilled') {
+            responses.push({ persona: 'Alice', message: aliceResult.value });
+            conversationContext += `\nAlice: ${aliceResult.value}`;
+        } else {
+            const aliceError = `Alice is unavailable: ${aliceResult.reason}`;
+            logger.error(`app/api/chat/route.ts - ${aliceError}`);
+            responses.push({ persona: 'Alice', message: aliceError });
+        }
+
+        // Handle Gemma's response
+        if (gemmaResult.status === 'fulfilled') {
+            responses.push({ persona: 'Gemma', message: gemmaResult.value });
+        } else {
+            const gemmaError = `Gemma is unavailable: ${gemmaResult.reason}`;
+            logger.error(`app/api/chat/route.ts - ${gemmaError}`);
+            responses.push({ persona: 'Gemma', message: gemmaError });
+        }
+
+        // Create and return a combined response stream
         const combinedStream = await createCombinedStream(responses);
 
         return new NextResponse(combinedStream, {
