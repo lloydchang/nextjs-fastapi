@@ -62,23 +62,25 @@ body {
 /* Mobile devices */
 @media (max-width: 767px) {
   .container {
-    grid-template-columns: 1fr; /* Stacks both panels vertically */
+    grid-template-columns: 1fr 1fr; /* Ensure both panels are displayed side by side */
   }
 
   .left-panel, .right-panel {
-    height: 50vh; /* Split panels in half for smaller screens */
+    height: auto; /* Allow panels to adjust height automatically */
+    min-height: 50vh; /* Ensure each panel has a minimum height for readability */
   }
 }
 
 /* Small wearable devices */
 @media (max-width: 480px) {
   .container {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; /* Stack both panels vertically */
     grid-template-rows: auto; /* Full height for each panel */
   }
 
   .left-panel, .right-panel {
-    height: 100vh; /* Use full height for readability */
+    height: auto; /* Allow panels to adjust height automatically */
+    min-height: 100vh; /* Use full height for readability */
   }
 }
 
