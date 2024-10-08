@@ -18,14 +18,21 @@ function shuffleArray<T>(array: T[]): T[] {
   return array.sort(() => Math.random() - 0.5);
 }
 
+// Function to safely escape special characters and format JSON for the stream
+function safeStringify(obj: Record<string, string>): string {
+  return JSON.stringify(obj)
+    .replace(/\n/g, "\\n") // Escape newlines
+    .replace(/[\u2028\u2029]/g, ""); // Remove problematic Unicode characters
+}
+
 async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
   const encoder = new TextEncoder();
   return new ReadableStream({
     async start(controller) {
       try {
         for (const { persona, message } of messages) {
-          // Safely encode the message using JSON.stringify
-          const formattedMessage = JSON.stringify({ persona, message });
+          // Use the safeStringify function to escape special characters
+          const formattedMessage = safeStringify({ persona, message });
           controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
           logger.debug(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
         }
