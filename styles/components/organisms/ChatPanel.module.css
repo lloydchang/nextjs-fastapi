@@ -8,7 +8,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 0; /* Ensure container is below chat/tool layers */
+  z-index: 0; /* Base container layer */
 }
 
 /* Placeholder for dynamic loading */
@@ -73,7 +73,7 @@
   bottom: 0px;
   right: 0;
   width: 80%;
-  z-index: 3; /* Increased z-index to ensure it's above toolsLayer */
+  z-index: 100; /* Increased z-index to ensure it's above toolsLayer */
   display: flex;
   flex-direction: column;
   max-height: 100vh;
