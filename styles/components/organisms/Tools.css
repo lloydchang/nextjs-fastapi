@@ -10,9 +10,9 @@
 }
 
 .button-group {
-  display: flex;
+  display: flex;       /* Use flex-start to align buttons to the left */
   flex-direction: column;   /* Keep buttons arranged vertically */
-  align-items: flex;    /* Align buttons to the far right edge */
+  align-items: flex-start;  /* Align buttons to the left */
 }
 
 /* Button styles */
