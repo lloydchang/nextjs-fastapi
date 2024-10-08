@@ -59,12 +59,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
     }
 
-    let conversationContext = messages
+    // Include only the most recent 2-3 messages (adjust this number as needed)
+    const recentMessages = messages.slice(-3);
+
+    let conversationContext = recentMessages
       .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${sanitizeInput(msg.content)}`)
       .join('\n');
 
     conversationContext = `${systemPrompt}\n\n${conversationContext}\nAssistant:`;
-    logger.silly(`app/api/chat/route.ts - Initialized conversation context: ${conversationContext}`);
+    logger.silly(`app/api/chat/route.ts - Initialized recent conversation context: ${conversationContext}`);
 
     const responseFunctions = [
       { persona: 'Eliza', generate: () => generateElizaResponse([...messages]) },
