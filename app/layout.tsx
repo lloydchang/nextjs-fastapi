@@ -24,7 +24,7 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         {/* Include the dynamic script */}
-        <Script src="/setContainerSize.js" strategy="afterInteractive" />
+        <Script src="./setContainerSize.js" strategy="afterInteractive" />
       </body>
     </html>
   );
