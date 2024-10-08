@@ -17,9 +17,10 @@
 }
 
 .searchRowContainer {
-  width: 100px; /* Fixed width */
+  width: 50px; /* Fixed width */
   display: flex;
   align-items: center;
+  flex-direction: row;
   gap: 10px;
   padding: 0px;
   height: 30px; /* Fixed height */
@@ -209,4 +210,17 @@
     padding: 8px 12px; /* Reduced padding for buttons */
     font-size: 1.5em; /* Adjust font size for better fit */
   }
+}
+
+/* Ensure buttons stack vertically on smaller screens */
+@media (max-width: 500px) {
+  /* Ensure buttons stack vertically on smaller screens */
+  .searchRowContainer {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+    height: 110px; /* Fixed height */
+    box-sizing: border-box; /* Ensure padding/border are included in width */
+  }  
 }
