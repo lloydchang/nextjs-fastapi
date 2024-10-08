@@ -1,5 +1,4 @@
 // app/page.tsx
-
 'use client'; // Mark as Client Component
 
 import React, { Suspense } from 'react';

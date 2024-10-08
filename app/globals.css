@@ -39,11 +39,47 @@ body {
 /* Container grid layout */
 .container {
   display: grid;
-  grid-template-columns: 3fr 3fr; /* Left panel is 3fr, right is 3fr */
   width: 100vw; /* Full screen width */
   height: 100vh; /* Full screen height */
   padding: 0px; /* No padding around the container */
   transition: none !important; /* Disable transitions for the container */
+}
+
+/* Desktop and large screens */
+@media (min-width: 1024px) {
+  .container {
+    grid-template-columns: 3fr 3fr; /* Left panel is 3fr, right is 3fr */
+  }
+}
+
+/* Tablets */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .container {
+    grid-template-columns: 2fr 2fr; /* Adjusted for tablets */
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 767px) {
+  .container {
+    grid-template-columns: 1fr; /* Stacks both panels vertically */
+  }
+
+  .left-panel, .right-panel {
+    height: 50vh; /* Split panels in half for smaller screens */
+  }
+}
+
+/* Small wearable devices */
+@media (max-width: 480px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto; /* Full height for each panel */
+  }
+
+  .left-panel, .right-panel {
+    height: 100vh; /* Use full height for readability */
+  }
 }
 
 /* Styling for the left panel */
