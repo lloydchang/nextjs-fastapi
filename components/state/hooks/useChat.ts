@@ -73,43 +73,43 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       const newMessageId = `${Date.now()}-${Math.random()}`;
       setMessages((prev) => [...prev, { id: newMessageId, sender: 'user', text: input }]);
       console.log(`useChat - Sending message: ${input}`);
-  
+
       try {
         const messagesArray = messagesRef.current.map((msg) => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.text,
         }));
-  
+
         messagesArray.push({ role: 'user', content: input.trim() });
-  
+
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: messagesArray }),
         });
-  
+
         const reader = response.body?.getReader();
         if (reader) {
           const decoder = new TextDecoder();
           let chunk;
           let textBuffer = ''; // Buffer to hold the text data
-  
+
           while ((chunk = await reader.read()) && !chunk.done) {
             textBuffer += decoder.decode(chunk.value, { stream: true });
-  
+
             // Split by double newline (indicating the end of a data chunk)
             const messages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
-  
+
             // Process each complete message
             for (const message of messages) {
               if (message.startsWith('data: ')) {
                 const jsonString = message.substring(6).trim();
                 try {
                   const parsedData = JSON.parse(jsonString);
-  
+
                   if (parsedData.message && parsedData.persona) {
                     console.log(`Incoming message from persona: ${parsedData.persona}`);
-  
+
                     // Include persona in the message text
                     const formattedMessage = `${parsedData.persona}: ${parsedData.message}`;
                     setMessages((prev) => [
@@ -122,7 +122,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                 }
               }
             }
-  
+
             // Reset buffer after processing complete messages
             textBuffer = textBuffer.endsWith('\n\n') ? '' : textBuffer.split('\n\n').slice(-1)[0];
           }
@@ -160,5 +160,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, [removeItem]);
 
-  return { messages, sendActionToChatbot, clearChatHistory, isMemOn };
+  // Return the state and functions, including setMessages
+  return { messages, setMessages, sendActionToChatbot, clearChatHistory, isMemOn };
 };
