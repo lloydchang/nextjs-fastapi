@@ -1,8 +1,8 @@
 /* styles/ChatMessages.module.css */
 
 .messagesContainer {
-  height: 90vh; /* Set fixed height to prevent initial resizing */
-  overflow-y: auto; /* Enable vertical scrolling when content overflows */
+  min-height: 90vh; /* Ensure the height is fixed to allow for overflow */
+  overflow-y: scroll; /* Always show the scrollbar */
   border-radius: 0px;
   scroll-behavior: smooth; /* Smooth scrolling */
   display: flex; /* Added display flex to handle children */

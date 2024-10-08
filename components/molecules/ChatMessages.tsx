@@ -42,7 +42,6 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   return (
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
       {messages.map((msg, index) => {
-        // Determine if a message is interim and only render it conditionally
         const isInterim = msg.isInterim && msg.sender === 'user';
 
         return (
