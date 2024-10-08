@@ -32,7 +32,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       const storedMessages = getItem();
       if (storedMessages) {
         setMessages(storedMessages);
-        console.log('useChat - Chat history loaded from memory.');
+        console.log('useChat - Chat history loaded from memory:', storedMessages);
       }
     } else {
       setMessages([]);
@@ -42,7 +42,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   useEffect(() => {
     if (isMemOn && messages.length > 0) {
       setItem(messages);
-      console.log('useChat - Chat history saved to memory.');
+      console.log('useChat - Chat history saved to memory:', messages);
     }
   }, [messages, isMemOn, setItem]);
 
@@ -60,6 +60,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     while (messageQueueRef.current.length > 0) {
       const nextMessage = messageQueueRef.current.shift();
       if (nextMessage) {
+        console.log('useChat - Sending next message from queue:', nextMessage);
         await sendMessage(nextMessage);
       }
     }
@@ -81,6 +82,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         }));
 
         messagesArray.push({ role: 'user', content: input.trim() });
+        console.log('useChat - Constructed messages array for API:', messagesArray);
 
         const response = await fetch('/api/chat', {
           method: 'POST',
@@ -97,11 +99,11 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
           while ((chunk = await reader.read()) && !chunk.done) {
             textBuffer += decoder.decode(chunk.value, { stream: true });
 
-            // Split by double newline (indicating the end of a data chunk)
-            const messages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
+            // Split by double newline to separate complete JSON chunks
+            const completeMessages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
 
             // Process each complete message
-            for (const message of messages) {
+            for (const message of completeMessages) {
               if (message.startsWith('data: ')) {
                 const jsonString = message.substring(6).trim();
                 console.log(`useChat - Raw incoming message: ${jsonString}`);
@@ -110,11 +112,16 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                   const parsedData = JSON.parse(jsonString);
 
                   if (parsedData.message && parsedData.persona) {
-                    console.log(`Incoming message from persona: ${parsedData.persona}`);
+                    console.log(`useChat - Incoming message from persona: ${parsedData.persona}`);
 
-                    // Include persona in the message text and handle newlines
-                    const formattedMessage = `${parsedData.persona}: ${parsedData.message.replace(/\n+/g, '\n')}`;
-                    
+                    // Clean the message text to handle special formatting or unwanted metadata
+                    let cleanMessage = parsedData.message.split('**Explanation:**')[0].trim();
+                    cleanMessage = cleanMessage.replace(/\n+/g, '\n'); // Normalize newlines
+
+                    // Include persona in the message text
+                    const formattedMessage = `${parsedData.persona}: ${cleanMessage}`;
+                    console.log('useChat - Formatted incoming message:', formattedMessage);
+
                     // Ensure the message gets displayed correctly
                     setMessages((prev) => [
                       ...prev,
@@ -128,7 +135,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
               }
             }
 
-            // Reset buffer after processing complete messages
+            // Update buffer: keep only the last incomplete message chunk
             textBuffer = textBuffer.endsWith('\n\n') ? '' : textBuffer.split('\n\n').slice(-1)[0];
           }
         }
