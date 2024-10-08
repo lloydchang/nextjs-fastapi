@@ -35,12 +35,6 @@ const nextConfig = {
       };
 
       config.resolve.alias['@tensorflow/tfjs-node'] = '@tensorflow/tfjs';
-
-      // Use shim for TensorFlow Node.js modules
-      // config.resolve.alias = {
-      //   ...config.resolve.alias,
-      //   '@tensorflow/tfjs-node': path.resolve(__dirname, 'tensorflow-shim.js'),
-      // };
     }
 
     // Ignore .html files using null-loader
@@ -48,12 +42,6 @@ const nextConfig = {
       test: /\.html$/,
       use: 'null-loader',
     });
-
-    // Ignore TensorFlow.js Node-specific warnings
-    // config.module.rules.push({
-    //   test: /@tensorflow[\\/]tfjs-node[\\/]/,
-    //   use: 'null-loader',
-    // });
 
     return config;
   },

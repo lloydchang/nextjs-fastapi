@@ -1,6 +1,6 @@
 // File: components/organisms/ChatPanel.tsx
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import BackgroundImage from '../../public/images/TEDxSDG.jpg';
 import { useChat } from '../../components/state/hooks/useChat';
@@ -25,27 +25,6 @@ const ChatPanel: React.FC = () => {
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<WebSocket | null>(null);
-
-  useEffect(() => {
-    // Connect to the WebSocket server
-    socketRef.current = new WebSocket('ws://localhost:3000/api/websockets'); // Adjust URL as needed
-
-    socketRef.current.onmessage = (event) => {
-      const newMessage = event.data;
-      // You can use your existing messages state or create a new method to handle incoming WebSocket messages
-      sendActionToChatbot(newMessage);
-    };
-
-    socketRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setError('WebSocket error occurred.'); // Handle error appropriately
-    };
-
-    return () => {
-      socketRef.current?.close();
-    };
-  }, []);
 
   const handleChat = useCallback(
     (input: string, isManual = false) => {
@@ -53,17 +32,13 @@ const ChatPanel: React.FC = () => {
       if (messageToSend) {
         const prefix = isManual ? "" : "🎙️ ";
         const formattedMessage = `${prefix}${messageToSend}`;
-        
-        // Send the message via WebSocket
-        if (socketRef.current) {
-          socketRef.current.send(formattedMessage);
-          setChatInput(''); // Clear input after sending
-        } else {
-          setError('WebSocket is not connected.');
-        }
+
+        // Send the message to the chat handler
+        sendActionToChatbot(formattedMessage);
+        setChatInput(''); // Clear input after sending
       }
     },
-    []
+    [sendActionToChatbot]
   );
 
   return (
