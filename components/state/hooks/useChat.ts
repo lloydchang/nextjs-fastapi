@@ -112,10 +112,10 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                   if (parsedData.message && parsedData.persona) {
                     console.log(`Incoming message from persona: ${parsedData.persona}`);
 
-                    // Include persona in the message text and retain line breaks
-                    const formattedMessage = `${parsedData.persona}: ${parsedData.message.replace(/\\n/g, '\n')}`;
+                    // Include persona in the message text and handle newlines
+                    const formattedMessage = `${parsedData.persona}: ${parsedData.message.replace(/\n+/g, '\n')}`;
                     
-                    // Force React to re-render by using a fresh array reference
+                    // Ensure the message gets displayed correctly
                     setMessages((prev) => [
                       ...prev,
                       { id: `${Date.now()}-${Math.random()}`, sender: 'bot', text: formattedMessage },
