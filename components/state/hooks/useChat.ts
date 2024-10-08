@@ -109,7 +109,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                 console.log(`useChat - Raw incoming message: ${jsonString}`);
 
                 try {
-                  const parsedData = parseIncomingMessage(jsonString);
+                  const parsedData = parseIncomingMessage(preprocessJSONString(jsonString));
 
                   if (parsedData?.message && parsedData?.persona) {
                     console.log(`useChat - Incoming message from persona: ${parsedData.persona}`);
@@ -173,7 +173,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   return { messages, setMessages, sendActionToChatbot, clearChatHistory, isMemOn };
 };
 
-// Function to parse incoming JSON strings and add detailed logging for malformed streams
+// Function to parse incoming JSON strings and handle malformed streams
 export function parseIncomingMessage(jsonString: string) {
   try {
     // Attempt to parse the incoming JSON string
@@ -194,8 +194,18 @@ export function parseIncomingMessage(jsonString: string) {
 }
 
 /**
+ * Preprocesses the incoming JSON string to fix common issues.
+ * This function replaces single quotes and escaped characters to prevent JSON parsing errors.
+ */
+function preprocessJSONString(jsonString: string): string {
+  return jsonString
+    .replace(/\\'/g, "'") // Replace escaped single quotes
+    .replace(/"/g, '\\"') // Ensure all double quotes are escaped
+    .replace(/(\r\n|\n|\r)/gm, ' '); // Replace newlines with spaces
+}
+
+/**
  * Provides detailed analysis of the malformed JSON string.
- * Logs problematic characters, string length, and likely causes.
  */
 function logDetailedErrorInfo(jsonString: string, error: Error) {
   console.error(`useChat - Error Type: ${error.name}`);
@@ -208,19 +218,19 @@ function logDetailedErrorInfo(jsonString: string, error: Error) {
 
   console.error('useChat - JSON Snippet (Start):', startSnippet);
   console.error('useChat - JSON Snippet (End):', endSnippet);
-  
-  // Check for common formatting issues in the JSON string
+
+  // Check for common formatting issues
   if (jsonString.trim().endsWith('"')) {
     console.error('useChat - Possible Issue: Unterminated string (ends with a double-quote).');
   } else if (jsonString.includes('undefined')) {
-    console.error('useChat - Possible Issue: Contains the string "undefined", which is not valid in JSON.');
+    console.error('useChat - Possible Issue: Contains the string "undefined".');
   } else if (jsonString.includes('{') && !jsonString.includes('}')) {
-    console.error('useChat - Possible Issue: Opening curly brace found without a matching closing brace.');
+    console.error('useChat - Possible Issue: Missing closing brace.');
   } else if (jsonString.includes('[') && !jsonString.includes(']')) {
-    console.error('useChat - Possible Issue: Opening square bracket found without a matching closing bracket.');
+    console.error('useChat - Possible Issue: Missing closing bracket.');
   } else {
-    console.error('useChat - Possible Issue: Unknown JSON formatting issue.');
+    console.error('useChat - Unknown formatting issue detected.');
   }
 
-  console.error('useChat - Suggested Fix: Verify if all JSON strings are correctly formatted with matching braces, quotes, and commas.');
+  console.error('useChat - Suggested Fix: Verify correct formatting with matching braces and quotes.');
 }
