@@ -12,9 +12,9 @@ interface ChatInputProps {
 const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleChat }) => {
   const isSendingRef = useRef(false); // Prevent multiple sends
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !isSendingRef.current) {
-      if (chatInput === '') return; // Do not send empty messages
+      if (chatInput.trim() === '') return; // Do not send empty messages
       isSendingRef.current = true;
       handleChat(true);
       setChatInput(''); // Clear input immediately
@@ -24,7 +24,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
   };
 
   const handleButtonClick = () => {
-    if (!isSendingRef.current && chatInput !== '') {
+    if (!isSendingRef.current && chatInput.trim() !== '') {
       isSendingRef.current = true;
       handleChat(true);
       setChatInput(''); // Clear input immediately
@@ -35,13 +35,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ chatInput, setChatInput, handleCh
 
   return (
     <div className={styles.inputContainer}>
-      <input
-        type="text"
+      <textarea
         value={chatInput}
         onChange={(e) => setChatInput(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="Type your message..."
+        placeholder=""
         className={styles.input}
+        rows={1} /* Set rows for initial size */
       />
       <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
         Send
