@@ -47,8 +47,8 @@ const TalkPanel: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
 
-  const panelRef = useRef<HTMLDivElement | null>(null); // Reference for TalkPanel
-  const listRef = useRef<HTMLDivElement | null>(null);  // Reference for ResultsList
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (initialKeyword.current === "") {
@@ -61,7 +61,7 @@ const TalkPanel: React.FC = () => {
   const performSearch = (searchQuery: string) => {
     setLoading(true);
     setError(null);
-    
+
     axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`)
       .then((response) => {
         if (response.status !== 200) {
@@ -159,7 +159,7 @@ const TalkPanel: React.FC = () => {
                 className={styles.resultItem} 
                 onClick={() => {
                   setSelectedTalk(talk);
-                  if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll TalkPanel to top only
+                  if (panelRef.current) panelRef.current.scrollTop = 0;
                 }}>
                 <h3>
                   <a href="#" className={styles.resultLink}>{talk.title}</a>
