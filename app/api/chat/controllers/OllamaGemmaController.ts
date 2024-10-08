@@ -17,10 +17,11 @@ export async function handleTextWithOllamaGemmaTextModel(
   const { ollamaGemmaEndpoint } = getConfig();
 
   if (!ollamaGemmaEndpoint || !textModel) {
-    logger.silly('Missing required environment variables.');
+    logger.silly('handleTextWithOllamaGemmaTextModel - Missing required environment variables.');
     return '';
   }
 
+  logger.debug(`handleTextWithOllamaGemmaTextModel - Generating text for model: ${textModel}`);
   const response = await generateFromOllamaGemma({
     endpoint: ollamaGemmaEndpoint,
     prompt: userPrompt,
@@ -28,10 +29,10 @@ export async function handleTextWithOllamaGemmaTextModel(
   });
 
   if (!response) {
-    logger.error('Failed to generate text from Ollama Gemma.');
+    logger.error('handleTextWithOllamaGemmaTextModel - Failed to generate text from Ollama Gemma.');
     return '';
   }
 
-  logger.verbose(`Generated response: ${response}`);
+  logger.verbose(`handleTextWithOllamaGemmaTextModel - Generated response: ${response}`);
   return response;
 }
