@@ -173,7 +173,7 @@ export function parseIncomingMessage(jsonString: string) {
 
     return parsedData;
   } catch (error) {
-    logDetailedErrorInfo(jsonString, error);
+    logDetailedErrorInfo(jsonString, error as Error); // Fixed: Type assertion added here
     return null;
   }
 }
