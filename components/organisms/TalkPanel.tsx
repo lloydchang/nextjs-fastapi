@@ -115,7 +115,7 @@ const TalkPanel: React.FC = () => {
   };
 
   return (
-    <div ref={panelRef} className={`${styles.TalkPanel} ${styles['Talk-panel']}`}>
+    <div ref={panelRef} className={`${styles.TalkPanel}`}>
       <div className={styles.searchContainer}>
         <div className={styles.searchRowContainer}>
           <input
@@ -160,7 +160,6 @@ const TalkPanel: React.FC = () => {
                 onClick={() => {
                   setSelectedTalk(talk);
                   if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll TalkPanel to top only
-                  // Removed the scroll for listRef
                 }}>
                 <h3>
                   <a href="#" className={styles.resultLink}>{talk.title}</a>

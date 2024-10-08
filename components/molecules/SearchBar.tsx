@@ -32,7 +32,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, loading }) => {
     <div>
       <input
         type="text"
-        placeholder="Enter a keyword"
+        placeholder=""
         value={query}
         onChange={handleInputChange}
         onKeyDown={handleKeyPress}
