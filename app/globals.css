@@ -75,12 +75,12 @@ body {
 @media (max-width: 480px) {
   .container {
     grid-template-columns: 1fr; /* Stack both panels vertically */
-    grid-template-rows: auto; /* Full height for each panel */
+    grid-template-rows: 50vh 50vh; /* Adjusted to split height between both panels */
   }
 
   .left-panel, .right-panel {
-    height: auto; /* Allow panels to adjust height automatically */
-    min-height: 100vh; /* Use full height for readability */
+    height: 50vh; /* Ensure both panels take up half the screen height */
+    min-height: 50vh; /* Set minimum height to half the viewport height */
   }
 }
 
