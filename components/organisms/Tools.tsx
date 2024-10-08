@@ -11,20 +11,20 @@ const Tools: React.FC = () => {
   return (
     <div className="tools-container">
       <div className="button-group">
-        {/* Local Button */}
-        <button
-          className="right-edge-button"
-          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
-        >
-          Local
-        </button>
-
         {/* Learn Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://www.unsdglearn.org/learning/')}
         >
           Learn
+        </button>
+
+        {/* Local Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
+        >
+          Local
         </button>
 
         {/* Fund Button */}
@@ -35,12 +35,20 @@ const Tools: React.FC = () => {
           Fund
         </button>
 
-        {/* Report Button */}
+        {/* Open Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://open-sdg.org/community')}
         >
-          Report
+          Open
+        </button>
+
+        {/* Stats Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal')}
+        >
+          Stats
         </button>
 
         {/* News Button */}
