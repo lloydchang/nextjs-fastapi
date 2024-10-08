@@ -110,8 +110,10 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                   if (parsedData.message && parsedData.persona) {
                     console.log(`Incoming message from persona: ${parsedData.persona}`);
 
-                    // Include persona in the message text
-                    const formattedMessage = `${parsedData.persona}: ${parsedData.message}`;
+                    // Include persona in the message text and retain line breaks
+                    const formattedMessage = `${parsedData.persona}: ${parsedData.message.replace(/\\n/g, '\n')}`;
+                    
+                    // Force React to re-render by using a fresh array reference
                     setMessages((prev) => [
                       ...prev,
                       { id: `${Date.now()}-${Math.random()}`, sender: 'bot', text: formattedMessage },
@@ -134,7 +136,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     [getConversationContext]
   );
 
-  // Define `sendActionToChatbot` to handle messages added to the queue
   const sendActionToChatbot = useCallback(
     async (input: string): Promise<void> => {
       if (!input.trim()) {
@@ -149,7 +150,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     [processQueue]
   );
 
-  // Function to clear chat history from state and local storage
   const clearChatHistory = useCallback(() => {
     setMessages([]);
     try {
@@ -160,6 +160,5 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, [removeItem]);
 
-  // Return the state and functions, including setMessages
   return { messages, setMessages, sendActionToChatbot, clearChatHistory, isMemOn };
 };
