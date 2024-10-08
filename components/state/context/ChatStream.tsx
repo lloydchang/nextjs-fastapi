@@ -1,7 +1,7 @@
 // File: components/state/context/ChatStream.tsx
 
 import React, { useState, useEffect } from 'react';
-import logger from '../../api/chat/utils/logger'; // Adjust the path based on your structure
+import logger from '../../../app/api/chat/utils/logger'; // Adjust the path based on your structure
 
 const ChatStream = () => {
   const [messages, setMessages] = useState<{ persona: string; message: string }[]>([]);
