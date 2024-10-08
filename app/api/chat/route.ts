@@ -25,13 +25,20 @@ function safeStringify(obj: Record<string, string>): string {
     .replace(/[\u2028\u2029]/g, ""); // Remove problematic Unicode characters
 }
 
+// Function to create a filtered context for each persona
+function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>) {
+  return messages
+    .filter((msg) => msg.persona !== persona) // Exclude the persona's own messages
+    .map((msg) => `${msg.role === 'user' ? 'User' : msg.persona}: ${sanitizeInput(msg.content)}`)
+    .join('\n');
+}
+
 async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
   const encoder = new TextEncoder();
   return new ReadableStream({
     async start(controller) {
       try {
         for (const { persona, message } of messages) {
-          // Use the safeStringify function to escape special characters
           const formattedMessage = safeStringify({ persona, message });
           controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
           logger.debug(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
@@ -62,22 +69,29 @@ export async function POST(request: NextRequest) {
     // Include only the most recent 2-3 messages (adjust this number as needed)
     const recentMessages = messages.slice(-3);
 
-    let conversationContext = recentMessages
-      .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${sanitizeInput(msg.content)}`)
-      .join('\n');
-
-    conversationContext = `${systemPrompt}\n\n${conversationContext}\nAssistant:`;
-    logger.silly(`app/api/chat/route.ts - Initialized recent conversation context: ${conversationContext}`);
-
     const responseFunctions = [
-      { persona: 'Eliza', generate: () => generateElizaResponse([...messages]) },
-      { persona: 'Alice', generate: () => generateAliceResponse([...messages]) },
+      {
+        persona: 'Eliza',
+        generate: () => {
+          const elizaContext = createFilteredContext('Eliza', recentMessages);
+          return generateElizaResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
+        },
+      },
+      {
+        persona: 'Alice',
+        generate: () => {
+          const aliceContext = createFilteredContext('Alice', recentMessages);
+          return generateAliceResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
+        },
+      },
       {
         persona: 'Gemma',
-        generate: () =>
-          config.ollamaGemmaTextModel
-            ? handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config)
-            : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration."),
+        generate: () => {
+          const gemmaContext = createFilteredContext('Gemma', recentMessages);
+          return config.ollamaGemmaTextModel
+            ? handleTextWithOllamaGemmaTextModel({ userPrompt: gemmaContext, textModel: config.ollamaGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration.");
+        },
       },
     ];
 
