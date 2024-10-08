@@ -1,4 +1,4 @@
-/* File: styles/TalkPanel.module.css */
+/* File: styles/components/organisms/TalkPanel.module.css */
 
 .TalkPanel {
   flex: 1;
@@ -21,8 +21,8 @@
   gap: 10px;
   padding: 0px;
   height: 30px;
+  flex-wrap: wrap; /* Wrap the elements when space is constrained */
   box-sizing: border-box;
-  flex: 1;
 }
 
 .searchInput {
@@ -71,4 +71,12 @@
 .tedButton:hover {
   background-color: #eb0028;
   transform: translateY(-2px);
+}
+
+/* Ensure buttons stack vertically on smaller screens */
+@media (max-width: 500px) {
+  .searchRowContainer {
+    flex-direction: column;
+    gap: 5px; /* Adjust gap for compact stacking */
+  }
 }
