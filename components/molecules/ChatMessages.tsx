@@ -19,22 +19,22 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
     // Use requestAnimationFrame for smoother scroll update
     if (container) {
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
+        container.scrollTop = container.scrollHeight; // Scroll to the bottom
       });
     }
   }, [messages]);
 
-  // Handle initial load to align messages to the bottom
+  // Initial load handling
   useEffect(() => {
     const container = messagesContainerRef.current;
 
     if (container) {
+      // Immediately set opacity to 1 for visibility
       container.style.opacity = '1';
       container.style.visibility = 'visible';
-      container.style.height = '90vh'; // Ensure it uses the defined height
-      // Scroll to the bottom on initial load
+      // Ensure the container is scrollable
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight;
+        container.scrollTop = container.scrollHeight; // Scroll to the bottom on initial load
       });
     }
   }, []);
