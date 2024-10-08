@@ -1,3 +1,5 @@
+.DS_Store
+
 # Ignore Google Cloud service account key files in any directory
 **/service-account-key.json
 
