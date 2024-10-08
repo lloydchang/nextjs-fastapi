@@ -104,6 +104,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
             for (const message of messages) {
               if (message.startsWith('data: ')) {
                 const jsonString = message.substring(6).trim();
+                console.log(`useChat - Raw incoming message: ${jsonString}`);
+
                 try {
                   const parsedData = JSON.parse(jsonString);
 
@@ -121,7 +123,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                     console.log(`useChat - Updated messages: ${JSON.stringify(messagesRef.current)}`);
                   }
                 } catch (e) {
-                  console.warn('useChat - Could not parse incoming event message:', jsonString);
+                  console.error('useChat - Error parsing incoming event message:', jsonString, e);
                 }
               }
             }
