@@ -38,6 +38,15 @@ const determineInitialKeyword = () => {
     : ['poverty', 'hunger', 'health', 'education', 'gender', 'water', 'energy', 'work', 'industry', 'inequality', 'city', 'consumption', 'climate', 'ocean', 'land', 'peace', 'partnership'][randomNumber - 1];
 };
 
+// Fisher-Yates shuffle function
+const shuffleArray = <T,>(array: T[]): T[] => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // Get a random index
+    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+  }
+  return array;
+};
+
 const TalkPanel: React.FC = () => {
   const { talks, setTalks } = useTalkContext();
   const { sendActionToChatbot } = useChatContext();
@@ -76,10 +85,12 @@ const TalkPanel: React.FC = () => {
             sdg_tags: result.sdg_tags || []
           }));
 
-          setTalks(data);
+          // Shuffle the array using Fisher-Yates
+          const shuffledData = shuffleArray(data);
+          setTalks(shuffledData);
 
-          if (data.length > 0) {
-            setSelectedTalk(data[0]);
+          if (shuffledData.length > 0) {
+            setSelectedTalk(shuffledData[0]);
           } else {
             setSelectedTalk(null);
           }
