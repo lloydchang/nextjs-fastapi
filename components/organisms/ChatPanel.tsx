@@ -24,18 +24,27 @@ const ChatPanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null); // New state to hold error details
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleChat = useCallback(
-    (input: string, isManual = false) => {
+    async (input: string, isManual = false) => {
       const messageToSend = input.trim();
       if (messageToSend) {
-        const prefix = isManual ? "" : "🎙️ ";
+        const prefix = isManual ? '' : '🎙️ ';
         const formattedMessage = `${prefix}${messageToSend}`;
 
-        // Send the message to the chat handler
-        sendActionToChatbot(formattedMessage);
-        setChatInput(''); // Clear input after sending
+        try {
+          await sendActionToChatbot(formattedMessage);
+          setChatInput(''); // Clear input after sending
+          setError(null); // Clear any previous errors on successful send
+          setErrorDetails(null); // Clear error details
+        } catch (err: any) {
+          const errorMessage = err.response?.data?.error || 'Unexpected error occurred. Please try again.';
+          const details = err.response?.data?.details || 'No additional details available.';
+          setError(errorMessage);
+          setErrorDetails(details);
+        }
       }
     },
     [sendActionToChatbot]
@@ -43,7 +52,12 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${styles['Chat-panel']}`}>
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.error}>
+          <strong>{error}</strong>
+          {errorDetails && <p className={styles.errorDetails}>{errorDetails}</p>}
+        </div>
+      )}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
