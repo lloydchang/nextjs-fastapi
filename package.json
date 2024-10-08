@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "pip install -r fastapi-search/requirements.txt 2>&1 >/dev/null; python3 -m uvicorn backend.fastapi.api.index:app --reload",
+    "fastapi-dev": "fastapi-search/run_fastapi-search.sh",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",
