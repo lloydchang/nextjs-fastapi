@@ -49,41 +49,39 @@ body {
 /* Desktop and large screens */
 @media (min-width: 1024px) {
   .container {
-    grid-template-columns: 3fr 3fr; /* Left panel is 3fr, right is 3fr */
+    grid-template-columns: 1fr 1fr; /* Split the container into two columns */
+    grid-template-rows: auto; /* Allow height to adjust automatically */
   }
 }
 
 /* Tablets */
 @media (max-width: 1023px) and (min-width: 768px) {
   .container {
-    grid-template-columns: 2fr 2fr; /* Adjusted for tablets */
+    grid-template-rows: auto; /* Allow height to adjust automatically */
+    grid-template-columns: 1fr 1fr; /* Split the container into two columns */
   }
 }
 
 /* Mobile devices */
 @media (max-width: 767px) {
   .container {
-    grid-template-columns: 1fr; /* Ensure both panels are displayed side by side */
+    grid-template-columns: 1fr 1fr; /* Split the container into two columns */
     grid-template-rows: auto; /* Allow height to adjust automatically */
   }
 
   .left-panel, .right-panel {
     height: auto; /* Allow panels to adjust height automatically */
-    min-height: 50vh; /* Ensure each panel has a minimum height for readability */
+    grid-template-rows: auto; /* Allow height to adjust automatically */
   }
 }
 
 /* Small wearable devices */
 @media (max-width: 480px) {
   .container {
-    grid-template-columns: 1fr; /* Stack both panels vertically */
-    grid-template-rows: 50vh 50vh; /* Adjusted to split height between both panels */
+    grid-template-columns: 1fr 1fr; /* Split the container into two columns */
+    grid-template-rows: auto; /* Allow height to adjust automatically */
   }
 
-  .left-panel, .right-panel {
-    height: 50vh; /* Ensure both panels take up half the screen height */
-    min-height: 50vh; /* Set minimum height to half the viewport height */
-  }
 }
 
 /* Styling for the left panel */
