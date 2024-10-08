@@ -25,11 +25,15 @@ function safeStringify(obj: Record<string, string>): string {
     .replace(/[\u2028\u2029]/g, ""); // Remove problematic Unicode characters
 }
 
-// Function to create a filtered context for each persona
+// Function to create a filtered context for each persona without self-references
 function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>) {
   return messages
     .filter((msg) => msg.persona !== persona) // Exclude the persona's own messages
-    .map((msg) => `${msg.role === 'user' ? 'User' : msg.persona}: ${sanitizeInput(msg.content)}`)
+    .map((msg) => {
+      // Remove any explicit mentions of the persona's name within the message content
+      const contentWithoutPersonaName = msg.content.replace(new RegExp(persona, 'gi'), '');
+      return `${msg.role === 'user' ? 'User' : msg.persona}: ${sanitizeInput(contentWithoutPersonaName)}`;
+    })
     .join('\n');
 }
 
