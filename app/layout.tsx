@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "TEDxSDG",
-  description: "A platform for TEDx talks focusing on the Sustainable Development Goals.",
+  description: "TEDxSDG",
 };
 
 export default function RootLayout({
