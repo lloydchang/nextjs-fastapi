@@ -131,7 +131,7 @@ const TalkPanel: React.FC = () => {
         <div className={styles.searchRowContainer}>
           <input
             type="text"
-            placeholder="Enter a keyword"
+            placeholder=""
             value={query}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}

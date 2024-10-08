@@ -2,17 +2,23 @@
 
 .inputContainer {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap; /* Allow elements to wrap into multiple rows */
+  gap: 4px;
   margin-top: 1px;
 }
 
 .input {
-  flex: 1;
+  width: 100%; /* Full width within its row */
   padding: 8px 12px;
   color: white;
   background-color: black;
   border: 1px solid #ccc;
   border-radius: 5px;
+  resize: none; /* Prevent resizing of textarea */
+  overflow-wrap: break-word; /* Handle long text wrapping */
+  word-wrap: break-word; /* Break long words */
+  height: auto; /* Allow height to adjust dynamically */
+  min-height: 30px; /* Minimum height */
 }
 
 .sendButton {
