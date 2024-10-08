@@ -1,0 +1,6 @@
+# File: requirements.txt
+
+fastapi
+uvicorn
+numpy
+rapidfuzz
