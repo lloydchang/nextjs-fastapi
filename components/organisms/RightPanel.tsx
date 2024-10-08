@@ -49,6 +49,8 @@ const RightPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTalk, setSelectedTalk] = useState<Talk | null>(null);
+  
+  const panelRef = useRef<HTMLDivElement | null>(null); // Reference to the RightPanel container
 
   // Initial keyword setup and search
   useEffect(() => {
@@ -109,7 +111,7 @@ const RightPanel: React.FC = () => {
       .finally(() => {
         setLoading(false);
       });
-  };  
+  };
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -139,7 +141,7 @@ const RightPanel: React.FC = () => {
   };
 
   return (
-    <div className={`${styles.rightPanel} ${styles['right-panel']}`}>
+    <div ref={panelRef} className={`${styles.rightPanel} ${styles['right-panel']}`}>
       <div className={styles.searchContainer}>
         <div className={styles.searchRowContainer}>
           <input
@@ -178,7 +180,13 @@ const RightPanel: React.FC = () => {
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
             {talks.map((talk, index) => (
-              <div key={index} className={styles.resultItem} onClick={() => setSelectedTalk(talk)}>
+              <div 
+                key={index} 
+                className={styles.resultItem} 
+                onClick={() => {
+                  setSelectedTalk(talk);
+                  panelRef.current?.scrollIntoView({ behavior: 'smooth' }); // Scroll to top on click
+                }}>
                 <h3>
                   <a href="#" className={styles.resultLink}>{talk.title}</a>
                   <p className={styles.sdgTags}>{talk.sdg_tags.map(tag => sdgTitleMap[tag]).join(', ')}</p>
