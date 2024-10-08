@@ -7,9 +7,8 @@
   scroll-behavior: smooth; /* Smooth scrolling */
   display: flex; /* Added display flex to handle children */
   flex-direction: column; /* Column layout for message alignment */
-  justify-content: flex-start; /* Ensure messages start at the top */
+  justify-content: flex-end; /* Start aligning messages from the bottom */
   opacity: 0; /* Start as hidden to avoid initial jump */
-  overflow-y: auto; /* enable vertical scrollbar */
   visibility: hidden; /* Ensure hidden state until fully loaded */
   transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
 }

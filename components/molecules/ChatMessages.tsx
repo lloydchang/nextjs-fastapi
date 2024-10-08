@@ -24,7 +24,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
     }
   }, [messages]);
 
-  // Use an additional useEffect to handle initial page load and container height adjustment
+  // Handle initial load to align messages to the bottom
   useEffect(() => {
     const container = messagesContainerRef.current;
 
@@ -32,6 +32,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
       container.style.opacity = '1';
       container.style.visibility = 'visible';
       container.style.height = '90vh'; // Ensure it uses the defined height
+      // Scroll to the bottom on initial load
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+      });
     }
   }, []);
 
