@@ -40,7 +40,7 @@ const LeftPanel: React.FC = () => {
   );
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${styles['left-panel']}`}>
       {error && <div className={styles.error}>{error}</div>}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
@@ -51,9 +51,7 @@ const LeftPanel: React.FC = () => {
       
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
-      {/* Stacked Layout */}
       <div className={styles.toolsLayer}>
-        {/* Removed `messages` prop from Tools */}
         <Tools />
       </div>
       
