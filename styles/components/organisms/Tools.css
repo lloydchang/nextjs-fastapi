@@ -2,22 +2,22 @@
 
 .tools-container {
   position: absolute;       /* Use absolute positioning */
-  bottom: -126px;             /* Position container at the bottom of the page */
-  right: -18px;              /* Align container slightly to the left for aesthetics */
+  bottom: -126px;           /* Position container at the bottom of the page */
+  right: -18px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
   align-items: flex-end;    /* Align buttons to the right */
 }
 
 .button-group {
-  display: flex;       /* Use flex-start to align buttons to the left */
+  display: flex;            /* Use flex-start to align buttons to the left */
   flex-direction: column;   /* Keep buttons arranged vertically */
   align-items: flex-start;  /* Align buttons to the left */
 }
 
 /* Button styles */
 .right-edge-button {
-  padding: 2px 2px;        /* Adjust padding for better spacing */
+  padding: 2px 2px;         /* Adjust padding for better spacing */
   margin-bottom: 6px;       /* Add spacing between buttons */
   background-color: rgb(0, 112, 243, 1); /* Default background color */
   color: white;             /* Text color */
@@ -25,8 +25,8 @@
   border-radius: 3px;       /* Small rounded corners */
   cursor: pointer;          /* Change cursor to pointer */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Light shadow */
-  font-size: 10px;           /* Much smaller font size */
-  width: flex;              /* Significantly smaller width for tiny buttons */
+  font-size: 10px;          /* Much smaller font size */
+  width: 60px;              /* Fixed width for tiny buttons */
   text-align: center;       /* Center text inside the button */
 }
 
