@@ -60,7 +60,7 @@
   right: 20px;
   width: calc(100% - 40px);
   max-width: 600px;
-  z-index: 2;
+  z-index: 2; /* Tools layer */
   display: flex;
   padding: 0px;
   border-radius: 8px;
@@ -72,7 +72,7 @@
   bottom: 0px;
   right: 0;
   width: 80%;
-  z-index: 1;
+  z-index: 3; /* Increased z-index to ensure it's above toolsLayer */
   display: flex;
   flex-direction: column;
   max-height: 100vh;
