@@ -21,7 +21,10 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={inter.className}>
-        {children}
+        {/* Main viewport section with full height */}
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </div>
       </body>
     </html>
   );
