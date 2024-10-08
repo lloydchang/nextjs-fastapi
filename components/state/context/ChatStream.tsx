@@ -1,6 +1,7 @@
 // File: components/state/context/ChatStream.tsx
 
 import React, { useState, useEffect } from 'react';
+import logger from '../../api/chat/utils/logger'; // Adjust the path based on your structure
 
 const ChatStream = () => {
   const [messages, setMessages] = useState<{ persona: string; message: string }[]>([]);
@@ -13,17 +14,18 @@ const ChatStream = () => {
       const data = JSON.parse(event.data);
       
       if (data.error) {
-        console.error(data.error);
+        logger.error(`ChatStream - Error received from server: ${data.error}`);
         setIsRunning(false);
         eventSource.close();
         return;
       }
 
       setMessages((prevMessages) => [...prevMessages, { persona: data.persona, message: data.message }]);
+      logger.debug(`ChatStream - New message received from ${data.persona}: ${data.message}`);
     };
 
     eventSource.onerror = () => {
-      console.error('Error with the event source.');
+      logger.error('ChatStream - Error with the event source.');
       setIsRunning(false);
       eventSource.close();
     };

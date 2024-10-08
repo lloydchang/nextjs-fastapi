@@ -11,16 +11,18 @@ import logger from './utils/logger';
 
 const config = getConfig();
 
-async function createStream(persona: string, message: string) {
+async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
     const encoder = new TextEncoder();
     return new ReadableStream({
-        start(controller) {
+        async start(controller) {
             try {
-                controller.enqueue(encoder.encode(`data: {"persona": "${persona}", "message": "${message}"}\n\n`));
+                for (const { persona, message } of messages) {
+                    controller.enqueue(encoder.encode(`data: {"persona": "${persona}", "message": "${message}"}\n\n`));
+                }
                 controller.close();
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
-                logger.error(`app/api/chat/route.ts - Error creating stream for ${persona}: ${errorMessage}`);
+                logger.error(`app/api/chat/route.ts - Error in stream: ${errorMessage}`);
                 controller.enqueue(encoder.encode(`data: {"error": "${errorMessage}"}\n\n`));
                 controller.close();
             }
@@ -36,10 +38,10 @@ export async function POST(request: NextRequest) {
         logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
 
         if (!Array.isArray(messages)) {
+            logger.warn(`app/api/chat/route.ts - Invalid request format: messages is not an array.`);
             return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
         }
 
-        // Initialize the conversation context
         let conversationContext = messages
             .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${sanitizeInput(msg.content)}`)
             .join('\n');
@@ -47,58 +49,33 @@ export async function POST(request: NextRequest) {
         conversationContext = `${systemPrompt}\n\n${conversationContext}\nAssistant:`;
         logger.debug(`app/api/chat/route.ts - Initialized conversation context: ${conversationContext}`);
 
-        // Eliza's turn
-        logger.debug(`app/api/chat/route.ts - Generating Eliza's response.`);
-        const elizaResponse = generateElizaResponse(conversationContext, systemPrompt);
+        const responses: Array<{ persona: string, message: string }> = [];
+
+        logger.debug(`app/api/chat/route.ts - Generating Eliza's response`);
+        const elizaResponse = await generateElizaResponse([...messages]);  // Ensure this is awaited
+        responses.push({ persona: 'Eliza', message: elizaResponse });
         conversationContext += `\nEliza: ${elizaResponse}`;
-        logger.debug(`app/api/chat/route.ts - Eliza's response: ${elizaResponse}`);
-        let elizaStream = await createStream("eliza", elizaResponse);
 
-        // Send Eliza's response and close the stream
-        const elizaResponseStream = new NextResponse(elizaStream, {
-            headers: {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-            }
-        });
-
-        // Alice's turn
-        logger.debug(`app/api/chat/route.ts - Generating Alice's response.`);
-        const aliceResponse = generateAliceResponse(conversationContext, systemPrompt);
+        logger.debug(`app/api/chat/route.ts - Generating Alice's response`);
+        const aliceResponse = await generateAliceResponse([...messages]);  // Ensure this is awaited
+        responses.push({ persona: 'Alice', message: aliceResponse });
         conversationContext += `\nAlice: ${aliceResponse}`;
-        logger.debug(`app/api/chat/route.ts - Alice's response: ${aliceResponse}`);
-        let aliceStream = await createStream("alice", aliceResponse);
 
-        // Send Alice's response and close the stream
-        const aliceResponseStream = new NextResponse(aliceStream, {
-            headers: {
-                'Content-Type': 'text/event-stream',
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-            }
-        });
-
-        // Gemma's turn based on the updated context
-        logger.debug(`app/api/chat/route.ts - Generating Gemma's response.`);
-        let gemmaResponse = "Gemma model is not available.";
+        let gemmaResponse = "Gemma: Gemma model is not available.";
         if (config.ollamaGemmaTextModel) {
             gemmaResponse = await handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config);
         }
-        conversationContext += `\nGemma: ${gemmaResponse}`;
-        logger.debug(`app/api/chat/route.ts - Gemma's response: ${gemmaResponse}`);
-        let gemmaStream = await createStream("gemma", gemmaResponse);
+        responses.push({ persona: 'Gemma', message: gemmaResponse });
 
-        // Send Gemma's response and close the stream
-        const gemmaResponseStream = new NextResponse(gemmaStream, {
+        const combinedStream = await createCombinedStream(responses);
+
+        return new NextResponse(combinedStream, {
             headers: {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
                 'Connection': 'keep-alive',
             }
         });
-
-        return gemmaResponseStream;  // Return the last response as the final one
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
         logger.error(`app/api/chat/route.ts - Error: ${errorMessage}`);

@@ -1,4 +1,4 @@
-// File: /omponents/organisms/ChatPanel.tsx
+// File: components/organisms/ChatPanel.tsx
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -33,22 +33,20 @@ const ChatPanel: React.FC = () => {
       if (messageToSend) {
         const prefix = isManual ? '' : '🎙️ ';
         const formattedMessage = `${prefix}${messageToSend}`;
+        console.log(`ChatPanel - Sending message: ${formattedMessage}`);
 
         try {
           await sendActionToChatbot(formattedMessage);
-          setChatInput(''); // Clear input after sending
-          setError(null); // Clear any previous errors on successful send
-          setErrorDetails(null); // Clear error details
+          setChatInput('');
+          setError(null);
+          setErrorDetails(null);
         } catch (err: any) {
-          if (err.response?.data) {
-            const { error, details } = err.response.data;
-            setError(error || 'Unknown error occurred.');
-            setErrorDetails(details || 'No additional details available.');
-          } else {
-            setError('Failed to communicate with server.');
-            setErrorDetails('Unknown error occurred.');
-          }
+          console.error(`ChatPanel - Error sending message: ${err}`);
+          setError('Failed to communicate with server.');
+          setErrorDetails('Unknown error occurred.');
         }
+      } else {
+        console.warn('ChatPanel - Attempted to send an empty message.');
       }
     },
     [sendActionToChatbot]
