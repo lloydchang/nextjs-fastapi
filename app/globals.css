@@ -69,10 +69,6 @@ body {
     grid-template-rows: auto; /* Allow height to adjust automatically */
   }
 
-  .left-panel, .right-panel {
-    height: auto; /* Allow panels to adjust height automatically */
-    grid-template-rows: auto; /* Allow height to adjust automatically */
-  }
 }
 
 /* Small wearable devices */
@@ -82,24 +78,6 @@ body {
     grid-template-rows: auto; /* Allow height to adjust automatically */
   }
 
-}
-
-/* Styling for the left panel */
-.left-panel {
-  background-color: #f0f0f0;
-  padding: 0px; /* No padding inside the left panel */
-  display: flex;
-  flex-direction: column;
-  transition: none; /* Disable transitions for left panel */
-}
-
-/* Styling for the right panel */
-.right-panel {
-  background-color: #f0f0f0;
-  padding: 0px; /* No padding inside the right panel */
-  display: flex;
-  flex-direction: column;
-  transition: none; /* Disable transitions for right panel */
 }
 
 /* Scrollbar styles */
