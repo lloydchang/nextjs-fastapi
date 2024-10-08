@@ -9,7 +9,7 @@ import SDGWheel from '../../public/images/SDGWheel.png';
 import styles from '../../styles/components/organisms/RightPanel.module.css';
 import { useChatContext } from '../state/context/ChatContext';
 import axios from 'axios';
-import { Talk } from '../state/types';
+import { Talk } from '../state/types'; // Use shared Talk type from centralized types file
 
 const sdgTitleMap: Record<string, string> = {
   'sdg1': 'SDG 1: No Poverty',
@@ -159,8 +159,8 @@ const RightPanel: React.FC = () => {
                 className={styles.resultItem} 
                 onClick={() => {
                   setSelectedTalk(talk);
-                  panelRef.current?.scrollIntoView({ behavior: 'smooth' });
-                  listRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll RightPanel to top
+                  if (listRef.current) listRef.current.scrollTop = 0; // Scroll ResultsList to top
                 }}>
                 <h3>
                   <a href="#" className={styles.resultLink}>{talk.title}</a>
