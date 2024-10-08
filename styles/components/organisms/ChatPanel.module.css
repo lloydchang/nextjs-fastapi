@@ -8,13 +8,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 0; /* Ensure container is below chat/tool layers */
 }
 
 /* Placeholder for dynamic loading */
 .emptyPlaceholder {
+  display: none; /* Hide the empty container completely */
   width: 100vw;
-  height: 100vh;
-  display: flex;
+  height: 0; /* Prevent it from covering content */
   opacity: 0;
   visibility: hidden;
 }
@@ -50,7 +51,7 @@
 }
 
 .videoStreamHidden {
-  display: none;
+  display: none !important; /* Ensure hidden video stream is completely removed */
 }
 
 /* Stacked Layout Styles */
@@ -60,7 +61,7 @@
   right: 20px;
   width: calc(100% - 40px);
   max-width: 600px;
-  z-index: 2; /* Tools layer */
+  z-index: 2;
   display: flex;
   padding: 0px;
   border-radius: 8px;
