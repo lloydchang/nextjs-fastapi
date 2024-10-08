@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
 
         const results = await Promise.allSettled([
             handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: config.ollamaGemmaTextModel }, config),
-            // Add more handlers as needed...
         ]);
 
         const responses = results
@@ -49,15 +48,16 @@ export async function POST(request: NextRequest) {
         if (responses.length > 0) {
             return NextResponse.json({ message: responses.join('\n') });
         } else {
-            return NextResponse.json({ error: 'No valid responses from any model.' }, { status: 500 });
+            return NextResponse.json({ error: 'No valid responses from any model.', details: 'The models returned empty results.' }, { status: 500 });
         }
     } catch (error) {
-        if (error instanceof Error) {
-            logger.error(`app/api/chat/route.ts - Error: ${error.message}`);
-            return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
-        } else {
-            logger.error(`app/api/chat/route.ts - Unknown error occurred.`);
-            return NextResponse.json({ error: 'Unknown error occurred' }, { status: 500 });
-        }
+        logger.error(`app/api/chat/route.ts - Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return NextResponse.json(
+            {
+                error: error instanceof Error ? error.message : 'Internal Server Error',
+                details: error instanceof Error ? error.stack || 'No stack trace available' : 'Unknown error occurred.',
+            },
+            { status: 500 }
+        );
     }
 }
