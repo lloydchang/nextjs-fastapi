@@ -94,15 +94,12 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         if (reader) {
           const decoder = new TextDecoder();
           let chunk;
-          let textBuffer = ''; // Buffer to hold the text data
+          let textBuffer = '';
 
           while ((chunk = await reader.read()) && !chunk.done) {
             textBuffer += decoder.decode(chunk.value, { stream: true });
-
-            // Split by double newline to separate complete JSON chunks
             const completeMessages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
 
-            // Process each complete message
             for (const message of completeMessages) {
               if (message.startsWith('data: ')) {
                 const jsonString = message.substring(6).trim();
@@ -110,24 +107,16 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
                 try {
                   const parsedData = parseIncomingMessage(jsonString);
-
                   if (parsedData?.message && parsedData?.persona) {
-                    console.log(`useChat - Incoming message from persona: ${parsedData.persona}`);
-
-                    // Clean the message text to handle special formatting or unwanted metadata
                     let cleanMessage = parsedData.message.split('**Explanation:**')[0].trim();
-                    cleanMessage = cleanMessage.replace(/\n+/g, '\n'); // Normalize newlines
-
-                    // Include persona in the message text
+                    cleanMessage = cleanMessage.replace(/\n+/g, '\n');
                     const formattedMessage = `${parsedData.persona}: ${cleanMessage}`;
                     console.log('useChat - Formatted incoming message:', formattedMessage);
 
-                    // Ensure the message gets displayed correctly
                     setMessages((prev) => [
                       ...prev,
                       { id: `${Date.now()}-${Math.random()}`, sender: 'bot', text: formattedMessage },
                     ]);
-                    console.log(`useChat - Updated messages: ${JSON.stringify(messagesRef.current)}`);
                   }
                 } catch (e) {
                   console.error('useChat - Error parsing incoming event message:', jsonString, e);
@@ -135,7 +124,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
               }
             }
 
-            // Update buffer: keep only the last incomplete message chunk
             textBuffer = textBuffer.endsWith('\n\n') ? '' : textBuffer.split('\n\n').slice(-1)[0];
           }
         }
@@ -173,43 +161,33 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   return { messages, setMessages, sendActionToChatbot, clearChatHistory, isMemOn };
 };
 
-// Function to parse incoming JSON strings and add detailed logging for malformed streams
 export function parseIncomingMessage(jsonString: string) {
   try {
-    // Attempt to parse the incoming JSON string
-    const parsedData = JSON.parse(jsonString);
+    const sanitizedString = jsonString.replace(/\\'/g, "'").replace(/\\"/g, '"');
+    const parsedData = JSON.parse(sanitizedString);
 
-    // Validate that the parsedData has the expected fields
     if (!parsedData.persona || !parsedData.message) {
-      console.error(`useChat - Incomplete message data received: ${jsonString}`);
+      console.error(`useChat - Incomplete message data received: ${sanitizedString}`);
       return null;
     }
 
     return parsedData;
   } catch (error) {
-    // Log detailed information about the malformed stream
     logDetailedErrorInfo(jsonString, error);
     return null;
   }
 }
 
-/**
- * Provides detailed analysis of the malformed JSON string.
- * Logs problematic characters, string length, and likely causes.
- */
 function logDetailedErrorInfo(jsonString: string, error: Error) {
   console.error(`useChat - Error Type: ${error.name}`);
   console.error(`useChat - Error Message: ${error.message}`);
-  
-  // Log the first and last 100 characters for context
   const snippetLength = 100;
   const startSnippet = jsonString.slice(0, snippetLength);
   const endSnippet = jsonString.slice(-snippetLength);
 
   console.error('useChat - JSON Snippet (Start):', startSnippet);
   console.error('useChat - JSON Snippet (End):', endSnippet);
-  
-  // Check for common formatting issues in the JSON string
+
   if (jsonString.trim().endsWith('"')) {
     console.error('useChat - Possible Issue: Unterminated string (ends with a double-quote).');
   } else if (jsonString.includes('undefined')) {
