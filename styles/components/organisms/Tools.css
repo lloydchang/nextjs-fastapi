@@ -4,20 +4,25 @@
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column; /* Arrange buttons vertically */
+  align-items: flex-end; /* Align buttons to the right */
+  padding: 20px; /* Add padding to ensure buttons don’t touch the edges */
 }
 
 .right-edge-button {
-  position: absolute; /* Absolute positioning to align within the left panel */
-  top: 20px; /* Keep it aligned at the top */
-  right: 20px; /* Position at the right-most part of the left panel */
-  padding: 8px 12px;
+  padding: 4px 8px; /* Further reduced padding */
   background-color: #0070f3;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px; /* Smaller radius for compactness */
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  z-index: 1003; /* Ensure the button is above other elements */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  z-index: 1003;
+  margin-bottom: 6px; /* Decreased spacing between buttons */
+  width: 80px; /* Significantly reduced width for a smaller button */
+  font-size: 12px; /* Smaller font size for compact appearance */
+  text-align: center; /* Center text inside the button */
 }
 
 .right-edge-button:hover {
@@ -32,34 +37,10 @@
   background-color: #b71c1c;
 }
 
-/* Modal Overlay */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 48%; /* Start slightly left of center */
-  width: 52%; /* Occupy 52% of the screen width */
-  height: 100%;
-  background: rgba(0, 0, 0, 0); /* Remove background since it only affects the right half */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1002;
+.external-link-button {
+  background-color: #0288d1;
 }
 
-/* Modal Content for Right-Half Layout */
-.modal-content {
-  position: relative;
-  width: 100%; /* Full width within the right-half overlay */
-  height: 100%; /* Full height */
-  border: 1px solid #ddd; /* Standard border */
-  border-radius: 0px; /* Remove border-radius for flush layout */
-  overflow: hidden;
-  box-shadow: -2px 0px 8px rgba(0, 0, 0, 0.1); /* Shadow only on the left side for separation */
-}
-
-/* Fully Opaque Iframe */
-.translucent-iframe {
-  opacity: 1; /* Full opacity */
-  filter: none; /* Remove any blur or visual effects */
-  pointer-events: auto; /* Make iframe interactive */
+.external-link-button:hover {
+  background-color: #0277bd;
 }

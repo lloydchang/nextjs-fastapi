@@ -11,7 +11,7 @@ import ChatInput from '../atoms/ChatInput';
 import ControlButtons from './ControlButtons';
 import styles from '../../styles/components/organisms/LeftPanel.module.css';
 import { useMedia } from '../../components/state/hooks/useMedia';
-import Tools from '../organisms/Tools';
+import Tools from './Tools';
 
 const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
   loading: () => <div className={styles.emptyPlaceholder}></div>,
