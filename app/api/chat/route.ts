@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         responses.push({ persona: 'Alice', message: aliceResponse });
         conversationContext += `\nAlice: ${aliceResponse}`;
 
-        let gemmaResponse = "Gemma: Gemma model is not available.";
+        let gemmaResponse = "I'm unavailable.";
         if (config.ollamaGemmaTextModel) {
             gemmaResponse = await handleTextWithOllamaGemmaTextModel({ userPrompt: conversationContext, textModel: config.ollamaGemmaTextModel }, config);
         }
