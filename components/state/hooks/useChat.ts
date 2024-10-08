@@ -2,6 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { z } from 'zod'; // For runtime type checking
+
+// Define a schema for incoming messages that allows for multi-line content
+const IncomingMessageSchema = z.object({
+  persona: z.string(),
+  message: z.string()
+});
 
 export interface Message {
   id: string;
@@ -23,6 +30,9 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   const messageQueueRef = useRef<string[]>([]);
   const isProcessingRef = useRef(false);
 
+  // Use a ref for the decoder to avoid recreating it on each render
+  const decoderRef = useRef(new TextDecoder());
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -32,7 +42,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
       const storedMessages = getItem();
       if (storedMessages) {
         setMessages(storedMessages);
-        console.log('useChat - Chat history loaded from memory:', storedMessages);
       }
     } else {
       setMessages([]);
@@ -42,7 +51,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   useEffect(() => {
     if (isMemOn && messages.length > 0) {
       setItem(messages);
-      console.log('useChat - Chat history saved to memory:', messages);
     }
   }, [messages, isMemOn, setItem]);
 
@@ -55,25 +63,23 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   const processQueue = useCallback(async () => {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
-    console.log('useChat - Starting to process the message queue.');
 
-    while (messageQueueRef.current.length > 0) {
-      const nextMessage = messageQueueRef.current.shift();
-      if (nextMessage) {
-        console.log('useChat - Sending next message from queue:', nextMessage);
-        await sendMessage(nextMessage);
+    try {
+      while (messageQueueRef.current.length > 0) {
+        const nextMessage = messageQueueRef.current.shift();
+        if (nextMessage) {
+          await sendMessage(nextMessage);
+        }
       }
+    } finally {
+      isProcessingRef.current = false;
     }
-
-    isProcessingRef.current = false;
-    console.log('useChat - Message queue processing complete.');
   }, []);
 
   const sendMessage = useCallback(
     async (input: string) => {
       const newMessageId = `${Date.now()}-${Math.random()}`;
       setMessages((prev) => [...prev, { id: newMessageId, sender: 'user', text: input }]);
-      console.log(`useChat - Sending message: ${input}`);
 
       try {
         const messagesArray = messagesRef.current.map((msg) => ({
@@ -82,7 +88,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         }));
 
         messagesArray.push({ role: 'user', content: input.trim() });
-        console.log('useChat - Constructed messages array for API:', messagesArray);
 
         const response = await fetch('/api/chat', {
           method: 'POST',
@@ -90,57 +95,66 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
           body: JSON.stringify({ messages: messagesArray }),
         });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const reader = response.body?.getReader();
         if (reader) {
-          const decoder = new TextDecoder();
-          let chunk;
-          let textBuffer = ''; // Buffer to hold the text data
+          let textBuffer = '';
+          let jsonBuffer = '';
+          let isInJson = false;
 
-          while ((chunk = await reader.read()) && !chunk.done) {
-            textBuffer += decoder.decode(chunk.value, { stream: true });
+          const processBuffer = () => {
+            const lines = textBuffer.split('\n');
+            textBuffer = '';
 
-            // Split by double newline to separate complete JSON chunks
-            const completeMessages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
-
-            // Process each complete message
-            for (const message of completeMessages) {
-              if (message.startsWith('data: ')) {
-                const jsonString = message.substring(6).trim();
-                console.log(`useChat - Raw incoming message: ${jsonString}`);
-
-                try {
-                  const parsedData = JSON.parse(jsonString);
-
-                  if (parsedData.message && parsedData.persona) {
-                    console.log(`useChat - Incoming message from persona: ${parsedData.persona}`);
-
-                    // Clean the message text to handle special formatting or unwanted metadata
-                    let cleanMessage = parsedData.message.split('**Explanation:**')[0].trim();
-                    cleanMessage = cleanMessage.replace(/\n+/g, '\n'); // Normalize newlines
-
-                    // Include persona in the message text
-                    const formattedMessage = `${parsedData.persona}: ${cleanMessage}`;
-                    console.log('useChat - Formatted incoming message:', formattedMessage);
-
-                    // Ensure the message gets displayed correctly
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const jsonString = line.substring(6).trim();
+                if (jsonString === '{') {
+                  isInJson = true;
+                  jsonBuffer = '{';
+                } else if (jsonString === '}') {
+                  isInJson = false;
+                  jsonBuffer += '}';
+                  try {
+                    const parsedData = IncomingMessageSchema.parse(JSON.parse(jsonBuffer));
+                    const formattedMessage = `${parsedData.persona}: ${parsedData.message.trim()}`;
                     setMessages((prev) => [
                       ...prev,
                       { id: `${Date.now()}-${Math.random()}`, sender: 'bot', text: formattedMessage },
                     ]);
-                    console.log(`useChat - Updated messages: ${JSON.stringify(messagesRef.current)}`);
+                  } catch (e) {
+                    console.error('Error parsing incoming event message:', jsonBuffer, e);
                   }
-                } catch (e) {
-                  console.error('useChat - Error parsing incoming event message:', jsonString, e);
+                  jsonBuffer = '';
+                } else if (isInJson) {
+                  jsonBuffer += jsonString;
                 }
+              } else {
+                textBuffer += line + '\n';
               }
             }
+          };
 
-            // Update buffer: keep only the last incomplete message chunk
-            textBuffer = textBuffer.endsWith('\n\n') ? '' : textBuffer.split('\n\n').slice(-1)[0];
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            textBuffer += decoderRef.current.decode(value, { stream: true });
+            processBuffer();
           }
+
+          // Process any remaining data in the buffer
+          processBuffer();
         }
       } catch (error) {
-        console.error(`useChat - Error generating content from API: ${error}`);
+        console.error(`Error generating content from API:`, error);
+        setMessages((prev) => [
+          ...prev,
+          { id: `${Date.now()}-${Math.random()}`, sender: 'bot', text: 'Sorry, an error occurred. Please try again.' },
+        ]);
       }
     },
     [getConversationContext]
@@ -148,13 +162,9 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
   const sendActionToChatbot = useCallback(
     async (input: string): Promise<void> => {
-      if (!input.trim()) {
-        console.warn('useChat - Ignoring empty input.');
-        return;
-      }
+      if (!input.trim()) return;
 
       messageQueueRef.current.push(input);
-      console.log(`useChat - Added message to queue: ${input}`);
       await processQueue();
     },
     [processQueue]
@@ -164,9 +174,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     setMessages([]);
     try {
       removeItem();
-      console.log('useChat - Chat history cleared from memory.');
     } catch (error) {
-      console.error('useChat - Failed to clear chat history from memory:', error);
+      console.error('Failed to clear chat history from memory:', error);
     }
   }, [removeItem]);
 
