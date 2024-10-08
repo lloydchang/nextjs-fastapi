@@ -41,7 +41,7 @@ const elizaPatterns = [
     { pattern: /My (.*)/i, response: "Tell me more about $1." },
     { pattern: /Am I (.*)/i, response: "Do you believe you are $1?" },
     { pattern: /It seems like (.*)/i, response: "Why does it seem that $1?" },
-    { pattern: /Everyone (.*)/i, response: "Can you be sure everyone $1?" },
+    { pattern: /Everyone (.*)/i, response: "Are you sure everyone loves $1?" },
     { pattern: /No one (.*)/i, response: "How does that make you feel?" },
     { pattern: /People (.*)/i, response: "Who specifically?" },
     { pattern: /What do you think\??/i, response: "Why do you ask what I think?" },
