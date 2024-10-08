@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import BackgroundImage from '../../public/images/TEDxSDG.jpg';
+import BackgroundImage from '../../public/images/TEDxSDG.gif';
 import { useChat } from '../../components/state/hooks/useChat';
 import dynamic from 'next/dynamic';
 import VideoStream from './VideoStream';
