@@ -80,7 +80,7 @@
   padding: 0px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   gap: 2px;
-  overflow-y: scroll; /* Always show vertical scrollbar */
+  overflow-y: auto;
 }
 
 /* Responsive styles for various device sizes */
