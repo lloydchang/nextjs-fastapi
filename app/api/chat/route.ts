@@ -11,6 +11,9 @@ import logger from './utils/logger';
 
 const config = getConfig();
 
+// Store the last response for each persona
+const lastResponses: { [key: string]: string } = {};
+
 async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
     const encoder = new TextEncoder();
     return new ReadableStream({
@@ -64,8 +67,14 @@ export async function POST(request: NextRequest) {
 
         // Handle Eliza's response
         if (elizaResult.status === 'fulfilled') {
-            responses.push({ persona: 'Eliza', message: elizaResult.value });
-            conversationContext += `\nEliza: ${elizaResult.value}`;
+            const newResponse = elizaResult.value;
+            if (newResponse !== lastResponses['Eliza']) {
+                responses.push({ persona: 'Eliza', message: newResponse });
+                conversationContext += `\nEliza: ${newResponse}`;
+                lastResponses['Eliza'] = newResponse;
+            } else {
+                logger.debug(`app/api/chat/route.ts - Skipping repeated response for Eliza.`);
+            }
         } else {
             const elizaError = `Eliza is unavailable: ${elizaResult.reason}`;
             logger.error(`app/api/chat/route.ts - ${elizaError}`);
@@ -74,8 +83,14 @@ export async function POST(request: NextRequest) {
 
         // Handle Alice's response
         if (aliceResult.status === 'fulfilled') {
-            responses.push({ persona: 'Alice', message: aliceResult.value });
-            conversationContext += `\nAlice: ${aliceResult.value}`;
+            const newResponse = aliceResult.value;
+            if (newResponse !== lastResponses['Alice']) {
+                responses.push({ persona: 'Alice', message: newResponse });
+                conversationContext += `\nAlice: ${newResponse}`;
+                lastResponses['Alice'] = newResponse;
+            } else {
+                logger.debug(`app/api/chat/route.ts - Skipping repeated response for Alice.`);
+            }
         } else {
             const aliceError = `Alice is unavailable: ${aliceResult.reason}`;
             logger.error(`app/api/chat/route.ts - ${aliceError}`);
@@ -84,7 +99,13 @@ export async function POST(request: NextRequest) {
 
         // Handle Gemma's response
         if (gemmaResult.status === 'fulfilled') {
-            responses.push({ persona: 'Gemma', message: gemmaResult.value });
+            const newResponse = gemmaResult.value;
+            if (newResponse !== lastResponses['Gemma']) {
+                responses.push({ persona: 'Gemma', message: newResponse });
+                lastResponses['Gemma'] = newResponse;
+            } else {
+                logger.debug(`app/api/chat/route.ts - Skipping repeated response for Gemma.`);
+            }
         } else {
             const gemmaError = `Gemma is unavailable: ${gemmaResult.reason}`;
             logger.error(`app/api/chat/route.ts - ${gemmaError}`);

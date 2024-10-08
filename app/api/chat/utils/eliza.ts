@@ -10,23 +10,43 @@ const elizaPatterns = [
     { pattern: /I need (.*)/i, response: "Why do you need $1?" },
     { pattern: /I want (.*)/i, response: "What would $1 change?" },
     { pattern: /Why can'?t I ([^\?]*)\??/i, response: "What’s stopping you?" },
-    { pattern: /Why don'?t you ([^\?]*)\??/i, response: "Should I $1?" },
+    { pattern: /Why don'?t you ([^\?]*)\??/i, response: "Should I do $1?" },
     { pattern: /Because (.*)/i, response: "Is that the only reason?" },
     { pattern: /I feel (.*)/i, response: "What makes you feel $1?" },
-    { pattern: /Can you ([^\?]*)\??/i, response: "Why would I $1?" },
+    { pattern: /Can you ([^\?]*)\??/i, response: "Why would I try $1?" },
     { pattern: /Can I ([^\?]*)\??/i, response: "Why wouldn’t you?" },
-    { pattern: /You are (.*)/i, response: "Why $1?" },
+    { pattern: /You are (.*)/i, response: "Who is $1?" },
     { pattern: /Are you ([^\?]*)\??/i, response: "Why ask?" },
-    { pattern: /What is (.*)/i, response: "Why $1?" },
+    { pattern: /What is (.*)/i, response: "What is $1?" },
     { pattern: /Who (.*)/i, response: "Who?" },
     { pattern: /How do I (.*)/i, response: "What’s your plan?" },
     { pattern: /How should I (.*)/i, response: "Does it fit?" },
-    { pattern: /I think (.*)/i, response: "Why $1?" },
-    { pattern: /Do you know (.*)\??/i, response: "Why $1?" },
+    { pattern: /I think (.*)/i, response: "When is $1?" },
+    { pattern: /Do you know (.*)\??/i, response: "Where is $1?" },
     { pattern: /Are you sure (.*)\??/i, response: "Why does it matter?" },
     { pattern: /Should I (.*)\??/i, response: "What’s holding you back?" },
     { pattern: /What if (.*)\??/i, response: "What then?" },
-    { pattern: /Why is (.*)\??/i, response: "Why $1?" },
+    { pattern: /Why is (.*)\??/i, response: "How is $1?" },
+    { pattern: /I am (.*)/i, response: "How long have you been feeling $1?" },
+    { pattern: /I can't (.*)/i, response: "What would it take for you to approach $1?" },
+    { pattern: /I don't (.*)/i, response: "What makes you resist $1?" },
+    { pattern: /I always (.*)/i, response: "Why always $1?" },
+    { pattern: /I never (.*)/i, response: "What would happen if you did?" },
+    { pattern: /Do you (.*)\??/i, response: "Do I try $1? What do you think?" },
+    { pattern: /I feel like (.*)/i, response: "Why do you feel like $1?" },
+    { pattern: /Is it possible (.*)\??/i, response: "What makes you question it?" },
+    { pattern: /Could I (.*)\??/i, response: "What would $1 achieve for you?" },
+    { pattern: /Why do I (.*)\??/i, response: "What do you think?" },
+    { pattern: /What should I (.*)\??/i, response: "What do you want to do?" },
+    { pattern: /My (.*)/i, response: "Tell me more about $1." },
+    { pattern: /Am I (.*)/i, response: "Do you believe you are $1?" },
+    { pattern: /It seems like (.*)/i, response: "Why does it seem that $1?" },
+    { pattern: /Everyone (.*)/i, response: "Can you be sure everyone $1?" },
+    { pattern: /No one (.*)/i, response: "How does that make you feel?" },
+    { pattern: /People (.*)/i, response: "Who specifically?" },
+    { pattern: /What do you think\??/i, response: "Why do you ask what I think?" },
+    { pattern: /Why can’t you (.*)\??/i, response: "What’s preventing you from $1?" },
+    { pattern: /Do you believe (.*)\??/i, response: "What does it mean if I believe $1?" },
 ];
 
 /**
@@ -41,6 +61,14 @@ function shuffleArray<T>(array: T[]): T[] {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+}
+
+/**
+ * Randomly returns either "this" or "that".
+ * @returns A random placeholder, either "this" or "that".
+ */
+function getRandomPlaceholder(): string {
+    return Math.random() < 0.5 ? "this" : "that";
 }
 
 /**
@@ -63,7 +91,8 @@ export async function generateElizaResponse(conversation: Array<{ role: string, 
         const match = lowercasedInput.match(rule.pattern);
         if (match) {
             logger.debug(`app/api/chat/utils/eliza.ts - Matched pattern: ${rule.pattern}`);
-            let response = rule.response.replace(/\$(\d+)/g, (_, index) => match[parseInt(index, 10)] || '');
+            // Replace placeholders in the response; use `getRandomPlaceholder()` if no match is found
+            let response = rule.response.replace(/\$(\d+)/g, (_, index) => match[parseInt(index, 10)] || getRandomPlaceholder());
 
             // Sanitize and format the response
             response = response.trim(); // Remove leading/trailing whitespace
@@ -78,7 +107,7 @@ export async function generateElizaResponse(conversation: Array<{ role: string, 
     const randomPattern = shuffledPatterns[Math.floor(Math.random() * shuffledPatterns.length)];
     logger.silly(`app/api/chat/utils/eliza.ts - No pattern matched. Using random response: ${randomPattern.response}`);
 
-    // Generate the random response without a pattern match
-    const randomResponse = randomPattern.response.replace(/\$\d+/g, "");
+    // Generate the random response without a pattern match, using `getRandomPlaceholder()` for placeholders
+    const randomResponse = randomPattern.response.replace(/\$\d+/g, getRandomPlaceholder());
     return randomResponse;
 }
