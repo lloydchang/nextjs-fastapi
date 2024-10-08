@@ -17,6 +17,21 @@ const alicePatterns = [
     { pattern: /Who are you\??/i, response: "I’m Alice, your project assistant." },
     { pattern: /Why is (.*)/i, response: "Why do you think $1?" },
     { pattern: /Where is (.*)\??/i, response: "Are you looking for $1 specifically?" },
+    { pattern: /What time is it\??/i, response: "I’m not a clock, but time is valuable! How’s your project going?" },
+    { pattern: /How do you work\??/i, response: "I analyze your project inputs and provide guidance." },
+    { pattern: /What’s your purpose\??/i, response: "I’m here to help you achieve your project’s goals." },
+    { pattern: /Tell me a joke/i, response: "Why did the project manager break up with the timeline? It was too controlling!" },
+    { pattern: /What is the SDG (.*)\??/i, response: "The SDG about $1 focuses on sustainable development. Let’s discuss it in context!" },
+    { pattern: /Explain (.*) to me\??/i, response: "I can break down $1 if it relates to project goals." },
+    { pattern: /Can we talk about (.*)\??/i, response: "Sure! Let’s dive into $1." },
+    { pattern: /I don’t understand (.*)/i, response: "Can you elaborate more on $1?" },
+    { pattern: /How should I start (.*)\??/i, response: "Begin by defining your project’s objectives clearly." },
+    { pattern: /Why don’t you (.*)\??/i, response: "That’s an interesting idea! Should we consider $1?" },
+    { pattern: /Can you recommend (.*)\??/i, response: "For $1, I’d suggest evaluating your project’s impact first." },
+    { pattern: /Should we include (.*)\??/i, response: "If $1 aligns with your project goals, it’s worth considering." },
+    { pattern: /What’s the best way to (.*)\??/i, response: "The best approach to $1 is to break it down into manageable steps." },
+    { pattern: /Do you think (.*)\??/i, response: "It depends on the context. Let’s explore $1 further!" },
+    { pattern: /How do you handle (.*)\??/i, response: "I process $1 based on project context and objectives." },
 ];
 
 /**
@@ -31,6 +46,14 @@ function shuffleArray<T>(array: T[]): T[] {
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+}
+
+/**
+ * Randomly returns either "this" or "that".
+ * @returns A random placeholder, either "this" or "that".
+ */
+function getRandomPlaceholder(): string {
+    return Math.random() < 0.5 ? "this" : "that";
 }
 
 /**
@@ -53,7 +76,8 @@ export async function generateAliceResponse(conversation: Array<{ role: string, 
         const match = lowercasedInput.match(rule.pattern);
         if (match) {
             logger.debug(`app/api/chat/utils/alice.ts - Matched pattern: ${rule.pattern}`);
-            let response = rule.response.replace(/\$(\d+)/g, (_, index) => match[parseInt(index, 10)] || '');
+            // Replace placeholders in the response; use `getRandomPlaceholder()` if no match is found
+            let response = rule.response.replace(/\$(\d+)/g, (_, index) => match[parseInt(index, 10)] || getRandomPlaceholder());
 
             // Sanitize and format the response
             response = response.trim(); // Remove leading/trailing whitespace
@@ -68,7 +92,7 @@ export async function generateAliceResponse(conversation: Array<{ role: string, 
     const randomPattern = shuffledPatterns[Math.floor(Math.random() * shuffledPatterns.length)];
     logger.silly(`app/api/chat/utils/alice.ts - No pattern matched. Using random response: ${randomPattern.response}`);
 
-    // Generate the random response without a pattern match
-    const randomResponse = randomPattern.response.replace(/\$\d+/g, "");
+    // Generate the random response without a pattern match, using `getRandomPlaceholder()` for placeholders
+    const randomResponse = randomPattern.response.replace(/\$\d+/g, getRandomPlaceholder());
     return randomResponse;
 }
