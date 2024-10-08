@@ -57,11 +57,10 @@ const ChatPanel: React.FC = () => {
         // Send the message via WebSocket
         if (socketRef.current) {
           socketRef.current.send(formattedMessage);
+          setChatInput(''); // Clear input after sending
         } else {
           setError('WebSocket is not connected.');
         }
-
-        setChatInput('');
       }
     },
     []
