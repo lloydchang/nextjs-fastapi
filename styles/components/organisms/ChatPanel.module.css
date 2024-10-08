@@ -13,7 +13,7 @@
 /* Placeholder for dynamic loading */
 .emptyPlaceholder {
   width: 100vw;
-  height: 10vh;
+  height: 100vh;
   display: flex;
   opacity: 0;
   visibility: hidden;
