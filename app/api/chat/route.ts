@@ -6,33 +6,8 @@ import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaCon
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/logger';
-import { Server } from 'ws';
 
 const config = getConfig();
-const wsServer = new Server({ noServer: true });
-
-// WebSocket connection handling
-export function setupWebSocket(server: any) {
-    server.on('upgrade', (request: any, socket: any, head: any) => {
-        wsServer.handleUpgrade(request, socket, head, (ws) => {
-            wsServer.emit('connection', ws, request);
-        });
-    });
-
-    wsServer.on('connection', (ws) => {
-        ws.on('message', (message) => {
-            console.log(`Received message: ${message}`);
-            // Broadcast to all clients
-            wsServer.clients.forEach((client) => {
-                if (client.readyState === client.OPEN) {
-                    client.send(message);
-                }
-            });
-        });
-
-        ws.send('Welcome to the WebSocket server!');
-    });
-}
 
 export async function POST(request: NextRequest) {
     try {
