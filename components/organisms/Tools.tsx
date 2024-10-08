@@ -1,44 +1,55 @@
 // File: components/organisms/Tools.tsx
 
-import React, { useState } from 'react';
-import '../../styles/components/organisms/Tools.css'; // Import the CSS file
+import React from 'react';
+import '../../styles/components/organisms/Tools.css';
 
 interface ToolsProps {
   messages: string[];
 }
 
-const Tools: React.FC<ToolsProps> = ({ messages }) => {
-  const [isIframeVisible, setIframeVisible] = useState(false);
-
-  // Toggle the visibility of the iframe modal
-  const toggleIframe = () => {
-    setIframeVisible(!isIframeVisible);
+const Tools: React.FC<ToolsProps> = () => {
+  // Function to handle opening a new tab for a given URL
+  const openInNewTab = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div className="tools-container">
-      {/* Conditionally render "Tools" or strikethrough "Close" button at the right-most part of the left panel */}
+      {/* Localizing Button */}
       <button
-        className={`right-edge-button ${isIframeVisible ? 'close-button-active' : ''}`}
-        onClick={toggleIframe}
+        className="right-edge-button"
+        onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
       >
-        {isIframeVisible ? <s>Tools</s> : 'Tools'}
+        Localizing
       </button>
 
-      {/* Layered Modal with the Iframe */}
-      {isIframeVisible && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <iframe
-              src="https://www.local2030.org/discover-tools"
-              width="100%"
-              height="100%"
-              className="translucent-iframe"
-              title="Local2030 Toolbox"
-            />
-          </div>
-        </div>
-      )}
+      {/* Learning Button */}
+      <button
+        className="right-edge-button"
+        onClick={() => openInNewTab('https://www.unsdglearn.org/learning/')}
+      >
+        Learning
+      </button>
+
+      {/* Financing Button */}
+      <button
+        className="right-edge-button"
+        onClick={() => openInNewTab('https://jointsdgfund.org/sdg-financing')}
+      >
+        Financing
+      </button>
+
+      {/* News Button */}
+      <button
+        className="right-edge-button"
+        onClick={() =>
+          openInNewTab(
+            'https://news.google.com/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YTI1c1poSUNaVzRvQUFQAQ'
+          )
+        }
+      >
+        News
+      </button>
     </div>
   );
 };
