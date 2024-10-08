@@ -68,7 +68,7 @@
 }
 
 .chatLayer {
-  position: absolute;
+  position: relative;
   bottom: 0px;
   left: 0px;
   width: calc(100% - 40px);
@@ -79,58 +79,4 @@
   border-radius: 8px;
   padding: 0px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Desktop view (above 1024px) */
-@media (min-width: 1024px) {
-  .container {
-    width: 50%; /* Left panel takes 50% width */
-    height: 100%; /* Full height */
-  }
-}
-
-/* Tablet view (768px to 1024px) */
-@media (max-width: 1024px) and (min-width: 768px) {
-  .container {
-    width: 100%; /* Full width for tablet view */
-    height: 100vh; /* Full height */
-  }
-
-  .toolsLayer, .chatLayer {
-    max-width: 100%; /* Expand layers to fit the container width */
-  }
-}
-
-/* Mobile view (below 768px) */
-@media (max-width: 767px) {
-  .container {
-    width: 100%; /* Full width for mobile */
-    height: auto; /* Auto height */
-    flex-direction: column; /* Stack elements vertically */
-  }
-
-  .videoStream, .videoStreamHidden {
-    height: 50%; /* Half height for the video stream */
-  }
-
-  .toolsLayer, .chatLayer {
-    max-width: 100%; /* Expand to fit container width */
-    border-radius: 0; /* Remove border radius */
-  }
-}
-
-/* Small mobile devices (below 480px) */
-@media (max-width: 480px) {
-  .container {
-    height: auto; /* Auto height for small screens */
-  }
-
-  .videoStream, .videoStreamHidden {
-    height: 50vh; /* Set video stream height to 50vh */
-  }
-
-  .toolsLayer, .chatLayer {
-    width: calc(100% - 20px); /* Slightly reduce width */
-    left: 10px; /* Center content horizontally */
-  }
 }
