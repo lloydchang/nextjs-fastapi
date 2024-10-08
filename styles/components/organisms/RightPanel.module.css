@@ -10,11 +10,10 @@
 .searchContainer {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0px;
   padding: 10px;
   margin-bottom: 0px;
-  font-size: 0.7em;
-  width: 700px; /* Example fixed width */
+  font-size: 0.5em;
 }
 
 .searchRowContainer {
@@ -22,17 +21,19 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 60px; /* Fixed height */
+  padding: 0px;
+  height: 30px; /* Fixed height */
   box-sizing: border-box; /* Ensure padding/border are included in width */
 }
 
 .searchInput {
-  flex: 1;
+  flex: 1; /* Allows the input to take available space within the fixed container */
+  font-size: 2em;
   padding: 10px;
   border-radius: 5px;
   border: 1px solid #ccc;
   color: black;
-  box-sizing: border-box;
+  box-sizing: border-box; /* Ensure padding/border are included in width */
 }
 
 .button {
@@ -70,34 +71,37 @@
   transform: translateY(-2px);
 }
 
+/* Container to keep the spinner centered */
 .loadingSpinnerContainer {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
   height: 24px;
   width: 24px;
 }
 
+/* Spinner animation */
 .loadingSpinner {
   width: 24px;
   height: 24px;
-  animation: spin 1s linear infinite;
-  transform-origin: 50% 50%;
+  animation: spin 1s linear infinite; /* The rotation animation */
+  transform-origin: 50% 50%; /* Ensure it spins from the center */
 }
 
+/* Define the keyframes for the rotation */
 @keyframes spin {
   0% {
-    transform: rotate(0deg);
+    transform: rotate(0deg); /* Start position */
   }
   100% {
-    transform: rotate(360deg);
+    transform: rotate(360deg); /* End position */
   }
 }
 
 .errorContainer {
-  margin-top: -10px;
-  margin-bottom: 0px;
-  text-align: center;
+  margin-top: -10px; /* Add spacing above */
+  margin-bottom: 0px; /* Add spacing below */
+  text-align: center; /* Center the text inside */
 }
 
 .nowPlaying {
@@ -105,10 +109,7 @@
 }
 
 .videoFrame {
-  width: 100%;
-  height: 100%; /* Ensures the iframe takes full height */
-  border: none; /* Remove borders */
-  object-fit: fill; /* Ensures content fills the container without preserving aspect ratio */
+  border-radius: 0px;
 }
 
 .resultsContainer {
@@ -124,7 +125,7 @@
   background-color: #000000;
   color: white;
   transition: background-color 0.3s ease;
-  cursor: pointer;
+  cursor: pointer; /* Ensures the cursor indicates interactivity */
 }
 
 .resultItem:hover {
@@ -167,22 +168,25 @@
   z-index: 0;
 }
 
+/* Scrollbar styles */
 .scrollableContainer::-webkit-scrollbar {
-  width: 12px;
+  width: 12px; /* Width of the scrollbar */
 }
 
 .scrollableContainer::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f1f1; /* Track color */
 }
 
 .scrollableContainer::-webkit-scrollbar-thumb {
-  background: #2196f3;
-  border-radius: 10px;
+  background: #2196f3; /* Scrollbar color */
+  border-radius: 10px; /* Rounded corners */
 }
 
 .scrollableContainer::-webkit-scrollbar-thumb:hover {
-  background: #0070f3;
+  background: #0070f3; /* Color on hover */
 }
+
+/* Remove duplicate .resultItem and .resultLink selectors if present */
 
 @media (max-width: 800px) {
   .searchContainer {
