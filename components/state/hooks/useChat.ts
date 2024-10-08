@@ -118,6 +118,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                       ...prev,
                       { id: `${Date.now()}-${Math.random()}`, sender: 'bot', text: formattedMessage },
                     ]);
+                    console.log(`useChat - Updated messages: ${JSON.stringify(messagesRef.current)}`);
                   }
                 } catch (e) {
                   console.warn('useChat - Could not parse incoming event message:', jsonString);
