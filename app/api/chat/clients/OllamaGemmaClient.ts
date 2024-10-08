@@ -13,7 +13,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
-  logger.verbose(`generateFromOllamaGemma - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.silly(`generateFromOllamaGemma - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     // Log the JSON body being sent to the endpoint

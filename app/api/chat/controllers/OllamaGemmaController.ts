@@ -24,7 +24,7 @@ export async function handleTextWithOllamaGemmaTextModel(
   logger.debug(`handleTextWithOllamaGemmaTextModel - Generating text for model: ${textModel}`);
   
   // Log the user prompt and model details
-  logger.debug(`handleTextWithOllamaGemmaTextModel - User prompt: ${userPrompt}`);
+  logger.silly(`handleTextWithOllamaGemmaTextModel - User prompt: ${userPrompt}`);
   
   const response = await generateFromOllamaGemma({
     endpoint: ollamaGemmaEndpoint,
