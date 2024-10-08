@@ -159,8 +159,8 @@ const RightPanel: React.FC = () => {
                 className={styles.resultItem} 
                 onClick={() => {
                   setSelectedTalk(talk);
-                  if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll RightPanel to top
-                  if (listRef.current) listRef.current.scrollTop = 0; // Scroll ResultsList to top
+                  if (panelRef.current) panelRef.current.scrollTop = 0; // Scroll RightPanel to top only
+                  // Removed the scroll for listRef
                 }}>
                 <h3>
                   <a href="#" className={styles.resultLink}>{talk.title}</a>
