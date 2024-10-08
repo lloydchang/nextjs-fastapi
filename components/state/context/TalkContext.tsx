@@ -1,17 +1,9 @@
-// context/TalkContext.tsx
+// File: components/state/context/TalkContext.tsx
 
-'use client'; // Mark this file as a Client Component
+'use client';
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
-
-interface Talk {
-  title: string;
-  description: string;
-  presenter: string;
-  sdg_tags: string[];
-  similarity_score: number;
-  url: string;
-}
+import { Talk } from '../types'; // Import the shared Talk type
 
 interface TalkContextType {
   talks: Talk[];

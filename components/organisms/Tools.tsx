@@ -3,12 +3,7 @@
 import React from 'react';
 import '../../styles/components/organisms/Tools.css';
 
-interface ToolsProps {
-  messages: string[];
-}
-
-const Tools: React.FC<ToolsProps> = () => {
-  // Function to handle opening a new tab for a given URL
+const Tools: React.FC = () => {  // Removed the `messages` prop from the component
   const openInNewTab = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -39,6 +34,14 @@ const Tools: React.FC<ToolsProps> = () => {
         Financing
       </button>
 
+      {/* Reporting Button */}
+      <button
+        className="right-edge-button"
+        onClick={() => openInNewTab('https://open-sdg.org/community')}
+      >
+        Reporting
+      </button>
+
       {/* News Button */}
       <button
         className="right-edge-button"
@@ -50,6 +53,7 @@ const Tools: React.FC<ToolsProps> = () => {
       >
         News
       </button>
+
     </div>
   );
 };

@@ -23,7 +23,7 @@ export function streamResponseWithLogs(text: string, logs: string[], context: st
       if (config.logsInResponse) {
         logs.forEach((log) => {
           const responseSegment: ResponseSegment = { message: `[Log]: ${log}`, context: context };
-          controller.enqueue(JSON.stringify(responseSegment) + '\n');
+          controller.enqueue(responseSegment); // Directly enqueue the ResponseSegment object
         });
       }
 
@@ -31,7 +31,7 @@ export function streamResponseWithLogs(text: string, logs: string[], context: st
         const message = segment.trim();
         if (message) {
           const responseSegment: ResponseSegment = { message: message, context: context };
-          controller.enqueue(JSON.stringify(responseSegment) + '\n');
+          controller.enqueue(responseSegment); // Directly enqueue the ResponseSegment object
         }
       });
       controller.close();

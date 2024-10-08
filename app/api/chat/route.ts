@@ -6,7 +6,6 @@ import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaCon
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/logger';
-import { validateEnvVars } from './utils/validate';
 
 const config = getConfig();
 
@@ -33,6 +32,11 @@ export async function POST(request: NextRequest) {
 
     logger.debug(`app/api/chat/route.ts - Constructed prompt: ${prompt}`);
 
+    if (!config.ollamaGemmaTextModel) {
+      logger.error("app/api/chat/route.ts - Ollama Gemma Text Model is not defined in the configuration.");
+      return NextResponse.json({ error: 'Ollama Gemma Text Model is not defined in the configuration.' }, { status: 500 });
+    }
+
     const results = await Promise.allSettled([
       handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: config.ollamaGemmaTextModel }, config),
       // Add more handlers as needed...
@@ -48,7 +52,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No valid responses from any model.' }, { status: 500 });
     }
   } catch (error) {
-    logger.error(`app/api/chat/route.ts - Error: ${error.message}`);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: error.status || 500 });
+    // Type narrowing to check if error is an instance of Error
+    if (error instanceof Error) {
+      logger.error(`app/api/chat/route.ts - Error: ${error.message}`);
+      return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    } else {
+      logger.error(`app/api/chat/route.ts - Unknown error occurred.`);
+      return NextResponse.json({ error: 'Unknown error occurred' }, { status: 500 });
+    }
   }
 }

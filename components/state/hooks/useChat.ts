@@ -1,10 +1,11 @@
-// File: hooks/useChat.ts
+// File: components/state/hooks/useChat.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface Message {
   id: string;
   sender: 'user' | 'bot';
   text: string;
+  isInterim?: boolean; // Add the isInterim property as optional
 }
 
 interface UseChatProps {
@@ -103,20 +104,25 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
         } else {
           throw new Error(data.message || 'Unexpected response format');
         }
-      } catch (error: any) { // Using 'any' to handle different error types
-        console.error('Error generating content from API:', {
-          input: input.trim(),
-          error: error.message || 'Unknown error occurred',
-        });
-        const errorId = `error-${Date.now()}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: errorId,
-            sender: 'bot',
-            text: `Error: ${error.message || 'Unknown error occurred'}`, // Display error in chat
-          },
-        ]);
+      } catch (error) { 
+        // Error handling with type narrowing
+        if (error instanceof Error) {
+          console.error('Error generating content from API:', {
+            input: input.trim(),
+            error: error.message,
+          });
+          const errorId = `error-${Date.now()}`;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: errorId,
+              sender: 'bot',
+              text: `Error: ${error.message}`, // Display error in chat
+            },
+          ]);
+        } else {
+          console.error('Unknown error occurred:', error);
+        }
       }
     },
     [getConversationContext]
@@ -126,6 +132,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
   const processQueue = useCallback(async () => {
     if (isProcessingRef.current) return; // Prevent multiple processors
     isProcessingRef.current = true;
+    console.log('Starting to process the message queue.');
 
     while (messageQueueRef.current.length > 0) {
       const nextMessage = messageQueueRef.current.shift(); // Get the next message from the queue
@@ -135,15 +142,16 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
 
     isProcessingRef.current = false;
+    console.log('Message queue processing complete.');
   }, [sendMessage]);
 
   // Function to add a message to the queue and initiate processing
   const sendActionToChatbot = useCallback(
-    (input: string) => {
+    async (input: string): Promise<void> => { // Ensure sendActionToChatbot returns a Promise<void>
       if (!input.trim()) return; // Ignore empty input
 
       messageQueueRef.current.push(input); // Add the input to the queue
-      processQueue(); // Start processing the queue
+      await processQueue(); // Wait for queue processing to complete
     },
     [processQueue]
   );
@@ -159,5 +167,5 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
     }
   }, []);
 
-  return { messages, setMessages, sendActionToChatbot, clearChatHistory };
+  return { messages, setMessages, sendActionToChatbot, clearChatHistory, isMemOn }; // Add isMemOn to the return value
 };
