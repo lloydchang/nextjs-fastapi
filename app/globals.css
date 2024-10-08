@@ -28,6 +28,7 @@ body {
     )
     rgb(var(--background-start-rgb));
   transition: none !important; /* Disable any default body transitions */
+  overflow: hidden; /* Prevent body scrolling */
 }
 
 /* Animation for spinning elements */
@@ -40,9 +41,10 @@ body {
 .container {
   display: grid;
   width: 100vw; /* Full screen width */
-  height: 100vh; /* Full screen height */
+  max-height: calc(100vh - env(safe-area-inset-bottom)); /* Adjust for mobile browser bars */
   padding: 0px; /* No padding around the container */
   transition: none !important; /* Disable transitions for the container */
+  overflow: auto; /* Allow scrolling inside the container */
 }
 
 /* Desktop and large screens */
