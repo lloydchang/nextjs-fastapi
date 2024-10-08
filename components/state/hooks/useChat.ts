@@ -109,7 +109,6 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
                 console.log(`useChat - Raw incoming message: ${jsonString}`);
 
                 try {
-                  // Sanitize the incoming JSON string before parsing to avoid errors
                   const parsedData = parseIncomingMessage(preprocessJSONString(jsonString));
 
                   if (parsedData?.message && parsedData?.persona) {
@@ -177,7 +176,7 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 // Function to parse incoming JSON strings and handle malformed streams
 export function parseIncomingMessage(jsonString: string) {
   try {
-    // Attempt to parse the incoming JSON string after preprocessing it
+    // Attempt to parse the incoming JSON string
     const parsedData = JSON.parse(jsonString);
 
     // Validate that the parsedData has the expected fields
