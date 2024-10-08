@@ -1,4 +1,4 @@
-/* styles/TalkPanel.module.css */
+/* File: styles/TalkPanel.module.css */
 
 .TalkPanel {
   flex: 1;
@@ -187,29 +187,26 @@
   background: #0070f3; /* Color on hover */
 }
 
-/* Remove duplicate .resultItem and .resultLink selectors if present */
-
+/* Responsive styles for various device sizes */
 @media (max-width: 800px) {
   .searchContainer {
     width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .greetingContainer,
-  .searchRowContainer {
-    width: 100%;
+    flex-direction: column; /* Stack items vertically */
+    align-items: stretch; /* Stretch items to fill container */
   }
 
   .searchRowContainer {
-    gap: 5px;
+    width: 100%; /* Full width on smaller screens */
+    gap: 5px; /* Reduced gap */
   }
 
   .searchInput {
-    padding: 8px;
+    padding: 8px; /* Reduced padding */
+    font-size: 1.5em; /* Adjust font size for better fit */
   }
 
   .button {
-    padding: 8px 12px;
+    padding: 8px 12px; /* Reduced padding for buttons */
+    font-size: 1.5em; /* Adjust font size for better fit */
   }
 }

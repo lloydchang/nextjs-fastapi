@@ -80,3 +80,24 @@
   padding: 0px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
+/* Responsive styles for various device sizes */
+
+/* Mobile devices */
+@media (max-width: 767px) {
+  .container {
+    flex-direction: column; /* Stack items vertically on mobile */
+  }
+
+  .toolsLayer, .chatLayer {
+    width: 100%; /* Full width on mobile */
+    max-width: none; /* Remove max-width constraint */
+  }
+}
+
+/* Tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    flex-direction: row; /* Display items side by side on tablets */
+  }
+}
