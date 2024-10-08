@@ -84,7 +84,7 @@
 /* Desktop view (above 1024px) */
 @media (min-width: 1024px) {
   .container {
-    width: 50%; /* Left panel takes 50% width */
+    width: 100%; /* Full width */
     height: 100%; /* Full height */
   }
 }
