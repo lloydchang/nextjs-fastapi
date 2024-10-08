@@ -1,23 +1,32 @@
-// components/atoms/TestSpeechRecognition.tsx
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-import React, { useEffect, useState, useRef } from 'react';
-import styles from '../styles/atoms/TestSpeechRecognition.module.css';
-
-interface TestSpeechRecognitionProps {
-  isMicOn: boolean; // Prop to control mic state
-  onSpeechResult: (finalResults: string) => void; // Callback for final results
-  onInterimUpdate: (interimResult: string) => void; // Callback for interim results
+interface UseSpeechRecognitionProps {
+  isMicOn: boolean;
+  onSpeechResult: (finalResults: string) => void;
+  onInterimUpdate: (interimResult: string) => void;
 }
 
-const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
+const useSpeechRecognition = ({
   isMicOn,
   onSpeechResult,
   onInterimUpdate,
-}) => {
-  const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
-  const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
-  const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
-  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
+}: UseSpeechRecognitionProps) => {
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const startListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  }, []);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  }, []);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -25,8 +34,8 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
 
     if (SpeechRecognitionConstructor) {
       const recognition = new SpeechRecognitionConstructor();
-      recognition.continuous = true; // Continuous listening mode
-      recognition.interimResults = true; // Capture interim results
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -43,13 +52,10 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         }
 
         if (finalTranscript) {
-          setResults(finalTranscript.trim());
           onSpeechResult(finalTranscript.trim());
-          setInterimResults('');
         }
 
         if (interimTranscript) {
-          setInterimResults(interimTranscript.trim());
           onInterimUpdate(interimTranscript.trim());
         }
       };
@@ -57,10 +63,8 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event);
         setIsListening(false);
-        // Restart recognition on error
         if (isMicOn) {
-          recognition.start();
-          setIsListening(true);
+          startListening();
         }
       };
 
@@ -68,12 +72,11 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         console.log('Speech recognition ended. Restarting...');
         setIsListening(false);
         if (isMicOn) {
-          recognition.start(); // Restart speech recognition if mic is still on
-          setIsListening(true);
+          startListening();
         }
       };
 
-      recognitionRef.current = recognition; // Save the recognition instance
+      recognitionRef.current = recognition;
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
@@ -83,30 +86,20 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
         recognitionRef.current.onend = null;
         recognitionRef.current.onresult = null;
         recognitionRef.current.onerror = null;
-        recognitionRef.current = null; // Clean up the recognition instance
+        stopListening();
       }
     };
-  }, [onSpeechResult, onInterimUpdate, isMicOn]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
 
   useEffect(() => {
-    if (isMicOn && recognitionRef.current) {
-      recognitionRef.current.start(); // Start recognition when mic is on
-      setIsListening(true);
-    } else if (recognitionRef.current) {
-      recognitionRef.current.stop(); // Stop recognition when mic is off
-      setIsListening(false);
+    if (isMicOn) {
+      startListening();
+    } else {
+      stopListening();
     }
-  }, [isMicOn]);
+  }, [isMicOn, startListening, stopListening]);
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.transcriptContainer}>
-        <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
-        <p><strong>Final Results:</strong> {results}</p>
-        <p><strong>Interim Results:</strong> {interimResults}</p>
-      </div>
-    </div>
-  );
+  return { isListening };
 };
 
-export default React.memo(TestSpeechRecognition);
+export default useSpeechRecognition;

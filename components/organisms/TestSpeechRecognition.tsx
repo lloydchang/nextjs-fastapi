@@ -1,4 +1,7 @@
+// File: components/organisms/TestSpeechRecognition.tsx
+
 import React, { useEffect, useRef, useState } from 'react';
+import '../../types/speech-recognition'; // Import the custom type declarations
 
 interface TestSpeechRecognitionProps {
   isMicOn: boolean;

@@ -53,7 +53,8 @@ const LeftPanel: React.FC = () => {
 
       {/* Stacked Layout */}
       <div className={styles.toolsLayer}>
-        <Tools messages={messages} />
+        {/* Removed `messages` prop from Tools */}
+        <Tools />
       </div>
       
       <div className={styles.chatLayer} ref={chatContainerRef}>

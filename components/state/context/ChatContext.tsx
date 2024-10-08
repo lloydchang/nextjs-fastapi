@@ -1,12 +1,15 @@
-// context/ChatContext.tsx
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useChat, Message } from '../hooks/useChat';
+// File: components/state/context/ChatContext.tsx
 
+import React, { createContext, useContext, ReactNode } from 'react';
+import { Message, useChat } from '../hooks/useChat';
+
+// Define the ChatContextProps type
 interface ChatContextProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  sendActionToChatbot: (input: string) => Promise<void>;
+  sendActionToChatbot: (input: string) => Promise<void>;  // Expect Promise<void> here
   clearChatHistory: () => void;
+  isMemOn: boolean;
 }
 
 const ChatContext = createContext<ChatContextProps | undefined>(undefined);
