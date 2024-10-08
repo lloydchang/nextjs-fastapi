@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
             logger.debug(`app/api/chat/route.ts - Eliza response: ${newResponse}`);
             if (newResponse !== lastResponses['Eliza']) {
                 responses.push({ persona: 'Eliza', message: newResponse });
-                conversationContext += `\nEliza: ${newResponse}`;
                 lastResponses['Eliza'] = newResponse;
             } else {
                 logger.debug(`app/api/chat/route.ts - Skipping repeated response for Eliza.`);
@@ -90,7 +89,6 @@ export async function POST(request: NextRequest) {
             logger.debug(`app/api/chat/route.ts - Alice response: ${newResponse}`);
             if (newResponse !== lastResponses['Alice']) {
                 responses.push({ persona: 'Alice', message: newResponse });
-                conversationContext += `\nAlice: ${newResponse}`;
                 lastResponses['Alice'] = newResponse;
             } else {
                 logger.debug(`app/api/chat/route.ts - Skipping repeated response for Alice.`);
@@ -104,7 +102,7 @@ export async function POST(request: NextRequest) {
         // Handle Gemma's response
         if (gemmaResult.status === 'fulfilled') {
             const newResponse = gemmaResult.value;
-            logger.debug(`app/api/chat/route.ts - Gemma response: ${newResponse}`);
+            logger.debug(`app/api/chat/route.ts - Gemma raw response: ${JSON.stringify(newResponse)}`);
             if (newResponse !== lastResponses['Gemma']) {
                 responses.push({ persona: 'Gemma', message: newResponse });
                 lastResponses['Gemma'] = newResponse;
