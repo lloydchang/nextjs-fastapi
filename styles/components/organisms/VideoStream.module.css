@@ -2,7 +2,7 @@
 
 .video {
   width: 100%;
-  height: auto;
-  border-radius: 8px;
-  background-color: #000;
+  height: 100%; /* Set to 100% height to fill the container */
+  object-fit: fill; /* Ensures that the video fills the container without preserving the aspect ratio */
+  border: none; /* Remove any borders */
 }
