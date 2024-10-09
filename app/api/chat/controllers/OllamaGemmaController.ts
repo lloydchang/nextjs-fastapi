@@ -17,7 +17,6 @@ export async function handleTextWithOllamaGemmaTextModel(
 ): Promise<string> {
   const { ollamaGemmaEndpoint } = getConfig();
 
-  // Check if the required endpoint is defined before proceeding
   if (!ollamaGemmaEndpoint) {
     logger.silly('handleTextWithOllamaGemmaTextModel - Missing Ollama Gemma endpoint.');
     return '';
@@ -28,7 +27,7 @@ export async function handleTextWithOllamaGemmaTextModel(
 
   try {
     const response = await generateFromOllamaGemma({
-      endpoint: ollamaGemmaEndpoint, // Type is guaranteed to be string
+      endpoint: ollamaGemmaEndpoint,
       prompt: userPrompt,
       model: textModel,
     });
@@ -42,7 +41,8 @@ export async function handleTextWithOllamaGemmaTextModel(
     return response;
 
   } catch (error) {
-    logger.error(`handleTextWithOllamaGemmaTextModel - Error during text generation: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`handleTextWithOllamaGemmaTextModel - Error during text generation: ${errorMessage}`);
     return '';
   }
 }
