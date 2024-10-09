@@ -51,6 +51,14 @@ const Tools: React.FC = () => {
           Fund
         </button>
 
+        {/* Map Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://mptf.undp.org/#impact-to-label')}
+        >
+          Map
+        </button>
+
         {/* News Button */}
         <button
           className="right-edge-button"
