@@ -88,11 +88,18 @@ export async function generateAliceResponse(conversation: Array<{ role: string, 
         }
     }
 
-    // If no pattern matched, select a random response from existing patterns
-    // const randomPattern = shuffledPatterns[Math.floor(Math.random() * shuffledPatterns.length)];
-    // logger.silly(`app/api/chat/utils/alice.ts - No pattern matched. Using random response: ${randomPattern.response}`);
+    // If no pattern matched, return a default response
+    logger.silly(`app/api/chat/utils/alice.ts - No pattern matched. Returning default response.`);
+    return "I'm not sure I understand. Could you please provide more context?";
 
-    // // Generate the random response without a pattern match, using `getRandomPlaceholder()` for placeholders
-    // const randomResponse = randomPattern.response.replace(/\$\d+/g, getRandomPlaceholder());
-    // return randomResponse;
+    // The following lines are commented out for now:
+    /*
+    // If no pattern matched, select a random response from existing patterns
+    const randomPattern = shuffledPatterns[Math.floor(Math.random() * shuffledPatterns.length)];
+    logger.silly(`app/api/chat/utils/alice.ts - No pattern matched. Using random response: ${randomPattern.response}`);
+
+    // Generate the random response without a pattern match, using `getRandomPlaceholder()` for placeholders
+    const randomResponse = randomPattern.response.replace(/\$\d+/g, getRandomPlaceholder());
+    return randomResponse;
+    */
 }

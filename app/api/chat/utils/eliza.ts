@@ -91,10 +91,7 @@ export async function generateElizaResponse(conversation: Array<{ role: string, 
         const match = lowercasedInput.match(rule.pattern);
         if (match) {
             logger.debug(`app/api/chat/utils/eliza.ts - Matched pattern: ${rule.pattern}`);
-            // Replace placeholders in the response; use `getRandomPlaceholder()` if no match is found
             let response = rule.response.replace(/\$(\d+)/g, (_, index) => match[parseInt(index, 10)] || getRandomPlaceholder());
-
-            // Sanitize and format the response
             response = response.trim(); // Remove leading/trailing whitespace
             response = response.replace(/\s+/g, ' '); // Replace multiple spaces/newlines with a single space
             logger.debug(`app/api/chat/utils/eliza.ts - Generated response: ${response}`);
@@ -103,11 +100,17 @@ export async function generateElizaResponse(conversation: Array<{ role: string, 
         }
     }
 
-    // // If no pattern matched, select a random response from existing patterns
-    // const randomPattern = shuffledPatterns[Math.floor(Math.random() * shuffledPatterns.length)];
-    // logger.silly(`app/api/chat/utils/eliza.ts - No pattern matched. Using random response: ${randomPattern.response}`);
+    // The following lines are commented out for now:
+    /*
+    // If no pattern matched, select a random response from existing patterns
+    const randomPattern = shuffledPatterns[Math.floor(Math.random() * shuffledPatterns.length)];
+    logger.silly(`app/api/chat/utils/eliza.ts - No pattern matched. Using random response: ${randomPattern.response}`);
 
-    // // Generate the random response without a pattern match, using `getRandomPlaceholder()` for placeholders
-    // const randomResponse = randomPattern.response.replace(/\$\d+/g, getRandomPlaceholder());
-    // return randomResponse;
+    // Generate the random response without a pattern match, using `getRandomPlaceholder()` for placeholders
+    const randomResponse = randomPattern.response.replace(/\$\d+/g, getRandomPlaceholder());
+    return randomResponse;
+    */
+
+    // Default response if no conditions are met
+    return "Can you tell me more about that?";
 }
