@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         },
       },
       {
-        persona: 'OllamaGemma',
+        persona: 'Ollama Gemma',
         generate: () => {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.ollamaGemmaTextModel
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         },
       },
       {
-        persona: 'CloudflareGemma',
+        persona: 'Cloudflare Gemma',
         generate: () => {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.cloudflareGemmaTextModel
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         },
       },
       {
-        persona: 'GoogleVertexGemma',
+        persona: 'Google Vertex Gemma',
         generate: () => {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.googleVertexGemmaTextModel
