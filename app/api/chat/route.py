@@ -75,10 +75,6 @@ async def chat_route(request: Request):
 
         response_functions = [
             {
-                "persona": "Eliza",
-                "generate": lambda: generate_eliza_response([{"role": "system", "content": system_prompt}] + recent_messages)
-            },
-            {
                 "persona": "Ollama Gemma",
                 "generate": lambda: (
                     handle_text_with_ollama_gemma_text_model(
@@ -115,16 +111,24 @@ async def chat_route(request: Request):
         tasks = [asyncio.create_task(res["generate"]()) for res in shuffled_responses if res["generate"] is not None]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        responses = []
-        for res, func in zip(results, shuffled_responses):
-            persona = func["persona"]
-            if isinstance(res, Exception):
-                logger.error(f"{persona} is unavailable: {str(res)}")
-            elif res is not None and res != last_responses.get(persona):
-                responses.append({"persona": persona, "message": res})
-                last_responses[persona] = res
+        gemma_responses = [res for res in results if not isinstance(res, Exception) and res is not None]
 
-        combined_stream = create_combined_stream(responses)
+        responses = []
+
+        # If no other persona responded, add Eliza's response
+        if len(gemma_responses) == 0:
+            eliza_response = generate_eliza_response([{"role": "system", "content": system_prompt}] + recent_messages)
+            responses.append({"persona": "Eliza", "message": eliza_response})
+        else:
+            for res, func in zip(results, shuffled_responses):
+                persona = func["persona"]
+                if isinstance(res, Exception):
+                    logger.error(f"{persona} is unavailable: {str(res)}")
+                elif res is not None and res != last_responses.get(persona):
+                    responses.append({"persona": persona, "message": res})
+                    last_responses[persona] = res
+
+        combined_stream = await create_combined_stream(responses)
         return StreamingResponse(combined_stream, media_type="text/event-stream", headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",

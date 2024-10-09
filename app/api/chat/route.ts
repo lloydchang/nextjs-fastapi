@@ -71,19 +71,12 @@ export async function POST(request: NextRequest) {
 
     const responseFunctions = [
       {
-        persona: 'Eliza',
-        generate: () => {
-          const elizaContext = createFilteredContext('Eliza', recentMessages);
-          return generateElizaResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
-        },
-      },
-      {
         persona: 'Ollama Gemma',
         generate: () => {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.ollamaGemmaTextModel
             ? handleTextWithOllamaGemmaTextModel({ userPrompt: gemmaContext, textModel: config.ollamaGemmaTextModel }, config)
-            : Promise.resolve(null); // Don't respond if out of office
+            : Promise.resolve(null);
         },
       },
       {
@@ -92,7 +85,7 @@ export async function POST(request: NextRequest) {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.cloudflareGemmaTextModel
             ? handleTextWithCloudflareGemmaTextModel({ userPrompt: gemmaContext, textModel: config.cloudflareGemmaTextModel }, config)
-            : Promise.resolve(null); // Don't respond if out of office
+            : Promise.resolve(null);
         },
       },
       {
@@ -101,30 +94,26 @@ export async function POST(request: NextRequest) {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.googleVertexGemmaTextModel
             ? handleTextWithGoogleVertexGemmaTextModel({ userPrompt: gemmaContext, textModel: config.googleVertexGemmaTextModel }, config)
-            : Promise.resolve(null); // Don't respond if out of office
+            : Promise.resolve(null);
         },
       },
     ];
 
-    const shuffledResponses = shuffleArray(responseFunctions);
+    const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
-    const results = await Promise.allSettled(shuffledResponses.map((res) => res.generate()));
+    const gemmaResponses = results.filter(res => res.status === 'fulfilled' && res.value !== null);
+    
+    let responses: Array<{ persona: string, message: string }> = [];
 
-    const responses: Array<{ persona: string, message: string }> = [];
-
-    results.forEach((result, index) => {
-      const { persona } = shuffledResponses[index];
-      if (result.status === 'fulfilled') {
-        const newResponse = result.value;
-        if (newResponse !== lastResponses[persona]) {
-          responses.push({ persona, message: newResponse });
-          lastResponses[persona] = newResponse;
-        }
-      } else {
-        const errorResponse = `${persona} is unavailable: ${result.reason}`;
-        responses.push({ persona, message: errorResponse });
-      }
-    });
+    if (gemmaResponses.length === 0) {
+      const elizaResponse = await generateElizaResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
+      responses.push({ persona: 'Eliza', message: elizaResponse });
+    } else {
+      responses = gemmaResponses.map((result, index) => ({
+        persona: responseFunctions[index].persona,
+        message: result.value,
+      }));
+    }
 
     const combinedStream = await createCombinedStream(responses);
     return new NextResponse(combinedStream, {
