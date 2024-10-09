@@ -3,7 +3,7 @@
 import logger from '../utils/logger';
 import { generateFromCloudflareGemma } from '../clients/CloudflareGemmaClient';
 import { getConfig } from '../utils/config';
-import { validateEnvVars } from '../utils/validate'; // Ensure the utility is correctly imported
+import { validateEnvVars } from '../utils/validate';
 
 /**
  * Handles text generation using the Cloudflare Gemma model.
@@ -17,9 +17,9 @@ export async function handleTextWithCloudflareGemmaTextModel(
 ): Promise<string> {
   const { cloudflareGemmaEndpoint } = getConfig();
 
-  // Validate required environment variables
-  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT'])) {
-    logger.silly('handleTextWithCloudflareGemmaTextModel - Missing required environment variables.');
+  // Check if the required endpoint is defined before proceeding
+  if (!cloudflareGemmaEndpoint) {
+    logger.silly('handleTextWithCloudflareGemmaTextModel - Missing Cloudflare Gemma endpoint.');
     return '';
   }
 
@@ -28,7 +28,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
 
   try {
     const response = await generateFromCloudflareGemma({
-      endpoint: cloudflareGemmaEndpoint,
+      endpoint: cloudflareGemmaEndpoint, // Type is guaranteed to be string
       prompt: userPrompt,
       model: textModel,
     });
