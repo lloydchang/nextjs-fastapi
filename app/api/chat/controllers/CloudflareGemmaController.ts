@@ -1,9 +1,9 @@
 // File: app/api/chat/controllers/CloudflareGemmaController.ts
 
-import logger from '../utils/logger';
-import { generateFromCloudflareGemma } from '../clients/CloudflareGemmaClient';
-import { getConfig } from '../utils/config';
-import { validateEnvVars } from '../utils/validate';
+import logger from 'app/api/chat/utils/logger';
+import { generateFromCloudflareGemma } from 'app/api/chat/clients/CloudflareGemmaClient';
+import { getConfig } from 'app/api/chat/utils/config';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 
 /**
  * Handles text generation using the Cloudflare Gemma model.

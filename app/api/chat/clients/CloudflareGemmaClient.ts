@@ -1,8 +1,8 @@
 // File: app/api/chat/clients/CloudflareGemmaClient.ts
 
-import { parseStream } from '../utils/streamParser';
-import logger from '../utils/logger';
-import { systemPrompt } from '../utils/prompt';
+import { parseStream } from 'app/api/chat/utils/streamParser';
+import logger from 'app/api/chat/utils/logger';
+import { systemPrompt } from 'app/api/chat/utils/prompt';
 
 export async function generateFromCloudflareGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
