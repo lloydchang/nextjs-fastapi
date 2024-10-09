@@ -17,6 +17,10 @@ export interface AppConfig {
   cloudflareGemmaTextModel?: string;
   cloudflareGemmaEndpoint?: string;
   cloudflareGemmaApiKey?: string;
+  cloudflareLlamaTextModel?: string;                // Added Cloudflare Llama properties
+  cloudflareLlamaEmbeddingModel?: string;           // Added Cloudflare Llama properties
+  cloudflareLlamaEndpoint?: string;                 // Added Cloudflare Llama properties
+  cloudflareLlamaApiKey?: string;                   // Added Cloudflare Llama properties
   googleVertexGeminiTextModel?: string;
   googleVertexGeminiEmbeddingModel?: string;
   googleVertexGeminiLocation?: string;
@@ -26,6 +30,10 @@ export interface AppConfig {
   googleVertexGemmaTextModel?: string;
   googleVertexGemmaEndpoint?: string; 
   googleVertexGemmaLocation?: string; 
+  googleVertexLlamaTextModel?: string;              // Added Google Vertex Llama properties
+  googleVertexLlamaEmbeddingModel?: string;         // Added Google Vertex Llama properties
+  googleVertexLlamaEndpoint?: string;               // Added Google Vertex Llama properties
+  googleVertexLlamaLocation?: string;               // Added Google Vertex Llama properties
   ollamaGemmaTextModel?: string;
   ollamaGemmaEmbeddingModel?: string;
   ollamaGemmaEndpoint?: string;
@@ -56,6 +64,10 @@ export function getConfig(): AppConfig {
     cloudflareGemmaTextModel: process.env.CLOUDFLARE_GEMMA_TEXT_MODEL,
     cloudflareGemmaEndpoint: process.env.CLOUDFLARE_GEMMA_ENDPOINT,
     cloudflareGemmaApiKey: process.env.CLOUDFLARE_GEMMA_API_KEY,
+    cloudflareLlamaTextModel: process.env.CLOUDFLARE_LLAMA_TEXT_MODEL,                // Added Cloudflare Llama model
+    cloudflareLlamaEmbeddingModel: process.env.CLOUDFLARE_LLAMA_EMBEDDING_MODEL,      // Added Cloudflare Llama embedding model
+    cloudflareLlamaEndpoint: process.env.CLOUDFLARE_LLAMA_ENDPOINT,                   // Added Cloudflare Llama endpoint
+    cloudflareLlamaApiKey: process.env.CLOUDFLARE_LLAMA_API_KEY,                      // Added Cloudflare Llama API key
     googleVertexGeminiTextModel: process.env.GOOGLE_VERTEX_GEMINI_TEXT_MODEL,
     googleVertexGeminiEmbeddingModel: process.env.GOOGLE_VERTEX_GEMINI_EMBEDDING_MODEL,
     googleVertexGeminiLocation: process.env.GOOGLE_VERTEX_GEMINI_LOCATION,
@@ -65,6 +77,10 @@ export function getConfig(): AppConfig {
     googleVertexGemmaTextModel: process.env.GOOGLE_VERTEX_GEMMA_TEXT_MODEL,
     googleVertexGemmaEndpoint: process.env.GOOGLE_VERTEX_GEMMA_ENDPOINT, 
     googleVertexGemmaLocation: process.env.GOOGLE_VERTEX_GEMMA_LOCATION, 
+    googleVertexLlamaTextModel: process.env.GOOGLE_VERTEX_LLAMA_TEXT_MODEL,           // Added Google Vertex Llama model
+    googleVertexLlamaEmbeddingModel: process.env.GOOGLE_VERTEX_LLAMA_EMBEDDING_MODEL, // Added Google Vertex Llama embedding model
+    googleVertexLlamaEndpoint: process.env.GOOGLE_VERTEX_LLAMA_ENDPOINT,              // Added Google Vertex Llama endpoint
+    googleVertexLlamaLocation: process.env.GOOGLE_VERTEX_LLAMA_LOCATION,              // Added Google Vertex Llama location
     ollamaGemmaTextModel: process.env.OLLAMA_GEMMA_TEXT_MODEL,
     ollamaGemmaEmbeddingModel: process.env.OLLAMA_GEMMA_EMBEDDING_MODEL,
     ollamaGemmaEndpoint: process.env.OLLAMA_GEMMA_ENDPOINT,

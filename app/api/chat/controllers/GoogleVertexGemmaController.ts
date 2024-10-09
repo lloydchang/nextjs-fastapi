@@ -1,9 +1,9 @@
 // File: app/api/chat/controllers/GoogleVertexGemmaController.ts
 
-import logger from '../utils/logger';
-import { generateFromGoogleVertexGemma } from '../clients/GoogleVertexGemmaClient';
-import { getConfig } from '../utils/config';
-import { validateEnvVars } from '../utils/validate';
+import logger from 'app/api/chat/utils/logger';
+import { generateFromGoogleVertexGemma } from 'app/api/chat/clients/GoogleVertexGemmaClient';
+import { getConfig } from 'app/api/chat/utils/config';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 
 /**
  * Handles text generation using the Google Vertex Gemma model.
