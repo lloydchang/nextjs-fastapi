@@ -20,7 +20,7 @@ const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
 
 const ChatPanel: React.FC = () => {
   const { mediaState, videoRef, audioRef, startCam, stopCam, toggleMic, togglePip, toggleMem } = useMedia();
-  const { messages, sendMessage, clearChatHistory, startReasoningLoop, isThinking } = useChat({ isMemOn: mediaState.isMemOn });
+  const { messages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -33,27 +33,23 @@ const ChatPanel: React.FC = () => {
       if (messageToSend) {
         const prefix = isManual ? '' : '🎙️ ';
         const formattedMessage = `${prefix}${messageToSend}`;
-        console.log(`ChatPanel - Preparing to send message: "${formattedMessage}"`);
+        console.log(`ChatPanel - Sending message: ${formattedMessage}`);
 
         try {
-          await sendMessage(formattedMessage);
-          console.log('ChatPanel - Message sent successfully.');
+          await sendActionToChatbot(formattedMessage);
           setChatInput('');
           setError(null);
           setErrorDetails(null);
         } catch (err: any) {
-          console.error('ChatPanel - Error sending message:', {
-            message: err.message,
-            stack: err.stack,
-          });
+          console.error(`ChatPanel - Error sending message: ${err}`);
           setError('Failed to communicate with server.');
-          setErrorDetails(err.message || 'Unknown error occurred.');
+          setErrorDetails('Unknown error occurred.');
         }
       } else {
         console.warn('ChatPanel - Attempted to send an empty message.');
       }
     },
-    [sendMessage]
+    [sendActionToChatbot]
   );
 
   return (
@@ -64,9 +60,7 @@ const ChatPanel: React.FC = () => {
           {errorDetails && <p className={styles.errorDetails}>{errorDetails}</p>}
         </div>
       )}
-      {/* Added unoptimized attribute to prevent Next.js optimization for animated GIF */}
-      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} unoptimized />
-
+      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
@@ -81,11 +75,7 @@ const ChatPanel: React.FC = () => {
       
       <div className={styles.chatLayer} ref={chatContainerRef}>
         <HeavyChatMessages messages={messages} />
-        <ChatInput
-          chatInput={chatInput}
-          setChatInput={setChatInput}
-          handleChat={() => handleChat(chatInput, true)}
-        />
+        <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
         <ControlButtons
           isCamOn={mediaState.isCamOn}
           isMicOn={mediaState.isMicOn}
@@ -97,8 +87,6 @@ const ChatPanel: React.FC = () => {
           isMemOn={mediaState.isMemOn}
           toggleMem={toggleMem}
           eraseMemory={clearChatHistory}
-          startLoop={startReasoningLoop}
-          isThinking={isThinking}
         />
       </div>
     </div>

@@ -2,104 +2,149 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from './utils/config';
+import { generateElizaResponse } from './utils/eliza';
+import { generateAliceResponse } from './utils/alice';
 import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaController';
+import { handleTextWithCloudflareGemmaTextModel } from './controllers/CloudflareGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from './controllers/GoogleVertexGemmaController';
+import { sanitizeInput } from './utils/sanitize';
+import { systemPrompt } from './utils/prompt';
 import logger from './utils/logger';
 
 const config = getConfig();
 
-const queryTypeOrder: ("news" | "data" | "talk")[] = ["news", "data", "talk"]; // Maintain a round-robin order
-let previousQueryType: "news" | "data" | "talk" = "news"; // Track the last used query type
+const lastResponses: { [key: string]: string } = {};
 
-// Helper function to rotate to the next query type
-const getNextQueryType = (): "news" | "data" | "talk" => {
-  const currentIndex = queryTypeOrder.indexOf(previousQueryType);
-  const nextIndex = (currentIndex + 1) % queryTypeOrder.length;
-  previousQueryType = queryTypeOrder[nextIndex];
-  return previousQueryType;
-};
+function shuffleArray<T>(array: T[]): T[] {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function safeStringify(obj: Record<string, string>): string {
+  return JSON.stringify(obj)
+    .replace(/\n/g, "\\n")
+    .replace(/[\u2028\u2029]/g, "");
+}
+
+function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>) {
+  return messages
+    .filter((msg) => msg.persona !== persona)
+    .map((msg) => {
+      const contentWithoutPersonaName = msg.content.replace(new RegExp(persona, 'gi'), '');
+      return `${msg.role === 'user' ? 'User' : msg.persona}: ${sanitizeInput(contentWithoutPersonaName)}`;
+    })
+    .join('\n');
+}
+
+async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
+  const encoder = new TextEncoder();
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        for (const { persona, message } of messages) {
+          const formattedMessage = safeStringify({ persona, message });
+          controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
+          logger.debug(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
+        }
+        controller.close();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
+        logger.error(`app/api/chat/route.ts - Error in stream: ${errorMessage}`);
+        controller.enqueue(encoder.encode(`data: {"error": "${errorMessage}"}\n\n`));
+        controller.close();
+      }
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
     logger.debug(`app/api/chat/route.ts - Handling POST request`);
 
-    // Log request headers
-    const requestHeaders = Object.fromEntries(request.headers.entries());
-    logger.debug(`app/api/chat/route.ts - Request Headers:`, requestHeaders);
+    const { messages } = await request.json();
+    logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
 
-    // Log request body
-    const requestBody = await request.json();
-    logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(requestBody.messages)}`);
-
-    if (!Array.isArray(requestBody.messages) || requestBody.messages.length === 0) {
-      logger.warn(`app/api/chat/route.ts - Invalid request format: "messages" is not an array or is empty.`);
-      return NextResponse.json(
-        { error: 'Invalid request format. "messages" must be a non-empty array.' },
-        { status: 400 }
-      );
+    if (!Array.isArray(messages)) {
+      logger.warn(`app/api/chat/route.ts - Invalid request format: messages is not an array.`);
+      return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
     }
 
-    // Extract the conversation context
-    const conversationContext = requestBody.messages
-      .map((msg: { role: string; content: string }) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-      .join('\n');
+    const recentMessages = messages.slice(-3);
 
-    logger.debug(`app/api/chat/route.ts - Conversation Context:\n${conversationContext}`);
+    const responseFunctions = [
+      {
+        persona: 'Eliza',
+        generate: () => {
+          const elizaContext = createFilteredContext('Eliza', recentMessages);
+          return generateElizaResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
+        },
+      },
+      {
+        persona: 'Alice',
+        generate: () => {
+          const aliceContext = createFilteredContext('Alice', recentMessages);
+          return generateAliceResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
+        },
+      },
+      {
+        persona: 'OllamaGemma',
+        generate: () => {
+          const gemmaContext = createFilteredContext('Gemma', recentMessages);
+          return config.ollamaGemmaTextModel
+            ? handleTextWithOllamaGemmaTextModel({ userPrompt: gemmaContext, textModel: config.ollamaGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration.");
+        },
+      },
+      {
+        persona: 'CloudflareGemma',
+        generate: () => {
+          const gemmaContext = createFilteredContext('Gemma', recentMessages);
+          return config.cloudflareGemmaTextModel
+            ? handleTextWithCloudflareGemmaTextModel({ userPrompt: gemmaContext, textModel: config.cloudflareGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Cloudflare Gemma Text Model is not defined in the configuration.");
+        },
+      },
+      {
+        persona: 'GoogleVertexGemma',
+        generate: () => {
+          const gemmaContext = createFilteredContext('Gemma', recentMessages);
+          return config.googleVertexGemmaTextModel
+            ? handleTextWithGoogleVertexGemmaTextModel({ userPrompt: gemmaContext, textModel: config.googleVertexGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Google Vertex Gemma Text Model is not defined in the configuration.");
+        },
+      },
+    ];
 
-    // Advanced LLM Prompt with context
-    const llmPrompt = `
-You are an intelligent agent. Based on the provided conversation context, suggest the next step:
+    const shuffledResponses = shuffleArray(responseFunctions);
 
-Context:
-${conversationContext}
+    const results = await Promise.allSettled(shuffledResponses.map((res) => res.generate()));
 
-Your goal is to guide the user through a search process. Consider rotating through search types to avoid repetition. 
-Provide the next query and indicate whether it should be a "news", "data", or "talk" search. Also, suggest improvements if applicable.
-`;
+    const responses: Array<{ persona: string, message: string }> = [];
 
-    logger.debug(`app/api/chat/route.ts - LLM Prompt Prepared:\n${llmPrompt}`);
-
-    // Send the prompt to the LLM (Gemma) to determine the next action
-    const llmResponse = await handleTextWithOllamaGemmaTextModel(
-      { userPrompt: llmPrompt, textModel: config.ollamaGemmaTextModel },
-      config
-    );
-
-    logger.debug(`app/api/chat/route.ts - Received LLM response: ${llmResponse}`);
-
-    // Determine the next query type based on the LLM response and prevent repetition
-    let nextQueryType: "news" | "data" | "talk" = "news"; // Default type
-
-    // Keyword-based determination of the next query type
-    if (/data|statistics|information/i.test(llmResponse)) {
-      nextQueryType = "data";
-    } else if (/talk|conversation|discussion/i.test(llmResponse)) {
-      nextQueryType = "talk";
-    } else if (/news|latest|updates/i.test(llmResponse)) {
-      nextQueryType = "news";
-    } else {
-      nextQueryType = getNextQueryType(); // Rotate through types if unclear
-      logger.debug(`app/api/chat/route.ts - No clear keyword match. Rotating to next query type: "${nextQueryType}"`);
-    }
-
-    // Logging the selected query type and the next query for transparency
-    logger.debug(`app/api/chat/route.ts - Selected nextQueryType: "${nextQueryType}"`);
-    logger.debug(`app/api/chat/route.ts - Next query suggested: "${llmResponse}"`);
-
-    // Log the response body
-    const responseBody = { nextQuery: llmResponse, queryType: nextQueryType };
-    logger.debug(`app/api/chat/route.ts - Responding with:`, responseBody);
-
-    return NextResponse.json(responseBody);
-  } catch (error) {
-    // Log detailed error information
-    logger.error(`app/api/chat/route.ts - Error:`, {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace available',
+    results.forEach((result, index) => {
+      const { persona } = shuffledResponses[index];
+      if (result.status === 'fulfilled') {
+        const newResponse = result.value;
+        if (newResponse !== lastResponses[persona]) {
+          responses.push({ persona, message: newResponse });
+          lastResponses[persona] = newResponse;
+        }
+      } else {
+        const errorResponse = `${persona} is unavailable: ${result.reason}`;
+        responses.push({ persona, message: errorResponse });
+      }
     });
 
-    // Optionally, log the request body if necessary
-    // Be cautious about logging sensitive information
-
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    const combinedStream = await createCombinedStream(responses);
+    return new NextResponse(combinedStream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
+    logger.error(`app/api/chat/route.ts - Error: ${errorMessage}`);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
