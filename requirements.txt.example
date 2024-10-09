@@ -1,7 +1,0 @@
-colorlog
-fastapi
-numpy
-pandas
-sentence_transformers
-torch
-uvicorn

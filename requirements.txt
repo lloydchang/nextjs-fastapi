@@ -1,6 +1,6 @@
-# File: requirements.txt
-
+colorlog
 fastapi
+httpx
 uvicorn
 numpy
 rapidfuzz

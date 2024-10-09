@@ -3,7 +3,8 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "fastapi-dev": "fastapi-search/run_fastapi-search.sh",
+    "fastapi-dev": "./run_fastapi-dev.sh",
+    "fastapi-search": "fastapi-search/run_fastapi-search.sh",
     "next-dev": "next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
     "build": "next build",
