@@ -9,7 +9,6 @@ import random
 import re
 from app.api.chat.utils.config import get_config
 from app.api.chat.utils.eliza import generate_eliza_response
-from app.api.chat.utils.alice import generate_alice_response
 from app.api.chat.controllers.ollama.gemma import handle_text_with_ollama_gemma_text_model
 from app.api.chat.controllers.cloudflare.gemma import handle_text_with_cloudflare_gemma_text_model
 from app.api.chat.controllers.google.vertex.gemma import handle_text_with_google_vertex_gemma_text_model
@@ -80,51 +79,50 @@ async def chat_route(request: Request):
                 "generate": lambda: generate_eliza_response([{"role": "system", "content": system_prompt}] + recent_messages)
             },
             {
-                "persona": "Alice",
-                "generate": lambda: generate_alice_response([{"role": "system", "content": system_prompt}] + recent_messages)
+                "persona": "Ollama Gemma",
+                "generate": lambda: (
+                    handle_text_with_ollama_gemma_text_model(
+                        {"user_prompt": create_filtered_context("Gemma", recent_messages),
+                         "text_model": config.get("ollamaGemmaTextModel")},
+                        config
+                    ) if config.get("ollamaGemmaTextModel") else None
+                )
             },
             {
-                "persona": "OllamaGemma",
-                "generate": lambda: handle_text_with_ollama_gemma(
-                    {"user_prompt": create_filtered_context("Gemma", recent_messages),
-                     "text_model": config.get("ollamaGemmaTextModel")},
-                    config
-                ) if config.get("ollamaGemmaTextModel") else "Out of office. Ollama Gemma Text Model is not defined in the configuration."
+                "persona": "Cloudflare Gemma",
+                "generate": lambda: (
+                    handle_text_with_cloudflare_gemma_text_model(
+                        {"user_prompt": create_filtered_context("Gemma", recent_messages),
+                         "text_model": config.get("cloudflareGemmaTextModel")},
+                        config
+                    ) if config.get("cloudflareGemmaTextModel") else None
+                )
             },
             {
-                "persona": "CloudflareGemma",
-                "generate": lambda: handle_text_with_cloudflare_gemma(
-                    {"user_prompt": create_filtered_context("Gemma", recent_messages),
-                     "text_model": config.get("cloudflareGemmaTextModel")},
-                    config
-                ) if config.get("cloudflareGemmaTextModel") else "Out of office. Cloudflare Gemma Text Model is not defined in the configuration."
-            },
-            {
-                "persona": "GoogleVertexGemma",
-                "generate": lambda: handle_text_with_google_vertex_gemma(
-                    {"user_prompt": create_filtered_context("Gemma", recent_messages),
-                     "text_model": config.get("googleVertexGemmaTextModel")},
-                    config
-                ) if config.get("googleVertexGemmaTextModel") else "Out of office. Google Vertex Gemma Text Model is not defined in the configuration."
+                "persona": "Google Vertex Gemma",
+                "generate": lambda: (
+                    handle_text_with_google_vertex_gemma_text_model(
+                        {"user_prompt": create_filtered_context("Gemma", recent_messages),
+                         "text_model": config.get("googleVertexGemmaTextModel")},
+                        config
+                    ) if config.get("googleVertexGemmaTextModel") else None
+                )
             },
         ]
 
         shuffled_responses = shuffle_array(response_functions)
 
-        tasks = [asyncio.create_task(res["generate"]()) for res in shuffled_responses]
+        tasks = [asyncio.create_task(res["generate"]()) for res in shuffled_responses if res["generate"] is not None]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         responses = []
         for res, func in zip(results, shuffled_responses):
             persona = func["persona"]
             if isinstance(res, Exception):
-                error_response = f"{persona} is unavailable: {str(res)}"
-                responses.append({"persona": persona, "message": error_response})
-            else:
-                new_response = res
-                if new_response != last_responses.get(persona):
-                    responses.append({"persona": persona, "message": new_response})
-                    last_responses[persona] = new_response
+                logger.error(f"{persona} is unavailable: {str(res)}")
+            elif res is not None and res != last_responses.get(persona):
+                responses.append({"persona": persona, "message": res})
+                last_responses[persona] = res
 
         combined_stream = create_combined_stream(responses)
         return StreamingResponse(combined_stream, media_type="text/event-stream", headers={
