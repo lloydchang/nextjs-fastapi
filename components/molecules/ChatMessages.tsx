@@ -1,6 +1,7 @@
-// components/molecules/ChatMessages.tsx
+// File: src/components/molecules/ChatMessages.tsx
 
 import React, { useEffect, useRef } from 'react';
+import ChatMessage from '../atoms/ChatMessage'; // Import the ChatMessage component
 import { Message } from '../state/hooks/useChat';
 import styles from '../../styles/components/molecules/ChatMessages.module.css';
 
@@ -41,18 +42,16 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
 
   return (
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
-      {messages.map((msg, index) => {
-        const isInterim = msg.isInterim && msg.sender === 'user';
+      {messages.map((msg) => {
+        const isInterim = msg.isInterim && msg.sender.toLowerCase() === 'user';
 
         return (
-          <div
-            key={index}
-            className={`${styles.message} ${
-              msg.sender === 'user' ? styles.userMessage : styles.botMessage
-            } ${isInterim ? styles.interim : ''}`}
-          >
-            <span className={styles.text}>{msg.text}</span>
-          </div>
+          <ChatMessage
+            key={msg.id} // Use unique key from msg.id
+            sender={msg.sender}
+            text={msg.text}
+            isInterim={isInterim}
+          />
         );
       })}
     </div>
