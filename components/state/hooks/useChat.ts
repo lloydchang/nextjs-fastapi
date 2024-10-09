@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import he from 'he'; // Import `he` for HTML entity decoding
 
 export interface Message {
   id: string;
@@ -163,7 +164,8 @@ export const useChat = ({ isMemOn }: UseChatProps) => {
 
 export function parseIncomingMessage(jsonString: string) {
   try {
-    const sanitizedString = jsonString.replace(/\\'/g, "'").replace(/\\"/g, '"');
+    // Decode HTML entities and special characters using `he`
+    const sanitizedString = he.decode(jsonString);
     const parsedData = JSON.parse(sanitizedString);
 
     if (!parsedData.persona || !parsedData.message) {
@@ -187,18 +189,4 @@ function logDetailedErrorInfo(jsonString: string, error: Error) {
 
   console.error('useChat - JSON Snippet (Start):', startSnippet);
   console.error('useChat - JSON Snippet (End):', endSnippet);
-
-  if (jsonString.trim().endsWith('"')) {
-    console.error('useChat - Possible Issue: Unterminated string (ends with a double-quote).');
-  } else if (jsonString.includes('undefined')) {
-    console.error('useChat - Possible Issue: Contains the string "undefined", which is not valid in JSON.');
-  } else if (jsonString.includes('{') && !jsonString.includes('}')) {
-    console.error('useChat - Possible Issue: Opening curly brace found without a matching closing brace.');
-  } else if (jsonString.includes('[') && !jsonString.includes(']')) {
-    console.error('useChat - Possible Issue: Opening square bracket found without a matching closing bracket.');
-  } else {
-    console.error('useChat - Possible Issue: Unknown JSON formatting issue.');
-  }
-
-  console.error('useChat - Suggested Fix: Verify if all JSON strings are correctly formatted with matching braces, quotes, and commas.');
 }
