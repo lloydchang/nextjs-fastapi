@@ -14,18 +14,18 @@ export interface AppConfig {
   azureOpenAIO1EmbeddingModel?: string;
   azureOpenAIO1Endpoint?: string;
   azureOpenAIO1ApiKey?: string;
+  cloudflareGemmaTextModel?: string;
+  cloudflareGemmaEndpoint?: string;
+  cloudflareGemmaApiKey?: string;
   googleVertexGeminiTextModel?: string;
   googleVertexGeminiEmbeddingModel?: string;
   googleVertexGeminiLocation?: string;
   googleVertexGeminiEndpoint?: string;
   googleApplicationCredentials?: string;
   googleCloudProject?: string;
-  googleVertexGemmaTextModel?: string; // Add this line
-  googleVertexGemmaEndpoint?: string;  // Add this line
-  googleVertexGemmaLocation?: string;  // Add this line
-  cloudflareGemmaTextModel?: string;
-  cloudflareGemmaEndpoint?: string;
-  cloudflareApiKey?: string;
+  googleVertexGemmaTextModel?: string;
+  googleVertexGemmaEndpoint?: string; 
+  googleVertexGemmaLocation?: string; 
   ollamaGemmaTextModel?: string;
   ollamaGemmaEmbeddingModel?: string;
   ollamaGemmaEndpoint?: string;
@@ -55,16 +55,16 @@ export function getConfig(): AppConfig {
     azureOpenAIO1ApiKey: process.env.AZURE_OPENAI_O1_API_KEY,
     cloudflareGemmaTextModel: process.env.CLOUDFLARE_GEMMA_TEXT_MODEL,
     cloudflareGemmaEndpoint: process.env.CLOUDFLARE_GEMMA_ENDPOINT,
-    cloudflareApiKey: process.env.CLOUDFLARE_API_KEY,
+    cloudflareGemmaApiKey: process.env.CLOUDFLARE_GEMMA_API_KEY,
     googleVertexGeminiTextModel: process.env.GOOGLE_VERTEX_GEMINI_TEXT_MODEL,
     googleVertexGeminiEmbeddingModel: process.env.GOOGLE_VERTEX_GEMINI_EMBEDDING_MODEL,
     googleVertexGeminiLocation: process.env.GOOGLE_VERTEX_GEMINI_LOCATION,
     googleVertexGeminiEndpoint: process.env.GOOGLE_VERTEX_GEMINI_ENDPOINT,
     googleApplicationCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     googleCloudProject: process.env.GOOGLE_CLOUD_PROJECT,
-    googleVertexGemmaTextModel: process.env.GOOGLE_VERTEX_GEMMA_TEXT_MODEL, // Add this line
-    googleVertexGemmaEndpoint: process.env.GOOGLE_VERTEX_GEMMA_ENDPOINT,  // Add this line
-    googleVertexGemmaLocation: process.env.GOOGLE_VERTEX_GEMMA_LOCATION,  // Add this line
+    googleVertexGemmaTextModel: process.env.GOOGLE_VERTEX_GEMMA_TEXT_MODEL,
+    googleVertexGemmaEndpoint: process.env.GOOGLE_VERTEX_GEMMA_ENDPOINT, 
+    googleVertexGemmaLocation: process.env.GOOGLE_VERTEX_GEMMA_LOCATION, 
     ollamaGemmaTextModel: process.env.OLLAMA_GEMMA_TEXT_MODEL,
     ollamaGemmaEmbeddingModel: process.env.OLLAMA_GEMMA_EMBEDDING_MODEL,
     ollamaGemmaEndpoint: process.env.OLLAMA_GEMMA_ENDPOINT,

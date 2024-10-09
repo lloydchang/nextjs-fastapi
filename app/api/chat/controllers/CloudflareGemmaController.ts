@@ -3,14 +3,22 @@
 import logger from '../utils/logger';
 import { generateFromCloudflareGemma } from '../clients/CloudflareGemmaClient';
 import { getConfig } from '../utils/config';
+import { validateEnvVars } from '../utils/validate'; // Ensure the utility is correctly imported
 
+/**
+ * Handles text generation using the Cloudflare Gemma model.
+ * @param param0 - Contains the user prompt and text model to be used.
+ * @param config - Configuration object, if passed separately.
+ * @returns {Promise<string>} - Generated response text.
+ */
 export async function handleTextWithCloudflareGemmaTextModel(
   { userPrompt, textModel }: { userPrompt: string; textModel: string },
   config: any
 ): Promise<string> {
   const { cloudflareGemmaEndpoint } = getConfig();
 
-  if (!cloudflareGemmaEndpoint || !textModel) {
+  // Validate required environment variables
+  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT'])) {
     logger.silly('handleTextWithCloudflareGemmaTextModel - Missing required environment variables.');
     return '';
   }
@@ -18,17 +26,23 @@ export async function handleTextWithCloudflareGemmaTextModel(
   logger.debug(`handleTextWithCloudflareGemmaTextModel - Generating text for model: ${textModel}`);
   logger.silly(`handleTextWithCloudflareGemmaTextModel - User prompt: ${userPrompt}`);
 
-  const response = await generateFromCloudflareGemma({
-    endpoint: cloudflareGemmaEndpoint,
-    prompt: userPrompt,
-    model: textModel,
-  });
+  try {
+    const response = await generateFromCloudflareGemma({
+      endpoint: cloudflareGemmaEndpoint,
+      prompt: userPrompt,
+      model: textModel,
+    });
 
-  if (!response) {
-    logger.error('handleTextWithCloudflareGemmaTextModel - Failed to generate text from Cloudflare Gemma.');
+    if (!response) {
+      logger.error('handleTextWithCloudflareGemmaTextModel - Failed to generate text from Cloudflare Gemma.');
+      return '';
+    }
+
+    logger.verbose(`handleTextWithCloudflareGemmaTextModel - Generated response: ${response}`);
+    return response;
+
+  } catch (error) {
+    logger.error(`handleTextWithCloudflareGemmaTextModel - Error during text generation: ${error.message}`);
     return '';
   }
-
-  logger.verbose(`handleTextWithCloudflareGemmaTextModel - Generated response: ${response}`);
-  return response;
 }

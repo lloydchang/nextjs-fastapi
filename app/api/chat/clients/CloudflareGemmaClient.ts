@@ -16,10 +16,7 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
 
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.CLOUDFLARE_API_KEY}`
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: requestBody,
     });
 

@@ -34,12 +34,21 @@ function createFilteredContext(persona: string, messages: Array<{ role: string; 
     .join('\n');
 }
 
+/**
+ * Creates a combined stream of messages to be sent to the client.
+ * @param messages - Array of persona-message pairs.
+ * @returns {ReadableStream} - A readable stream of formatted messages.
+ */
 async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
   const encoder = new TextEncoder();
+
+  // Filter out empty or null messages to prevent streaming empty content.
+  const validMessages = messages.filter(({ message }) => message && message.trim() !== '');
+
   return new ReadableStream({
     async start(controller) {
       try {
-        for (const { persona, message } of messages) {
+        for (const { persona, message } of validMessages) {
           const formattedMessage = safeStringify({ persona, message });
           controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
           logger.debug(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
@@ -101,9 +110,10 @@ export async function POST(request: NextRequest) {
 
     const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
-    // Type Guard to filter fulfilled results
+    // Type Guard to filter fulfilled results and ensure non-null and non-empty responses
     const gemmaResponses = results.filter(
-      (res): res is PromiseFulfilledResult<string | null> => res.status === 'fulfilled' && res.value !== null
+      (res): res is PromiseFulfilledResult<string | null> =>
+        res.status === 'fulfilled' && res.value !== null && res.value.trim() !== ''
     );
 
     let responses: Array<{ persona: string, message: string }> = [];
