@@ -10,8 +10,9 @@ import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/Oll
 import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { sanitizeInput } from 'app/api/chat/utils/sanitize';
-import { systemPrompt } from 'app/api/chat/utils/prompt';
+import { getSystemPromptForPersona } from 'app/api/chat/utils/prompt';
 import logger from 'app/api/chat/utils/logger';
+import jsesc from 'jsesc';
 
 const config = getConfig();
 
@@ -27,82 +28,90 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
     }
 
-    const recentMessages = messages.slice(-3);  // Define recentMessages here
+    const recentMessages = messages.slice(-3);
 
-    // Define responseFunctions after recentMessages is declared
+    // Adjusted order: Llama personas are processed before Gemma personas.
     const responseFunctions = [
       {
-        persona: 'Ollama Gemma',
-        generate: () => {
-          const gemmaContext = createFilteredContext('Gemma', recentMessages);
-          return config.ollamaGemmaTextModel
-            ? handleTextWithOllamaGemmaTextModel({ userPrompt: gemmaContext, textModel: config.ollamaGemmaTextModel }, config)
-            : Promise.resolve(null);
-        },
-      },
-      {
-        persona: 'Cloudflare Gemma',
-        generate: () => {
-          const gemmaContext = createFilteredContext('Gemma', recentMessages);
-          return config.cloudflareGemmaTextModel
-            ? handleTextWithCloudflareGemmaTextModel({ userPrompt: gemmaContext, textModel: config.cloudflareGemmaTextModel }, config)
-            : Promise.resolve(null);
-        },
-      },
-      {
-        persona: 'Google Vertex Gemma',
-        generate: () => {
-          const gemmaContext = createFilteredContext('Gemma', recentMessages);
-          return config.googleVertexGemmaTextModel
-            ? handleTextWithGoogleVertexGemmaTextModel({ userPrompt: gemmaContext, textModel: config.googleVertexGemmaTextModel }, config)
-            : Promise.resolve(null);
-        },
-      },
-      {
         persona: 'Ollama Llama',
-        generate: () => {
-          const llamaContext = createFilteredContext('Llama', recentMessages);
-          return config.ollamaLlamaTextModel
-            ? handleTextWithOllamaLlamaTextModel({ userPrompt: llamaContext, textModel: config.ollamaLlamaTextModel }, config)
-            : Promise.resolve(null);
-        },
+        generate: () =>
+          config.ollamaLlamaTextModel
+            ? handleTextWithOllamaLlamaTextModel(
+                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.ollamaLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
       },
       {
         persona: 'Cloudflare Llama',
-        generate: () => {
-          const llamaContext = createFilteredContext('Llama', recentMessages);
-          return config.cloudflareLlamaTextModel
-            ? handleTextWithCloudflareLlamaTextModel({ userPrompt: llamaContext, textModel: config.cloudflareLlamaTextModel }, config)
-            : Promise.resolve(null);
-        },
+        generate: () =>
+          config.cloudflareLlamaTextModel
+            ? handleTextWithCloudflareLlamaTextModel(
+                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.cloudflareLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
       },
       {
         persona: 'Google Vertex Llama',
-        generate: () => {
-          const llamaContext = createFilteredContext('Llama', recentMessages);
-          return config.googleVertexLlamaTextModel
-            ? handleTextWithGoogleVertexLlamaTextModel({ userPrompt: llamaContext, textModel: config.googleVertexLlamaTextModel }, config)
-            : Promise.resolve(null);
-        },
+        generate: () =>
+          config.googleVertexLlamaTextModel
+            ? handleTextWithGoogleVertexLlamaTextModel(
+                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.googleVertexLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+
+      // Group 1: Gemma Personas
+      {
+        persona: 'Ollama Gemma',
+        generate: () =>
+          config.ollamaGemmaTextModel
+            ? handleTextWithOllamaGemmaTextModel(
+                { userPrompt: buildPrompt('Gemma', recentMessages, false), textModel: config.ollamaGemmaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Cloudflare Gemma',
+        generate: () =>
+          config.cloudflareGemmaTextModel
+            ? handleTextWithCloudflareGemmaTextModel(
+                { userPrompt: buildPrompt('Gemma', recentMessages, false), textModel: config.cloudflareGemmaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Google Vertex Gemma',
+        generate: () =>
+          config.googleVertexGemmaTextModel
+            ? handleTextWithGoogleVertexGemmaTextModel(
+                { userPrompt: buildPrompt('Gemma', recentMessages, false), textModel: config.googleVertexGemmaTextModel },
+                config
+              )
+            : Promise.resolve(null),
       },
     ];
 
+    const personaMap = responseFunctions.map((res) => res.persona);
+
     const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
-    // Type Guard to filter fulfilled results and ensure non-null and non-empty responses
-    const gemmaResponses = results.filter(
-      (res): res is PromiseFulfilledResult<string | null> =>
-        res.status === 'fulfilled' && res.value !== null && res.value.trim() !== ''
-    );
+    const validResponses = results
+      .map((res, index) => ({ result: res, persona: personaMap[index] }))
+      .filter(({ result }) => result.status === 'fulfilled' && result.value !== null && result.value.trim() !== '');
 
     let responses: Array<{ persona: string, message: string }> = [];
 
-    if (gemmaResponses.length === 0) {
-      const elizaResponse = await generateElizaResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
+    if (validResponses.length === 0) {
+      const elizaResponse = await generateElizaResponse([{ role: 'system', content: getSystemPromptForPersona('Eliza') }, ...recentMessages]);
       responses.push({ persona: 'Eliza', message: elizaResponse });
     } else {
-      responses = gemmaResponses.map((result, index) => ({
-        persona: responseFunctions[index].persona,
+      responses = validResponses.map(({ result, persona }) => ({
+        persona: persona,
         message: result.value!,
       }));
     }
@@ -122,27 +131,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>) {
+// Modify buildPrompt to include persona-specific context controls.
+function buildPrompt(persona: string, messages: Array<{ role: string; content: string; persona?: string }>, isLlama: boolean = false) {
+  const filteredContext = createFilteredContext(persona, messages, isLlama);
+  return `${getSystemPromptForPersona(persona)}\n\n${filteredContext}\n\nUser Prompt:`;
+}
+
+// Adjust createFilteredContext to handle Llama personas differently.
+function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>, isLlama: boolean = false) {
   return messages
     .filter((msg) => msg.persona !== persona)
-    .map((msg) => {
-      const contentWithoutPersonaName = msg.content.replace(new RegExp(persona, 'gi'), '');
-      return `${msg.role === 'user' ? 'User' : msg.persona}: ${sanitizeInput(contentWithoutPersonaName)}`;
-    })
+    .map((msg) => `${msg.role === 'user' ? 'User' : msg.persona || 'System'}: ${sanitizeInput(msg.content)}`)
+    .slice(isLlama ? -2 : undefined)  // Limit context for Llama models to 2 most recent messages
     .join('\n');
 }
 
+// Function to create a combined stream for responses
 async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
   const encoder = new TextEncoder();
-
-  // Filter out empty or null messages to prevent streaming empty content.
   const validMessages = messages.filter(({ message }) => message && message.trim() !== '');
 
   return new ReadableStream({
     async start(controller) {
       try {
         for (const { persona, message } of validMessages) {
-          const formattedMessage = JSON.stringify({ persona, message }).replace(/\n/g, "\\n").replace(/[\u2028\u2029]/g, "");
+          const formattedMessage = jsesc({ persona, message }, { json: true });
           controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
           logger.debug(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
         }
