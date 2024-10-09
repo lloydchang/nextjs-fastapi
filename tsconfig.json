@@ -1,5 +1,4 @@
 // File: tsconfig.json
-
 {
   "compilerOptions": {
     "target": "ESNext",
@@ -22,10 +21,11 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".", // Set the base URL to the project root
     "paths": {
-      "@/*": ["./*"],
+      "*": ["*"] // Match all paths relative to the project root
     },
-    "typeRoots": ["./src/types", "node_modules/@types"],
+    "typeRoots": ["./src/types", "node_modules/@types"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
