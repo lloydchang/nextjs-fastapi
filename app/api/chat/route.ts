@@ -5,6 +5,8 @@ import { getConfig } from './utils/config';
 import { generateElizaResponse } from './utils/eliza';
 import { generateAliceResponse } from './utils/alice';
 import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaController';
+import { handleTextWithCloudflareGemmaTextModel } from './controllers/CloudflareGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from './controllers/GoogleVertexGemmaController';
 import { sanitizeInput } from './utils/sanitize';
 import { systemPrompt } from './utils/prompt';
 import logger from './utils/logger';
@@ -13,24 +15,20 @@ const config = getConfig();
 
 const lastResponses: { [key: string]: string } = {};
 
-// Helper function to randomize the order of personas
 function shuffleArray<T>(array: T[]): T[] {
   return array.sort(() => Math.random() - 0.5);
 }
 
-// Function to safely escape special characters and format JSON for the stream
 function safeStringify(obj: Record<string, string>): string {
   return JSON.stringify(obj)
-    .replace(/\n/g, "\\n") // Escape newlines
-    .replace(/[\u2028\u2029]/g, ""); // Remove problematic Unicode characters
+    .replace(/\n/g, "\\n")
+    .replace(/[\u2028\u2029]/g, "");
 }
 
-// Function to create a filtered context for each persona without self-references
 function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>) {
   return messages
-    .filter((msg) => msg.persona !== persona) // Exclude the persona's own messages
+    .filter((msg) => msg.persona !== persona)
     .map((msg) => {
-      // Remove any explicit mentions of the persona's name within the message content
       const contentWithoutPersonaName = msg.content.replace(new RegExp(persona, 'gi'), '');
       return `${msg.role === 'user' ? 'User' : msg.persona}: ${sanitizeInput(contentWithoutPersonaName)}`;
     })
@@ -70,7 +68,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
     }
 
-    // Include only the most recent 2-3 messages (adjust this number as needed)
     const recentMessages = messages.slice(-3);
 
     const responseFunctions = [
@@ -89,7 +86,7 @@ export async function POST(request: NextRequest) {
         },
       },
       {
-        persona: 'Gemma',
+        persona: 'OllamaGemma',
         generate: () => {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.ollamaGemmaTextModel
@@ -97,12 +94,28 @@ export async function POST(request: NextRequest) {
             : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration.");
         },
       },
+      {
+        persona: 'CloudflareGemma',
+        generate: () => {
+          const gemmaContext = createFilteredContext('Gemma', recentMessages);
+          return config.cloudflareGemmaTextModel
+            ? handleTextWithCloudflareGemmaTextModel({ userPrompt: gemmaContext, textModel: config.cloudflareGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Cloudflare Gemma Text Model is not defined in the configuration.");
+        },
+      },
+      {
+        persona: 'GoogleVertexGemma',
+        generate: () => {
+          const gemmaContext = createFilteredContext('Gemma', recentMessages);
+          return config.googleVertexGemmaTextModel
+            ? handleTextWithGoogleVertexGemmaTextModel({ userPrompt: gemmaContext, textModel: config.googleVertexGemmaTextModel }, config)
+            : Promise.resolve("Out of office. Google Vertex Gemma Text Model is not defined in the configuration.");
+        },
+      },
     ];
 
-    // Shuffle the response order
     const shuffledResponses = shuffleArray(responseFunctions);
 
-    // Execute the requests in random order
     const results = await Promise.allSettled(shuffledResponses.map((res) => res.generate()));
 
     const responses: Array<{ persona: string, message: string }> = [];

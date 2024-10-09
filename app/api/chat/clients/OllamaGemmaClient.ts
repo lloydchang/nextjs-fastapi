@@ -4,11 +4,6 @@ import { parseStream } from '../utils/streamParser';
 import logger from '../utils/logger';
 import { systemPrompt } from '../utils/prompt';
 
-/**
- * Fetches and parses a response from the Ollama Gemma model.
- * @param params - The request parameters, including endpoint, prompt, and model.
- * @returns The parsed response as a string, or null if an error occurs.
- */
 export async function generateFromOllamaGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
@@ -16,7 +11,6 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
   logger.silly(`generateFromOllamaGemma - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
-    // Log the JSON body being sent to the endpoint
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
     logger.debug(`generateFromOllamaGemma - Request body: ${requestBody}`);
 
