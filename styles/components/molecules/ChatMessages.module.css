@@ -1,61 +1,18 @@
-/* File: styles/ChatMessages.module.css */
+/* File: src/styles/components/molecules/ChatMessages.module.css */
 
+/* Container for all messages */
 .messagesContainer {
-  height: 90vh; /* Set fixed height to prevent initial resizing */
-  overflow-y: auto; /* Enable vertical scrolling when content overflows */
-  border-radius: 0px;
+  height: 90vh; /* Set container height to occupy most of the viewport */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border-radius: 5px;
   scroll-behavior: smooth; /* Smooth scrolling */
-  display: flex; /* Added display flex to handle children */
-  flex-direction: column; /* Column layout for message alignment */
-  justify-content: flex-start; /* Ensure messages start at the top */
-  opacity: 0; /* Start as hidden to avoid initial jump */
-  visibility: hidden; /* Ensure hidden state until fully loaded */
-  transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
-  z-index: 500; /* Ensure the messagesContainer is above the chatLayer */
-}
-
-.message {
-  margin-bottom: 6px;
   display: flex;
   flex-direction: column;
-  transform: translateY(10px); /* Prevent stretch effect */
-  animation: fadeInUp 0.3s forwards; /* Smooth appearance animation */
-  z-index: 501; /* Set messages to be on the top layer */
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.userMessage .text {
-  color: #eb0028; /* User message color (red) */
-  align-self: flex-end; /* Align to the right */
-}
-
-.botMessage .text {
-  color: white; /* Bot message color */
-  align-self: flex-start; /* Align to the left */
-}
-
-.sender {
-  font-weight: bold;
-  margin-bottom: 2px;
-}
-
-.text {
-  background-color: black;
-  color: white; /* Default color, overridden in specific user/bot styles */
-  padding: 8px 12px;
-  border-radius: 15px;
-  max-width: 70%;
-  z-index: 9999; /* Ensure the text span is always at the top */
+  justify-content: flex-start; /* Ensure messages start at the top */
+  opacity: 1; /* Ensure visibility on initial render */
+  visibility: visible; /* Avoid hidden or collapsed state */
+  transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out; /* Smooth transitions */
+  z-index: 500; /* Ensure the messagesContainer is above the chatLayer */
 }
 
 /* Scrollbar styles for better UI visibility */

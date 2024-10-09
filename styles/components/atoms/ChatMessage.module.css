@@ -1,71 +1,180 @@
-/* styles/ChatMessages.module.css */
+/* File: src/styles/components/atoms/ChatMessage.module.css */
 
-/* Container for all messages */
-.messagesContainer {
-  height: 90vh; /* Set container height to occupy most of the viewport */
-  overflow-y: auto; /* Enable vertical scrolling */
-  border-radius: 5px;
-  scroll-behavior: smooth; /* Smooth scrolling */
+/* Container for individual messages */
+.messageContainer {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Ensure messages start at the top */
-  opacity: 1; /* Ensure visibility on initial render */
-  visibility: visible; /* Avoid hidden or collapsed state */
-  transition: height 0.3s ease-in-out, opacity 0.3s ease-in-out; /* Smooth transitions */
-}
-
-.message {
   margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  transform: translateY(10px); /* Prevent stretch effect */
-  animation: fadeInUp 0.3s forwards; /* Smooth appearance animation */
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* User message styling */
+.userMessage {
+  align-items: flex-end;
 }
 
-.userMessage .text {
-  color: #eb0028; /* User message color (red) */
-  align-self: flex-end; /* Align to the right */
+/* Bot message styling */
+.botMessage {
+  align-items: flex-start;
 }
 
-.botMessage .text {
-  color: white; /* Bot message color */
-  align-self: flex-start; /* Align to the left */
+/* Interim message styling (e.g., typing indicators) */
+.interim {
+  opacity: 0.6;
 }
 
-.sender {
-  font-weight: bold;
-  margin-bottom: 2px;
-}
-
+/* Message bubble styling */
 .text {
-  background-color: black;
-  color: white; /* Default color, overridden in specific user/bot styles */
   padding: 8px 12px;
   border-radius: 15px;
   max-width: 70%;
+  word-wrap: break-word;
+  background-color: #ECE5DD; /* Light gray for general message bubbles */
+  color: #000000; /* Black text for readability */
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Scrollbar styles for better UI visibility */
-.messagesContainer::-webkit-scrollbar {
-  width: 8px; /* Chrome, Safari */
+/* Specific styles for user messages */
+.userMessage .text {
+  background-color: #25D366; /* WhatsApp Green for user messages */
+  color: #ffffff; /* White text for better contrast */
 }
 
-.messagesContainer::-webkit-scrollbar-thumb {
-  background-color: #555; /* Dark gray scrollbar color */
+/* Specific styles for bot messages */
+.botMessage .text {
+  background-color: #ECE5DD; /* Light gray for bot messages */
+  color: #000000; /* Black text */
+}
+
+/* Markdown Element Styles */
+
+/* Bold text */
+.text strong {
+  font-weight: bold;
+}
+
+/* Italic text */
+.text em {
+  font-style: italic;
+}
+
+/* Links */
+.text a {
+  color: #128C7E; /* Darker green for links */
+  text-decoration: none;
+}
+
+.text a:hover {
+  text-decoration: underline;
+}
+
+/* Headers */
+.text h1,
+.text h2,
+.text h3,
+.text h4,
+.text h5,
+.text h6 {
+  margin: 0.5em 0;
+  font-weight: bold;
+  color: #000000; /* Black color for headers */
+}
+
+/* Lists */
+.text ul,
+.text ol {
+  padding-left: 20px;
+  margin: 0.5em 0;
+  color: #000000; /* Black text for list items */
+}
+
+/* Code blocks */
+.text pre {
+  background-color: #f0f0f0; /* Light background for code blocks */
+  padding: 10px;
   border-radius: 5px;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0.5em 0;
 }
 
-.messagesContainer::-webkit-scrollbar-track {
-  background-color: transparent; /* Track color */
+/* Inline code */
+.text code {
+  background-color: #f0f0f0; /* Light background for inline code */
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Blockquotes */
+.text blockquote {
+  border-left: 4px solid #25D366; /* WhatsApp Green left border */
+  padding-left: 10px;
+  color: #555555; /* Dark gray text */
+  margin: 0.5em 0;
+}
+
+/* Responsive Images */
+.text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* Tables */
+.text table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.text th,
+.text td {
+  border: 1px solid #cccccc; /* Light border for tables */
+  padding: 8px;
+}
+
+.text th {
+  background-color: #25D366; /* WhatsApp Green header background */
+  color: #ffffff; /* White text */
+  text-align: left;
+}
+
+.text td {
+  color: #000000; /* Black text for table cells */
+}
+
+/* Task Lists */
+.text ul.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.text ul.task-list li {
+  display: flex;
+  align-items: center;
+}
+
+.text ul.task-list li input[type='checkbox'] {
+  margin-right: 8px;
+}
+
+/* Adjustments for dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  .text {
+    background-color: #2A2F32; /* Dark background for messages */
+    color: #e0e0e0; /* Light gray text */
+  }
+
+  .userMessage .text {
+    background-color: #075E54; /* Dark green for user messages in dark mode */
+    color: #ffffff; /* White text */
+  }
+
+  .botMessage .text {
+    background-color: #000000; /* Black for bot messages in dark mode */
+    color: #ffffff; /* White text */
+  }
+
+  /* Additional dark mode styles can be added here */
 }

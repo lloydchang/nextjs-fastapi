@@ -10,9 +10,20 @@ import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/Oll
 import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { sanitizeInput } from 'app/api/chat/utils/sanitize';
-import { getSystemPromptForPersona } from 'app/api/chat/utils/prompt';
+import { systemPrompt } from 'app/api/chat/utils/prompt';
 import logger from 'app/api/chat/utils/logger';
 import jsesc from 'jsesc';
+
+// Type Guard to ensure the result is fulfilled with a non-null, non-empty string
+function isFulfilledStringResult(
+  result: PromiseSettledResult<string | null>
+): result is PromiseFulfilledResult<string> {
+  return (
+    result.status === 'fulfilled' &&
+    typeof result.value === 'string' &&
+    result.value.trim() !== ''
+  );
+}
 
 const config = getConfig();
 
@@ -25,44 +36,16 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(messages)) {
       logger.warn(`app/api/chat/route.ts - Invalid request format: messages is not an array.`);
-      return NextResponse.json({ error: 'Invalid request format. "messages" must be an array.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request format. "messages" must be an array.' },
+        { status: 400 }
+      );
     }
 
     const recentMessages = messages.slice(-3);
 
-    // Adjusted order: Llama personas are processed before Gemma personas.
+    // Updated order: Gemma personas are processed before Llama personas.
     const responseFunctions = [
-      {
-        persona: 'Ollama Llama',
-        generate: () =>
-          config.ollamaLlamaTextModel
-            ? handleTextWithOllamaLlamaTextModel(
-                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.ollamaLlamaTextModel },
-                config
-              )
-            : Promise.resolve(null),
-      },
-      {
-        persona: 'Cloudflare Llama',
-        generate: () =>
-          config.cloudflareLlamaTextModel
-            ? handleTextWithCloudflareLlamaTextModel(
-                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.cloudflareLlamaTextModel },
-                config
-              )
-            : Promise.resolve(null),
-      },
-      {
-        persona: 'Google Vertex Llama',
-        generate: () =>
-          config.googleVertexLlamaTextModel
-            ? handleTextWithGoogleVertexLlamaTextModel(
-                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.googleVertexLlamaTextModel },
-                config
-              )
-            : Promise.resolve(null),
-      },
-
       // Group 1: Gemma Personas
       {
         persona: 'Ollama Gemma',
@@ -94,26 +77,66 @@ export async function POST(request: NextRequest) {
               )
             : Promise.resolve(null),
       },
+
+      // Group 2: Llama Personas
+      {
+        persona: 'Ollama Llama',
+        generate: () =>
+          config.ollamaLlamaTextModel
+            ? handleTextWithOllamaLlamaTextModel(
+                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.ollamaLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Cloudflare Llama',
+        generate: () =>
+          config.cloudflareLlamaTextModel
+            ? handleTextWithCloudflareLlamaTextModel(
+                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.cloudflareLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Google Vertex Llama',
+        generate: () =>
+          config.googleVertexLlamaTextModel
+            ? handleTextWithGoogleVertexLlamaTextModel(
+                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.googleVertexLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
     ];
 
     const personaMap = responseFunctions.map((res) => res.persona);
 
     const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
-    const validResponses = results
-      .map((res, index) => ({ result: res, persona: personaMap[index] }))
-      .filter(({ result }) => result.status === 'fulfilled' && result.value !== null && result.value.trim() !== '');
+    // Construct validResponses using forEach to ensure TypeScript correctly infers types
+    const validResponses: Array<{ persona: string; message: string }> = [];
 
-    let responses: Array<{ persona: string, message: string }> = [];
+    results.forEach((result, index) => {
+      if (isFulfilledStringResult(result)) {
+        validResponses.push({
+          persona: personaMap[index],
+          message: result.value, // Now safely inferred as string
+        });
+      }
+    });
+
+    let responses: Array<{ persona: string; message: string }> = [];
 
     if (validResponses.length === 0) {
-      const elizaResponse = await generateElizaResponse([{ role: 'system', content: getSystemPromptForPersona('Eliza') }, ...recentMessages]);
+      const elizaResponse = await generateElizaResponse([
+        { role: 'system', content: systemPrompt },
+        ...recentMessages,
+      ]);
       responses.push({ persona: 'Eliza', message: elizaResponse });
     } else {
-      responses = validResponses.map(({ result, persona }) => ({
-        persona: persona,
-        message: result.value!,
-      }));
+      responses = validResponses;
     }
 
     const combinedStream = await createCombinedStream(responses);
@@ -132,22 +155,30 @@ export async function POST(request: NextRequest) {
 }
 
 // Modify buildPrompt to include persona-specific context controls.
-function buildPrompt(persona: string, messages: Array<{ role: string; content: string; persona?: string }>, isLlama: boolean = false) {
+function buildPrompt(
+  persona: string,
+  messages: Array<{ role: string; content: string; persona?: string }>,
+  isLlama: boolean = false
+): string {
   const filteredContext = createFilteredContext(persona, messages, isLlama);
-  return `${getSystemPromptForPersona(persona)}\n\n${filteredContext}\n\nUser Prompt:`;
+  return `${systemPrompt}\n\n${filteredContext}\n\nUser Prompt:`;
 }
 
 // Adjust createFilteredContext to handle Llama personas differently.
-function createFilteredContext(persona: string, messages: Array<{ role: string; content: string; persona?: string }>, isLlama: boolean = false) {
+function createFilteredContext(
+  persona: string,
+  messages: Array<{ role: string; content: string; persona?: string }>,
+  isLlama: boolean = false
+): string {
   return messages
     .filter((msg) => msg.persona !== persona)
     .map((msg) => `${msg.role === 'user' ? 'User' : msg.persona || 'System'}: ${sanitizeInput(msg.content)}`)
-    .slice(isLlama ? -2 : undefined)  // Limit context for Llama models to 2 most recent messages
+    .slice(isLlama ? -2 : undefined) // Limit context for Llama models to 2 most recent messages
     .join('\n');
 }
 
 // Function to create a combined stream for responses
-async function createCombinedStream(messages: Array<{ persona: string, message: string }>) {
+async function createCombinedStream(messages: Array<{ persona: string; message: string }>) {
   const encoder = new TextEncoder();
   const validMessages = messages.filter(({ message }) => message && message.trim() !== '');
 
