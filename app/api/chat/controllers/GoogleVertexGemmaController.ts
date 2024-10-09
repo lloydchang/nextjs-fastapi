@@ -17,7 +17,6 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
 ): Promise<string> {
   const { googleVertexGemmaEndpoint } = getConfig();
 
-  // Check if the required endpoint is defined before proceeding
   if (!googleVertexGemmaEndpoint) {
     logger.silly('handleTextWithGoogleVertexGemmaTextModel - Missing Google Vertex Gemma endpoint.');
     return '';
@@ -28,7 +27,7 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
 
   try {
     const response = await generateFromGoogleVertexGemma({
-      endpoint: googleVertexGemmaEndpoint, // Type is guaranteed to be string
+      endpoint: googleVertexGemmaEndpoint,
       prompt: userPrompt,
       model: textModel,
     });
@@ -42,7 +41,8 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
     return response;
 
   } catch (error) {
-    logger.error(`handleTextWithGoogleVertexGemmaTextModel - Error during text generation: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`handleTextWithGoogleVertexGemmaTextModel - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

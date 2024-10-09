@@ -17,7 +17,6 @@ export async function handleTextWithCloudflareGemmaTextModel(
 ): Promise<string> {
   const { cloudflareGemmaEndpoint } = getConfig();
 
-  // Check if the required endpoint is defined before proceeding
   if (!cloudflareGemmaEndpoint) {
     logger.silly('handleTextWithCloudflareGemmaTextModel - Missing Cloudflare Gemma endpoint.');
     return '';
@@ -28,7 +27,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
 
   try {
     const response = await generateFromCloudflareGemma({
-      endpoint: cloudflareGemmaEndpoint, // Type is guaranteed to be string
+      endpoint: cloudflareGemmaEndpoint,
       prompt: userPrompt,
       model: textModel,
     });
@@ -42,7 +41,8 @@ export async function handleTextWithCloudflareGemmaTextModel(
     return response;
 
   } catch (error) {
-    logger.error(`handleTextWithCloudflareGemmaTextModel - Error during text generation: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`handleTextWithCloudflareGemmaTextModel - Error during text generation: ${errorMessage}`);
     return '';
   }
 }
