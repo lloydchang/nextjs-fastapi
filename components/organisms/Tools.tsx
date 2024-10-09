@@ -19,6 +19,22 @@ const Tools: React.FC = () => {
           Learn
         </button>
 
+        {/* Stats Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal')}
+        >
+          Stats
+        </button>
+
+        {/* Cities Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://open-sdg.org/community')}
+        >
+          Cities
+        </button>
+
         {/* Local Button */}
         <button
           className="right-edge-button"
@@ -33,22 +49,6 @@ const Tools: React.FC = () => {
           onClick={() => openInNewTab('https://jointsdgfund.org/sdg-financing')}
         >
           Fund
-        </button>
-
-        {/* Open Button */}
-        <button
-          className="right-edge-button"
-          onClick={() => openInNewTab('https://open-sdg.org/community')}
-        >
-          Open
-        </button>
-
-        {/* Stats Button */}
-        <button
-          className="right-edge-button"
-          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal')}
-        >
-          Stats
         </button>
 
         {/* News Button */}
