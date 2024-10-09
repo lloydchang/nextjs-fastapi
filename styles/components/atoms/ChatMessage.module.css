@@ -1,4 +1,4 @@
-/* File: src/styles/components/atoms/ChatMessage.module.css */
+/* File: styles/components/atoms/ChatMessage.module.css */
 
 /* Container for individual messages */
 .messageContainer {
@@ -25,23 +25,22 @@
 /* Message bubble styling */
 .text {
   padding: 8px 12px;
-  border-radius: 15px;
+  border-radius: 8px;
   max-width: 70%;
   word-wrap: break-word;
-  background-color: #ECE5DD; /* Light gray for general message bubbles */
   color: #000000; /* Black text for readability */
   transition: background-color 0.3s, color 0.3s;
 }
 
 /* Specific styles for user messages */
 .userMessage .text {
-  background-color: #25D366; /* WhatsApp Green for user messages */
-  color: #ffffff; /* White text for better contrast */
+  background-color: #DCF8C6; /* Light green for user messages (WhatsApp color) */
+  color: #000000; /* Black text */
 }
 
 /* Specific styles for bot messages */
 .botMessage .text {
-  background-color: #ECE5DD; /* Light gray for bot messages */
+  background-color: #FFFFFF; /* White for bot messages (WhatsApp color) */
   color: #000000; /* Black text */
 }
 
@@ -59,7 +58,7 @@
 
 /* Links */
 .text a {
-  color: #128C7E; /* Darker green for links */
+  color: #34B7F1; /* WhatsApp blue for links */
   text-decoration: none;
 }
 
@@ -162,19 +161,40 @@
 /* Adjustments for dark mode compatibility */
 @media (prefers-color-scheme: dark) {
   .text {
-    background-color: #2A2F32; /* Dark background for messages */
-    color: #e0e0e0; /* Light gray text */
+    color: #E9EDEF; /* Light gray text for dark mode */
   }
 
   .userMessage .text {
-    background-color: #075E54; /* Dark green for user messages in dark mode */
-    color: #ffffff; /* White text */
+    background-color: #005C4B; /* Dark green for user messages in dark mode (WhatsApp color) */
+    color: #E9EDEF; /* Light gray text */
   }
 
   .botMessage .text {
-    background-color: #000000; /* Black for bot messages in dark mode */
-    color: #ffffff; /* White text */
+    background-color: #202C33; /* Dark gray for bot messages in dark mode (WhatsApp color) */
+    color: #E9EDEF; /* Light gray text */
   }
 
-  /* Additional dark mode styles can be added here */
+  .text a {
+    color: #53BDEB; /* Lighter blue for links in dark mode */
+  }
+
+  .text pre,
+  .text code {
+    background-color: #2A3942; /* Darker background for code in dark mode */
+    color: #E9EDEF; /* Light gray text */
+  }
+
+  .text blockquote {
+    border-left-color: #00A884; /* Adjusted green for blockquotes in dark mode */
+    color: #8696A0; /* Grayish text for blockquotes in dark mode */
+  }
+
+  .text th {
+    background-color: #00A884; /* Adjusted green for table headers in dark mode */
+    color: #E9EDEF; /* Light gray text */
+  }
+
+  .text td {
+    color: #E9EDEF; /* Light gray text for table cells in dark mode */
+  }
 }
