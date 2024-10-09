@@ -1,4 +1,4 @@
-/* File: src/styles/components/molecules/ChatMessages.module.css */
+/* File: styles/components/molecules/ChatMessages.module.css */
 
 /* Container for all messages */
 .messagesContainer {
@@ -9,10 +9,159 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* Ensure messages start at the top */
-  opacity: 1; /* Ensure visibility on initial render */
-  visibility: visible; /* Avoid hidden or collapsed state */
+  opacity: 0; /* Start as hidden to avoid initial jump */
+  visibility: hidden; /* Ensure hidden state until fully loaded */
   transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out; /* Smooth transitions */
   z-index: 500; /* Ensure the messagesContainer is above the chatLayer */
+}
+
+.messageContainer {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.userMessage {
+  align-items: flex-end;
+}
+
+.botMessage {
+  align-items: flex-start;
+}
+
+/* Interim message styling (e.g., typing indicators) */
+.interim {
+  opacity: 0.6;
+}
+
+/* Message bubble styling */
+.text {
+  padding: 8px 12px;
+  border-radius: 15px;
+  max-width: 70%;
+  word-wrap: break-word;
+  background-color: black; /* Default background */
+  color: white; /* Default text color */
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Specific styles for user messages */
+.userMessage .text {
+  background-color: #daf1ff; /* Light blue for user messages */
+  color: #000; /* Black text for better readability */
+}
+
+/* Specific styles for bot messages */
+.botMessage .text {
+  background-color: #f1f1f1; /* Light gray for bot messages */
+  color: #000; /* Black text */
+}
+
+/* Markdown Element Styles */
+
+/* Bold text */
+.text strong {
+  font-weight: bold;
+}
+
+/* Italic text */
+.text em {
+  font-style: italic;
+}
+
+/* Links */
+.text a {
+  color: #1a0dab;
+  text-decoration: none;
+}
+
+.text a:hover {
+  text-decoration: underline;
+}
+
+/* Headers */
+.text h1,
+.text h2,
+.text h3,
+.text h4,
+.text h5,
+.text h6 {
+  margin: 0.5em 0;
+  font-weight: bold;
+}
+
+/* Lists */
+.text ul,
+.text ol {
+  padding-left: 20px;
+  margin: 0.5em 0;
+}
+
+/* Code blocks */
+.text pre {
+  background-color: #eee;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0.5em 0;
+}
+
+/* Inline code */
+.text code {
+  background-color: #eee;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Blockquotes */
+.text blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 10px;
+  color: #666;
+  margin: 0.5em 0;
+}
+
+/* Responsive Images */
+.text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* Tables */
+.text table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.text th,
+.text td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.text th {
+  background-color: #f2f2f2;
+  text-align: left;
+}
+
+/* Task Lists */
+.text ul.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.text ul.task-list li {
+  display: flex;
+  align-items: center;
+}
+
+.text ul.task-list li input[type='checkbox'] {
+  margin-right: 8px;
 }
 
 /* Scrollbar styles for better UI visibility */

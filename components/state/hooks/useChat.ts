@@ -1,7 +1,7 @@
 // File: components/state/hooks/useChat.ts
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { useLocalStorage } from 'components/state/hooks/useLocalStorage';
 import he from 'he'; // Import `he` for HTML entity decoding
 
 export interface Message {

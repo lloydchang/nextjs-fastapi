@@ -54,43 +54,80 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${styles['Chat-panel']}`}>
-      {error && (
-        <div className={styles.error}>
-          <strong>{error}</strong>
-          {errorDetails && <p className={styles.errorDetails}>{errorDetails}</p>}
-        </div>
-      )}
+      <ErrorDisplay error={error} errorDetails={errorDetails} />
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
-        <VideoStream isCamOn={mediaState.isCamOn} videoRef={videoRef} />
-      </div>
-      
+      <VideoStreamContainer isPipOn={mediaState.isPipOn} isCamOn={mediaState.isCamOn} videoRef={videoRef} />
       <AudioStream isMicOn={mediaState.isMicOn} audioRef={audioRef} />
 
       <div className={styles.toolsLayer}>
         <Tools />
       </div>
       
-      <div className={styles.chatLayer} ref={chatContainerRef}>
-        <HeavyChatMessages messages={messages} />
-        <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
-        <ControlButtons
-          isCamOn={mediaState.isCamOn}
-          isMicOn={mediaState.isMicOn}
-          toggleMic={toggleMic}
-          startCam={startCam}
-          stopCam={stopCam}
-          isPipOn={mediaState.isPipOn}
-          togglePip={togglePip}
-          isMemOn={mediaState.isMemOn}
-          toggleMem={toggleMem}
-          eraseMemory={clearChatHistory}
-        />
-      </div>
+      <ChatContainer 
+        chatContainerRef={chatContainerRef}
+        messages={messages}
+        chatInput={chatInput}
+        setChatInput={setChatInput}
+        handleChat={handleChat}
+        mediaState={mediaState}
+        startCam={startCam}
+        stopCam={stopCam}
+        toggleMic={toggleMic}
+        togglePip={togglePip}
+        toggleMem={toggleMem}
+        clearChatHistory={clearChatHistory}
+      />
     </div>
   );
 };
+
+const ErrorDisplay: React.FC<{ error: string | null; errorDetails: string | null }> = ({ error, errorDetails }) => (
+  error && (
+    <div className={styles.error}>
+      <strong>{error}</strong>
+      {errorDetails && <p className={styles.errorDetails}>{errorDetails}</p>}
+    </div>
+  )
+);
+
+const VideoStreamContainer: React.FC<{ isPipOn: boolean; isCamOn: boolean; videoRef: React.RefObject<HTMLVideoElement> }> = ({ isPipOn, isCamOn, videoRef }) => (
+  <div className={isPipOn ? styles.videoStreamHidden : styles.videoStream}>
+    <VideoStream isCamOn={isCamOn} videoRef={videoRef} />
+  </div>
+);
+
+const ChatContainer: React.FC<{
+  chatContainerRef: React.RefObject<HTMLDivElement>;
+  messages: any[];
+  chatInput: string;
+  setChatInput: React.Dispatch<React.SetStateAction<string>>;
+  handleChat: (input: string, isManual: boolean) => Promise<void>;
+  mediaState: any;
+  startCam: () => void;
+  stopCam: () => void;
+  toggleMic: () => void;
+  togglePip: () => void;
+  toggleMem: () => void;
+  clearChatHistory: () => void;
+}> = ({ chatContainerRef, messages, chatInput, setChatInput, handleChat, mediaState, startCam, stopCam, toggleMic, togglePip, toggleMem, clearChatHistory }) => (
+  <div className={styles.chatLayer} ref={chatContainerRef}>
+    <HeavyChatMessages messages={messages} />
+    <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
+    <ControlButtons
+      isCamOn={mediaState.isCamOn}
+      isMicOn={mediaState.isMicOn}
+      toggleMic={toggleMic}
+      startCam={startCam}
+      stopCam={stopCam}
+      isPipOn={mediaState.isPipOn}
+      togglePip={togglePip}
+      isMemOn={mediaState.isMemOn}
+      toggleMem={toggleMem}
+      eraseMemory={clearChatHistory}
+    />
+  </div>
+);
 
 export default React.memo(ChatPanel);
