@@ -22,7 +22,7 @@ const Tools: React.FC = () => {
         {/* Country Button */}
         <button
           className="right-edge-button"
-          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal')}
+          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal/countryprofiles')}
         >
           Country
         </button>
