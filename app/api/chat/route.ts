@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.ollamaGemmaTextModel
             ? handleTextWithOllamaGemmaTextModel({ userPrompt: gemmaContext, textModel: config.ollamaGemmaTextModel }, config)
-            : Promise.resolve("Out of office. Ollama Gemma Text Model is not defined in the configuration.");
+            : Promise.resolve("Out of office.");
         },
       },
       {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.cloudflareGemmaTextModel
             ? handleTextWithCloudflareGemmaTextModel({ userPrompt: gemmaContext, textModel: config.cloudflareGemmaTextModel }, config)
-            : Promise.resolve("Out of office. Cloudflare Gemma Text Model is not defined in the configuration.");
+            : Promise.resolve("Out of office.");
         },
       },
       {
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
           const gemmaContext = createFilteredContext('Gemma', recentMessages);
           return config.googleVertexGemmaTextModel
             ? handleTextWithGoogleVertexGemmaTextModel({ userPrompt: gemmaContext, textModel: config.googleVertexGemmaTextModel }, config)
-            : Promise.resolve("Out of office. Google Vertex Gemma Text Model is not defined in the configuration.");
+            : Promise.resolve("Out of office.");
         },
       },
     ];
