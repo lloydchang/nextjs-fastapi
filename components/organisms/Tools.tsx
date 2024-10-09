@@ -46,7 +46,7 @@ const Tools: React.FC = () => {
         {/* Fund Button */}
         <button
           className="right-edge-button"
-          onClick={() => openInNewTab('https://jointsdgfund.org/sdg-financing')}
+          onClick={() => openInNewTab('https://jointsdgfund.org/sdg-financing#PROFILES')}
         >
           Fund
         </button>
