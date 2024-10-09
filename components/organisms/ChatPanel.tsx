@@ -60,7 +60,9 @@ const ChatPanel: React.FC = () => {
           {errorDetails && <p className={styles.errorDetails}>{errorDetails}</p>}
         </div>
       )}
-      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
+      {/* Added unoptimized attribute to prevent Next.js optimization for animated GIF */}
+      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} unoptimized />
+
       <div className={styles.overlay} />
 
       <div className={mediaState.isPipOn ? styles.videoStreamHidden : styles.videoStream}>
