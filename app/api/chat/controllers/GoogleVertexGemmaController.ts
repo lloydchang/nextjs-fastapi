@@ -3,7 +3,7 @@
 import logger from '../utils/logger';
 import { generateFromGoogleVertexGemma } from '../clients/GoogleVertexGemmaClient';
 import { getConfig } from '../utils/config';
-import { validateEnvVars } from '../utils/validate'; // Ensure the utility is correctly imported
+import { validateEnvVars } from '../utils/validate';
 
 /**
  * Handles text generation using the Google Vertex Gemma model.
@@ -17,9 +17,9 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
 ): Promise<string> {
   const { googleVertexGemmaEndpoint } = getConfig();
 
-  // Validate required environment variables
-  if (!validateEnvVars(['GOOGLE_VERTEX_GEMMA_ENDPOINT'])) {
-    logger.silly('handleTextWithGoogleVertexGemmaTextModel - Missing required environment variables.');
+  // Check if the required endpoint is defined before proceeding
+  if (!googleVertexGemmaEndpoint) {
+    logger.silly('handleTextWithGoogleVertexGemmaTextModel - Missing Google Vertex Gemma endpoint.');
     return '';
   }
 
@@ -28,7 +28,7 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
 
   try {
     const response = await generateFromGoogleVertexGemma({
-      endpoint: googleVertexGemmaEndpoint,
+      endpoint: googleVertexGemmaEndpoint, // Type is guaranteed to be string
       prompt: userPrompt,
       model: textModel,
     });
