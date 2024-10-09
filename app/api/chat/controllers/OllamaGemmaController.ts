@@ -17,8 +17,9 @@ export async function handleTextWithOllamaGemmaTextModel(
 ): Promise<string> {
   const { ollamaGemmaEndpoint } = getConfig();
 
-  if (!ollamaGemmaEndpoint) {
-    logger.silly('handleTextWithOllamaGemmaTextModel - Missing Ollama Gemma endpoint.');
+  // Validate required environment variables
+  if (!validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
+    logger.silly('handleTextWithOllamaGemmaTextModel - Missing required environment variables.');
     return '';
   }
 

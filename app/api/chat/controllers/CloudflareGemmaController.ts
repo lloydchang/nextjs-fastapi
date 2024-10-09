@@ -17,8 +17,9 @@ export async function handleTextWithCloudflareGemmaTextModel(
 ): Promise<string> {
   const { cloudflareGemmaEndpoint } = getConfig();
 
-  if (!cloudflareGemmaEndpoint) {
-    logger.silly('handleTextWithCloudflareGemmaTextModel - Missing Cloudflare Gemma endpoint.');
+  // Validate required environment variables
+  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT'])) {
+    logger.silly('handleTextWithCloudflareGemmaTextModel - Missing required environment variables.');
     return '';
   }
 
