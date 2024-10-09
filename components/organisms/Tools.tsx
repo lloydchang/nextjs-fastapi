@@ -19,12 +19,12 @@ const Tools: React.FC = () => {
           Learn
         </button>
 
-        {/* Stats Button */}
+        {/* Countries Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal')}
         >
-          Stats
+          Countries
         </button>
 
         {/* Cities Button */}
