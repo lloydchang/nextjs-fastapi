@@ -19,12 +19,12 @@ const Tools: React.FC = () => {
           Learn
         </button>
 
-        {/* Country Button */}
+        {/* Local Button */}
         <button
           className="right-edge-button"
-          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal/countryprofiles')}
+          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
         >
-          Country
+          Local
         </button>
 
         {/* City Button */}
@@ -35,12 +35,12 @@ const Tools: React.FC = () => {
           City
         </button>
 
-        {/* Local Button */}
+        {/* Country Button */}
         <button
           className="right-edge-button"
-          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
+          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal/countryprofiles')}
         >
-          Local
+          Country
         </button>
 
         {/* Fund Button */}
@@ -51,12 +51,12 @@ const Tools: React.FC = () => {
           Fund
         </button>
 
-        {/* Map Button */}
+        {/* Hub Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://mptf.undp.org/#impact-to-label')}
         >
-          Map
+          Hub
         </button>
 
         {/* News Button */}
