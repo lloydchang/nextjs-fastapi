@@ -19,20 +19,20 @@ const Tools: React.FC = () => {
           Learn
         </button>
 
-        {/* Countries Button */}
+        {/* Country Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal')}
         >
-          Countries
+          Country
         </button>
 
-        {/* Cities Button */}
+        {/* City Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://open-sdg.org/community')}
         >
-          Cities
+          City
         </button>
 
         {/* Local Button */}
