@@ -20,7 +20,7 @@ const HeavyChatMessages = dynamic(() => import('../molecules/ChatMessages'), {
 
 const ChatPanel: React.FC = () => {
   const { mediaState, videoRef, audioRef, startCam, stopCam, toggleMic, togglePip, toggleMem } = useMedia();
-  const { messages, sendActionToChatbot, clearChatHistory } = useChat({ isMemOn: mediaState.isMemOn });
+  const { messages, sendMessage, clearChatHistory, startReasoningLoop, isThinking } = useChat({ isMemOn: mediaState.isMemOn });
 
   const [chatInput, setChatInput] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -33,23 +33,27 @@ const ChatPanel: React.FC = () => {
       if (messageToSend) {
         const prefix = isManual ? '' : '🎙️ ';
         const formattedMessage = `${prefix}${messageToSend}`;
-        console.log(`ChatPanel - Sending message: ${formattedMessage}`);
+        console.log(`ChatPanel - Preparing to send message: "${formattedMessage}"`);
 
         try {
-          await sendActionToChatbot(formattedMessage);
+          await sendMessage(formattedMessage);
+          console.log('ChatPanel - Message sent successfully.');
           setChatInput('');
           setError(null);
           setErrorDetails(null);
         } catch (err: any) {
-          console.error(`ChatPanel - Error sending message: ${err}`);
+          console.error('ChatPanel - Error sending message:', {
+            message: err.message,
+            stack: err.stack,
+          });
           setError('Failed to communicate with server.');
-          setErrorDetails('Unknown error occurred.');
+          setErrorDetails(err.message || 'Unknown error occurred.');
         }
       } else {
         console.warn('ChatPanel - Attempted to send an empty message.');
       }
     },
-    [sendActionToChatbot]
+    [sendMessage]
   );
 
   return (
@@ -77,7 +81,11 @@ const ChatPanel: React.FC = () => {
       
       <div className={styles.chatLayer} ref={chatContainerRef}>
         <HeavyChatMessages messages={messages} />
-        <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={() => handleChat(chatInput, true)} />
+        <ChatInput
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          handleChat={() => handleChat(chatInput, true)}
+        />
         <ControlButtons
           isCamOn={mediaState.isCamOn}
           isMicOn={mediaState.isMicOn}
@@ -89,6 +97,8 @@ const ChatPanel: React.FC = () => {
           isMemOn={mediaState.isMemOn}
           toggleMem={toggleMem}
           eraseMemory={clearChatHistory}
+          startLoop={startReasoningLoop}
+          isThinking={isThinking}
         />
       </div>
     </div>
