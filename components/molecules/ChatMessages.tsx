@@ -1,42 +1,31 @@
-// src/components/atoms/ChatMessage.tsx
+// File: components/atoms/ChatMessages.tsx
 
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css';
-import styles from '../../styles/components/atoms/ChatMessage.module.css';
-import LinkRenderer from './LinkRenderer'; // Adjust the import path accordingly
+import styles from '../../styles/components/molecules/ChatMessages.module.css';
+import ChatMessage from '../atoms/ChatMessage';
 
-interface ChatMessageProps {
+interface Message {
+  id: string;
   sender: string;
   text: string;
-  isInterim?: boolean;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
-  const isUser = sender.toLowerCase() === 'user';
+interface ChatMessagesProps {
+  messages: Message[];
+}
 
+const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   return (
-    <div
-      className={`${styles.messageContainer} ${
-        isUser ? styles.userMessage : styles.botMessage
-      } ${isInterim ? styles.interim : ''}`}
-    >
-      <div className={styles.text}>
-        {/* Render Markdown with GFM and syntax highlighting */}
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeHighlight]}
-          components={{
-            a: LinkRenderer, // Use custom link renderer
-          }}
-        >
-          {text}
-        </ReactMarkdown>
-      </div>
+    <div className={styles.chatMessages}>
+      {messages.map((message) => (
+        <ChatMessage
+          key={message.id}
+          sender={message.sender}
+          text={message.text}
+        />
+      ))}
     </div>
   );
 };
 
-export default React.memo(ChatMessage);
+export default React.memo(ChatMessages);
