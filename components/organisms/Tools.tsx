@@ -59,6 +59,14 @@ const Tools: React.FC = () => {
           Hub
         </button>
 
+        {/* Data Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://unstats.un.org/UNSDWebsite/undatacommons/search')}
+        >
+          Data
+        </button>
+
         {/* News Button */}
         <button
           className="right-edge-button"
