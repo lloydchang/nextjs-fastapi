@@ -30,7 +30,7 @@ const Tools: React.FC = () => {
         {/* City Button */}
         <button
           className="right-edge-button"
-          onClick={() => openInNewTab('https://open-sdg.org/community')}
+          onClick={() => openInNewTab('https://open-sdg.org/community#cities-and-regions')}
         >
           City
         </button>
