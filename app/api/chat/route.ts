@@ -3,7 +3,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from './utils/config';
 import { generateElizaResponse } from './utils/eliza';
-import { generateAliceResponse } from './utils/alice';
 import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from './controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from './controllers/GoogleVertexGemmaController';
@@ -76,13 +75,6 @@ export async function POST(request: NextRequest) {
         generate: () => {
           const elizaContext = createFilteredContext('Eliza', recentMessages);
           return generateElizaResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
-        },
-      },
-      {
-        persona: 'Alice',
-        generate: () => {
-          const aliceContext = createFilteredContext('Alice', recentMessages);
-          return generateAliceResponse([{ role: 'system', content: systemPrompt }, ...recentMessages]);
         },
       },
       {
