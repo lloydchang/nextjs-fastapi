@@ -1,14 +1,14 @@
 // File: app/api/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getConfig } from './utils/config';
-import { generateElizaResponse } from './utils/eliza';
-import { handleTextWithOllamaGemmaTextModel } from './controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from './controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from './controllers/GoogleVertexGemmaController';
-import { sanitizeInput } from './utils/sanitize';
-import { systemPrompt } from './utils/prompt';
-import logger from './utils/logger';
+import { getConfig } from 'app/api/chat/utils/config';
+import { generateElizaResponse } from 'app/api/chat/utils/eliza';
+import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
+import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
+import { sanitizeInput } from 'app/api/chat/utils/sanitize';
+import { systemPrompt } from 'app/api/chat/utils/prompt';
+import logger from 'app/api/chat/utils/logger';
 
 const config = getConfig();
 
