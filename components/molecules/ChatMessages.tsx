@@ -1,61 +1,42 @@
-// File: src/components/molecules/ChatMessages.tsx
+// src/components/atoms/ChatMessage.tsx
 
-import React, { useEffect, useRef } from 'react';
-import ChatMessage from '../atoms/ChatMessage'; // Import the ChatMessage component
-import { Message } from '../state/hooks/useChat';
-import styles from '../../styles/components/molecules/ChatMessages.module.css';
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
+import styles from '../../styles/components/atoms/ChatMessage.module.css';
+import LinkRenderer from './LinkRenderer'; // Adjust the import path accordingly
 
-interface ChatMessagesProps {
-  messages: Message[];
+interface ChatMessageProps {
+  sender: string;
+  text: string;
+  isInterim?: boolean;
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
-  // Create a reference for the messages container
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to the bottom whenever messages change
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-
-    // Use requestAnimationFrame for smoother scroll update
-    if (container) {
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight; // Scroll to the bottom
-      });
-    }
-  }, [messages]);
-
-  // Initial load handling
-  useEffect(() => {
-    const container = messagesContainerRef.current;
-
-    if (container) {
-      // Immediately set opacity to 1 for visibility
-      container.style.opacity = '1';
-      container.style.visibility = 'visible';
-      // Ensure the container is scrollable
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight; // Scroll to the bottom on initial load
-      });
-    }
-  }, []);
+const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
+  const isUser = sender.toLowerCase() === 'user';
 
   return (
-    <div className={styles.messagesContainer} ref={messagesContainerRef}>
-      {messages.map((msg) => {
-        const isInterim = msg.isInterim && msg.sender.toLowerCase() === 'user';
-
-        return (
-          <ChatMessage
-            key={msg.id} // Use unique key from msg.id
-            sender={msg.sender}
-            text={msg.text}
-            isInterim={isInterim}
-          />
-        );
-      })}
+    <div
+      className={`${styles.messageContainer} ${
+        isUser ? styles.userMessage : styles.botMessage
+      } ${isInterim ? styles.interim : ''}`}
+    >
+      <div className={styles.text}>
+        {/* Render Markdown with GFM and syntax highlighting */}
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeHighlight]}
+          components={{
+            a: LinkRenderer, // Use custom link renderer
+          }}
+        >
+          {text}
+        </ReactMarkdown>
+      </div>
     </div>
   );
 };
 
-export default React.memo(ChatMessages);
+export default React.memo(ChatMessage);
