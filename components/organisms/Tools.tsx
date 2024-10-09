@@ -22,7 +22,7 @@ const Tools: React.FC = () => {
         {/* Local Button */}
         <button
           className="right-edge-button"
-          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
+          onClick={() => openInNewTab('https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap')}
         >
           Local
         </button>
