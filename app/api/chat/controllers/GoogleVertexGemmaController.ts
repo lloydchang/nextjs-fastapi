@@ -17,8 +17,9 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
 ): Promise<string> {
   const { googleVertexGemmaEndpoint } = getConfig();
 
-  if (!googleVertexGemmaEndpoint) {
-    logger.silly('handleTextWithGoogleVertexGemmaTextModel - Missing Google Vertex Gemma endpoint.');
+  // Validate required environment variables
+  if (!validateEnvVars(['GOOGLE_VERTEX_GEMMA_ENDPOINT'])) {
+    logger.silly('handleTextWithGoogleVertexGemmaTextModel - Missing required environment variables.');
     return '';
   }
 
