@@ -101,8 +101,11 @@ export async function POST(request: NextRequest) {
 
     const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
-    const gemmaResponses = results.filter(res => res.status === 'fulfilled' && res.value !== null);
-    
+    // Type Guard to filter fulfilled results
+    const gemmaResponses = results.filter(
+      (res): res is PromiseFulfilledResult<string | null> => res.status === 'fulfilled' && res.value !== null
+    );
+
     let responses: Array<{ persona: string, message: string }> = [];
 
     if (gemmaResponses.length === 0) {
@@ -111,7 +114,7 @@ export async function POST(request: NextRequest) {
     } else {
       responses = gemmaResponses.map((result, index) => ({
         persona: responseFunctions[index].persona,
-        message: result.value,
+        message: result.value!, // `value` is guaranteed to exist because of the type guard above
       }));
     }
 
