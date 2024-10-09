@@ -23,12 +23,15 @@ export async function handleTextWithCloudflareGemmaTextModel(
     return '';
   }
 
+  // Type assertion to ensure TypeScript knows the endpoint is defined
+  const endpoint = cloudflareGemmaEndpoint as string;
+
   logger.debug(`handleTextWithCloudflareGemmaTextModel - Generating text for model: ${textModel}`);
   logger.silly(`handleTextWithCloudflareGemmaTextModel - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareGemma({
-      endpoint: cloudflareGemmaEndpoint,
+      endpoint,
       prompt: userPrompt,
       model: textModel,
     });

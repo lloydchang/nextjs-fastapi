@@ -23,12 +23,15 @@ export async function handleTextWithOllamaGemmaTextModel(
     return '';
   }
 
+  // Type assertion to ensure TypeScript knows the endpoint is defined
+  const endpoint = ollamaGemmaEndpoint as string;
+
   logger.debug(`handleTextWithOllamaGemmaTextModel - Generating text for model: ${textModel}`);
   logger.silly(`handleTextWithOllamaGemmaTextModel - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaGemma({
-      endpoint: ollamaGemmaEndpoint,
+      endpoint,
       prompt: userPrompt,
       model: textModel,
     });
