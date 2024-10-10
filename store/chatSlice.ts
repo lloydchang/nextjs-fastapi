@@ -40,13 +40,19 @@ const chatSlice = createSlice({
   },
 });
 
-// Async function to send message and get response from the API
-export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
-  const userMessage: Message = { id: `${Date.now()}`, sender: 'user', text };
+// Async function to send a message and get a response from the API
+export const sendMessage = (input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }) => async (dispatch: AppDispatch) => {
+  // Determine if the input is a string or an object
+  const userMessage: Message = typeof input === 'string' 
+    ? { id: `${Date.now()}`, sender: 'user', text: input }
+    : { id: `${Date.now()}`, sender: input.sender || 'user', text: input.text, hidden: input.hidden || false, persona: input.persona };
+
+  // Dispatch the user message to the chat
   dispatch(addMessage(userMessage));
 
   try {
-    const messagesArray = [{ role: 'user', content: text.trim() }];
+    // Prepare the message array for the API request
+    const messagesArray = [{ role: 'user', content: userMessage.text.trim() }];
 
     const response = await fetch('/api/chat', {
       method: 'POST',
