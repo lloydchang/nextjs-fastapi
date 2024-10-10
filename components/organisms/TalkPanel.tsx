@@ -116,8 +116,8 @@ const TalkPanel: React.FC = () => {
         const transcript = await scrapeTranscript(transcriptUrl);
 
         // Send the scraped transcript to the chat directly
-        dispatch(sendMessage(`${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`));
-        // dispatch(sendMessage({ text: `Remember: ONE question, ≤140 chars, always. ${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`, hidden: false }));
+        // dispatch(sendMessage(`${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`));
+        dispatch(sendMessage({ text: `${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`, hidden: true }));
         // dispatch(sendMessage({ text: `${sdgTag}\n\n${firstTalk.title}\n\n${transcript}`, hidden: true }));
       }
     } catch (error) {
