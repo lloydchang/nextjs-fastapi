@@ -4,7 +4,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from 'store/store';
+import { RootState, AppDispatch } from 'store/store'; // Import AppDispatch and RootState types
 import { sendMessage, clearMessages } from 'store/chatSlice';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -17,13 +17,14 @@ import Tools from 'components/organisms/Tools';
 import VideoStream from 'components/organisms/VideoStream';
 import AudioStream from 'components/organisms/AudioStream';
 
-
+// Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
 });
 
 const ChatPanel: React.FC = () => {
-  const dispatch = useDispatch();
+  // Use `AppDispatch` type to ensure correct dispatch typing
+  const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
 
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
@@ -48,15 +49,18 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${styles['Chat-panel']}`}>
-
+      {/* Background Image */}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
+      {/* Chat Panel Container */}
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
+        {/* Tools Layer */}
         <div className={styles.toolsLayer}>
           <Tools />
         </div>
 
+        {/* Chat Layer */}
         <div className={styles.chatLayer}>
           <HeavyChatMessages />
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />

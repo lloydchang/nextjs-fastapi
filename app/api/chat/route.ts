@@ -195,13 +195,13 @@ function createFilteredContext(
 ): string {
   return messages
     .map((msg) => {
-      if (!msg.text) {
+      if (!msg.content) {
         logger.error(`app/api/chat/route.ts - Invalid message content: ${JSON.stringify(msg)}`);
         return ''; // Skip invalid messages
       }
-      return `${msg.sender === 'user' ? 'User' : 'System'}: ${sanitizeInput(msg.text)}`;
+      return msg.content;
     })
-    .join('\n');
+    .join('\n');  // Ensure the `join` is correctly aligned and closes the map.
 }
 
 // Function to create a combined stream for responses
