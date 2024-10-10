@@ -33,7 +33,7 @@ const chatSlice = createSlice({
         sender: action.payload.sender || 'bot',
         text: action.payload.text,
         persona: action.payload.persona,
-        hidden: action.payload.hidden || true,
+        hidden: action.payload.hidden || false,
       };
       state.messages.push(newMessage);
     },
