@@ -115,8 +115,7 @@ const TalkPanel: React.FC = () => {
         const sdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : 'No SDG Tag';
         const transcript = await scrapeTranscript(transcriptUrl);
 
-        // Save and send the scraped transcript to the chat
-        dispatch(saveMessage({ text: `${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`, hidden: true }));
+        // Send the scraped transcript to the chat directly
         dispatch(sendMessage(`${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`));
       }
     } catch (error) {
