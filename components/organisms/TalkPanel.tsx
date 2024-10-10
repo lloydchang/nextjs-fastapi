@@ -116,6 +116,7 @@ const TalkPanel: React.FC = () => {
 
         // Send the scraped transcript to the chat
         dispatch(sendMessage(`${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`));
+
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
