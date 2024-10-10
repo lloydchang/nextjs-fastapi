@@ -170,7 +170,7 @@
   }
 
   .botMessage .text {
-    background-color: #202C33; /* Dark gray for bot messages in dark mode */
+    background-color: #000000; /* Black for bot messages in dark mode */
     color: #E9EDEF; /* Light gray text */
   }
 
