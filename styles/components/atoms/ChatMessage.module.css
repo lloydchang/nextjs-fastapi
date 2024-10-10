@@ -34,13 +34,13 @@
 
 /* Specific styles for user messages */
 .userMessage .text {
-  background-color: #DCF8C6; /* Light green for user messages (WhatsApp color) */
+  background-color: #DCF8C6; /* Light green for user messages */
   color: #000000; /* Black text */
 }
 
 /* Specific styles for bot messages */
 .botMessage .text {
-  background-color: #FFFFFF; /* White for bot messages (WhatsApp color) */
+  background-color: #FFFFFF; /* White for bot messages */
   color: #000000; /* Black text */
 }
 
@@ -58,7 +58,7 @@
 
 /* Links */
 .text a {
-  color: #34B7F1; /* WhatsApp blue for links */
+  color: ##AAFF00; /* Bright green for links */
   text-decoration: none;
 }
 
@@ -106,7 +106,7 @@
 
 /* Blockquotes */
 .text blockquote {
-  border-left: 4px solid #25D366; /* WhatsApp Green left border */
+  border-left: 4px solid #25D366; /* Green left border */
   padding-left: 10px;
   color: #555555; /* Dark gray text */
   margin: 0.5em 0;
@@ -134,7 +134,7 @@
 }
 
 .text th {
-  background-color: #25D366; /* WhatsApp Green header background */
+  background-color: #25D366; /* Green header background */
   color: #ffffff; /* White text */
   text-align: left;
 }
@@ -165,17 +165,17 @@
   }
 
   .userMessage .text {
-    background-color: #005C4B; /* Dark green for user messages in dark mode (WhatsApp color) */
+    background-color: #005C4B; /* Dark green for user messages in dark mode */
     color: #E9EDEF; /* Light gray text */
   }
 
   .botMessage .text {
-    background-color: #202C33; /* Dark gray for bot messages in dark mode (WhatsApp color) */
+    background-color: #202C33; /* Dark gray for bot messages in dark mode */
     color: #E9EDEF; /* Light gray text */
   }
 
   .text a {
-    color: #53BDEB; /* Lighter blue for links in dark mode */
+    color: ##AAFF00; /* Bright green for links in dark mode */
   }
 
   .text pre,
