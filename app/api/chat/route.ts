@@ -31,9 +31,11 @@ export async function POST(request: NextRequest) {
   try {
     logger.debug(`app/api/chat/route.ts - Handling POST request`);
 
+    // Parse the incoming request
     const { messages } = await request.json();
     logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
 
+    // Validate messages
     if (!Array.isArray(messages)) {
       logger.warn(`app/api/chat/route.ts - Invalid request format: messages is not an array.`);
       return NextResponse.json(
@@ -42,7 +44,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if messages are empty
+    if (messages.length === 0) {
+      logger.warn(`app/api/chat/route.ts - No messages received.`);
+      return NextResponse.json(
+        { error: 'No messages provided.' },
+        { status: 400 }
+      );
+    }
+
+    const invalidMessages = messages.filter(msg => {
+      logger.debug(`app/api/chat/route.ts - Validating message: ${JSON.stringify(msg)}`);
+      const isInvalid = typeof msg !== 'object' || msg === null || 
+                        typeof msg.role !== 'string' || msg.role.trim() === '' ||
+                        typeof msg.content !== 'string' || msg.content.trim() === '';
+      if (isInvalid) {
+        logger.error(`app/api/chat/route.ts - Invalid message content: ${JSON.stringify(msg)}`);
+      }
+      return isInvalid;
+    });
+
+    if (invalidMessages.length > 0) {
+      logger.warn(`app/api/chat/route.ts - Invalid messages detected: ${JSON.stringify(invalidMessages)}`);
+      return NextResponse.json(
+        { error: 'One or more messages are invalid.' },
+        { status: 400 }
+      );
+    }
+
     const recentMessages = messages.slice(-3);
+    logger.debug(`app/api/chat/route.ts - Recent messages for context: ${JSON.stringify(recentMessages)}`);
 
     const responseFunctions = [
       {
@@ -108,6 +139,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const personaMap = responseFunctions.map((res) => res.persona);
+    logger.debug(`app/api/chat/route.ts - Response functions prepared: ${JSON.stringify(personaMap)}`);
 
     const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
@@ -136,6 +168,7 @@ export async function POST(request: NextRequest) {
     }
 
     const combinedStream = await createCombinedStream(responses);
+    logger.debug(`app/api/chat/route.ts - Valid responses: ${JSON.stringify(responses)}`);
     return new NextResponse(combinedStream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -145,7 +178,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
-    logger.error(`app/api/chat/route.ts - Error: ${errorMessage}`);
+    logger.error(`app/api/chat/route.ts - Error: ${errorMessage}`, { stack: error instanceof Error ? error.stack : null });
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
@@ -161,7 +194,13 @@ function createFilteredContext(
   messages: Array<{ role: string; content: string }>
 ): string {
   return messages
-    .map((msg) => `${msg.role === 'user' ? 'User' : 'System'}: ${sanitizeInput(msg.content)}`)
+    .map((msg) => {
+      if (!msg.text) {
+        logger.error(`app/api/chat/route.ts - Invalid message content: ${JSON.stringify(msg)}`);
+        return ''; // Skip invalid messages
+      }
+      return `${msg.sender === 'user' ? 'User' : 'System'}: ${sanitizeInput(msg.text)}`;
+    })
     .join('\n');
 }
 
