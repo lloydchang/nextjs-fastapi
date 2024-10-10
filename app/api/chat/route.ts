@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     }
 
     const combinedStream = await createCombinedStream(responses);
-    logger.debug(`app/api/chat/route.ts - Valid responses: ${JSON.stringify(responses)}`);
+    logger.silly(`app/api/chat/route.ts - Valid responses: ${JSON.stringify(responses)}`);
     return new NextResponse(combinedStream, {
       headers: {
         'Content-Type': 'text/event-stream',

@@ -26,7 +26,7 @@ export async function handleTextWithOllamaGemmaTextModel(
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = ollamaGemmaEndpoint as string;
 
-  logger.debug(`app/api/chat/controllers/OllamaGemmaController.ts - Generating text for model: ${textModel}`);
+  logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Generating text for model: ${textModel}`);
   logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - User prompt: ${userPrompt}`);
 
   try {
