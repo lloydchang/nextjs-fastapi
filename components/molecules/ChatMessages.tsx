@@ -31,7 +31,12 @@ const ChatMessages: React.FC = () => {
       {messages
         .filter((msg) => msg.hidden === false || msg.hidden === undefined) // Show non-hidden or undefined messages
         .map((msg) => (
-          <ChatMessage key={msg.id} sender={msg.sender} text={msg.text} persona={msg.persona} />
+          <ChatMessage
+            key={msg.id}
+            sender={msg.sender}
+            text={typeof msg.text === 'string' ? msg.text : ''} // Default to empty string if text is not a string
+            persona={msg.persona}
+          />
         ))}
     </div>
   );

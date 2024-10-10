@@ -3,22 +3,19 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch } from 'store/store';
 import he from 'he'; // For HTML entity decoding
+import { Message } from 'types'; // Import the unified Message type
 
-interface Message {
-  id: string;
-  sender: 'user' | 'bot';
-  text: string;
-  persona?: string; // Added persona to support rendering different personas
-}
-
+// Define the ChatState interface
 interface ChatState {
   messages: Message[];
 }
 
+// Initial state for the chat slice
 const initialState: ChatState = {
   messages: [],
 };
 
+// Create the chat slice with updated action names
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
@@ -29,11 +26,19 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
+    saveMessage: (state, action: PayloadAction<{ text: string; sender?: 'user' | 'bot'; hidden?: boolean; persona?: string }>) => {
+      // Construct the new message and use the addMessage reducer to add it to the state
+      const newMessage: Message = {
+        id: `${Date.now()}`,
+        sender: action.payload.sender || 'bot',
+        text: action.payload.text,
+        persona: action.payload.persona,
+        hidden: action.payload.hidden || true,
+      };
+      state.messages.push(newMessage);
+    },
   },
 });
-
-// Export actions
-export const { addMessage, clearMessages } = chatSlice.actions;
 
 // Async function to send message and get response from the API
 export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
@@ -55,6 +60,7 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
       let chunk;
       let textBuffer = '';
 
+      // Handle streaming responses
       while ((chunk = await reader.read()) && !chunk.done) {
         textBuffer += decoder.decode(chunk.value, { stream: true });
         const completeMessages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
@@ -71,7 +77,7 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
                   id: `${Date.now()}`, 
                   sender: 'bot', 
                   text: parsedData.message,
-                  persona: parsedData.persona // Include persona for rendering
+                  persona: parsedData.persona
                 };
                 dispatch(addMessage(botMessage));
               }
@@ -87,7 +93,7 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
   }
 };
 
-// Function to parse incoming messages
+// Function to parse incoming messages from the API
 export function parseIncomingMessage(jsonString: string) {
   try {
     // Decode HTML entities and special characters using `he`
@@ -118,4 +124,6 @@ function logDetailedErrorInfo(jsonString: string, error: Error) {
   console.error('chatSlice - JSON Snippet (End):', endSnippet);
 }
 
+// Export the reducer and actions
+export const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
 export default chatSlice.reducer;
