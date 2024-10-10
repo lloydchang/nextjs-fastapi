@@ -48,7 +48,7 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  
+
   // Use `useRef` to track initial render
   const initialRender = useRef(true);
 
@@ -64,7 +64,7 @@ const TalkPanel: React.FC = () => {
     dispatch(setLoading(true));
 
     // Send the search keyword as a chat message
-    dispatch(sendMessage(`Search: ${searchQuery}`));
+    dispatch(sendMessage(`Searching for talks related to: ${searchQuery}`));
 
     try {
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`);
@@ -80,6 +80,13 @@ const TalkPanel: React.FC = () => {
 
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
+
+      // Send the first talk found as a chat message
+      if (data.length > 0) {
+        dispatch(sendMessage(`Found: ${data[0].title}`));
+      } else {
+        dispatch(sendMessage("No talks found."));
+      }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
     } finally {
