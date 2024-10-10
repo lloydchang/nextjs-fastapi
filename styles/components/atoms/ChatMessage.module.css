@@ -37,7 +37,7 @@
   border-radius: 8px;
   max-width: 70%;
   word-wrap: break-word;
-  color: #000000; /* Black text for readability */
+  color: #FFFFFF; /* Black text for readability */
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -49,8 +49,8 @@
 
 /* Specific styles for bot messages */
 .botMessage .text {
-  background-color: #FFFFFF; /* White for bot messages */
-  color: #000000; /* Black text */
+  background-color: #000000;
+  color: #FFFFFF;
   border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
 }
 
@@ -85,7 +85,7 @@
 .text h6 {
   margin: 0.5em 0;
   font-weight: bold;
-  color: #000000; /* Black color for headers */
+  color: #FFFFFF;
 }
 
 /* Lists */
@@ -93,7 +93,7 @@
 .text ol {
   padding-left: 20px;
   margin: 0.5em 0;
-  color: #000000; /* Black text for list items */
+  color: #FFFFFF;
 }
 
 /* Code blocks */
@@ -150,7 +150,7 @@
 }
 
 .text td {
-  color: #000000; /* Black text for table cells */
+  color: #FFFFFF; /* Black text for table cells */
 }
 
 /* Task Lists */
