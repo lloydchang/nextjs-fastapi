@@ -5,15 +5,15 @@ import logger from 'app/api/chat/utils/logger';
 
 // Function to extract transcript using a more flexible approach
 const extractTranscript = (html: string): string => {
-  logger.debug("Starting transcript extraction from HTML...");
+  logger.debug("app/api/proxyTranscript/route.ts - Starting transcript extraction from HTML...");
   
   // Match JSON-like structure that may contain the transcript
   const jsonMatch = html.match(/"transcript":\s*"(.*?)",/);
   if (!jsonMatch || jsonMatch.length < 2) {
-    logger.error("Error: Could not find transcript in the HTML. The transcript structure may have changed.");
+    logger.error("app/api/proxyTranscript/route.ts - Error: Could not find transcript in the HTML. The transcript structure may have changed.");
     
     // Log the HTML snippet for analysis
-    logger.error(`HTML Snippet for Debugging: ${html.substring(0, 500)}`);
+    logger.error(`app/api/proxyTranscript/route.ts - HTML Snippet for Debugging: ${html.substring(0, 500)}`);
     return 'Failed to retrieve transcript. Transcript structure may have changed.';
   }
 
@@ -27,7 +27,7 @@ const extractTranscript = (html: string): string => {
     .replace(/&quot;/g, '"')
     .replace(/\\n/g, ' ');
 
-  logger.debug("Transcript successfully extracted and decoded."); // This log is sufficient
+  logger.debug("app/api/proxyTranscript/route.ts - Transcript successfully extracted and decoded."); // This log is sufficient
   return decodedTranscript.trim();
 };
 
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   logger.debug(`Incoming request with transcriptUrl: ${transcriptUrl}`);
 
   if (!transcriptUrl || typeof transcriptUrl !== 'string') {
-    logger.error(`Missing or invalid transcript URL: ${transcriptUrl}`);
+    logger.error(`app/api/proxyTranscript/route.ts - Missing or invalid transcript URL: ${transcriptUrl}`);
     return NextResponse.json({ error: 'Missing or invalid transcript URL' }, { status: 400 });
   }
 
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     });
 
     if (!response.ok) {
-      logger.error(`Failed to fetch transcript. Status: ${response.status} - ${response.statusText}`);
+      logger.error(`app/api/proxyTranscript/route.ts - Failed to fetch transcript. Status: ${response.status} - ${response.statusText}`);
       return NextResponse.json({ error: `Failed to fetch transcript. Status: ${response.status} - ${response.statusText}` }, { status: response.status });
     }
 
@@ -70,12 +70,12 @@ export async function GET(request: Request) {
     const transcript = extractTranscript(html);
 
     if (transcript.startsWith("Failed to retrieve")) {
-      logger.error("Transcript extraction failed. The transcript structure may have changed.");
+      logger.error("app/api/proxyTranscript/route.ts - Transcript extraction failed. The transcript structure may have changed.");
     }
 
     return NextResponse.json({ transcript }, { status: 200 });
   } catch (error) {
-    logger.error(`Error fetching transcript: ${error}`);
+    logger.error(`app/api/proxyTranscript/route.ts - Error fetching transcript: ${error}`);
     return NextResponse.json({ error: `Error fetching transcript: ${error}` }, { status: 500 });
   }
 }
