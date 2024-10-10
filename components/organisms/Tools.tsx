@@ -91,6 +91,14 @@ const Tools: React.FC = () => {
           Data
         </button>
 
+        {/* Tools Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
+        >
+          Tools
+        </button>
+
         {/* News Button */}
         <button
           className="right-edge-button"
