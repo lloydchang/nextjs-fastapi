@@ -28,30 +28,44 @@
   font-size: 10px;          /* Much smaller font size */
   width: 60px;              /* Fixed width for tiny buttons */
   text-align: center;       /* Center text inside the button */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
 }
 
 .right-edge-button:hover {
-  background-color: #1565c0; /* Darken on hover */
+  background-color: rgb(0, 141, 255, 1); /* Brighten on hover */
+  transform: translateX(5px); /* Shift button slightly to the right on hover */
 }
 
 .right-edge-button:active {
-  background-color: #0d47a1; /* Even darker on click */
+  background-color: rgb(0, 170, 255, 1); /* Even brighter on click */
 }
 
 /* External Link Button */
 .external-link-button {
   background-color: #0288d1; /* Maintain different color for external links */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
 }
 
 .external-link-button:hover {
-  background-color: #0277bd; /* Darker on hover */
+  background-color: #03a9f4; /* Brighten on hover */
+  transform: translateX(5px); /* Shift slightly to the right on hover */
+}
+
+.external-link-button:active {
+  background-color: #4fc3f7; /* Even brighter on click */
 }
 
 /* Close Button */
 .close-button-active {
   background-color: #d32f2f; /* Different color for close buttons */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
 }
 
 .close-button-active:hover {
-  background-color: #b71c1c; /* Darker on hover */
+  background-color: #e57373; /* Brighten on hover */
+  transform: translateX(5px); /* Shift slightly to the right on hover */
+}
+
+.close-button-active:active {
+  background-color: #ef9a9a; /* Even brighter on click */
 }
