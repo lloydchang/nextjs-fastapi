@@ -99,6 +99,7 @@
 
   .chatLayer {
     max-height: 80vh;
+    padding: 20px;
   }  
 }
 
@@ -108,4 +109,7 @@
     flex-direction: row; /* Display items side by side on tablets */
     max-height: 80vh;
   }
+  .chatLayer {
+    padding: 20px;
+  }  
 }
