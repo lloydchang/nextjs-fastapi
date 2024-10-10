@@ -8,6 +8,8 @@ import Image from 'next/image';
 import SDGWheel from 'public/images/SDGWheel.png';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 import axios from 'axios';
+import fetch from 'node-fetch'; // Import node-fetch
+import cheerio from 'cheerio'; // Import cheerio for server-side HTML parsing
 import { RootState } from 'store/store';
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
 import { sendMessage } from 'store/chatSlice';
@@ -52,6 +54,36 @@ const shuffleArray = (array: any[]) => {
   return array;
 };
 
+// Function to scrape the transcript from TED Talk URL using cheerio
+const scrapeTranscript = async (transcriptUrl: string): Promise<string> => {
+  try {
+    // Use node-fetch to get the HTML of the transcript page
+    const response = await fetch(transcriptUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+      },
+    });
+
+    const html = await response.text();
+
+    // Load HTML into cheerio for parsing
+    const $ = cheerio.load(html);
+
+    // Select transcript paragraphs using class name
+    const paragraphs = $('.talk-transcript__para__text');
+    let transcript = '';
+
+    paragraphs.each((index, element) => {
+      transcript += $(element).text() + ' ';
+    });
+
+    return transcript.trim();
+  } catch (error) {
+    console.error(`Error scraping transcript: ${error}`);
+    return 'Failed to retrieve transcript.';
+  }
+};
+
 const TalkPanel: React.FC = () => {
   const dispatch = useDispatch();
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
@@ -90,12 +122,16 @@ const TalkPanel: React.FC = () => {
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
 
-      // Send the first talk found with its transcript URL and SDG tag
+      // Send the scraped transcript of the first talk
       if (data.length > 0) {
         const firstTalk = data[0];
         const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
+
         const sdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : 'No SDG Tag';
-        dispatch(sendMessage(`${firstTalk.title} ${transcriptUrl} ${sdgTag}`));
+        const transcript = await scrapeTranscript(transcriptUrl);
+
+        // Send the scraped transcript to the chat
+        dispatch(sendMessage(`${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
