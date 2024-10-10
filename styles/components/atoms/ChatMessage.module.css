@@ -7,6 +7,16 @@
   margin-bottom: 10px;
 }
 
+/* Persona Label Styling */
+.personaLabel {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #6c757d; /* Gray color for persona labels */
+  background-color: #000000;
+  margin-bottom: 4px;
+  align-self: flex-start; /* Align persona label to the left */
+}
+
 /* User message styling */
 .userMessage {
   align-items: flex-end;
@@ -172,6 +182,11 @@
   .botMessage .text {
     background-color: #000000; /* Black for bot messages in dark mode */
     color: #E9EDEF; /* Light gray text */
+  }
+
+  .personaLabel {
+    color: #8696A0; /* Adjusted gray color for persona labels in dark mode */
+    background-color: #000000;
   }
 
   .text a {

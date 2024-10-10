@@ -8,6 +8,7 @@ interface Message {
   id: string;
   sender: 'user' | 'bot';
   text: string;
+  persona?: string; // Added persona to support rendering different personas
 }
 
 interface ChatState {
@@ -69,7 +70,8 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
                 const botMessage: Message = { 
                   id: `${Date.now()}`, 
                   sender: 'bot', 
-                  text: parsedData.message 
+                  text: parsedData.message,
+                  persona: parsedData.persona // Include persona for rendering
                 };
                 dispatch(addMessage(botMessage));
               }
