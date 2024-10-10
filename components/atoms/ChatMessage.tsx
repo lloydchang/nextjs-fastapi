@@ -25,9 +25,25 @@ const convertPlainUrlsToMarkdownLinks = (text: string) => {
   });
 };
 
+// Function to hash a persona name to a specific color in the range of #777777 to #FFFFFF
+const hashPersonaToColor = (persona: string): string => {
+  let hash = 0;
+  for (let i = 0; i < persona.length; i++) {
+    hash = persona.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const minColorValue = parseInt('777777', 16);
+  const maxColorValue = parseInt('FFFFFF', 16);
+
+  // Convert hash to a value between the specified color range
+  const rangeValue = minColorValue + (Math.abs(hash) % (maxColorValue - minColorValue));
+  return `#${rangeValue.toString(16)}`;
+};
+
 const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona }) => {
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
+
+  const personaColor = persona ? hashPersonaToColor(persona) : '#777777'; // Default color if persona is undefined
 
   return (
     <div
@@ -37,7 +53,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
     >
       {/* Display Persona Label for bot messages only */}
       {sender === 'bot' && persona && (
-        <div className={styles.personaLabel}>
+        <div className={styles.personaLabel} style={{ color: personaColor }}>
           <strong>{persona}</strong> {/* Render persona name in bold */}
         </div>
       )}

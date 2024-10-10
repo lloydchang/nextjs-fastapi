@@ -10,12 +10,10 @@
 /* Persona Label Styling */
 .personaLabel {
   font-size: 0.85rem;
-  color: #6c757d; /* Gray color for persona labels */
-  background-color: #FFFFFF;
-  margin-bottom: 1px;
+  margin-bottom: 0px;
   align-self: flex-start; /* Align persona label to the left */
-  border-radius: 8px; /* Adds rounded corners */
-  padding: 2px 4px; /* Optional: Adds some spacing inside the label */
+  border-radius: 8px 8px 0px 0px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
+  padding: 0px 4px; /* Optional: Adds some spacing inside the label */
 }
 
 /* User message styling */
@@ -53,6 +51,7 @@
 .botMessage .text {
   background-color: #FFFFFF; /* White for bot messages */
   color: #000000; /* Black text */
+  border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
 }
 
 /* Markdown Element Styles */
