@@ -13,11 +13,11 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
-  logger.silly(`OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    logger.debug(`OllamaLlamaClient.ts - Request body: ${requestBody}`);
+    logger.debug(`app/api/chat/clients/OllamaLlamaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -26,22 +26,22 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     });
 
     if (!response.ok) {
-      logger.error(`OllamaLlamaClient.ts - HTTP error! Status: ${response.status}`);
+      logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - HTTP error! Status: ${response.status}`);
       return null;
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      logger.error('OllamaLlamaClient.ts - Failed to access the response body stream.');
+      logger.error('app/api/chat/clients/OllamaLlamaClient.ts - Failed to access the response body stream.');
       return null;
     }
 
     const finalResponse = await parseStream(reader);
-    logger.debug(`OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
+    logger.debug(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
 
     return finalResponse;
   } catch (error) {
-    logger.warn(`OllamaLlamaClient.ts - Error generating content from Ollama Llama: ${error}`);
+    logger.warn(`app/api/chat/clients/OllamaLlamaClient.ts - Error generating content from Ollama Llama: ${error}`);
     return null;
   }
 }
