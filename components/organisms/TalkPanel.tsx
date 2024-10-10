@@ -63,7 +63,7 @@ const scrapeTranscript = async (transcriptUrl: string): Promise<string> => {
     }
 
     const data = await response.json();
-    return data.transcript || 'Failed to retrieve transcript.';
+    return data.transcript || ''; // '' = Failed to retrieve transcript.
   } catch (error) {
     console.error(`Error scraping transcript from URL ${transcriptUrl}: ${error}`);
     return 'Failed to retrieve transcript.';
@@ -116,8 +116,9 @@ const TalkPanel: React.FC = () => {
         const transcript = await scrapeTranscript(transcriptUrl);
 
         // Send the scraped transcript to the chat directly
-        dispatch(sendMessage(`${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`));
-        // dispatch(sendMessage({ text: `${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`, hidden: true }));
+        dispatch(sendMessage(`${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`));
+        // dispatch(sendMessage({ text: `Remember: ONE question, ≤140 chars, always. ${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`, hidden: false }));
+        // dispatch(sendMessage({ text: `${sdgTag}\n\n${firstTalk.title}\n\n${transcript}`, hidden: true }));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
