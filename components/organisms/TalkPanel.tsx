@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Image from 'next/image';
 import SDGWheel from 'public/images/SDGWheel.png';
@@ -10,6 +10,7 @@ import styles from 'styles/components/organisms/TalkPanel.module.css';
 import axios from 'axios';
 import { RootState } from 'store/store';
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
+import { sendMessage } from 'store/chatSlice'; // Import sendMessage from chatSlice
 import { Talk } from 'components/state/types';
 
 const sdgTitleMap: Record<string, string> = {
@@ -47,14 +48,23 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
+  
+  // Use `useRef` to track initial render
+  const initialRender = useRef(true);
 
   useEffect(() => {
-    performSearch(searchQuery);
-  }, []);
+    if (initialRender.current) {
+      performSearch(searchQuery);
+      initialRender.current = false; // Set to false after the first render
+    }
+  }, []); // Empty dependency array ensures it only runs once during component mount
 
   const performSearch = async (searchQuery: string) => {
     dispatch(setError(null));
     dispatch(setLoading(true));
+
+    // Send the search keyword as a chat message
+    dispatch(sendMessage(`Search: ${searchQuery}`));
 
     try {
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`);
