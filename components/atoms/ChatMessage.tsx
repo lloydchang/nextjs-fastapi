@@ -7,13 +7,7 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css'; // Ensure the correct styling for code highlighting
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer'; // Ensure this path is correct
-
-interface ChatMessageProps {
-  sender: 'user' | 'bot'; // Specify sender type to ensure it's either 'user' or 'bot'
-  text: string;
-  isInterim?: boolean;
-  persona?: string; // Add persona property to differentiate bot personas
-}
+import { Message } from 'types'; // Import the unified Message type
 
 // Function to convert plain URLs into clickable links
 const convertPlainUrlsToMarkdownLinks = (text: string) => {

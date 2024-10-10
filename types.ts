@@ -1,5 +1,14 @@
 // File: types.ts
 
+export interface Message {
+  id: string;
+  sender: 'user' | 'bot';
+  text: string; // Ensure text is always a string
+  persona?: string;
+  hidden?: boolean;
+  isInterim?: boolean; // Optional property for interim status
+}
+
 /**
  * Represents the request body structure for the chatbot API.
  */
