@@ -34,14 +34,14 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
-    // Updated action: saveMessage (formerly sendMessage) to handle hidden messages and save them to the state
     saveMessage: (state, action: PayloadAction<{ text: string; sender?: 'user' | 'bot'; hidden?: boolean; persona?: string }>) => {
+      // Construct the new message and use the addMessage reducer to add it to the state
       const newMessage: Message = {
         id: `${Date.now()}`,
         sender: action.payload.sender || 'bot',
         text: action.payload.text,
         persona: action.payload.persona,
-        hidden: action.payload.hidden || false, // Set hidden based on the action payload
+        hidden: action.payload.hidden || false,
       };
       state.messages.push(newMessage);
     },
@@ -49,7 +49,6 @@ const chatSlice = createSlice({
 });
 
 // Async function to send message and get response from the API
-// Renamed from `triggerMessage` to `sendMessage` to reflect its primary purpose
 export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
   const userMessage: Message = { id: `${Date.now()}`, sender: 'user', text };
 
@@ -85,7 +84,7 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
                   id: `${Date.now()}`, 
                   sender: 'bot', 
                   text: parsedData.message,
-                  persona: parsedData.persona // Include persona for rendering
+                  persona: parsedData.persona
                 };
                 dispatch(addMessage(botMessage));
               }
