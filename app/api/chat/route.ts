@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Validate messages
     if (!Array.isArray(messages)) {
-      logger.warn(`app/api/chat/route.ts - Invalid request format: messages is not an array.`);
+      logger.silly(`app/api/chat/route.ts - Invalid request format: messages is not an array.`);
       return NextResponse.json(
         { error: 'Invalid request format. "messages" must be an array.' },
         { status: 400 }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Check if messages are empty
     if (messages.length === 0) {
-      logger.warn(`app/api/chat/route.ts - No messages received.`);
+      logger.silly(`app/api/chat/route.ts - No messages received.`);
       return NextResponse.json(
         { error: 'No messages provided.' },
         { status: 400 }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (invalidMessages.length > 0) {
-      logger.warn(`app/api/chat/route.ts - Invalid messages detected: ${JSON.stringify(invalidMessages)}`);
+      logger.silly(`app/api/chat/route.ts - Invalid messages detected: ${JSON.stringify(invalidMessages)}`);
       return NextResponse.json(
         { error: 'One or more messages are invalid.' },
         { status: 400 }
