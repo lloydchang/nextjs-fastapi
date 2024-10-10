@@ -112,13 +112,11 @@ const TalkPanel: React.FC = () => {
       if (data.length > 0) {
         const firstTalk = data[0];
         const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
-        const sdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : 'No SDG Tag';
+        const sdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : ''; // No SDG Tag
         const transcript = await scrapeTranscript(transcriptUrl);
 
         // Send the scraped transcript to the chat directly
-        // dispatch(sendMessage(`${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`));
         dispatch(sendMessage({ text: `${sdgTag}\n\nPresenter: ${firstTalk.title}\n\n${transcript}`, hidden: true }));
-        // dispatch(sendMessage({ text: `${sdgTag}\n\n${firstTalk.title}\n\n${transcript}`, hidden: true }));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
