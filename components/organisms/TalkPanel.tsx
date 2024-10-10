@@ -9,7 +9,7 @@ import SDGWheel from 'public/images/SDGWheel.png';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 import axios from 'axios';
 import { RootState } from 'store/store';
-import { setTalks, setSelectedTalk, addSearchHistory, setError, setLoading } from 'store/talkSlice';
+import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
 import { Talk } from 'components/state/types';
 
 const sdgTitleMap: Record<string, string> = {
@@ -44,7 +44,7 @@ const determineInitialKeyword = () => {
 
 const TalkPanel: React.FC = () => {
   const dispatch = useDispatch();
-  const { talks, selectedTalk, searchHistory, error, loading } = useSelector((state: RootState) => state.talk);
+  const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
 
@@ -70,7 +70,6 @@ const TalkPanel: React.FC = () => {
 
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
-      dispatch(addSearchHistory(searchQuery));
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
     } finally {
@@ -147,17 +146,6 @@ const TalkPanel: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {searchHistory.length > 0 && (
-        <div className={styles.historyContainer}>
-          <h4>Search History</h4>
-          <ul>
-            {searchHistory.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
         </div>
       )}
     </div>
