@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const recentMessages = messages.slice(-3); // 3 most recent messages
+    const recentMessages = messages.slice(-7); // 7 most recent messages
     logger.debug(`app/api/chat/route.ts - Recent messages for context: ${JSON.stringify(recentMessages)}`);
 
     const responseFunctions = [
