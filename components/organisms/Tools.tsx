@@ -75,12 +75,12 @@ const Tools: React.FC = () => {
           Hub
         </button>
 
-        {/* IATI Button */}
+        {/* Aid Button */}
         <button
           className="right-edge-button"
           onClick={() => openInNewTab('https://countrydata.iatistandard.org/')}
         >
-          IATI
+          Aid
         </button>
 
         {/* Data Button */}
