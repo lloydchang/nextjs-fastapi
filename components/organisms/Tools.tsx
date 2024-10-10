@@ -43,6 +43,22 @@ const Tools: React.FC = () => {
           Country
         </button>
 
+        {/* Rank Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://hdr.undp.org/data-center/country-insights#/ranks')}
+        >
+          Rank
+        </button>
+
+        {/* Atlas Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://datatopics.worldbank.org/sdgatlas')}
+        >
+          Atlas
+        </button>
+
         {/* Fund Button */}
         <button
           className="right-edge-button"
@@ -57,6 +73,14 @@ const Tools: React.FC = () => {
           onClick={() => openInNewTab('https://mptf.undp.org/#impact-to-label')}
         >
           Hub
+        </button>
+
+        {/* IATI Button */}
+        <button
+          className="right-edge-button"
+          onClick={() => openInNewTab('https://countrydata.iatistandard.org/')}
+        >
+          IATI
         </button>
 
         {/* Data Button */}
