@@ -11,7 +11,7 @@
   width: 100%; /* Full width within its row */
   padding: 8px 12px;
   color: white;
-  background-color: black;
+  background-color: #005C4B;
   border: 1px solid #ccc;
   border-radius: 5px;
   resize: none; /* Prevent resizing of textarea */
