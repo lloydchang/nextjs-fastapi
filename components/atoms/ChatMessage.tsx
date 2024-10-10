@@ -14,8 +14,23 @@ interface ChatMessageProps {
   isInterim?: boolean;
 }
 
+// Function to convert plain URLs into clickable links
+const convertPlainUrlsToMarkdownLinks = (text: string) => {
+  // Regex to match URLs that start without 'http://' or 'https://'
+  const urlPattern = /(?<!\S)(www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/\S*)?(?!\S)/g;
+
+  return text.replace(urlPattern, (match) => {
+    // Convert plain URL to clickable link
+    const url = match.startsWith('www.') ? `http://${match}` : `http://${match}`;
+    return `[${match}](${url})`;
+  });
+};
+
 const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
   const isUser = sender.toLowerCase() === 'user';
+
+  // Convert plain URLs into Markdown links
+  const processedText = convertPlainUrlsToMarkdownLinks(text);
 
   return (
     <div
@@ -31,7 +46,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) =>
             a: ({ node, ...props }) => <LinkRenderer {...props} />,
           }}
         >
-          {text}
+          {processedText}
         </ReactMarkdown>
       </div>
     </div>
