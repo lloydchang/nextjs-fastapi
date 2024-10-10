@@ -118,10 +118,10 @@ const TalkPanel: React.FC = () => {
         const sendSdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : ''; // No SDG Tag
 
         // Send the scraped transcript to the chat directly (and hidden) without user interaction
-        dispatch(sendMessage({ text: `${sendSearchQuery}`, hidden: false}));
-        dispatch(sendMessage({ text: `${sendTitle}`, hidden: false }));
-        dispatch(sendMessage({ text: `${sendTranscript}`, hidden: false }));
-        dispatch(sendMessage({ text: `${sendSdgTag}`, hidden: false}));
+        dispatch(sendMessage({ text: `${sendSearchQuery}`, hidden: true }));
+        dispatch(sendMessage({ text: `${sendTitle}`, hidden: true }));
+        dispatch(sendMessage({ text: `${sendTranscript}`, hidden: true }));
+        dispatch(sendMessage({ text: `${sendSdgTag}`, hidden: true }));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));

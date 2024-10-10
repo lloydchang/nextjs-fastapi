@@ -18,28 +18,28 @@ export async function handleTextWithOllamaLlamaTextModel(
   const { ollamaLlamaEndpoint } = getConfig();
 
   if (!validateEnvVars(['OLLAMA_LLAMA_ENDPOINT'])) {
-    logger.silly('handleTextWithOllamaLlamaTextModel - Missing required environment variables.');
+    logger.silly('OllamaLlamaController.ts - Missing required environment variables.');
     return '';
   }
 
   const endpoint = ollamaLlamaEndpoint as string;
 
-  logger.debug(`handleTextWithOllamaLlamaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithOllamaLlamaTextModel - User prompt: ${userPrompt}`);
+  logger.debug(`OllamaLlamaController.ts - Generating text for model: ${textModel}`);
+  logger.silly(`OllamaLlamaController.ts - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaLlama({ endpoint, prompt: userPrompt, model: textModel });
 
     if (!response) {
-      logger.error('handleTextWithOllamaLlamaTextModel - Failed to generate text from Ollama Llama.');
+      logger.error('OllamaLlamaController.ts - Failed to generate text from Ollama Llama.');
       return '';
     }
 
-    logger.verbose(`handleTextWithOllamaLlamaTextModel - Generated response: ${response}`);
+    logger.verbose(`OllamaLlamaController.ts - Generated response: ${response}`);
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`handleTextWithOllamaLlamaTextModel - Error during text generation: ${errorMessage}`);
+    logger.error(`OllamaLlamaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

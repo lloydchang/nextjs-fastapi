@@ -13,11 +13,11 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
-  logger.silly(`generateFromOllamaLlama - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.silly(`OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    logger.debug(`generateFromOllamaLlama - Request body: ${requestBody}`);
+    logger.debug(`OllamaLlamaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -26,22 +26,22 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     });
 
     if (!response.ok) {
-      logger.error(`generateFromOllamaLlama - HTTP error! Status: ${response.status}`);
+      logger.error(`OllamaLlamaClient.ts - HTTP error! Status: ${response.status}`);
       return null;
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      logger.error('generateFromOllamaLlama - Failed to access the response body stream.');
+      logger.error('OllamaLlamaClient.ts - Failed to access the response body stream.');
       return null;
     }
 
     const finalResponse = await parseStream(reader);
-    logger.debug(`generateFromOllamaLlama - Received final response from Ollama Llama: ${finalResponse}`);
+    logger.debug(`OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
 
     return finalResponse;
   } catch (error) {
-    logger.warn(`generateFromOllamaLlama - Error generating content from Ollama Llama: ${error}`);
+    logger.warn(`OllamaLlamaClient.ts - Error generating content from Ollama Llama: ${error}`);
     return null;
   }
 }
