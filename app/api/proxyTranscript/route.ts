@@ -5,7 +5,7 @@ import logger from 'app/api/chat/utils/logger';
 
 // Function to extract transcript using a more flexible approach
 const extractTranscript = (html: string): string => {
-  logger.debug("app/api/proxyTranscript/route.ts - Starting transcript extraction from HTML...");
+  logger.silly("app/api/proxyTranscript/route.ts - Starting transcript extraction from HTML...");
   
   // Match JSON-like structure that may contain the transcript
   const jsonMatch = html.match(/"transcript":\s*"(.*?)",/);
@@ -27,7 +27,7 @@ const extractTranscript = (html: string): string => {
     .replace(/&quot;/g, '"')
     .replace(/\\n/g, ' ');
 
-  logger.debug("app/api/proxyTranscript/route.ts - Transcript successfully extracted and decoded."); // This log is sufficient
+  logger.silly("app/api/proxyTranscript/route.ts - Transcript successfully extracted and decoded."); // This log is sufficient
   return decodedTranscript.trim();
 };
 
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const transcriptUrl = searchParams.get('transcriptUrl');
 
-  logger.debug(`app/api/proxyTranscript/route.ts - Incoming request with transcriptUrl: ${transcriptUrl}`);
+  logger.silly(`app/api/proxyTranscript/route.ts - Incoming request with transcriptUrl: ${transcriptUrl}`);
 
   if (!transcriptUrl || typeof transcriptUrl !== 'string') {
     logger.error(`app/api/proxyTranscript/route.ts - Missing or invalid transcript URL: ${transcriptUrl}`);
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    logger.debug(`app/api/proxyTranscript/route.ts - Fetching transcript from URL: ${transcriptUrl}`);
+    logger.silly(`app/api/proxyTranscript/route.ts - Fetching transcript from URL: ${transcriptUrl}`);
     
     // Use the native fetch API to get the HTML content
     const response = await fetch(transcriptUrl, {
@@ -61,10 +61,10 @@ export async function GET(request: Request) {
     // Read the response content as text
     const html = await response.text();
 
-    logger.debug(`app/api/proxyTranscript/route.ts - Successfully fetched HTML content using fetch.`);
+    logger.silly(`app/api/proxyTranscript/route.ts - Successfully fetched HTML content using fetch.`);
     
     // Log a snippet of the fetched HTML for debugging
-    logger.debug(`app/api/proxyTranscript/route.ts - Fetched HTML Snippet: ${html.substring(0, 500)}`);
+    logger.silly(`app/api/proxyTranscript/route.ts - Fetched HTML Snippet: ${html.substring(0, 500)}`);
 
     // Extract and decode the transcript
     const transcript = extractTranscript(html);
