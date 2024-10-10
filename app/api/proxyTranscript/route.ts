@@ -27,7 +27,7 @@ const extractTranscript = (html: string): string => {
     .replace(/&quot;/g, '"')
     .replace(/\\n/g, ' ');
 
-  logger.debug("Transcript successfully extracted and decoded.");
+  logger.debug("Transcript successfully extracted and decoded."); // This log is sufficient
   return decodedTranscript.trim();
 };
 
@@ -71,8 +71,6 @@ export async function GET(request: Request) {
 
     if (transcript.startsWith("Failed to retrieve")) {
       logger.error("Transcript extraction failed. The transcript structure may have changed.");
-    } else {
-      logger.debug("Transcript successfully extracted and decoded.");
     }
 
     return NextResponse.json({ transcript }, { status: 200 });

@@ -4,21 +4,26 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch } from 'store/store';
 import he from 'he'; // For HTML entity decoding
 
+// Define the Message interface
 interface Message {
   id: string;
   sender: 'user' | 'bot';
   text: string;
   persona?: string; // Added persona to support rendering different personas
+  hidden?: boolean; // Added hidden property to handle messages that shouldn't be displayed
 }
 
+// Define the ChatState interface
 interface ChatState {
   messages: Message[];
 }
 
+// Initial state for the chat slice
 const initialState: ChatState = {
   messages: [],
 };
 
+// Create the chat slice with updated action names
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
@@ -29,16 +34,24 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
+    // Updated action: saveMessage (formerly sendMessage) to handle hidden messages and save them to the state
+    saveMessage: (state, action: PayloadAction<{ text: string; sender?: 'user' | 'bot'; hidden?: boolean; persona?: string }>) => {
+      const newMessage: Message = {
+        id: `${Date.now()}`,
+        sender: action.payload.sender || 'bot',
+        text: action.payload.text,
+        persona: action.payload.persona,
+        hidden: action.payload.hidden || false, // Set hidden based on the action payload
+      };
+      state.messages.push(newMessage);
+    },
   },
 });
 
-// Export actions
-export const { addMessage, clearMessages } = chatSlice.actions;
-
 // Async function to send message and get response from the API
+// Renamed from `triggerMessage` to `sendMessage` to reflect its primary purpose
 export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
   const userMessage: Message = { id: `${Date.now()}`, sender: 'user', text };
-  dispatch(addMessage(userMessage));
 
   try {
     const messagesArray = [{ role: 'user', content: text.trim() }];
@@ -55,6 +68,7 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
       let chunk;
       let textBuffer = '';
 
+      // Handle streaming responses
       while ((chunk = await reader.read()) && !chunk.done) {
         textBuffer += decoder.decode(chunk.value, { stream: true });
         const completeMessages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
@@ -87,7 +101,7 @@ export const sendMessage = (text: string) => async (dispatch: AppDispatch) => {
   }
 };
 
-// Function to parse incoming messages
+// Function to parse incoming messages from the API
 export function parseIncomingMessage(jsonString: string) {
   try {
     // Decode HTML entities and special characters using `he`
@@ -118,4 +132,6 @@ function logDetailedErrorInfo(jsonString: string, error: Error) {
   console.error('chatSlice - JSON Snippet (End):', endSnippet);
 }
 
+// Export the reducer and actions
+export const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
 export default chatSlice.reducer;

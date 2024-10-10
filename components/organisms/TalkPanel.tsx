@@ -11,7 +11,7 @@ import axios from 'axios';
 import fetch from 'node-fetch';
 import { RootState } from 'store/store';
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
-import { sendMessage } from 'store/chatSlice';
+import { saveMessage, sendMessage } from 'store/chatSlice'; // Updated action names
 import { Talk } from 'components/state/types';
 
 const sdgTitleMap: Record<string, string> = {
@@ -34,6 +34,7 @@ const sdgTitleMap: Record<string, string> = {
   sdg17: 'SDG 17: Partnerships for the Goals',
 };
 
+// Determine an initial search keyword randomly from predefined options
 const determineInitialKeyword = () => {
   const keywords = [
     'poverty', 'hunger', 'health', 'education', 'gender',
@@ -44,7 +45,7 @@ const determineInitialKeyword = () => {
   return keywords[randomIndex];
 };
 
-// Fisher-Yates shuffle to randomize an array
+// Fisher-Yates shuffle algorithm to randomize the order of results
 const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -53,7 +54,7 @@ const shuffleArray = (array: any[]) => {
   return array;
 };
 
-// Function to fetch the processed transcript from the proxy
+// Function to fetch and scrape the processed transcript from a given URL
 const scrapeTranscript = async (transcriptUrl: string): Promise<string> => {
   try {
     const response = await fetch(`/api/proxyTranscript?transcriptUrl=${encodeURIComponent(transcriptUrl)}`);
@@ -61,7 +62,6 @@ const scrapeTranscript = async (transcriptUrl: string): Promise<string> => {
       throw new Error(`Failed to fetch transcript: ${response.statusText}`);
     }
 
-    // Extract the transcript from the JSON response
     const data = await response.json();
     return data.transcript || 'Failed to retrieve transcript.';
   } catch (error) {
@@ -77,6 +77,7 @@ const TalkPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
   const initialRender = useRef(true);
 
+  // Perform an initial search when the component mounts
   useEffect(() => {
     if (initialRender.current) {
       performSearch(searchQuery);
@@ -84,6 +85,7 @@ const TalkPanel: React.FC = () => {
     }
   }, []);
 
+  // Function to perform the search based on the query and dispatch results
   const performSearch = async (searchQuery: string) => {
     dispatch(setError(null));
     dispatch(setLoading(true));
@@ -94,29 +96,28 @@ const TalkPanel: React.FC = () => {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 
-      // Map the results into Talk objects
+      // Map the results into Talk objects and shuffle them
       let data: Talk[] = response.data.results.map((result: any) => ({
         title: result.slug.replace(/_/g, ' '),
         url: `https://www.ted.com/talks/${result.slug}`,
         sdg_tags: result.sdg_tags || [],
       }));
 
-      // Randomize the sequence of the results
       data = shuffleArray(data);
 
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
 
-      // Send the scraped transcript of the first talk
+      // Send the scraped transcript of the first talk to the chat
       if (data.length > 0) {
         const firstTalk = data[0];
         const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
         const sdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : 'No SDG Tag';
         const transcript = await scrapeTranscript(transcriptUrl);
 
-        // Send the scraped transcript to the chat
+        // Save and send the scraped transcript to the chat
+        dispatch(saveMessage({ text: `${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`, hidden: true }));
         dispatch(sendMessage(`${firstTalk.title}\n\n${sdgTag}\n\n\n${transcript}`));
-
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
@@ -125,16 +126,19 @@ const TalkPanel: React.FC = () => {
     }
   };
 
+  // Handle input change for the search query
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
+  // Handle "Enter" key press to trigger search
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       performSearch(searchQuery);
     }
   };
 
+  // Open the transcript in a new tab for the selected talk
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
       const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;

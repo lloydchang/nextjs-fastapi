@@ -28,9 +28,11 @@ const ChatMessages: React.FC = () => {
 
   return (
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
-      {messages.map((msg) => (
-        <ChatMessage key={msg.id} sender={msg.sender} text={msg.text} persona={msg.persona} />
-      ))}
+      {messages
+        .filter((msg) => !msg.hidden) // Filter out hidden messages
+        .map((msg) => (
+          <ChatMessage key={msg.id} sender={msg.sender} text={msg.text} persona={msg.persona} />
+        ))}
     </div>
   );
 };
