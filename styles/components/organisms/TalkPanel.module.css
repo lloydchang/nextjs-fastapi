@@ -89,6 +89,7 @@
 .loadingSpinnerContainer {
   position: absolute;
   right: 10px; /* Position spinner to the right within the input */
+  top: 48px;
   display: flex;
   justify-content: center; /* Center horizontally */
   align-items: center; /* Center vertically */
