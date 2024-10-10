@@ -90,11 +90,12 @@ const TalkPanel: React.FC = () => {
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
 
-      // Send the first talk found with its transcript URL
+      // Send the first talk found with its transcript URL and SDG tag
       if (data.length > 0) {
         const firstTalk = data[0];
         const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
-        dispatch(sendMessage(`${firstTalk.title} ${transcriptUrl}`));
+        const sdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : 'No SDG Tag';
+        dispatch(sendMessage(`${firstTalk.title} ${transcriptUrl} ${sdgTag}`));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
