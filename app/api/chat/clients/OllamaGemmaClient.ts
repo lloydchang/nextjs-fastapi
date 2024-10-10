@@ -32,8 +32,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
     }
 
     const finalResponse = await parseStream(reader);
-    logger.debug('app/api/chat/clients/OllamaGemmaClient.ts - Received final response from Ollama Gemma:');
-    logger.debug(`app/api/chat/clients/OllamaGemmaClient.ts - Final response: ${finalResponse}`);
+    logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Received final response from Ollama Gemma: ${finalResponse}`);
     
     return finalResponse;
 

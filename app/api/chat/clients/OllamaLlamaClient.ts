@@ -37,7 +37,7 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     }
 
     const finalResponse = await parseStream(reader);
-    logger.debug(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
+    logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
 
     return finalResponse;
   } catch (error) {
