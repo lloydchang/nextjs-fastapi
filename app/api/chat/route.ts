@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         generate: () =>
           config.ollamaGemmaTextModel
             ? handleTextWithOllamaGemmaTextModel(
-                { userPrompt: buildPrompt('Gemma', recentMessages, false), textModel: config.ollamaGemmaTextModel },
+                { userPrompt: buildPrompt('Gemma', recentMessages), textModel: config.ollamaGemmaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         generate: () =>
           config.cloudflareGemmaTextModel
             ? handleTextWithCloudflareGemmaTextModel(
-                { userPrompt: buildPrompt('Gemma', recentMessages, false), textModel: config.cloudflareGemmaTextModel },
+                { userPrompt: buildPrompt('Gemma', recentMessages), textModel: config.cloudflareGemmaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         generate: () =>
           config.googleVertexGemmaTextModel
             ? handleTextWithGoogleVertexGemmaTextModel(
-                { userPrompt: buildPrompt('Gemma', recentMessages, false), textModel: config.googleVertexGemmaTextModel },
+                { userPrompt: buildPrompt('Gemma', recentMessages), textModel: config.googleVertexGemmaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         generate: () =>
           config.ollamaLlamaTextModel
             ? handleTextWithOllamaLlamaTextModel(
-                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.ollamaLlamaTextModel },
+                { userPrompt: buildPrompt('Llama', recentMessages), textModel: config.ollamaLlamaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         generate: () =>
           config.cloudflareLlamaTextModel
             ? handleTextWithCloudflareLlamaTextModel(
-                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.cloudflareLlamaTextModel },
+                { userPrompt: buildPrompt('Llama', recentMessages), textModel: config.cloudflareLlamaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         generate: () =>
           config.googleVertexLlamaTextModel
             ? handleTextWithGoogleVertexLlamaTextModel(
-                { userPrompt: buildPrompt('Llama', recentMessages, true), textModel: config.googleVertexLlamaTextModel },
+                { userPrompt: buildPrompt('Llama', recentMessages), textModel: config.googleVertexLlamaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -157,23 +157,20 @@ export async function POST(request: NextRequest) {
 // Modify buildPrompt to include persona-specific context controls.
 function buildPrompt(
   persona: string,
-  messages: Array<{ role: string; content: string; persona?: string }>,
-  isLlama: boolean = false
+  messages: Array<{ role: string; content: string; persona?: string }>
 ): string {
-  const filteredContext = createFilteredContext(persona, messages, isLlama);
+  const filteredContext = createFilteredContext(persona, messages);
   return `${systemPrompt}\n\n${filteredContext}\n\nUser Prompt:`;
 }
 
-// Adjust createFilteredContext to handle Llama personas differently.
+// Standard createFilteredContext to filter out messages based on persona.
 function createFilteredContext(
   persona: string,
-  messages: Array<{ role: string; content: string; persona?: string }>,
-  isLlama: boolean = false
+  messages: Array<{ role: string; content: string; persona?: string }>
 ): string {
   return messages
     .filter((msg) => msg.persona !== persona)
     .map((msg) => `${msg.role === 'user' ? 'User' : msg.persona || 'System'}: ${sanitizeInput(msg.content)}`)
-    .slice(isLlama ? -2 : undefined) // Limit context for Llama models to 2 most recent messages
     .join('\n');
 }
 
