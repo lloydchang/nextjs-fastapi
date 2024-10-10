@@ -1,5 +1,7 @@
 // components/organisms/ErrorBoundary.tsx
 
+'use client'; // Mark as Client Component
+
 import React, { Component, ReactNode } from 'react';
 
 interface Props {

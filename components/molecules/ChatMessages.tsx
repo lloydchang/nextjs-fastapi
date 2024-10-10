@@ -1,61 +1,39 @@
-// File: src/components/molecules/ChatMessages.tsx
+// File: components/molecules/ChatMessages.tsx
 
 import React, { useEffect, useRef } from 'react';
-import ChatMessage from '../atoms/ChatMessage'; // Import the ChatMessage component
-import { Message } from '../state/hooks/useChat';
-import styles from '../../styles/components/molecules/ChatMessages.module.css';
+import { useSelector } from 'react-redux';
+import { RootState } from 'store/store'; // Ensure this path is correct
+import ChatMessage from 'components/atoms/ChatMessage'; // Ensure this path is correct
+import styles from 'styles/components/molecules/ChatMessages.module.css'; // Ensure this path is correct
 
-interface ChatMessagesProps {
-  messages: Message[];
-}
-
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
-  // Create a reference for the messages container
+const ChatMessages: React.FC = () => {
+  // Access Redux state directly
+  const messages = useSelector((state: RootState) => state.chat.messages);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to the bottom whenever messages change
   useEffect(() => {
     const container = messagesContainerRef.current;
-
-    // Use requestAnimationFrame for smoother scroll update
     if (container) {
       requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight; // Scroll to the bottom
+        container.scrollTop = container.scrollHeight;
       });
     }
   }, [messages]);
 
-  // Initial load handling
+  // Log messages whenever Redux state updates
   useEffect(() => {
-    const container = messagesContainerRef.current;
-
-    if (container) {
-      // Immediately set opacity to 1 for visibility
-      container.style.opacity = '1';
-      container.style.visibility = 'visible';
-      // Ensure the container is scrollable
-      requestAnimationFrame(() => {
-        container.scrollTop = container.scrollHeight; // Scroll to the bottom on initial load
-      });
-    }
-  }, []);
+    console.log('ChatMessages - Received messages from Redux:', messages);
+  }, [messages]);
 
   return (
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
-      {messages.map((msg) => {
-        const isInterim = msg.isInterim && msg.sender.toLowerCase() === 'user';
-
-        return (
-          <ChatMessage
-            key={msg.id} // Use unique key from msg.id
-            sender={msg.sender}
-            text={msg.text}
-            isInterim={isInterim}
-          />
-        );
-      })}
+      {messages.map((msg) => (
+        <ChatMessage key={msg.id} sender={msg.sender} text={msg.text} />
+      ))}
     </div>
   );
+    
 };
 
 export default React.memo(ChatMessages);
