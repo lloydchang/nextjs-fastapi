@@ -10,7 +10,7 @@ import styles from 'styles/components/organisms/TalkPanel.module.css';
 import axios from 'axios';
 import { RootState } from 'store/store';
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
-import { sendMessage } from 'store/chatSlice'; // Import sendMessage from chatSlice
+import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'components/state/types';
 
 const sdgTitleMap: Record<string, string> = {
@@ -43,6 +43,15 @@ const determineInitialKeyword = () => {
   return keywords[randomIndex];
 };
 
+// Fisher-Yates shuffle to randomize an array
+const shuffleArray = (array: any[]) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
 const TalkPanel: React.FC = () => {
   const dispatch = useDispatch();
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
@@ -62,20 +71,21 @@ const TalkPanel: React.FC = () => {
     dispatch(setError(null));
     dispatch(setLoading(true));
 
-    // Send the search keyword as a chat message
-    // dispatch(sendMessage(`Search: ${searchQuery}`));
-
     try {
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`);
       if (response.status !== 200) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 
-      const data: Talk[] = response.data.results.map((result: any) => ({
+      // Map the results into Talk objects
+      let data: Talk[] = response.data.results.map((result: any) => ({
         title: result.slug.replace(/_/g, ' '),
         url: `https://www.ted.com/talks/${result.slug}`,
         sdg_tags: result.sdg_tags || [],
       }));
+
+      // Randomize the sequence of the results
+      data = shuffleArray(data);
 
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
@@ -84,7 +94,7 @@ const TalkPanel: React.FC = () => {
       if (data.length > 0) {
         const firstTalk = data[0];
         const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
-        dispatch(sendMessage(`${firstTalk.title} ${transcriptUrl}`));
+        dispatch(sendMessage(`Found: ${firstTalk.title} Transcript: ${transcriptUrl}`));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
