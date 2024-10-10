@@ -29,11 +29,11 @@ const config = getConfig();
 
 export async function POST(request: NextRequest) {
   try {
-    logger.debug(`app/api/chat/route.ts - Handling POST request`);
+    logger.silly(`app/api/chat/route.ts - Handling POST request`);
 
     // Parse the incoming request
     const { messages } = await request.json();
-    logger.debug(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
+    logger.silly(`app/api/chat/route.ts - Received messages: ${JSON.stringify(messages)}`);
 
     // Validate messages
     if (!Array.isArray(messages)) {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const invalidMessages = messages.filter(msg => {
-      logger.debug(`app/api/chat/route.ts - Validating message: ${JSON.stringify(msg)}`);
+      logger.silly(`app/api/chat/route.ts - Validating message: ${JSON.stringify(msg)}`);
       const isInvalid = typeof msg !== 'object' || msg === null || 
                         typeof msg.role !== 'string' || msg.role.trim() === '' ||
                         typeof msg.content !== 'string' || msg.content.trim() === '';
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     const recentMessages = messages.slice(-7); // 7 most recent messages
-    logger.debug(`app/api/chat/route.ts - Recent messages for context: ${JSON.stringify(recentMessages)}`);
+    logger.silly(`app/api/chat/route.ts - Recent messages for context: ${JSON.stringify(recentMessages)}`);
 
     const responseFunctions = [
       {
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const personaMap = responseFunctions.map((res) => res.persona);
-    logger.debug(`app/api/chat/route.ts - Response functions prepared: ${JSON.stringify(personaMap)}`);
+    logger.silly(`app/api/chat/route.ts - Response functions prepared: ${JSON.stringify(personaMap)}`);
 
     const results = await Promise.allSettled(responseFunctions.map((res) => res.generate()));
 
@@ -215,7 +215,7 @@ async function createCombinedStream(messages: Array<{ persona: string; message: 
         for (const { persona, message } of validMessages) {
           const formattedMessage = jsesc({ persona, message }, { json: true });
           controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
-          logger.debug(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
+          logger.silly(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
         }
         controller.close();
       } catch (error) {
