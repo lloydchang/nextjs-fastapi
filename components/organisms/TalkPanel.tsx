@@ -2,15 +2,15 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Image from 'next/image';
 import SDGWheel from 'public/images/SDGWheel.png';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 import axios from 'axios';
-import { RootState } from 'store/store'; // Import RootState
-import { setTalks, setSelectedTalk, addSearchHistory, setError, setLoading } from 'store/talkSlice'; // Import necessary actions
-import { Talk } from 'components/state/types'; // Use shared Talk type from centralized types file
+import { RootState } from 'store/store';
+import { setTalks, setSelectedTalk, addSearchHistory, setError, setLoading } from 'store/talkSlice';
+import { Talk } from 'components/state/types';
 
 const sdgTitleMap: Record<string, string> = {
   sdg1: 'SDG 1: No Poverty',
@@ -42,27 +42,19 @@ const determineInitialKeyword = () => {
   return keywords[randomIndex];
 };
 
-// Fisher-Yates shuffle function
-const shuffleArray = <T,>(array: T[]): T[] => {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // Get a random index
-    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
-  }
-  return array;
-};
-
 const TalkPanel: React.FC = () => {
   const dispatch = useDispatch();
-  const { talks, selectedTalk, searchHistory, error, loading } = useSelector((state: RootState) => state.talk); // Get state from Redux
+  const { talks, selectedTalk, searchHistory, error, loading } = useSelector((state: RootState) => state.talk);
+
+  const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
 
   useEffect(() => {
-    const initialKeyword = determineInitialKeyword();
-    performSearch(initialKeyword);
+    performSearch(searchQuery);
   }, []);
 
   const performSearch = async (searchQuery: string) => {
-    dispatch(setError(null)); // Reset error
-    dispatch(setLoading(true)); // Set loading state
+    dispatch(setError(null));
+    dispatch(setLoading(true));
 
     try {
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`);
@@ -76,23 +68,23 @@ const TalkPanel: React.FC = () => {
         sdg_tags: result.sdg_tags || [],
       }));
 
-      dispatch(setTalks(data)); // Set talks in Redux
-      dispatch(setSelectedTalk(data[0] || null)); // Set selected talk
-      dispatch(addSearchHistory(searchQuery)); // Add to search history
+      dispatch(setTalks(data));
+      dispatch(setSelectedTalk(data[0] || null));
+      dispatch(addSearchHistory(searchQuery));
     } catch (error) {
-      dispatch(setError("Failed to fetch talks.")); // Set error message
+      dispatch(setError("Failed to fetch talks."));
     } finally {
-      dispatch(setLoading(false)); // Reset loading state
+      dispatch(setLoading(false));
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Update input value as needed, if you're planning to use it
+    setSearchQuery(e.target.value);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      performSearch(e.currentTarget.value); // Use the input value directly
+      performSearch(searchQuery);
     }
   };
 
@@ -106,14 +98,21 @@ const TalkPanel: React.FC = () => {
   return (
     <div className={`${styles.TalkPanel}`}>
       <div className={styles.searchContainer}>
-        <input
-          type="text"
-          placeholder="Search talks…"
-          onChange={handleInputChange}
-          onKeyDown={handleKeyPress}
-          className={styles.searchInput}
-        />
-        <button onClick={() => performSearch("")} className={`${styles.button} ${styles.searchButton}`} disabled={loading}>
+        <div className={styles.searchInputWrapper} style={{ position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="Search talks…"
+            value={searchQuery}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            className={styles.searchInput}
+          />
+          {/* Reserve space for the spinner using visibility instead of conditional rendering */}
+          <div className={styles.loadingSpinnerContainer} style={{ visibility: loading ? 'visible' : 'hidden' }}>
+            <Image src={SDGWheel} alt="Loading" width={24} height={24} className={styles.loadingSpinner} />
+          </div>
+        </div>
+        <button onClick={() => performSearch(searchQuery)} className={`${styles.button} ${styles.searchButton}`} disabled={loading}>
           Search
         </button>
         {selectedTalk && (
@@ -122,12 +121,6 @@ const TalkPanel: React.FC = () => {
           </button>
         )}
       </div>
-
-      {loading && (
-        <div className={styles.loadingSpinnerContainer}>
-          <Image src={SDGWheel} alt="Loading..." width={24} height={24} className={styles.loadingSpinner} />
-        </div>
-      )}
 
       {error && <div className={styles.errorContainer}><p className={styles.errorText}>{error}</p></div>}
 
@@ -145,7 +138,7 @@ const TalkPanel: React.FC = () => {
                 key={index} 
                 className={styles.resultItem} 
                 onClick={() => {
-                  dispatch(setSelectedTalk(talk)); // Set selected talk in Redux
+                  dispatch(setSelectedTalk(talk));
                 }}>
                 <h3>
                   <a href="#" className={styles.resultLink}>{talk.title}</a>
