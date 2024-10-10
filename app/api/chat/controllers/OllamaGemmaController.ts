@@ -19,15 +19,15 @@ export async function handleTextWithOllamaGemmaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
-    logger.silly('handleTextWithOllamaGemmaTextModel - Missing required environment variables.');
+    logger.silly('OllamaGemmaController.ts - Missing required environment variables.');
     return '';
   }
 
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = ollamaGemmaEndpoint as string;
 
-  logger.debug(`handleTextWithOllamaGemmaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithOllamaGemmaTextModel - User prompt: ${userPrompt}`);
+  logger.debug(`OllamaGemmaController.ts - Generating text for model: ${textModel}`);
+  logger.silly(`OllamaGemmaController.ts - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaGemma({
@@ -37,16 +37,16 @@ export async function handleTextWithOllamaGemmaTextModel(
     });
 
     if (!response) {
-      logger.error('handleTextWithOllamaGemmaTextModel - Failed to generate text from Ollama Gemma.');
+      logger.error('OllamaGemmaController.ts - Failed to generate text from Ollama Gemma.');
       return '';
     }
 
-    logger.verbose(`handleTextWithOllamaGemmaTextModel - Generated response: ${response}`);
+    logger.verbose(`OllamaGemmaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`handleTextWithOllamaGemmaTextModel - Error during text generation: ${errorMessage}`);
+    logger.error(`OllamaGemmaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

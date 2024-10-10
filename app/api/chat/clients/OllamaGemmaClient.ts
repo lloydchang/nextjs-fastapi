@@ -8,11 +8,11 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
-  logger.silly(`generateFromOllamaGemma - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  logger.silly(`OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    logger.debug(`generateFromOllamaGemma - Request body: ${requestBody}`);
+    logger.debug(`OllamaGemmaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -21,24 +21,24 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
     });
 
     if (!response.ok) {
-      logger.error(`generateFromOllamaGemma - HTTP error! Status: ${response.status}`);
+      logger.error(`OllamaGemmaClient.ts - HTTP error! Status: ${response.status}`);
       return null;
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      logger.error('generateFromOllamaGemma - Failed to access the response body stream.');
+      logger.error('OllamaGemmaClient.ts - Failed to access the response body stream.');
       return null;
     }
 
     const finalResponse = await parseStream(reader);
-    logger.debug('generateFromOllamaGemma - Received final response from Ollama Gemma:');
-    logger.debug(`generateFromOllamaGemma - Final response: ${finalResponse}`);
+    logger.debug('OllamaGemmaClient.ts - Received final response from Ollama Gemma:');
+    logger.debug(`OllamaGemmaClient.ts - Final response: ${finalResponse}`);
     
     return finalResponse;
 
   } catch (error) {
-    logger.warn(`generateFromOllamaGemma - Error generating content from Ollama Gemma: ${error}`);
+    logger.warn(`OllamaGemmaClient.ts - Error generating content from Ollama Gemma: ${error}`);
     return null;
   }
 }
