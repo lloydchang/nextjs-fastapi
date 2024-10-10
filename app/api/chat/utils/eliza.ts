@@ -13,7 +13,7 @@ const elizaPatterns = [
     { pattern: /Why don'?t you ([^\?]*)\??/i, response: "Should I do $1?", type: 'eliza' },
     { pattern: /Because (.*)/i, response: "Is that the only reason?", type: 'eliza' },
     { pattern: /I feel (.*)/i, response: "What makes you feel $1?", type: 'eliza' },
-    { pattern: /Can you ([^\?]*)\??/i, response: "I could, but then who’s going to do the $2?", type: 'humor' },
+    { pattern: /Can you ([^\?]*)\??/i, response: "I could, but then who’s going to do $2?", type: 'humor' },
     { pattern: /Can I ([^\?]*)\??/i, response: "Can you? Can I? Who’s on first?", type: 'humor' },
     { pattern: /You are (.*)/i, response: "Who is $1?", type: 'eliza' },
     { pattern: /Are you ([^\?]*)\??/i, response: "Why ask?", type: 'eliza' },
