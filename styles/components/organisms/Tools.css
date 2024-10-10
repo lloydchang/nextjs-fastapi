@@ -2,7 +2,7 @@
 
 .tools-container {
   position: absolute;       /* Use absolute positioning */
-  bottom: -280px;           /* Adjusted: Move container further down */
+  bottom: -237px;           /* Adjusted: Move container further down */
   right: -14px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
@@ -74,6 +74,13 @@
 
 /* Mobile devices */
 @media (max-width: 767px) {
+
+  .tools-container {
+    position: relative;       /* Use absolute positioning */
+    bottom: -100px;           /* Adjusted: Move container further down */
+    right: -4px;             /* Align container slightly to the left for aesthetics */
+  }
+  
   .button-group {
     position: relative;       /* Use absolute positioning */
     bottom: 120px;            /* Adjusted: Move container further down */
@@ -87,8 +94,8 @@
   .right-edge-button {
     padding: 4px 4px;         /* Adjust padding for better spacing */
     margin-left: 6px;        /* Add spacing between buttons in a row */
-    font-size: 10px;          /* Smaller font size */
-    width: 64px;             /* Smaller fixed width */
+    font-size: 8px;          /* Smaller font size */
+    width: 40px;             /* Smaller fixed width */
   }
 
   .right-edge-button:hover {
