@@ -108,7 +108,7 @@ const TalkPanel: React.FC = () => {
       <div className={styles.searchContainer}>
         <input
           type="text"
-          placeholder="Search talks..."
+          placeholder="Search talks…"
           onChange={handleInputChange}
           onKeyDown={handleKeyPress}
           className={styles.searchInput}
