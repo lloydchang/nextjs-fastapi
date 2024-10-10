@@ -1,23 +1,7 @@
 // File: app/api/proxyTranscript/route.ts
 
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
 import logger from 'app/api/chat/utils/logger';
-
-// Helper function to run curl as a subprocess and capture its output
-const runCurlCommand = (command: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        logger.error(`Error executing curl command: ${error.message}`);
-        logger.error(`Detailed stderr output from curl: ${stderr}`);
-        reject(`Error executing curl: ${stderr}`);
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-};
 
 // Function to extract transcript using a more flexible approach
 const extractTranscript = (html: string): string => {
@@ -58,26 +42,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing or invalid transcript URL' }, { status: 400 });
   }
 
-  // Construct the basic curl command for fetching the transcript without additional headers
-  const curlCommand = `curl -s -L "${transcriptUrl}"`;
-
-  logger.debug(`Constructed curl command for debugging:\n${curlCommand}`);
-  
   try {
-    logger.debug(`Executing curl command to fetch transcript...`);
-
-    // Run the curl command as a subprocess
-    const html = await runCurlCommand(curlCommand);
-
-    logger.debug(`Successfully fetched HTML content using curl.`);
+    logger.debug(`Fetching transcript from URL: ${transcriptUrl}`);
     
-    // Log the exact curl command executed for easy copy-pasting
-    logger.debug(`Executed curl command:\n${curlCommand}`);
+    // Use the native fetch API to get the HTML content
+    const response = await fetch(transcriptUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; TranscriptFetcher/1.0; +https://example.com)'
+      }
+    });
 
+    if (!response.ok) {
+      logger.error(`Failed to fetch transcript. Status: ${response.status} - ${response.statusText}`);
+      return NextResponse.json({ error: `Failed to fetch transcript. Status: ${response.status} - ${response.statusText}` }, { status: response.status });
+    }
+
+    // Read the response content as text
+    const html = await response.text();
+
+    logger.debug(`Successfully fetched HTML content using fetch.`);
+    
     // Log a snippet of the fetched HTML for debugging
     logger.debug(`Fetched HTML Snippet: ${html.substring(0, 500)}`);
 
-    logger.debug(`Starting transcript extraction from HTML...`);
+    // Extract and decode the transcript
     const transcript = extractTranscript(html);
 
     if (transcript.startsWith("Failed to retrieve")) {
@@ -88,7 +77,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ transcript }, { status: 200 });
   } catch (error) {
-    logger.error(`Error fetching transcript using curl: ${error}`);
-    return NextResponse.json({ error: `Error fetching transcript using curl: ${error}` }, { status: 500 });
+    logger.error(`Error fetching transcript: ${error}`);
+    return NextResponse.json({ error: `Error fetching transcript: ${error}` }, { status: 500 });
   }
 }
