@@ -58,7 +58,7 @@
 
 /* Links */
 .text a {
-  color: ##AAFF00; /* Bright green for links */
+  color: #34B7F1; /* Blue for links */
   text-decoration: none;
 }
 
@@ -175,7 +175,7 @@
   }
 
   .text a {
-    color: ##AAFF00; /* Bright green for links in dark mode */
+    color: #53BDEB; /* Lighter blue for links in dark mode */
   }
 
   .text pre,
