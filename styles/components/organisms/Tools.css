@@ -3,7 +3,7 @@
 .tools-container {
   position: absolute;       /* Use absolute positioning */
   bottom: -200px;           /* Adjusted: Move container further down */
-  right: -18px;             /* Align container slightly to the left for aesthetics */
+  right: -14px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
   align-items: flex-end;    /* Align buttons to the right */
@@ -26,7 +26,7 @@
   cursor: pointer;          /* Change cursor to pointer */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Light shadow */
   font-size: 10px;          /* Much smaller font size */
-  width: 60px;              /* Fixed width for tiny buttons */
+  width: 50px;              /* Fixed width for tiny buttons */
   text-align: center;       /* Center text inside the button */
   transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
 }
@@ -68,4 +68,38 @@
 
 .close-button-active:active {
   background-color: #ef9a9a; /* Even brighter on click */
+}
+
+/* Responsive styles for various device sizes */
+
+/* Mobile devices */
+@media (max-width: 767px) {
+  .button-group {
+    position: relative;       /* Use absolute positioning */
+    bottom: 160px;            /* Adjusted: Move container further down */
+    right: -25px;             /* Align container slightly to the left for aesthetics */
+    display: flex;            /* Use flex-start to align buttons to the left */
+    flex-wrap: wrap;          /* Allow buttons to wrap into multiple rows */
+    flex-direction: row;      /* Arrange buttons horizontally */
+  }
+  
+  /* Button styles */
+  .right-edge-button {
+    margin-left: 1px;        /* Add spacing between buttons in a row */
+    font-size: 9px;          /* Smaller font size */
+    width: 40px;             /* Smaller fixed width */
+  }
+
+  .right-edge-button:hover {
+    transform: translateY(-5px); /* Shift button slightly up on hover */
+  }  
+}
+
+/* Tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Button styles */
+  .right-edge-button {
+    font-size: 9px;          /* Smaller font size */
+    width: 40px;             /* Smaller fixed width */
+  }
 }
