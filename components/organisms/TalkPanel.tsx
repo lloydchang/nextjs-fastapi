@@ -94,7 +94,7 @@ const TalkPanel: React.FC = () => {
       if (data.length > 0) {
         const firstTalk = data[0];
         const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
-        dispatch(sendMessage(`Found: ${firstTalk.title} Transcript: ${transcriptUrl}`));
+        dispatch(sendMessage(`${firstTalk.title} ${transcriptUrl}`));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
