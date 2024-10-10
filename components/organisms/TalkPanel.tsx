@@ -49,22 +49,21 @@ const TalkPanel: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
 
-  // Use `useRef` to track initial render
   const initialRender = useRef(true);
 
   useEffect(() => {
     if (initialRender.current) {
       performSearch(searchQuery);
-      initialRender.current = false; // Set to false after the first render
+      initialRender.current = false;
     }
-  }, []); // Empty dependency array ensures it only runs once during component mount
+  }, []);
 
   const performSearch = async (searchQuery: string) => {
     dispatch(setError(null));
     dispatch(setLoading(true));
 
     // Send the search keyword as a chat message
-    dispatch(sendMessage(`Searching for talks related to: ${searchQuery}`));
+    // dispatch(sendMessage(`Search: ${searchQuery}`));
 
     try {
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(searchQuery)}`);
@@ -81,11 +80,11 @@ const TalkPanel: React.FC = () => {
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
 
-      // Send the first talk found as a chat message
+      // Send the first talk found with its transcript URL
       if (data.length > 0) {
-        dispatch(sendMessage(`Found: ${data[0].title}`));
-      } else {
-        dispatch(sendMessage("No talks found."));
+        const firstTalk = data[0];
+        const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
+        dispatch(sendMessage(`${firstTalk.title} ${transcriptUrl}`));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
