@@ -12,6 +12,7 @@ interface ChatMessageProps {
   sender: 'user' | 'bot'; // Specify sender type to ensure it's either 'user' or 'bot'
   text: string;
   isInterim?: boolean;
+  persona?: string; // Add persona property to differentiate bot personas
 }
 
 // Function to convert plain URLs into clickable links
@@ -24,7 +25,7 @@ const convertPlainUrlsToMarkdownLinks = (text: string) => {
   });
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona }) => {
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
@@ -34,6 +35,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim }) =>
         isUser ? styles.userMessage : styles.botMessage
       } ${isInterim ? styles.interim : ''}`}
     >
+      {/* Display Persona Label for bot messages only */}
+      {sender === 'bot' && persona && (
+        <div className={styles.personaLabel}>
+          <strong>{persona}</strong> {/* Render persona name in bold */}
+        </div>
+      )}
       <div className={styles.text}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
