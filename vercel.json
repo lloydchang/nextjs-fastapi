@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "functions": {
+    "source": "**",
+    "maxDuration": 30,
+    "memory": 1024
+  }
+}
