@@ -3,11 +3,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaTextModel';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaTextModel';
+import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
 import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaTextModel';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaTextModel';
+import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
+import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
 import logger from 'app/api/chat/utils/logger';
 
@@ -822,9 +822,9 @@ export async function POST(request: NextRequest) {
             }
 
             // 136. **Dynamic Goal Recalibration Based on User Emotional State**
-            const detectedEmotion = userMessages.find((msg) => ['worried', 'excited', 'discouraged'].some((emotion) => msg.content.includes(emotion)));
-            if (detectedEmotion) {
-              finalResponse = `Since you’re feeling ${detectedEmotion.content}, Let’s recalibrate our focus to ensure we’re aligned with your current needs: ${finalResponse}`;
+            const detectedSentiment = userMessages.find((msg) => ['worried', 'ecstastic', 'dismayed'].some((sentiment) => msg.content.includes(sentiment)));
+            if (detectedSentiment) {
+              finalResponse = `Since you’re feeling ${detectedSentiment.content}, Let’s recalibrate our focus to ensure we’re aligned with your current needs: ${finalResponse}`;
             }
 
             // 137. **Incentive-Based Reasoning**
@@ -918,9 +918,9 @@ export async function POST(request: NextRequest) {
             }
 
             // 163. **Cognitive Dissonance Resolution**
-            const contradictions = recentResponses.filter((msg) => msg.content.includes('conflict') || msg.content.includes('inconsistent'));
-            if (contradictions.length > 0) {
-              finalResponse = `To resolve the inconsistencies identified by ${contradictions.map((msg) => msg.persona).join(', ')}, here’s a reconciled response: ${finalResponse}`;
+            const contrary = recentResponses.filter((msg) => msg.content.includes('contrary') || msg.content.includes('inconsistent'));
+            if (contrary.length > 0) {
+              finalResponse = `To resolve the inconsistencies identified by ${contrary.map((msg) => msg.persona).join(', ')}, here’s a reconciled response: ${finalResponse}`;
             }
 
             // 164. **Dynamic Scenario Adjustment**
@@ -1104,7 +1104,7 @@ export async function POST(request: NextRequest) {
             }
 
             // 196. **Simulated Meta-Cognition and Self-Awareness**
-            if (finalResponse.includes('error') || finalResponse includes('misalignment')) {
+            if (finalResponse.includes('error') || finalResponse.includes('misalignment')) {
               finalResponse = `Reflecting on my previous response, I may have deviated from your expectations. Let’s course-correct: ${finalResponse}`;
             }
 
@@ -1303,7 +1303,7 @@ export async function POST(request: NextRequest) {
               finalResponse = `Taking a more assertive role now: ${finalResponse}`;
             }
 
-            // 200. **Building Rapport and Trust**
+            // 210. **Building Rapport and Trust**
             const rapportKeywords = userMessages.some((msg) =>
               ['thank you', 'appreciate', 'great'].some((term) => msg.content.includes(term))
             );
@@ -1311,84 +1311,84 @@ export async function POST(request: NextRequest) {
               finalResponse = `you’re welcome! Glad I could help. ${finalResponse}`;
             }
 
-            // 201. **Multi-turn Strategy Planning**
+            // 211. **Multi-turn Strategy Planning**
             const multiTurnStrategy = userMessages.some((msg) => msg.content.includes('long-term plan'));
             if (multiTurnStrategy) {
               finalResponse = `${finalResponse} In the long run, we should consider breaking this problem into smaller, manageable goals.`;
             }
 
-            // 202. **Self-Reflection and Error Correction**
+            // 212. **Self-Reflection and Error Correction**
             if (finalResponse.includes('error') || finalResponse.includes('mistake')) {
               finalResponse = `Upon further review, I realize I might have made an error in my previous statement. Let’s correct that: ${finalResponse}`;
             }
 
-            // 203. **Strategic Prompting**
+            // 213. **Strategic Prompting**
             const needsClarification = userMessages.some((msg) => msg.content.includes('unclear') || msg.content.includes('explain'));
             if (needsClarification) {
               finalResponse = `${finalResponse} Could you elaborate on what’s unclear?`;
             }
 
-            // 204. **Influence and Persuasion Techniques**
+            // 214. **Influence and Persuasion Techniques**
             if (bot.persona.includes('Gemma')) {
               finalResponse = `Based on data trends, ${finalResponse}`;
             } else if (bot.persona.includes('Llama')) {
               finalResponse = `Imagine this: ${finalResponse}`;
             }
 
-            // 205. **Fact-Checking and Verification**
+            // 215. **Fact-Checking and Verification**
             const requiresVerification = finalResponse.includes('According to');
             if (requiresVerification) {
               finalResponse = `Let me verify that statement: ${finalResponse}`;
             }
 
-            // 206. **Dynamic Role Switching**
+            // 216. **Dynamic Role Switching**
             if (iteration > 1) {
               finalResponse = `${finalResponse} Switching roles to take a more proactive approach now.`;
             }
 
-            // 207. **Contextual Memory Integration**
+            // 217. **Contextual Memory Integration**
             const pastConversations = context.find((msg) => msg.content.includes('In our last discussion'));
             if (pastConversations) {
               finalResponse = `${finalResponse} Building on what we discussed previously: ${pastConversations.content}`;
             }
 
-            // 208. **Collaborative Goal-Oriented Actions**
+            // 218. **Collaborative Goal-Oriented Actions**
             const sharedGoal = userMessages.find((msg) => msg.content.includes('we') || msg.content.includes('together'));
             if (sharedGoal) {
               finalResponse = `To achieve our shared goal, ${finalResponse}`;
             }
 
-            // 209. **Advanced Intent Rewriting**
+            // 219. **Advanced Intent Rewriting**
             if (userMessages.some((msg) => msg.content.includes('what I meant was'))) {
               finalResponse = `Let me reframe that based on your clarification: ${finalResponse}`;
             }
 
-            // 210. **Pattern and Preference Learning**
+            // 220. **Pattern and Preference Learning**
             const prefersBriefResponses = userMessages.some((msg) => msg.content.includes('brief') || msg.content.includes('short'));
             if (prefersBriefResponses) {
               finalResponse = `${finalResponse} I’ll keep responses concise moving forward.`;
             }
 
-            // 211. **Goal Tracking and Prioritization**
-            const userGoals = userMessages.map((msg) => msg.content.match(/goal|objective|priority/i));
-            if (userGoals.length > 0) {
-              const currentGoal = userGoals[userGoals.length - 1];
-              finalResponse = `Focusing on your primary goal: ${currentGoal}. ${finalResponse}`;
+            // 221. **Targeting and Prioritization**
+            const userTargets = userMessages.map((msg) => msg.content.match(/target|intent|priority/i));
+            if (userTargets.length > 0) {
+              const currentTarget = userTargets[userTargets.length - 1];
+              finalResponse = `Focusing on your primary goal: ${currentTarget}. ${finalResponse}`;
             }
 
-            // 212. **Meta-cognition (Reflecting on Strategy)**
+            // 222. **Meta-cognition (Reflecting on Strategy)**
             if (finalResponse.includes('unclear') || finalResponse.includes('confusing')) {
               finalResponse = `After reviewing my previous response, I realized it might be confusing. Let me clarify: ${finalResponse}`;
             }
 
-            // 213. **Role-playing Dynamics**
+            // 223. **Role-playing Dynamics**
             if (bot.persona.includes('Llama')) {
               finalResponse = `Creative input: ${finalResponse}`; // Llama bots are more creative
             } else if (bot.persona.includes('Gemma')) {
               finalResponse = `Factual analysis: ${finalResponse}`; // Gemma bots are more factual
             }
 
-            // 214. **Prediction and Anticipation of User Needs**
+            // 224. **Prediction and Anticipation of User Needs**
             const likelyNextStep = context.find((msg) =>
               msg.content.includes('What’s next?') || msg.content.includes('Could you expand?')
             );
@@ -1396,7 +1396,7 @@ export async function POST(request: NextRequest) {
               finalResponse = `${finalResponse} I anticipate you might be interested in the next steps or detailed insights. Would you like to dive deeper?`;
             }
 
-            // 215. **Cross-Bot Debate**
+            // 225. **Cross-Bot Debate**
             const contradictingResponses = recentResponses.filter(
               (msg) =>
                 msg.role === 'bot' &&
@@ -1408,13 +1408,13 @@ export async function POST(request: NextRequest) {
               finalResponse = `I see a point of contention with ${contradictingResponses[0].persona}. Let’s discuss this further.`;
             }
 
-            // 216. **Dynamic Learning from User Feedback**
+            // 226. **Dynamic Learning from User Feedback**
             const userFeedback = userMessages.find((msg) => msg.content.includes('wrong') || msg.content.includes('incorrect'));
             if (userFeedback) {
               finalResponse = `${finalResponse} Based on your feedback, I’ll make sure to refine my future responses.`;
             }
 
-            // 217. **Implicit Intent Identification**
+            // 227. **Implicit Intent Identification**
             const implicitCuriosity = userMessages.some((msg) =>
               ['curious', 'wondering', 'interested'].some((term) => msg.content.includes(term))
             );
@@ -1422,14 +1422,14 @@ export async function POST(request: NextRequest) {
               finalResponse = `It seems you might be curious about this topic. Would you like more details? ${finalResponse}`;
             }
 
-            // 218. **Personality-Based Influence Strategies**
+            // 228. **Personality-Based Influence Strategies**
             if (bot.persona.includes('Gemma')) {
               finalResponse = `Here’s the data to support my view: ${finalResponse}`;
             } else if (bot.persona.includes('Llama')) {
               finalResponse = `Imagine this scenario: ${finalResponse}`;
             }
 
-            // 219. **Redundancy Check**
+            // 229. **Redundancy Check**
             const isRedundant = recentResponses.some(
               (msg) => msg.content.trim() === generatedResponse.trim() && msg.persona !== bot.persona
             );
@@ -1437,7 +1437,7 @@ export async function POST(request: NextRequest) {
               finalResponse = `${generatedResponse} (Rephrased to avoid redundancy.)`;
             }
 
-            // 220. **Conflict Detection**
+            // 230. **Conflict Detection**
             const conflictingMessage = recentResponses.find(
               (msg) =>
                 msg.role === 'bot' &&
@@ -1449,77 +1449,51 @@ export async function POST(request: NextRequest) {
               finalResponse = `${generatedResponse}. Note: This differs from ${conflictingMessage.persona}’s viewpoint.`;
             }
 
-            // 221. **Incomplete Information Check**
+            // 231. **Incomplete Information Check**
             const missingInfo = generatedResponse.includes('I don’t know') || generatedResponse.includes('uncertain');
             if (missingInfo) {
               finalResponse = `${finalResponse} Could you clarify or provide more information?`;
             }
 
-            // 222. **Clarification Requests**
+            // 232. **Clarification Requests**
             const ambiguousMessages = recentResponses.filter((msg) => msg.content.includes('?'));
             if (ambiguousMessages.length > 0) {
               finalResponse = `It seems there are some questions that need further clarification: ${ambiguousMessages.map((msg) => msg.content).join(', ')}.`;
             }
 
-            // 223. **Summarization After Complex Contexts**
+            // 233. **Summarization After Complex Contexts**
             if (context.length > 12) {
               finalResponse = `Here’s a quick summary of the discussion so far: ${context
                 .map((msg) => `${msg.persona || msg.role}: ${msg.content}`)
                 .join('; ')}.`;
             }
 
-            // 224. **Hypothesis Testing**
+            // 234. **Hypothesis Testing**
             const hypothesisDetected = generatedResponse.includes('assumption') || generatedResponse.includes('hypothesis');
             if (hypothesisDetected) {
               finalResponse = `${finalResponse} Let’s test this further by considering an alternative perspective.`;
             }
 
-            // 225. **Feedback Loop**
+            // 235. **Feedback Loop**
             const unclearResponse = recentResponses.find((msg) => msg.content.includes('unclear') || msg.content.includes('confusing'));
             if (unclearResponse) {
               finalResponse = `To clarify, ${finalResponse}`;
             }
 
-            // 226. **Consensus Building**
+            // 236. **Consensus Building**
             const agreementCount = recentResponses.filter((msg) => msg.content.includes('agree')).length;
             if (agreementCount > 2) {
               finalResponse = `${finalResponse} It seems there’s a general consensus on this point.`;
             }
 
-            // 227. **Persona-specific Modifications**
+            // 237. **Persona-specific Modifications**
             if (bot.persona.includes('Gemma')) {
               finalResponse = `Analysis: ${finalResponse}`;
             } else if (bot.persona.includes('Llama')) {
               finalResponse = `Hey there! Just wanted to say, ${finalResponse}`;
             }
 
-            // 228. **Redundancy Check**
-            const isRedundant = recentResponses.some(
-              (msg) => msg.content.trim() === generatedResponse.trim() && msg.persona !== bot.persona
-            );
-            if (isRedundant) {
-              finalResponse = `${generatedResponse} (Rephrased to avoid redundancy.)`;
-            }
-
-            // 229. **Conflict Detection**
-            const conflictingMessage = recentResponses.find(
-              (msg) =>
-                msg.role === 'bot' &&
-                msg.persona !== bot.persona &&
-                generatedResponse.toLowerCase().includes('no') &&
-                msg.content.toLowerCase().includes('yes')
-            );
-            if (conflictingMessage) {
-              finalResponse = `${generatedResponse}. Note: This differs from ${conflictingMessage.persona}’s viewpoint.`;
-            }
-
-            // 230. **Incomplete Information Check**
-            const missingInfo = generatedResponse.includes('I don’t know') || generatedResponse.includes('uncertain');
-            if (missingInfo) {
-              finalResponse = `${finalResponse} Could you clarify or provide more information?`;
-            }
-
-            // 231. **Sentiment Analysis & Tone Adjustment**
+            // 238. **Sentiment Analysis & Tone Adjustment**
             const negativeSentiment = userMessages.some((msg) =>
               ['sad', 'angry', 'frustrated', 'upset'].some((term) => msg.content.includes(term))
             );
@@ -1527,42 +1501,14 @@ export async function POST(request: NextRequest) {
               finalResponse = `I understand that this may be frustrating. ${finalResponse}`;
             }
 
-            // 232. **Consensus Building**
-            const agreementCount = recentResponses.filter((msg) => msg.content.includes('agree')).length;
-            if (agreementCount > 2) {
-              finalResponse = `${finalResponse} It seems there’s a general consensus on this point.`;
-            }
-
-            // 233. **Persona-specific Modifications**
+            // 239. **Persona-specific Modifications**
             if (bot.persona.includes('Gemma')) {
               finalResponse = `Analysis: ${finalResponse}`;
             } else if (bot.persona.includes('Llama')) {
               finalResponse = `Hey there! Just wanted to say, ${finalResponse}`;
             }
 
-            // 234. **Redundancy Check**: If a similar message exists, modify or skip the response
-            const isRedundant = recentResponses.some(
-              (msg) => msg.content.trim() === generatedResponse.trim() && msg.persona !== bot.persona
-            );
-            if (isRedundant) {
-              logger.silly(`Response from ${bot.persona} detected as redundant.`);
-              finalResponse = `${generatedResponse} (This was rephrased to avoid redundancy.)`;
-            }
-
-            // 235. **Conflict Detection**: If the response contradicts another, adjust or add clarification
-            const conflictingMessage = recentResponses.find(
-              (msg) =>
-                msg.role === 'bot' &&
-                msg.persona !== bot.persona &&
-                generatedResponse.toLowerCase().includes('no') &&
-                msg.content.toLowerCase().includes('yes')
-            );
-            if (conflictingMessage) {
-              logger.silly(`Response from ${bot.persona} detected as conflicting with ${conflictingMessage.persona}.`);
-              finalResponse = `${generatedResponse}. Note: This differs from ${conflictingMessage.persona}’s viewpoint.`;
-            }
-
-            // 236. **Persona-specific Modifications**: Make responses more formal for "Gemma" personas and conversational for "Llama" personas
+            // 240. **Persona-specific Modifications**: Make responses more formal for "Gemma" personas and conversational for "Llama" personas
             if (bot.persona.includes('Gemma')) {
               finalResponse = `Analysis: ${finalResponse}`;
             } else if (bot.persona.includes('Llama')) {
