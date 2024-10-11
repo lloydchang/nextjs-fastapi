@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from 'store/store'; // Ensure this path is correct
 import ChatMessage from 'components/atoms/ChatMessage'; // Ensure this path is correct
 import styles from 'styles/components/molecules/ChatMessages.module.css'; // Ensure this path is correct
+import { Message } from 'types'; // Import the Message type to ensure prop compatibility
 
 const ChatMessages: React.FC = () => {
   // Access Redux state directly
@@ -30,12 +31,14 @@ const ChatMessages: React.FC = () => {
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
       {messages
         .filter((msg) => msg.hidden === false || msg.hidden === undefined) // Show non-hidden or undefined messages
-        .map((msg) => (
+        .map((msg: Message) => (
           <ChatMessage
             key={msg.id}
+            id={msg.id} // Ensure the id is passed down
             sender={msg.sender}
             text={typeof msg.text === 'string' ? msg.text : ''} // Default to empty string if text is not a string
             persona={msg.persona}
+            isInterim={msg.isInterim} // Include isInterim if available
           />
         ))}
     </div>

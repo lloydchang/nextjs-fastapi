@@ -33,7 +33,8 @@ const hashPersonaToColor = (persona: string): string => {
   return `#${rangeValue.toString(16)}`;
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona }) => {
+// Update the component to use the Message type directly for props
+const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) => {
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
