@@ -22,6 +22,11 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
   // Retrieve configuration for temperature and streaming
   const { stream = true, temperature = 0.0 } = getConfig();  // Default values for stream and temperature
 
+  if (!cloudflareGemmaApiKey) {
+    logger.error('generateFromCloudflareGemma - Cloudflare Gemma API key is not defined.');
+    return null;  // Or throw an error if appropriate
+  }
+
   try {
     const requestBody = JSON.stringify({
       // frequency_penalty: 0.2,
@@ -46,7 +51,7 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
       headers: { 
         // 'Authorization': `Bearer ${token}`, 
         // 'X-Auth-Email': authEmail,
-        'X-Auth-Key': cloudflareGemmaApiKey,
+        'X-Auth-Key': cloudflareGemmaApiKey,  // Ensure this is defined
         'Content-Type': 'application/json'
       },
       body: requestBody,
