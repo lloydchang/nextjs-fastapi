@@ -5,12 +5,9 @@ import logger from 'app/api/chat/utils/logger';
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 import { getConfig } from 'app/api/chat/utils/config';
 
-// Load environment variables
-const cloudflareGemmaApiKey = process.env.CLOUDFLARE_GEMMA_API_KEY;
-
 /**
  * Function to interact with the Cloudflare Gemma API.
- * @param params - The parameters including endpoint, prompt, and model name.
+ * @param params - The parameters including endpoint, prompt, model, token, authEmail, and authKey.
  * @returns {Promise<string | null>} - The generated content or null if an error occurs.
  */
 export async function generateFromCloudflareGemma(params: { endpoint: string; prompt: string; model: string; token: string; authEmail: string; authKey: string; }): Promise<string | null> {
@@ -22,8 +19,8 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
   // Retrieve configuration for temperature and streaming
   const { stream = true, temperature = 0.0 } = getConfig();  // Default values for stream and temperature
 
-  if (!cloudflareGemmaApiKey) {
-    logger.error('generateFromCloudflareGemma - Cloudflare Gemma API key is not defined.');
+  if (!authKey) {
+    logger.error('generateFromCloudflareGemma - Cloudflare Gemma API key (authKey) is not defined.');
     return null;  // Or throw an error if appropriate
   }
 
@@ -50,8 +47,8 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
       method: 'POST',
       headers: { 
         // 'Authorization': `Bearer ${token}`, 
-        // 'X-Auth-Email': authEmail,
-        'X-Auth-Key': cloudflareGemmaApiKey,  // Ensure this is defined
+        'X-Auth-Email': authEmail,
+        'X-Auth-Key': authKey,  // Use authKey from params
         'Content-Type': 'application/json'
       },
       body: requestBody,
