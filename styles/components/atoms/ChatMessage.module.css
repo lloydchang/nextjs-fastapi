@@ -259,8 +259,6 @@
   background: #444;
 }
 
-/* File: styles/components/atoms/ChatMessage.module.css */
-
 /* Full-screen message modal */
 .fullScreenMessage {
   background-color: #000000;
@@ -271,16 +269,42 @@
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   z-index: 1000; /* Ensure the modal is above the backdrop */
-  position: relative; /* This allows absolute positioning for children */
+  position: relative;
+}
+
+/* Modal Header Styling */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
+  z-index: 1001;
+  padding: 8px;
 }
 
 /* Persona Label Styling inside the Modal */
 .modalPersonaLabel {
-  position: absolute; /* Attach to the top-left of the modal content */
-  top: 20px; /* Fixed distance from the top of the modal */
-  left: 20px; /* Fixed distance from the left of the modal */
-  background-color: rgba(0, 0, 0, 0.7); /* Slightly transparent background */
+  margin-right: 10px; /* Separate the label from the close button */
   padding: 4px 8px;
   border-radius: 8px;
-  z-index: 1001; /* Ensure it stays above the modal content */
+  background-color: rgba(0, 0, 0, 0.7); /* Transparent background to blend with the modal */
+}
+
+/* Close Button Styling */
+.modalCloseButton {
+  padding: 4px 8px;
+  margin: 0;
+  background-color: #333; /* Darker button background */
+  color: #ffffff; /* White text */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px; /* Spacing between persona label and close button */
+}
+
+.modalCloseButton:hover {
+  background-color: #555; /* Lighter background on hover */
 }

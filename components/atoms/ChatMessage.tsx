@@ -45,12 +45,19 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
       {showFullScreen && (
         <div className={styles.modalBackdrop} onClick={() => setShowFullScreen(false)}>
           <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
-            {/* Persona Label Positioned Inside the Modal */}
-            {sender === 'bot' && persona && (
-              <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
-                <strong>{persona}</strong>
-              </div>
-            )}
+            {/* Modal Header with Persona Label and Close Button */}
+            <div className={styles.modalHeader}>
+              {/* Persona Label */}
+              {sender === 'bot' && persona && (
+                <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
+                  <strong>{persona}</strong>
+                </div>
+              )}
+              {/* Close Button */}
+              <button className={styles.modalCloseButton} onClick={() => setShowFullScreen(false)}>
+                Close
+              </button>
+            </div>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
@@ -60,9 +67,6 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
             >
               {processedText}
             </ReactMarkdown>
-            <button className={styles.closeButton} onClick={() => setShowFullScreen(false)}>
-              Close
-            </button>
           </div>
         </div>
       )}
