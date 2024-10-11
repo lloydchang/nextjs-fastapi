@@ -261,10 +261,24 @@
 
 /* File: styles/components/atoms/ChatMessage.module.css */
 
-.modalBackdropPersonaLabel {
-  position: absolute; /* Attach to the backdrop rather than the modal dialogue */
-  top: 20px; /* Fixed to top of the screen */
-  left: 20px; /* Fixed to left of the screen */
+/* Full-screen message modal */
+.fullScreenMessage {
+  background-color: #000000;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto; /* Enable scrolling if the message is long */
+  padding: 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Ensure the modal is above the backdrop */
+  position: relative; /* This allows absolute positioning for children */
+}
+
+/* Persona Label Styling inside the Modal */
+.modalPersonaLabel {
+  position: absolute; /* Attach to the top-left of the modal content */
+  top: 20px; /* Fixed distance from the top of the modal */
+  left: 20px; /* Fixed distance from the left of the modal */
   background-color: rgba(0, 0, 0, 0.7); /* Slightly transparent background */
   padding: 4px 8px;
   border-radius: 8px;
