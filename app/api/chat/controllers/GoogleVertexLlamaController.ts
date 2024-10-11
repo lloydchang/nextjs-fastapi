@@ -29,7 +29,7 @@ export async function handleTextWithGoogleVertexLlamaTextModel(
       return '';
     }
 
-    logger.verbose(`handleTextWithGoogleVertexLlamaTextModel - Generated response: ${response}`);
+    logger.silly(`handleTextWithGoogleVertexLlamaTextModel - Generated response: ${response}`);
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

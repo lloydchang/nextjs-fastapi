@@ -41,7 +41,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
       return '';
     }
 
-    logger.verbose(`handleTextWithCloudflareGemmaTextModel - Generated response: ${response}`);
+    logger.silly(`handleTextWithCloudflareGemmaTextModel - Generated response: ${response}`);
     return response;
 
   } catch (error) {

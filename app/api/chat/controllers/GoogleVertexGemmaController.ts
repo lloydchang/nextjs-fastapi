@@ -41,7 +41,7 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
       return '';
     }
 
-    logger.verbose(`handleTextWithGoogleVertexGemmaTextModel - Generated response: ${response}`);
+    logger.silly(`handleTextWithGoogleVertexGemmaTextModel - Generated response: ${response}`);
     return response;
 
   } catch (error) {

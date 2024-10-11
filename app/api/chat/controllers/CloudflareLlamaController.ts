@@ -29,7 +29,7 @@ export async function handleTextWithCloudflareLlamaTextModel(
       return '';
     }
 
-    logger.verbose(`handleTextWithCloudflareLlamaTextModel - Generated response: ${response}`);
+    logger.silly(`handleTextWithCloudflareLlamaTextModel - Generated response: ${response}`);
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

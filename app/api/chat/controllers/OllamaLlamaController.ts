@@ -35,7 +35,7 @@ export async function handleTextWithOllamaLlamaTextModel(
       return '';
     }
 
-    logger.verbose(`app/api/chat/controllers/OllamaLlamaController.ts - Generated response: ${response}`);
+    logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generated response: ${response}`);
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
