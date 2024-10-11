@@ -17,7 +17,7 @@ const config = getConfig();
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const { messages, enableTruncation = false } = await request.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
     }
@@ -111,22 +111,23 @@ export async function POST(request: NextRequest) {
             // If no responses, end the loop early
             let hasResponse = false;
 
-            // Process each bot response, truncate it, and add it to the context and stream
+            // Process each bot response, optionally truncate it, and add it to the context and stream
             for (let index = 0; index < responses.length; index++) {
               const response = responses[index];
               if (response && typeof response === 'string') {
-                const truncatedResponse = randomlyTruncateSentences(response);
+                // Apply truncation if enabled, otherwise use the full response
+                const finalResponse = enableTruncation ? randomlyTruncateSentences(response) : response;
                 const botPersona = botFunctions[index].persona;
 
-                logger.silly(`Truncated response from ${botPersona}: ${truncatedResponse}`);
+                logger.silly(`Response from ${botPersona}: ${finalResponse}`);
 
                 // Add to the context for other bots to use
-                context.push({ role: 'bot', content: truncatedResponse, persona: botPersona });
+                context.push({ role: 'bot', content: finalResponse, persona: botPersona });
 
                 // Stream this response immediately to the client with data prefix
                 controller.enqueue(`data: ${JSON.stringify({
                   persona: botPersona,
-                  message: truncatedResponse,
+                  message: finalResponse,
                 })}\n\n`);
 
                 hasResponse = true;
