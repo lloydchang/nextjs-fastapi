@@ -30,14 +30,21 @@ export async function POST(request: NextRequest) {
     // Create a dynamic context to handle the evolving bot dialogue.
     let botDialogue = [...userMessages];
 
-    // Define bot personas and their generation functions.
+    // Define the shared goal for all bots to use in the prompt, explicitly labeled.
+    const sharedGoal = `
+      **Shared Goal**: Guide users in developing impactful, actionable business plans aligned with the UN SDGs.
+      Analyze TEDx talks, provide personalized roadmaps, and connect users with funding opportunities.
+      Assist users in turning ideas into tangible change that addresses societal challenges and supports the UN SDGs.
+    `;
+
+    // Define bot personas and their generation functions, all referencing the shared goal in their prompt.
     const botFunctions = [
       {
         persona: 'Ollama Gemma',
         generate: (currentContext: any[]) =>
           config.ollamaGemmaTextModel
             ? handleTextWithOllamaGemmaTextModel(
-                { userPrompt: buildPrompt(currentContext), textModel: config.ollamaGemmaTextModel },
+                { userPrompt: buildPrompt(currentContext, sharedGoal), textModel: config.ollamaGemmaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -47,7 +54,7 @@ export async function POST(request: NextRequest) {
         generate: (currentContext: any[]) =>
           config.cloudflareGemmaTextModel
             ? handleTextWithCloudflareGemmaTextModel(
-                { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareGemmaTextModel },
+                { userPrompt: buildPrompt(currentContext, sharedGoal), textModel: config.cloudflareGemmaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -57,7 +64,7 @@ export async function POST(request: NextRequest) {
         generate: (currentContext: any[]) =>
           config.googleVertexGemmaTextModel
             ? handleTextWithGoogleVertexGemmaTextModel(
-                { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexGemmaTextModel },
+                { userPrompt: buildPrompt(currentContext, sharedGoal), textModel: config.googleVertexGemmaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
         generate: (currentContext: any[]) =>
           config.ollamaLlamaTextModel
             ? handleTextWithOllamaLlamaTextModel(
-                { userPrompt: buildPrompt(currentContext), textModel: config.ollamaLlamaTextModel },
+                { userPrompt: buildPrompt(currentContext, sharedGoal), textModel: config.ollamaLlamaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -77,7 +84,7 @@ export async function POST(request: NextRequest) {
         generate: (currentContext: any[]) =>
           config.cloudflareLlamaTextModel
             ? handleTextWithCloudflareLlamaTextModel(
-                { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareLlamaTextModel },
+                { userPrompt: buildPrompt(currentContext, sharedGoal), textModel: config.cloudflareLlamaTextModel },
                 config
               )
             : Promise.resolve(null),
@@ -87,7 +94,7 @@ export async function POST(request: NextRequest) {
         generate: (currentContext: any[]) =>
           config.googleVertexLlamaTextModel
             ? handleTextWithGoogleVertexLlamaTextModel(
-                { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexLlamaTextModel },
+                { userPrompt: buildPrompt(currentContext, sharedGoal), textModel: config.googleVertexLlamaTextModel },
                 config
               )
             : Promise.resolve(null),
