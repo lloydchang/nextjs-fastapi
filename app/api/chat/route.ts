@@ -22,140 +22,142 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
     }
 
-    // Initial context includes the recent user messages
-    let context = messages.slice(-7); // Keep the 7 most recent messages for context
+    // Initialize userMessages with the system prompt and up to 7 recent user messages.
+    const systemPrompt = messages[0]; // The first message is always the system prompt.
+    const recentUserMessages = messages.slice(1, 8).filter((msg) => msg.role === 'user'); // Up to 7 user messages.
+    const userMessages = [systemPrompt, ...recentUserMessages]; // Combine system prompt and user messages.
 
-    // Create a ReadableStream to send responses to the client in real-time
+    // Create a dynamic context to handle the evolving bot dialogue.
+    let botDialogue = [...userMessages];
+
+    // Define bot personas and their generation functions.
+    const botFunctions = [
+      {
+        persona: 'Ollama Gemma',
+        generate: (currentContext: any[]) =>
+          config.ollamaGemmaTextModel
+            ? handleTextWithOllamaGemmaTextModel(
+                { userPrompt: buildPrompt(currentContext), textModel: config.ollamaGemmaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Cloudflare Gemma',
+        generate: (currentContext: any[]) =>
+          config.cloudflareGemmaTextModel
+            ? handleTextWithCloudflareGemmaTextModel(
+                { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareGemmaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Google Vertex Gemma',
+        generate: (currentContext: any[]) =>
+          config.googleVertexGemmaTextModel
+            ? handleTextWithGoogleVertexGemmaTextModel(
+                { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexGemmaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Ollama Llama',
+        generate: (currentContext: any[]) =>
+          config.ollamaLlamaTextModel
+            ? handleTextWithOllamaLlamaTextModel(
+                { userPrompt: buildPrompt(currentContext), textModel: config.ollamaLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Cloudflare Llama',
+        generate: (currentContext: any[]) =>
+          config.cloudflareLlamaTextModel
+            ? handleTextWithCloudflareLlamaTextModel(
+                { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+      {
+        persona: 'Google Vertex Llama',
+        generate: (currentContext: any[]) =>
+          config.googleVertexLlamaTextModel
+            ? handleTextWithGoogleVertexLlamaTextModel(
+                { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexLlamaTextModel },
+                config
+              )
+            : Promise.resolve(null),
+      },
+    ];
+
+    // Set a maximum number of iterations to control conversation length.
+    const maxIterations = 10;
+    let iteration = 0;
+
+    // Create a ReadableStream to send responses to the client in real-time.
     const stream = new ReadableStream({
       async start(controller) {
         logger.silly(`Started streaming responses to the client.`);
 
-        // Define bot personas and their generation functions
-        const botFunctions = [
-          {
-            persona: 'Ollama Gemma',
-            generate: (currentContext: any[]) =>
-              config.ollamaGemmaTextModel
-                ? handleTextWithOllamaGemmaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.ollamaGemmaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
-          },
-          {
-            persona: 'Cloudflare Gemma',
-            generate: (currentContext: any[]) =>
-              config.cloudflareGemmaTextModel
-                ? handleTextWithCloudflareGemmaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareGemmaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
-          },
-          {
-            persona: 'Google Vertex Gemma',
-            generate: (currentContext: any[]) =>
-              config.googleVertexGemmaTextModel
-                ? handleTextWithGoogleVertexGemmaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexGemmaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
-          },
-          {
-            persona: 'Ollama Llama',
-            generate: (currentContext: any[]) =>
-              config.ollamaLlamaTextModel
-                ? handleTextWithOllamaLlamaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.ollamaLlamaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
-          },
-          {
-            persona: 'Cloudflare Llama',
-            generate: (currentContext: any[]) =>
-              config.cloudflareLlamaTextModel
-                ? handleTextWithCloudflareLlamaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareLlamaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
-          },
-          {
-            persona: 'Google Vertex Llama',
-            generate: (currentContext: any[]) =>
-              config.googleVertexLlamaTextModel
-                ? handleTextWithGoogleVertexLlamaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexLlamaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
-          },
-        ];
-
-        // Set a maximum number of iterations to control the conversation length
-        const maxIterations = 10;
-        let iteration = 0;
-
         async function processBots() {
           while (iteration < maxIterations) {
             iteration++;
-            logger.silly(`Iteration ${iteration}: Current context: ${JSON.stringify(context)}`);
+            logger.silly(`Iteration ${iteration}: Current botDialogue: ${JSON.stringify(botDialogue)}`);
 
-            // Run all bots concurrently, each generating a response based on the shared context
+            // Run all bots concurrently, each generating a response based on the shared botDialogue.
             const responses = await Promise.all(
-              botFunctions.map((bot) => bot.generate(context))
+              botFunctions.map((bot) => bot.generate(botDialogue))
             );
 
-            // If no responses, end the loop early
-            let hasResponse = false;
-
-            // Process each bot response, optionally truncate it, and add it to the context and stream
+            // Process each bot response, optionally truncate it, and add it to the context and stream.
             for (let index = 0; index < responses.length; index++) {
               const response = responses[index];
               if (response && typeof response === 'string') {
-                // Apply truncation if enabled, otherwise use the full response
+                // Apply truncation if enabled, otherwise use the full response.
                 const finalResponse = enableTruncation ? randomlyTruncateSentences(response) : response;
                 const botPersona = botFunctions[index].persona;
 
                 logger.silly(`Response from ${botPersona}: ${finalResponse}`);
 
-                // Add to the context for other bots to use
-                context.push({ role: 'bot', content: finalResponse, persona: botPersona });
+                // Add to the botDialogue for subsequent bot iterations to reference.
+                botDialogue.push({ role: 'bot', content: finalResponse, persona: botPersona });
 
-                // Stream this response immediately to the client with data prefix
-                controller.enqueue(`data: ${JSON.stringify({
-                  persona: botPersona,
-                  message: finalResponse,
-                })}\n\n`);
-
-                hasResponse = true;
+                // Stream this response immediately to the client with data prefix.
+                controller.enqueue(
+                  `data: ${JSON.stringify({
+                    persona: botPersona,
+                    message: finalResponse,
+                  })}\n\n`
+                );
               }
             }
 
-            // If no bots generated a response, terminate the loop
-            if (!hasResponse) {
+            // If no bots generated a response, terminate the loop.
+            if (responses.every((res) => !res)) {
               logger.silly(`No bot responded in iteration ${iteration}. Ending interaction.`);
               break;
             }
           }
 
-          // Send a completion message to indicate the end of the stream
+          // Send a completion message to indicate the end of the stream.
           controller.enqueue('data: [DONE]\n\n');
           controller.close();
         }
 
-        // Start the bot processing loop
-        processBots().catch((error: AppError) => { // Use the custom AppError type
-          const errorMessage: string = (error instanceof Error) ? error.message : 'Unknown error occurred';
+        // Start the bot processing loop.
+        processBots().catch((error: AppError) => {
+          const errorMessage: string = error instanceof Error ? error.message : 'Unknown error occurred';
           logger.error(`Error in streaming bot interaction: ${errorMessage}`);
           controller.error(error);
         });
       },
     });
 
-    // Return the streaming response
+    // Return the streaming response.
     return new NextResponse(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -164,7 +166,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const errorMessage: string = (error instanceof Error) ? error.message : 'Internal Server Error';
+    const errorMessage: string = error instanceof Error ? error.message : 'Internal Server Error';
     logger.error(`Error in streaming bot interaction: ${errorMessage}`);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
