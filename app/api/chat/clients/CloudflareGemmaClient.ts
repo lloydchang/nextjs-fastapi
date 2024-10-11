@@ -3,20 +3,49 @@
 import { parseStream } from 'app/api/chat/utils/streamParser';
 import logger from 'app/api/chat/utils/logger';
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
+import { getConfig } from 'app/api/chat/utils/config';
 
-export async function generateFromCloudflareGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
-  const { endpoint, prompt, model } = params;
+/**
+ * Function to interact with the Cloudflare Gemma API.
+ * @param params - The parameters including endpoint, prompt, and model name.
+ * @returns {Promise<string | null>} - The generated content or null if an error occurs.
+ */
+export async function generateFromCloudflareGemma(params: { endpoint: string; prompt: string; model: string; token: string; authEmail: string; authKey: string; }): Promise<string | null> {
+  const { endpoint, prompt, model, token, authEmail, authKey } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
   logger.silly(`generateFromCloudflareGemma - Sending request to Cloudflare Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
+  // Retrieve configuration for temperature and streaming
+  const { stream = true, temperature = 0.0 } = getConfig();  // Default values for stream and temperature
+
   try {
-    const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
+    const requestBody = JSON.stringify({
+      // frequency_penalty: 0.2,
+      // image: [],
+      // lora: model,
+      // max_tokens: 256,
+      // presence_penalty: 0.5,
+      prompt: combinedPrompt,
+      // raw: false,
+      // repetition_penalty: 1.2,
+      // seed: 12345,
+      stream: stream,
+      temperature: temperature,
+      // top_k: 5,
+      // top_p: 0.9,
+    });
+
     logger.debug(`generateFromCloudflareGemma - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        // 'Authorization': `Bearer ${token}`, 
+        // 'X-Auth-Email': authEmail,
+        'X-Auth-Key': cloudflareGemmaApiKey,
+        'Content-Type': 'application/json'
+      },
       body: requestBody,
     });
 
