@@ -14,12 +14,12 @@ import { useMedia } from 'components/state/hooks/useMedia';
 import ControlButtons from 'components/organisms/ControlButtons';
 import ChatInput from 'components/atoms/ChatInput';
 import Tools from 'components/organisms/Tools';
-import { Message } from 'types'; // Ensure the Message type is imported correctly
+import { Message } from 'types';
 
 // Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
-});
+}) as React.FC<{ messages: Message[] }>;
 
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -43,40 +43,28 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
-  // SSE EventSource setup for streaming real-time responses
   useEffect(() => {
-    const eventSource = new EventSource('/api/chat'); // Connect to the server-side stream
+    const eventSource = new EventSource('/api/chat');
 
     eventSource.onmessage = (event) => {
-      console.log('Received SSE message:', event.data); // Log raw incoming data
       if (event.data !== '[DONE]') {
         try {
           const parsedData = JSON.parse(event.data);
-          
-          // Dispatch the parsed message to Redux state, ensuring all required properties are present
           dispatch(addMessage({
-            id: parsedData.id || Date.now().toString(), // Generate a unique ID if not present
-            sender: 'bot', // Assuming the message is from a bot in this context
-            text: parsedData.message, // Main content of the message
-            role: parsedData.persona || 'bot', // Set role as persona or default to 'bot'
-            content: parsedData.message, // Use parsed message as content
+            id: parsedData.id || Date.now().toString(),
+            sender: 'bot',
+            text: parsedData.message,
+            role: parsedData.persona || 'bot',
+            content: parsedData.message,
           }));
         } catch (error) {
           console.error('Error parsing SSE message:', error);
         }
       } else {
-        // Close the connection when [DONE] is received
-        console.log('Stream complete, closing EventSource.');
         eventSource.close();
       }
     };
 
-    eventSource.onerror = (error) => {
-      console.error('EventSource error:', error);
-      eventSource.close();
-    };
-
-    // Cleanup EventSource on component unmount
     return () => {
       eventSource.close();
     };
@@ -84,18 +72,14 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${styles['Chat-panel']}`}>
-      {/* Background Image */}
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
-      {/* Chat Panel Container */}
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
-        {/* Tools Layer */}
         <div className={styles.toolsLayer}>
           <Tools />
         </div>
 
-        {/* Chat Layer */}
         <div className={styles.chatLayer}>
           <HeavyChatMessages messages={messages} />
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
