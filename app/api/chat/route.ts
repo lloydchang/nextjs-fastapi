@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     // Create a ReadableStream to send responses to the client in real-time
     const stream = new ReadableStream({
       async start(controller) {
-        logger.silly(`Started streaming responses to the client.`);
+        logger.silly(`app/api/chat/route.ts - Started streaming responses to the client.`);
 
         // Define bot personas and their generation functions
         const botFunctions = [
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         async function processBots() {
           while (iteration < maxIterations) {
             iteration++;
-            logger.silly(`Iteration ${iteration}: Current context: ${JSON.stringify(context)}`);
+            logger.silly(`app/api/chat/route.ts - Iteration ${iteration}: Current context: ${JSON.stringify(context)}`);
 
             // Run all bots concurrently, each generating a response based on the shared context
             const responses = await Promise.all(
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
             // If no bots generated a response, terminate the loop
             if (!hasResponse) {
-              logger.silly(`No bot responded in iteration ${iteration}. Ending interaction.`);
+              logger.silly(`app/api/chat/route.ts - No bot responded in iteration ${iteration}. Ending interaction.`);
               break;
             }
           }
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 
         // Start the bot processing loop
         processBots().catch((error) => {
-          logger.error(`Error in streaming bot interaction: ${error}`);
+          logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
           controller.error(error);
         });
       },
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error(`Error in streaming bot interaction: ${error}`);
+    logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
 
     if (error instanceof Error) {
       return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

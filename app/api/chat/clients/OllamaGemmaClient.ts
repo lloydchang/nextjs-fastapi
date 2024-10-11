@@ -37,7 +37,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
     return finalResponse;
 
   } catch (error) {
-    logger.warn(`app/api/chat/clients/OllamaGemmaClient.ts - Error generating content from Ollama Gemma: ${error}`);
+    logger.error(`app/api/chat/clients/OllamaGemmaClient.ts - Error generating content from Ollama Gemma: ${error}`);
     return null;
   }
 }

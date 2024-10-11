@@ -37,7 +37,7 @@ export async function handleTextWithOllamaGemmaTextModel(
     });
 
     if (!response) {
-      logger.error('app/api/chat/controllers/OllamaGemmaController.ts - Failed to generate text from Ollama Gemma.');
+      logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Failed to generate text from Ollama Gemma.');
       return '';
     }
 
@@ -46,7 +46,7 @@ export async function handleTextWithOllamaGemmaTextModel(
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`app/api/chat/controllers/OllamaGemmaController.ts - Error during text generation: ${errorMessage}`);
+    logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

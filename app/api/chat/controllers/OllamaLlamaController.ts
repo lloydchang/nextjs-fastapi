@@ -31,7 +31,7 @@ export async function handleTextWithOllamaLlamaTextModel(
     const response = await generateFromOllamaLlama({ endpoint, prompt: userPrompt, model: textModel });
 
     if (!response) {
-      logger.error('app/api/chat/controllers/OllamaLlamaController.ts - Failed to generate text from Ollama Llama.');
+      logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Failed to generate text from Ollama Llama.');
       return '';
     }
 
@@ -39,7 +39,7 @@ export async function handleTextWithOllamaLlamaTextModel(
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`app/api/chat/controllers/OllamaLlamaController.ts - Error during text generation: ${errorMessage}`);
+    logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

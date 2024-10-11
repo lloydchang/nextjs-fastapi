@@ -41,7 +41,7 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
 
     return finalResponse;
   } catch (error) {
-    logger.warn(`app/api/chat/clients/OllamaLlamaClient.ts - Error generating content from Ollama Llama: ${error}`);
+    logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - Error generating content from Ollama Llama: ${error}`);
     return null;
   }
 }

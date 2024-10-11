@@ -24,7 +24,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_X_AUTH_KEY', 'CLOUDFLARE_GEMMA_X_AUTH_EMAIL', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])) {
-    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required environment variables.');
+    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required environment variables');
     return '';
   }
 

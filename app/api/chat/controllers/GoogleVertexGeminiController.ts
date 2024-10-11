@@ -15,14 +15,9 @@ export async function handleTextWithGoogleVertexGeminiTextModel(
   // Destructure the Google Vertex Gemini endpoint from the configData object
   const { googleVertexGeminiEndpoint } = configData;
 
-  // Debugging logs for endpoint and inputs
-  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - GOOGLE_VERTEX_GEMINI_ENDPOINT: ${googleVertexGeminiEndpoint}`);
-  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Text model provided: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - ${userPrompt}`);
-
   // Check if required environment variables are set
-  if (!googleVertexGeminiEndpoint || !textModel) {
-    logger.error('app/api/chat/controllers/GoogleVertexGeminiController.ts - Missing required environment variables:');
+  if (!validateEnvVars(['GOOGLE_VERTEX_GEMINI_ENDPOINT', 'GOOGLE_VERTEX_GEMINI_TEXT_MODEL'])) {
+    logger.error('app/api/chat/controllers/GoogleVertexGeminiController.ts - Missing required environment variables.');
     if (!googleVertexGeminiEndpoint) {
       logger.error('Google Vertex Gemini endpoint is missing.');
     }

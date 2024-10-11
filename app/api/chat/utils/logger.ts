@@ -31,6 +31,6 @@ const logger = createLogger({
 });
 
 // Log an initialization message to confirm logger setup
-logger.silly('Logger initialized successfully from app/api/chat/utils/logger.ts');
+logger.silly('app/api/chat/utils/logger.ts - Logger initialized successfully');
 
 export default logger;

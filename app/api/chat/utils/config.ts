@@ -75,15 +75,12 @@ export function getConfig(): AppConfig {
     googleVertexGeminiTextModel: process.env.GOOGLE_VERTEX_GEMINI_TEXT_MODEL,
     googleVertexGeminiEmbeddingModel: process.env.GOOGLE_VERTEX_GEMINI_EMBEDDING_MODEL,
     googleVertexGeminiLocation: process.env.GOOGLE_VERTEX_GEMINI_LOCATION,
-    googleVertexGeminiEndpoint: process.env.GOOGLE_VERTEX_GEMINI_ENDPOINT,
     googleApplicationCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS,
     googleCloudProject: process.env.GOOGLE_CLOUD_PROJECT,
     googleVertexGemmaTextModel: process.env.GOOGLE_VERTEX_GEMMA_TEXT_MODEL,
-    googleVertexGemmaEndpoint: process.env.GOOGLE_VERTEX_GEMMA_ENDPOINT, 
     googleVertexGemmaLocation: process.env.GOOGLE_VERTEX_GEMMA_LOCATION, 
     googleVertexLlamaTextModel: process.env.GOOGLE_VERTEX_LLAMA_TEXT_MODEL,           // Added Google Vertex Llama model
     googleVertexLlamaEmbeddingModel: process.env.GOOGLE_VERTEX_LLAMA_EMBEDDING_MODEL, // Added Google Vertex Llama embedding model
-    googleVertexLlamaEndpoint: process.env.GOOGLE_VERTEX_LLAMA_ENDPOINT,              // Added Google Vertex Llama endpoint
     googleVertexLlamaLocation: process.env.GOOGLE_VERTEX_LLAMA_LOCATION,              // Added Google Vertex Llama location
     ollamaGemmaTextModel: process.env.OLLAMA_GEMMA_TEXT_MODEL,
     ollamaGemmaEmbeddingModel: process.env.OLLAMA_GEMMA_EMBEDDING_MODEL,
