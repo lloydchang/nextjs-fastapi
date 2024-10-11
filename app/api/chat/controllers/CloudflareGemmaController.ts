@@ -24,15 +24,15 @@ export async function handleTextWithCloudflareGemmaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_X_AUTH_KEY', 'CLOUDFLARE_GEMMA_X_AUTH_EMAIL', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])) {
-    logger.silly('handleTextWithCloudflareGemmaTextModel - Missing required environment variables.');
+    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required environment variables.');
     return '';
   }
 
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = cloudflareGemmaEndpoint as string;
 
-  logger.silly(`handleTextWithCloudflareGemmaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithCloudflareGemmaTextModel - User prompt: ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - Generating text for model: ${textModel}`);
+  logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareGemma({
@@ -45,16 +45,16 @@ export async function handleTextWithCloudflareGemmaTextModel(
     });
 
     if (!response) {
-      logger.error('handleTextWithCloudflareGemmaTextModel - Failed to generate text from Cloudflare Gemma.');
+      logger.error('app/api/chat/controllers/CloudflareGemmaController.ts - Failed to generate text from Cloudflare Gemma.');
       return '';
     }
 
-    logger.silly(`handleTextWithCloudflareGemmaTextModel - Generated response: ${response}`);
+    logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`handleTextWithCloudflareGemmaTextModel - Error during text generation: ${errorMessage}`);
+    logger.error(`app/api/chat/controllers/CloudflareGemmaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

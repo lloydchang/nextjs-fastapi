@@ -12,28 +12,28 @@ export async function handleTextWithCloudflareLlamaTextModel(
   const { cloudflareLlamaEndpoint } = getConfig();
 
   if (!validateEnvVars(['CLOUDFLARE_LLAMA_ENDPOINT'])) {
-    logger.silly('handleTextWithCloudflareLlamaTextModel - Missing required environment variables.');
+    logger.silly('app/api/chat/controllers/CloudflareLlamaController.ts - Missing required environment variables.');
     return '';
   }
 
   const endpoint = cloudflareLlamaEndpoint as string;
 
-  logger.silly(`handleTextWithCloudflareLlamaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithCloudflareLlamaTextModel - ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/CloudflareLlamaController.ts - Generating text for model: ${textModel}`);
+  logger.silly(`app/api/chat/controllers/CloudflareLlamaController.ts - ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareLlama({ endpoint, prompt: userPrompt, model: textModel });
 
     if (!response) {
-      logger.error('handleTextWithCloudflareLlamaTextModel - Failed to generate text from Cloudflare Llama.');
+      logger.error('app/api/chat/controllers/CloudflareLlamaController.ts - Failed to generate text from Cloudflare Llama.');
       return '';
     }
 
-    logger.silly(`handleTextWithCloudflareLlamaTextModel - Generated response: ${response}`);
+    logger.silly(`app/api/chat/controllers/CloudflareLlamaController.ts - Generated response: ${response}`);
     return response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`handleTextWithCloudflareLlamaTextModel - Error during text generation: ${errorMessage}`);
+    logger.error(`app/api/chat/controllers/CloudflareLlamaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }
