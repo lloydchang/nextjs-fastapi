@@ -44,7 +44,7 @@ export interface AppConfig {
   openAIO1EmbeddingModel?: string;
   openAIO1Endpoint?: string;
   openAIO1ApiKey?: string;
-  streamEnabled?: boolean;
+  stream?: boolean;
   temperature?: number;
   winstonLoggerLevel: string;
 }
@@ -91,8 +91,8 @@ export function getConfig(): AppConfig {
     openAIO1EmbeddingModel: process.env.OPENAI_O1_EMBEDDING_MODEL,
     openAIO1Endpoint: process.env.OPENAI_O1_ENDPOINT,
     openAIO1ApiKey: process.env.OPENAI_O1_API_KEY,
-    streamEnabled: process.env.STREAM_ENABLED === 'true',
+    stream: process.env.STREAM === 'true',
     temperature: parseFloat(process.env.TEMPERATURE || '0.0'),
-    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'debug',
+    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'silly', // Default log level to 'silly' if not set
   };
 }

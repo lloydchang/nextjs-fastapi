@@ -1,6 +1,7 @@
 // File: app/api/chat/utils/logger.ts
 
 import { createLogger, format, transports, addColors } from 'winston';
+import { getConfig } from 'app/api/chat/utils/config';
 
 // Define custom log levels and colors
 const colors = {
@@ -10,11 +11,13 @@ const colors = {
 // Apply custom colors to Winston
 addColors(colors);
 
+const { winstonLoggerLevel } = getConfig();
+
 /**
  * Creates a centralized logger using the `winston` library.
  */
 const logger = createLogger({
-  level: process.env.WINSTON_LOGGER_LEVEL || 'debug', // Default log level to 'silly' if not set
+  level: winstonLoggerLevel,
   format: format.combine(
     format((info) => {
       info.level = info.level.toUpperCase(); // Convert log level to uppercase
