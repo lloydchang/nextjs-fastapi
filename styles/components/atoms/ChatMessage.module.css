@@ -5,7 +5,6 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-  cursor: pointer; /* Add cursor pointer to indicate interaction */
 }
 
 /* Persona Label Styling */
@@ -38,6 +37,7 @@
   border-radius: 8px;
   max-width: 70%;
   word-wrap: break-word;
+  color: #FFFFFF; /* Black text for readability */
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -54,7 +54,189 @@
   border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
 }
 
-/* Hover style for bot messages */
-.botMessage .text:hover {
-  background-color: #333333; /* Change background on hover */
+/* Markdown Element Styles */
+
+/* Bold text */
+.text strong {
+  font-weight: bold;
+}
+
+/* Italic text */
+.text em {
+  font-style: italic;
+}
+
+/* Links */
+.text a {
+  color: #34B7F1; /* Blue for links */
+  text-decoration: none;
+}
+
+.text a:hover {
+  text-decoration: underline;
+}
+
+/* Headers */
+.text h1,
+.text h2,
+.text h3,
+.text h4,
+.text h5,
+.text h6 {
+  margin: 0.5em 0;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+/* Lists */
+.text ul,
+.text ol {
+  padding-left: 20px;
+  margin: 0.5em 0;
+  color: #FFFFFF;
+}
+
+/* Code blocks */
+.text pre {
+  background-color: #f0f0f0; /* Light background for code blocks */
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0.5em 0;
+}
+
+/* Inline code */
+.text code {
+  background-color: #f0f0f0; /* Light background for inline code */
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* Blockquotes */
+.text blockquote {
+  border-left: 4px solid #25D366; /* Green left border */
+  padding-left: 10px;
+  color: #555555; /* Dark gray text */
+  margin: 0.5em 0;
+}
+
+/* Responsive Images */
+.text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* Tables */
+.text table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.text th,
+.text td {
+  border: 1px solid #cccccc; /* Light border for tables */
+  padding: 8px;
+}
+
+.text th {
+  background-color: #25D366; /* Green header background */
+  color: #ffffff; /* White text */
+  text-align: left;
+}
+
+.text td {
+  color: #FFFFFF; /* Black text for table cells */
+}
+
+/* Task Lists */
+.text ul.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.text ul.task-list li {
+  display: flex;
+  align-items: center;
+}
+
+.text ul.task-list li input[type='checkbox'] {
+  margin-right: 8px;
+}
+
+/* Adjustments for dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+  .text {
+    color: #E9EDEF; /* Light gray text for dark mode */
+  }
+
+  .userMessage .text {
+    background-color: #005C4B; /* Dark green for user messages in dark mode */
+    color: #E9EDEF; /* Light gray text */
+  }
+
+  .botMessage .text {
+    background-color: #000000; /* Black for bot messages in dark mode */
+    color: #E9EDEF; /* Light gray text */
+  }
+
+  .personaLabel {
+    color: #8696A0; /* Adjusted gray color for persona labels in dark mode */
+    background-color: #000000;
+  }
+
+  .text a {
+    color: #53BDEB; /* Lighter blue for links in dark mode */
+  }
+
+  .text pre,
+  .text code {
+    background-color: #2A3942; /* Darker background for code in dark mode */
+    color: #E9EDEF; /* Light gray text */
+  }
+
+  .text blockquote {
+    border-left-color: #00A884; /* Adjusted green for blockquotes in dark mode */
+    color: #8696A0; /* Grayish text for blockquotes in dark mode */
+  }
+
+  .text th {
+    background-color: #00A884; /* Adjusted green for table headers in dark mode */
+    color: #E9EDEF; /* Light gray text */
+  }
+
+  .text td {
+    color: #E9EDEF; /* Light gray text for table cells in dark mode */
+  }
+}
+
+/* --- New Additions --- */
+
+/* Hover style to show full message */
+.messageContainer:hover .fullMessage {
+  display: block; /* Show the full message on hover */
+}
+
+/* Default hidden state for the full message */
+.fullMessage {
+  display: none; /* Full message is hidden by default */
+  position: absolute;
+  top: 0;
+  left: 100%; /* Position the full message next to the original bubble */
+  background-color: #000000;
+  color: #FFFFFF;
+  padding: 8px 12px;
+  border-radius: 8px;
+  max-width: 300px; /* Limit width of the expanded message */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+  z-index: 10; /* Make sure it is above other elements */
+}
+
+/* Full message styling when visible */
+.fullMessageVisible {
+  display: block; /* Force display when visible */
 }
