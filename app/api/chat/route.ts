@@ -92,9 +92,11 @@ export async function POST(request: NextRequest) {
           },
         ];
 
-        // Set a maximum number of iterations to run indefinitely
+        // Set a maximum number of iterations to run
+        
         // const maxIterations = Infinity;
         const maxIterations = 1;
+
         let iteration = 0;
 
         async function processBots() {
