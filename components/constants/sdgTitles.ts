@@ -9,7 +9,7 @@ export const sdgTitleMap: Record<string, string> = {
     sdg6: 'SDG 6: Clean Water and Sanitation: Ensure access to water and sanitation for all',
     sdg7: 'SDG 7: Affordable and Clean Energy: Ensure access to affordable, reliable, sustainable and modern energy',
     sdg8: 'SDG 8: Decent Work and Economic Growth: Promote inclusive and sustainable economic growth, employment and decent work for all',
-    sdg9: 'SDG 9 Industry, Innovation, and Infrastructure: Build resilient infrastructure, promote sustainable industrialization and foster innovation',
+    sdg9: 'SDG 9: Industry, Innovation, and Infrastructure: Build resilient infrastructure, promote sustainable industrialization and foster innovation',
     sdg10: 'SDG 10: Reduced Inequalities: Reduce inequality within and among countries',
     sdg11: 'SDG 11: Sustainable Cities and Communities: Make cities inclusive, safe, resilient and sustainable',
     sdg12: 'SDG 12: Responsible Consumption and Production: Ensure sustainable consumption and production patterns',
