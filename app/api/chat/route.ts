@@ -8,7 +8,6 @@ import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controlle
 import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
 import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
-import { randomlyTruncateSentences } from 'app/api/chat/utils/truncate';
 import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
 import logger from 'app/api/chat/utils/logger';
 
@@ -110,22 +109,21 @@ export async function POST(request: NextRequest) {
             // If no responses, end the loop early
             let hasResponse = false;
 
-            // Process each bot response, truncate it, and add it to the context and stream
+            // Process each bot response and add it to the context and stream
             for (let index = 0; index < responses.length; index++) {
               const response = responses[index];
               if (response && typeof response === 'string') {
-                const truncatedResponse = randomlyTruncateSentences(response);
                 const botPersona = botFunctions[index].persona;
 
-                logger.silly(`Truncated response from ${botPersona}: ${truncatedResponse}`);
+                logger.silly(`Response from ${botPersona}: ${response}`);
 
                 // Add to the context for other bots to use
-                context.push({ role: 'bot', content: truncatedResponse, persona: botPersona });
+                context.push({ role: 'bot', content: response, persona: botPersona });
 
                 // Stream this response immediately to the client with data prefix
                 controller.enqueue(`data: ${JSON.stringify({
                   persona: botPersona,
-                  message: truncatedResponse,
+                  message: response,
                 })}\n\n`);
 
                 hasResponse = true;
