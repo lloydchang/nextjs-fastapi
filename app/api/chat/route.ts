@@ -1486,33 +1486,12 @@ export async function POST(request: NextRequest) {
               finalResponse = `${finalResponse} It seems there’s a general consensus on this point.`;
             }
 
-            // 237. **Persona-specific Modifications**
-            if (bot.persona.includes('Gemma')) {
-              finalResponse = `Analysis: ${finalResponse}`;
-            } else if (bot.persona.includes('Llama')) {
-              finalResponse = `Hey there! Just wanted to say, ${finalResponse}`;
-            }
-
-            // 238. **Sentiment Analysis & Tone Adjustment**
+            // 237. **Sentiment Analysis & Tone Adjustment**
             const negativeSentiment = userMessages.some((msg) =>
               ['sad', 'angry', 'frustrated', 'upset'].some((term) => msg.content.includes(term))
             );
             if (negativeSentiment) {
               finalResponse = `I understand that this may be frustrating. ${finalResponse}`;
-            }
-
-            // 239. **Persona-specific Modifications**
-            if (bot.persona.includes('Gemma')) {
-              finalResponse = `Analysis: ${finalResponse}`;
-            } else if (bot.persona.includes('Llama')) {
-              finalResponse = `Hey there! Just wanted to say, ${finalResponse}`;
-            }
-
-            // 240. **Persona-specific Modifications**: Make responses more formal for "Gemma" personas and conversational for "Llama" personas
-            if (bot.persona.includes('Gemma')) {
-              finalResponse = `Analysis: ${finalResponse}`;
-            } else if (bot.persona.includes('Llama')) {
-              finalResponse = `Hey there! Just wanted to say, ${finalResponse}`;
             }
 
             return finalResponse;
