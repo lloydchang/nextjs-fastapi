@@ -19,7 +19,7 @@ import { Message } from 'types';
 // Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
-}) as React.FC<{ messages: Message[] }>;
+}) as React.ComponentType<{ messages: Message[]; isInfo: boolean }>;
 
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -44,31 +44,21 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
-  // New: Function to toggle full-screen info mode
+  // Updated: Function to toggle full-screen info mode using standard API
   const toggleInfo = () => {
     const elem = document.documentElement;
 
     if (!isInfo) {
-      // Enter fullscreen mode
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-      } else if (elem.mozRequestFullScreen) {
-        elem.mozRequestFullScreen();
-      } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-      } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
-      }
+      // Enter fullscreen mode using standard API
+      elem.requestFullscreen().catch((err) => {
+        console.error(`Failed to enter fullscreen mode: ${err.message}`);
+      });
     } else {
-      // Check if currently in fullscreen before trying to exit
+      // Exit fullscreen mode using standard API
       if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else if (document.webkitFullscreenElement) {
-        document.webkitExitFullscreen();
-      } else if (document.mozFullScreenElement) {
-        document.mozCancelFullScreen();
-      } else if (document.msFullscreenElement) {
-        document.msExitFullscreen();
+        document.exitFullscreen().catch((err) => {
+          console.error(`Failed to exit fullscreen mode: ${err.message}`);
+        });
       }
     }
     setIsInfo(!isInfo);
@@ -115,7 +105,8 @@ const ChatPanel: React.FC = () => {
         </div>
 
         <div className={`${styles.chatLayer} ${isInfo ? styles.fullScreenChat : ''}`}>
-          <HeavyChatMessages messages={messages} />
+          {/* Pass `isInfo` prop along with messages */}
+          <HeavyChatMessages messages={messages} isInfo={isInfo} />
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
           <ControlButtons
             isCamOn={mediaState.isCamOn}
@@ -128,8 +119,8 @@ const ChatPanel: React.FC = () => {
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
             eraseMemory={handleClearChat}
-            toggleInfo={toggleInfo} // New: Pass the toggle function
-            isInfo={isInfo} // New: Pass the Info state
+            toggleInfo={toggleInfo} // Pass the toggle function
+            isInfoOn={isInfo} // Updated prop name to match ControlButtons
           />
         </div>
       </div>
