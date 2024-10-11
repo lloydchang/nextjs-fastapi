@@ -95,11 +95,11 @@ export async function generateElizaResponse(conversation: Array<{ role: string, 
     for (const rule of shuffledPatterns) {
         const match = lowercasedInput.match(rule.pattern);
         if (match) {
-            logger.debug(`app/api/chat/utils/eliza.ts - Matched pattern: ${rule.pattern}`);
+            logger.silly(`app/api/chat/utils/eliza.ts - Matched pattern: ${rule.pattern}`);
             let response = rule.response.replace(/\$(\d+)/g, (_, index) => match[parseInt(index, 10)] || getRandomPlaceholder());
             response = response.trim(); // Remove leading/trailing whitespace
             response = response.replace(/\s+/g, ' '); // Replace multiple spaces/newlines with a single space
-            logger.debug(`app/api/chat/utils/eliza.ts - Generated response: ${response}`);
+            logger.silly(`app/api/chat/utils/eliza.ts - Generated response: ${response}`);
 
             return response;
         }
