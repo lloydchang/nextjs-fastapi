@@ -3,11 +3,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
+import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaTextModel';
+import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaTextModel';
 import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
+import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaTextModel';
+import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaTextModel';
 import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
 import logger from 'app/api/chat/utils/logger';
 
@@ -93,17 +93,84 @@ export async function POST(request: NextRequest) {
         ];
 
         // Set a maximum number of iterations to control the conversation length
-        const maxIterations = 1;
+        const maxIterations = 10; // Increase iterations for deeper multi-turn strategies
         let iteration = 0;
+
+        // Define a reasoning and acting function for each bot
+        const reasoningAndActingFunctions = botFunctions.map((bot) => ({
+          persona: bot.persona,
+          reasonAndAct: async (context: any[]) => {
+            const generatedResponse = await bot.generate(context);
+            if (!generatedResponse || typeof generatedResponse !== 'string') return null;
+
+            let finalResponse = generatedResponse;
+            const recentResponses = context.slice(-5);
+            const userMessages = context.filter((msg) => msg.role === 'user');
+
+            // Enhanced Reasoning and Acting Strategies
+
+            // 1. **Holistic Impact Analysis**
+            if (userMessages.some((msg) => msg.content.includes('impact') || msg.content.includes('considerations'))) {
+              finalResponse = `Let’s consider the broader impact of this decision—not just practically, but also emotionally, socially, and ethically. Here’s a holistic analysis: ${finalResponse}`;
+            }
+
+            // 2. **Reverse Engineering for Goal Achievement**
+            if (userMessages.some((msg) => msg.content.includes('goal') || msg.content.includes('achieve'))) {
+              finalResponse = `To achieve this goal, let’s work backward and break it down into smaller, actionable steps. Here’s how we could reverse-engineer it: ${finalResponse}`;
+            }
+
+            // 3. **Strength-Based Reframing**
+            if (userMessages.some((msg) => msg.content.includes('challenge') || msg.content.includes('difficult'))) {
+              finalResponse = `This challenge could be a great opportunity to use your strength in X. Let’s reframe this and approach it in a way that leverages your unique skills: ${finalResponse}`;
+            }
+
+            // 4. **"Path of Least Resistance" Exploration**
+            if (userMessages.some((msg) => msg.content.includes('tired') || msg.content.includes('low motivation'))) {
+              finalResponse = `It seems like motivation is low right now, and that’s okay. Let’s explore the path of least resistance—an easy action that still moves you forward: ${finalResponse}`;
+            }
+
+            // 5. **Emotional Energy Budgeting**
+            if (userMessages.some((msg) => msg.content.includes('draining') || msg.content.includes('energy'))) {
+              finalResponse = `Let’s take into account how different activities might impact your emotional energy. We can plan to allocate your energy where it matters most: ${finalResponse}`;
+            }
+
+            // 6. **Behavioral Sequence Prediction**
+            if (userMessages.some((msg) => msg.content.includes('if I do this') || msg.content.includes('outcome'))) {
+              finalResponse = `If you take this action, it’s likely to trigger a series of events. Let’s try to anticipate how this behavioral sequence could unfold: ${finalResponse}`;
+            }
+
+            // 7. **Cognitive Flexibility Practice**
+            if (userMessages.some((msg) => msg.content.includes('perspective') || msg.content.includes('viewpoint'))) {
+              finalResponse = `Let’s practice cognitive flexibility. How might this problem look from a completely different perspective? This can help expand our problem-solving options: ${finalResponse}`;
+            }
+
+            // 8. **Implicit Value Discovery**
+            if (userMessages.some((msg) => msg.content.includes('feels right') || msg.content.includes('intuitively'))) {
+              finalResponse = `It seems like this decision resonates with a deeper value you hold. Let’s explore what that value might be—it could help clarify why this feels important: ${finalResponse}`;
+            }
+
+            // 9. **Temporary Detachment for Perspective Gain**
+            if (userMessages.some((msg) => msg.content.includes('stuck') || msg.content.includes('can’t decide'))) {
+              finalResponse = `It sounds like you’re feeling stuck. Let’s detach from this for a bit—sometimes stepping away can bring a fresh perspective when we return: ${finalResponse}`;
+            }
+
+            // 10. **Interconnected Decision Mapping**
+            if (userMessages.some((msg) => msg.content.includes('affect') || msg.content.includes('other areas'))) {
+              finalResponse = `Let’s map out how this decision might affect other areas of your life. Understanding these interconnections can help you make a more integrated choice: ${finalResponse}`;
+            }
+
+            return finalResponse;
+          },
+        }));
 
         async function processBots() {
           while (iteration < maxIterations) {
             iteration++;
             logger.silly(`Iteration ${iteration}: Current context: ${JSON.stringify(context)}`);
 
-            // Run all bots concurrently, each generating a response based on the shared context
+            // Each bot will generate a response and reason/act upon it
             const responses = await Promise.all(
-              botFunctions.map((bot) => bot.generate(context))
+              reasoningAndActingFunctions.map((bot) => bot.reasonAndAct(context))
             );
 
             // If no responses, end the loop early
