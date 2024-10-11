@@ -8,7 +8,7 @@ import logger from 'app/api/chat/utils/logger';
  */
 export function buildPrompt(messages: Array<{ role: string; content: string }>): string {
   const filteredContext = createFilteredContext(messages);
-  return `${systemPrompt}\n\n${filteredContext}\n\nUser Prompt:`;
+  return `${filteredContext}`;
 }
 
 /**
