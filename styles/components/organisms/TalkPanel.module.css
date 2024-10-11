@@ -75,6 +75,16 @@
   transform: translateY(-2px);
 }
 
+.shuffleButton {
+  background-color: #4caf50; /* Green color for the shuffle button */
+  color: white;
+}
+
+.shuffleButton:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+}
+
 .errorContainer {
   margin-top: -10px; /* Add spacing above */
   margin-bottom: 0px; /* Add spacing below */

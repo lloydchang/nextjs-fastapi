@@ -46,14 +46,12 @@ const TalkPanel: React.FC = () => {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 
-      // Map the results into Talk objects and shuffle them
+      // Map the results into Talk objects
       let data: Talk[] = response.data.results.map((result: any) => ({
         title: result.slug.replace(/_/g, ' '),
         url: `https://www.ted.com/talks/${result.slug}`,
         sdg_tags: result.sdg_tags || [],
       }));
-
-      data = shuffleArray(data);
 
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
@@ -110,6 +108,17 @@ const TalkPanel: React.FC = () => {
   };
 
   /**
+   * Shuffles the current talks.
+   */
+  const shuffleTalks = () => {
+    if (talks.length > 0) {
+      const shuffledTalks = shuffleArray([...talks]);
+      dispatch(setTalks(shuffledTalks));
+      dispatch(setSelectedTalk(shuffledTalks[0] || null));
+    }
+  };
+
+  /**
    * Opens the transcript in a new tab for the selected talk.
    */
   const openTranscriptInNewTab = () => {
@@ -139,6 +148,12 @@ const TalkPanel: React.FC = () => {
           disabled={loading}
         >
           Search
+        </button>
+        <button
+          onClick={shuffleTalks}
+          className={`${styles.button} ${styles.shuffleButton}`}
+        >
+          Shuffle
         </button>
         {selectedTalk && (
           <button
