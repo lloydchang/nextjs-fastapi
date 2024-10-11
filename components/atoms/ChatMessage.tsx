@@ -9,6 +9,11 @@ import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
 
+// New: Add a prop for Info mode detection
+interface ChatMessageProps extends Message {
+  isInfo: boolean;
+}
+
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
   const urlPattern = /(?<!\S)(www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/\S*)?(?!\S)/g;
   return text.replace(urlPattern, (match) => {
@@ -28,7 +33,7 @@ const hashPersonaToColor = (persona: string): string => {
   return `#${rangeValue.toString(16)}`;
 };
 
-const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isInfo }) => {
   const [showFullMessage, setShowFullMessage] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
 

@@ -7,7 +7,12 @@ import ChatMessage from 'components/atoms/ChatMessage'; // Ensure this path is c
 import styles from 'styles/components/molecules/ChatMessages.module.css'; // Ensure this path is correct
 import { Message } from 'types'; // Import the Message type to ensure prop compatibility
 
-const ChatMessages: React.FC = () => {
+// New: Add isInfo prop to handle Info mode
+interface ChatMessagesProps {
+  isInfo: boolean;
+}
+
+const ChatMessages: React.FC<ChatMessagesProps> = ({ isInfo }) => {
   // Access Redux state directly
   const messages = useSelector((state: RootState) => state.chat.messages);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +46,7 @@ const ChatMessages: React.FC = () => {
             isInterim={msg.isInterim} // Include isInterim if available
             role={msg.role} // Add the missing role property
             content={msg.content} // Add the missing content property
+            isInfo={isInfo} // New: Pass the isInfo prop to each ChatMessage
           />
         ))}
     </div>

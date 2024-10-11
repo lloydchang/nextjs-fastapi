@@ -113,3 +113,29 @@
     padding: 20px;
   }  
 }
+
+/* New: Additional styles for Info mode */
+.infoMode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000; /* Ensure it covers everything */
+  background-color: rgba(0, 0, 0, 0.9); /* Optional: Darker background for full-screen */
+}
+
+.fullScreenChat {
+  width: 100vw; /* Expand chat panel to full width */
+  height: 100vh; /* Expand chat panel to full height */
+  padding: 20px;
+  max-height: none; /* Remove max-height constraint */
+}
+
+/* New: Minimize Tools Layer in Info Mode */
+.minimized {
+  width: 0px; /* Collapse the width */
+  visibility: hidden; /* Hide the content */
+  height: 0px; /* Collapse height */
+  overflow: hidden; /* Ensure no content is shown */
+}

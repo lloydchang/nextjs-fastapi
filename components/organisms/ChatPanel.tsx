@@ -26,6 +26,7 @@ const ChatPanel: React.FC = () => {
   const messages = useSelector((state: RootState) => state.chat.messages);
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
+  const [isInfo, setIsInfo] = useState<boolean>(false); // New state for Info mode
 
   useEffect(() => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
@@ -43,6 +44,36 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
+  // New: Function to toggle full-screen info mode
+  const toggleInfo = () => {
+    const elem = document.documentElement;
+
+    if (!isInfo) {
+      // Enter fullscreen mode
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    } else {
+      // Check if currently in fullscreen before trying to exit
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (document.webkitFullscreenElement) {
+        document.webkitExitFullscreen();
+      } else if (document.mozFullScreenElement) {
+        document.mozCancelFullScreen();
+      } else if (document.msFullscreenElement) {
+        document.msExitFullscreen();
+      }
+    }
+    setIsInfo(!isInfo);
+  };
+
   useEffect(() => {
     const eventSource = new EventSource('/api/chat');
 
@@ -50,13 +81,15 @@ const ChatPanel: React.FC = () => {
       if (event.data !== '[DONE]') {
         try {
           const parsedData = JSON.parse(event.data);
-          dispatch(addMessage({
-            id: parsedData.id || Date.now().toString(),
-            sender: 'bot',
-            text: parsedData.message,
-            role: parsedData.persona || 'bot',
-            content: parsedData.message,
-          }));
+          dispatch(
+            addMessage({
+              id: parsedData.id || Date.now().toString(),
+              sender: 'bot',
+              text: parsedData.message,
+              role: parsedData.persona || 'bot',
+              content: parsedData.message,
+            })
+          );
         } catch (error) {
           console.error('Error parsing SSE message:', error);
         }
@@ -71,16 +104,17 @@ const ChatPanel: React.FC = () => {
   }, [dispatch]);
 
   return (
-    <div className={`${styles.container} ${styles['Chat-panel']}`}>
+    <div className={`${styles.container} ${isInfo ? styles.infoMode : styles['Chat-panel']}`}>
       <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
-        <div className={styles.toolsLayer}>
+        <div className={`${styles.toolsLayer} ${isInfo ? styles.minimized : ''}`}>
+          {/* Optional: Hide or shrink Tools when in Info mode */}
           <Tools />
         </div>
 
-        <div className={styles.chatLayer}>
+        <div className={`${styles.chatLayer} ${isInfo ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} />
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
           <ControlButtons
@@ -94,6 +128,8 @@ const ChatPanel: React.FC = () => {
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
             eraseMemory={handleClearChat}
+            toggleInfo={toggleInfo} // New: Pass the toggle function
+            isInfo={isInfo} // New: Pass the Info state
           />
         </div>
       </div>

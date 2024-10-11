@@ -14,6 +14,8 @@ interface ControlButtonsProps {
   isMemOn: boolean;
   toggleMem: () => void;
   eraseMemory: () => void; 
+  isInfoOn: boolean;
+  toggleInfo: () => void;
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -27,6 +29,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isMemOn,
   toggleMem,
   eraseMemory,
+  isInfoOn,
+  toggleInfo,
 }) => {
   console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
 
@@ -36,6 +40,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   const camButtonText = isCamOn ? '📷' : '📷';
   const pipButtonText = isPipOn ? '📹' : '📹';
   const memButtonText = isMemOn ? '🧠' : '🧠';
+  const infoButtonText = 'ℹ️';
 
   return (
     <div className={styles.container}>
@@ -96,6 +101,11 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       >
         {memButtonText}
       </button> */}
+
+      {/* Info Mode Button */}
+      <button onClick={toggleInfo} title="Toggle Info Mode">
+        {isInfoOn ? 'ℹ️' : 'ℹ️'}
+      </button>
 
     </div>
   );

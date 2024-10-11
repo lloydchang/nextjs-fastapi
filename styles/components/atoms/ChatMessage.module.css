@@ -308,3 +308,8 @@
 .modalCloseButton:hover {
   background-color: #555; /* Lighter background on hover */
 }
+
+/* --- New: Info Mode Styles --- */
+.infoMode .text {
+  max-width: none; /* Remove width limit in Info mode */
+}
