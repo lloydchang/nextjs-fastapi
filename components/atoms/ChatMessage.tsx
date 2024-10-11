@@ -1,6 +1,6 @@
 // File: components/atoms/ChatMessage.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, MouseEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -31,6 +31,7 @@ const hashPersonaToColor = (persona: string): string => {
 const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) => {
   const [showFullMessage, setShowFullMessage] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
+
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
@@ -39,11 +40,38 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
 
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
 
+  const handleOpenModal = () => {
+    setShowFullScreen(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowFullScreen(false);
+  };
+
+  // Handle Escape key press to close the modal
+  useEffect(() => {
+    if (showFullScreen) {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          handleCloseModal();
+        }
+      };
+
+      // Attach event listener
+      document.addEventListener('keydown', handleKeyDown);
+
+      // Clean up event listener on unmount or modal close
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [showFullScreen]); // Re-run effect only when `showFullScreen` changes
+
   return (
     <>
       {/* Full-Screen Modal */}
       {showFullScreen && (
-        <div className={styles.modalBackdrop} onClick={() => setShowFullScreen(false)}>
+        <div className={styles.modalBackdrop} onClick={handleCloseModal}>
           <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
             {/* Modal Header with Persona Label and Close Button */}
             <div className={styles.modalHeader}>
@@ -54,7 +82,7 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
                 </div>
               )}
               {/* Close Button */}
-              <button className={styles.modalCloseButton} onClick={() => setShowFullScreen(false)}>
+              <button className={styles.modalCloseButton} onClick={handleCloseModal}>
                 Close
               </button>
             </div>
@@ -77,7 +105,7 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
         } ${isInterim ? styles.interim : ''}`}
         onMouseEnter={() => setShowFullMessage(true)}
         onMouseLeave={() => setShowFullMessage(false)}
-        onClick={() => setShowFullScreen(true)}
+        onClick={handleOpenModal}
       >
         {/* Display Persona Label for bot messages only */}
         {sender === 'bot' && persona && (

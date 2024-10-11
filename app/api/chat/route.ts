@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         ];
 
         // Set a maximum number of iterations to control the conversation length
-        const maxIterations = 10;
+        const maxIterations = 1;
         let iteration = 0;
 
         async function processBots() {

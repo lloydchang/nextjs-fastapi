@@ -58,21 +58,37 @@ const TalkPanel: React.FC = () => {
       dispatch(setTalks(data));
       dispatch(setSelectedTalk(data[0] || null));
 
-      // Send the scraped transcript of the first talk to the chat
-      if (data.length > 0) {
-        const firstTalk = data[0];
-        const transcriptUrl = `${firstTalk.url}/transcript?subtitle=en`;
-        const sendTranscript = await scrapeTranscript(transcriptUrl);
-        const sendSdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : ''; // No SDG Tag
-
-        dispatch(sendMessage({ text: `${query} | ${firstTalk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
-      }
+      // Attempt to send the transcript of the first available talk to the chat
+      await sendFirstAvailableTranscript(query, data);
     } catch (error) {
       console.error(error);
       dispatch(setError("Failed to fetch talks."));
     } finally {
       dispatch(setLoading(false));
     }
+  };
+
+  /**
+   * Tries to scrape and send the transcript of the first available talk.
+   * If the first one fails, it will try the next one.
+   * @param query - The original search query.
+   * @param talks - The array of fetched talks.
+   */
+  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
+    for (let i = 0; i < talks.length; i++) {
+      try {
+        const transcriptUrl = `${talks[i].url}/transcript?subtitle=en`;
+        const sendTranscript = await scrapeTranscript(transcriptUrl);
+        const sendSdgTag = talks[i].sdg_tags.length > 0 ? sdgTitleMap[talks[i].sdg_tags[0]] : ''; // No SDG Tag
+
+        dispatch(sendMessage({ text: `${query} | ${talks[i].title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+        dispatch(setSelectedTalk(talks[i])); // Set the current successful talk as the selected one
+        return; // Exit loop once a successful transcript is fetched
+      } catch (error) {
+        console.error(`Failed to fetch transcript for ${talks[i].title}. Trying the next one...`);
+      }
+    }
+    dispatch(setError("Failed to fetch transcripts for all talks."));
   };
 
   /**
