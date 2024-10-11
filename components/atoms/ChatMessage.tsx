@@ -4,12 +4,11 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github-dark.css'; // Ensure the correct styling for code highlighting
+import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
-import LinkRenderer from 'components/atoms/LinkRenderer'; // Ensure this path is correct
-import { Message } from 'types'; // Import the unified Message type
+import LinkRenderer from 'components/atoms/LinkRenderer';
+import { Message } from 'types';
 
-// Function to convert plain URLs into clickable links
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
   const urlPattern = /(?<!\S)(www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/\S*)?(?!\S)/g;
   return text.replace(urlPattern, (match) => {
@@ -18,7 +17,6 @@ const convertPlainUrlsToMarkdownLinks = (text: string) => {
   });
 };
 
-// Function to hash a persona name to a specific color in the range of #777777 to #FFFFFF
 const hashPersonaToColor = (persona: string): string => {
   let hash = 0;
   for (let i = 0; i < persona.length; i++) {
@@ -30,18 +28,16 @@ const hashPersonaToColor = (persona: string): string => {
   return `#${rangeValue.toString(16)}`;
 };
 
-// Update the component to use the Message type directly for props
 const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) => {
-  const [showFullMessage, setShowFullMessage] = useState(false); // State to control full message display
-  const [showFullScreen, setShowFullScreen] = useState(false); // State to control full-screen modal display
+  const [showFullMessage, setShowFullMessage] = useState(false);
+  const [showFullScreen, setShowFullScreen] = useState(false);
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
-  // Shorten text if necessary
   const shouldShorten = sender === 'bot' && text.split(' ').length > 10;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
-  const personaColor = persona ? hashPersonaToColor(persona) : '#777777'; // Default color if persona is undefined
+  const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
 
   return (
     <>
@@ -49,6 +45,12 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
       {showFullScreen && (
         <div className={styles.modalBackdrop} onClick={() => setShowFullScreen(false)}>
           <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
+            {/* Display Persona Label in the Modal */}
+            {sender === 'bot' && persona && (
+              <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
+                <strong>{persona}</strong>
+              </div>
+            )}
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
@@ -69,14 +71,14 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
         } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => setShowFullMessage(true)} // Show full message on hover
-        onMouseLeave={() => setShowFullMessage(false)} // Hide full message on leave
-        onClick={() => setShowFullScreen(true)} // Toggle full-screen modal on click
+        onMouseEnter={() => setShowFullMessage(true)}
+        onMouseLeave={() => setShowFullMessage(false)}
+        onClick={() => setShowFullScreen(true)}
       >
         {/* Display Persona Label for bot messages only */}
         {sender === 'bot' && persona && (
           <div className={styles.personaLabel} style={{ color: personaColor }}>
-            <strong>{persona}</strong> {/* Render persona name in bold */}
+            <strong>{persona}</strong>
           </div>
         )}
         <div className={styles.text}>

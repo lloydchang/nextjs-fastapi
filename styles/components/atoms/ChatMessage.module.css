@@ -258,3 +258,15 @@
 .closeButton:hover {
   background: #444;
 }
+
+/* File: styles/components/atoms/ChatMessage.module.css */
+
+/* Additional styling for the Persona Label inside the modal */
+.modalPersonaLabel {
+  position: absolute; /* Position it absolutely relative to the modal */
+  top: 20px; /* Adjust the top margin */
+  left: 20px; /* Adjust the left margin */
+  background-color: rgba(0, 0, 0, 0.7); /* Slightly transparent background */
+  padding: 4px 8px;
+  border-radius: 8px; /* Rounded corners */
+}
