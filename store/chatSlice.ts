@@ -31,6 +31,8 @@ const chatSlice = createSlice({
         id: `${Date.now()}`,
         sender: action.payload.sender || 'bot',
         text: action.payload.text,
+        role: action.payload.sender === 'user' ? 'user' : 'bot', // Add role field
+        content: action.payload.text, // Add content field matching text
         persona: action.payload.persona,
         hidden: action.payload.hidden || false,
       };
@@ -42,8 +44,8 @@ const chatSlice = createSlice({
 // Async function to send a message and get a response from the API
 export const sendMessage = (input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }) => async (dispatch: AppDispatch) => {
   const userMessage: Message = typeof input === 'string' 
-    ? { id: `${Date.now()}`, sender: 'user', text: input }
-    : { id: `${Date.now()}`, sender: input.sender || 'user', text: input.text, hidden: input.hidden || false, persona: input.persona };
+    ? { id: `${Date.now()}`, sender: 'user', text: input, role: 'user', content: input }
+    : { id: `${Date.now()}`, sender: input.sender || 'user', text: input.text, role: 'user', content: input.text, hidden: input.hidden || false, persona: input.persona };
 
   dispatch(addMessage(userMessage));
 
@@ -86,6 +88,8 @@ export const sendMessage = (input: string | { text: string; hidden?: boolean; se
                   id: `${Date.now()}`, 
                   sender: 'bot', 
                   text: parsedData.message,
+                  role: 'bot',
+                  content: parsedData.message,
                   persona: parsedData.persona
                 };
                 dispatch(addMessage(botMessage)); // Add bot response to the Redux state
