@@ -38,7 +38,7 @@
   border-radius: 8px;
   max-width: 70%;
   word-wrap: break-word;
-  color: #FFFFFF; /* Black text for readability */
+  color: #000000; /* Black text for readability */
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -51,7 +51,7 @@
 /* Specific styles for bot messages */
 .botMessage .text {
   background-color: #000000;
-  color: #FFFFFF;
+  color: #000000;
   border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
 }
 
@@ -233,7 +233,7 @@
 
 /* Full-screen message modal */
 .fullScreenMessage {
-  background-color: #ffffff;
+  background-color: #000000;
   border-radius: 8px;
   max-width: 90%;
   max-height: 90%;
