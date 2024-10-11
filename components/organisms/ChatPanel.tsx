@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store'; // Import AppDispatch and RootState types
-import { sendMessage, clearMessages } from 'store/chatSlice';
+import { sendMessage, clearMessages, addMessage } from 'store/chatSlice'; // Include addMessage to update chat in Redux
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.gif';
@@ -23,7 +23,6 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 });
 
 const ChatPanel: React.FC = () => {
-  // Use `AppDispatch` type to ensure correct dispatch typing
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
 
@@ -47,6 +46,39 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
+  // SSE EventSource setup for streaming real-time responses
+  useEffect(() => {
+    const eventSource = new EventSource('/api/chat'); // Connect to the server-side stream
+
+    eventSource.onmessage = (event) => {
+      if (event.data !== '[DONE]') {
+        try {
+          const parsedData = JSON.parse(event.data);
+          console.log('Received SSE message:', parsedData);
+
+          // Dispatch the parsed message to Redux state
+          dispatch(addMessage({ role: parsedData.persona, content: parsedData.message }));
+        } catch (error) {
+          console.error('Error parsing SSE message:', error);
+        }
+      } else {
+        // Close the connection when [DONE] is received
+        console.log('Stream complete, closing EventSource.');
+        eventSource.close();
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('EventSource error:', error);
+      eventSource.close();
+    };
+
+    // Cleanup EventSource on component unmount
+    return () => {
+      eventSource.close();
+    };
+  }, [dispatch]);
+
   return (
     <div className={`${styles.container} ${styles['Chat-panel']}`}>
       {/* Background Image */}
@@ -62,7 +94,7 @@ const ChatPanel: React.FC = () => {
 
         {/* Chat Layer */}
         <div className={styles.chatLayer}>
-          <HeavyChatMessages />
+          <HeavyChatMessages messages={messages} />
           <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
           <ControlButtons
             isCamOn={mediaState.isCamOn}

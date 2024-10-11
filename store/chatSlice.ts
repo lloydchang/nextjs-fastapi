@@ -63,17 +63,24 @@ export const sendMessage = (input: string | { text: string; hidden?: boolean; se
     const reader = response.body?.getReader();
     if (reader) {
       const decoder = new TextDecoder();
-      let chunk;
-      let textBuffer = '';
+      let textBuffer = ''; // Accumulate the response chunks here
 
       // Handle streaming responses
-      while ((chunk = await reader.read()) && !chunk.done) {
-        textBuffer += decoder.decode(chunk.value, { stream: true });
-        const completeMessages = textBuffer.split('\n\n').filter((msg) => msg.trim() !== '');
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break; // Exit the loop if streaming is complete
 
-        for (const message of completeMessages) {
+        // Decode the current chunk and add it to the buffer
+        textBuffer += decoder.decode(value, { stream: true });
+
+        // Process each complete message (separated by \n\n) from the buffer
+        const messages = textBuffer.split('\n\n');
+        textBuffer = messages.pop() || ''; // Save the last incomplete message back to the buffer
+
+        // Process each complete message from the buffer
+        for (const message of messages) {
           if (message.startsWith('data: ')) {
-            const jsonString = message.substring(6).trim();
+            const jsonString = message.substring(6).trim(); // Strip out 'data: ' prefix
             console.log(`chatSlice - Raw incoming message: ${jsonString}`);
 
             try {
@@ -85,7 +92,7 @@ export const sendMessage = (input: string | { text: string; hidden?: boolean; se
                   text: parsedData.message,
                   persona: parsedData.persona
                 };
-                dispatch(addMessage(botMessage));
+                dispatch(addMessage(botMessage)); // Add bot response to the Redux state
               }
             } catch (e) {
               console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
