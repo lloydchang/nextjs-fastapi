@@ -2,7 +2,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getConfig } from 'app/api/chat/utils/config';
-import { generateElizaResponse } from 'app/api/chat/utils/eliza';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
@@ -123,13 +122,11 @@ export async function POST(request: NextRequest) {
                 // Add to the context for other bots to use
                 context.push({ role: 'bot', content: truncatedResponse, persona: botPersona });
 
-                // Stream this response immediately to the client
-                controller.enqueue(
-                  JSON.stringify({
-                    persona: botPersona,
-                    message: truncatedResponse,
-                  }) + '\n'
-                );
+                // Stream this response immediately to the client with data prefix
+                controller.enqueue(`data: ${JSON.stringify({
+                  persona: botPersona,
+                  message: truncatedResponse,
+                })}\n\n`);
 
                 hasResponse = true;
               }
@@ -143,7 +140,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Send a completion message to indicate the end of the stream
-          controller.enqueue('[DONE]\n');
+          controller.enqueue('data: [DONE]\n\n');
           controller.close();
         }
 

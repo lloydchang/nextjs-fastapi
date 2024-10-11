@@ -27,7 +27,6 @@ const chatSlice = createSlice({
       state.messages = [];
     },
     saveMessage: (state, action: PayloadAction<{ text: string; sender?: 'user' | 'bot'; hidden?: boolean; persona?: string }>) => {
-      // Construct the new message and use the addMessage reducer to add it to the state
       const newMessage: Message = {
         id: `${Date.now()}`,
         sender: action.payload.sender || 'bot',
@@ -42,18 +41,15 @@ const chatSlice = createSlice({
 
 // Async function to send a message and get a response from the API
 export const sendMessage = (input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }) => async (dispatch: AppDispatch) => {
-  // Determine if the input is a string or an object
   const userMessage: Message = typeof input === 'string' 
     ? { id: `${Date.now()}`, sender: 'user', text: input }
     : { id: `${Date.now()}`, sender: input.sender || 'user', text: input.text, hidden: input.hidden || false, persona: input.persona };
 
-  // Dispatch the user message to the chat
   dispatch(addMessage(userMessage));
 
   try {
-    // Prepare the message array for the API request
     const messagesArray = [{ role: 'user', content: userMessage.text.trim() }];
-
+    
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -4,8 +4,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from 'store/store'; // Import AppDispatch and RootState types
-import { sendMessage, clearMessages, addMessage } from 'store/chatSlice'; // Include addMessage to update chat in Redux
+import { RootState, AppDispatch } from 'store/store';
+import { sendMessage, clearMessages, addMessage } from 'store/chatSlice';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.gif';
@@ -14,8 +14,6 @@ import { useMedia } from 'components/state/hooks/useMedia';
 import ControlButtons from 'components/organisms/ControlButtons';
 import ChatInput from 'components/atoms/ChatInput';
 import Tools from 'components/organisms/Tools';
-import VideoStream from 'components/organisms/VideoStream';
-import AudioStream from 'components/organisms/AudioStream';
 
 // Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
@@ -25,9 +23,7 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
-
   const [chatInput, setChatInput] = useState<string>('');
 
   useEffect(() => {
@@ -51,11 +47,10 @@ const ChatPanel: React.FC = () => {
     const eventSource = new EventSource('/api/chat'); // Connect to the server-side stream
 
     eventSource.onmessage = (event) => {
+      console.log('Received SSE message:', event.data); // Log raw incoming data
       if (event.data !== '[DONE]') {
         try {
           const parsedData = JSON.parse(event.data);
-          console.log('Received SSE message:', parsedData);
-
           // Dispatch the parsed message to Redux state
           dispatch(addMessage({ role: parsedData.persona, content: parsedData.message }));
         } catch (error) {
