@@ -14,6 +14,7 @@ import { useMedia } from 'components/state/hooks/useMedia';
 import ControlButtons from 'components/organisms/ControlButtons';
 import ChatInput from 'components/atoms/ChatInput';
 import Tools from 'components/organisms/Tools';
+import { Message } from 'types'; // Ensure the Message type is imported correctly
 
 // Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
@@ -51,8 +52,15 @@ const ChatPanel: React.FC = () => {
       if (event.data !== '[DONE]') {
         try {
           const parsedData = JSON.parse(event.data);
-          // Dispatch the parsed message to Redux state
-          dispatch(addMessage({ role: parsedData.persona, content: parsedData.message }));
+          
+          // Dispatch the parsed message to Redux state, ensuring all required properties are present
+          dispatch(addMessage({
+            id: parsedData.id || Date.now().toString(), // Generate a unique ID if not present
+            sender: 'bot', // Assuming the message is from a bot in this context
+            text: parsedData.message, // Main content of the message
+            role: parsedData.persona || 'bot', // Set role as persona or default to 'bot'
+            content: parsedData.message, // Use parsed message as content
+          }));
         } catch (error) {
           console.error('Error parsing SSE message:', error);
         }

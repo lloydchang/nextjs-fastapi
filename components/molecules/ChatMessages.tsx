@@ -39,6 +39,8 @@ const ChatMessages: React.FC = () => {
             text={typeof msg.text === 'string' ? msg.text : ''} // Default to empty string if text is not a string
             persona={msg.persona}
             isInterim={msg.isInterim} // Include isInterim if available
+            role={msg.role} // Add the missing role property
+            content={msg.content} // Add the missing content property
           />
         ))}
     </div>

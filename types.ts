@@ -20,11 +20,21 @@ export interface ChatbotRequestBody {
     temperature: number;
   }
   
-  /**
-   * Represents a segment of the response to be streamed back to the client.
-   */
-  export interface ResponseSegment {
-    message: string;
-    context: string | null;
-  }
-  
+/**
+ * Represents a segment of the response to be streamed back to the client.
+ */
+export interface ResponseSegment {
+  message: string;
+  context: string | null;
+}
+
+  // File: components/state/types.ts
+
+export interface Talk {
+  title: string;
+  description?: string;         // Optional property
+  presenter?: string;           // Optional property
+  sdg_tags: string[];
+  similarity_score?: number;    // Optional property
+  url: string;
+}
