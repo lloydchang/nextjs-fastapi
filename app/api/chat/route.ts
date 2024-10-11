@@ -14,6 +14,15 @@ import { systemPrompt } from 'app/api/chat/utils/prompt';
 import logger from 'app/api/chat/utils/logger';
 import jsesc from 'jsesc';
 
+// Utility function to randomly truncate the text to 1 or 2 sentences
+function truncateToRandomSentences(text: string): string {
+  // Regular expression pattern to capture sentences and special phrases like "(Applause)" or "(Laughter)"
+  const sentencePattern = /[^.!?]*[.!?]+|[(][^)]*[)]/g;
+  const sentences = text.match(sentencePattern) || [];
+  const numSentencesToKeep = Math.floor(Math.random() * 2) + 1; // Randomly choose between 1 and 2
+  return sentences.slice(0, numSentencesToKeep).join(' ').trim();
+}
+
 // Type Guard to ensure the result is fulfilled with a non-null, non-empty string
 function isFulfilledStringResult(
   result: PromiseSettledResult<string | null>
@@ -149,7 +158,7 @@ export async function POST(request: NextRequest) {
       if (isFulfilledStringResult(result)) {
         validResponses.push({
           persona: personaMap[index],
-          message: result.value,
+          message: truncateToRandomSentences(result.value), // Apply random truncation here
         });
       }
     });
@@ -160,10 +169,10 @@ export async function POST(request: NextRequest) {
       responses = validResponses;
     } else {
       logger.silly(`app/api/chat/route.ts - No valid responses, using Eliza as fallback.`);
-      const elizaResponse = await generateElizaResponse([
+      const elizaResponse = truncateToRandomSentences(await generateElizaResponse([
         { role: 'system', content: systemPrompt },
         ...recentMessages,
-      ]);
+      ]));
       responses.push({ persona: 'Eliza', message: elizaResponse });
     }
 
