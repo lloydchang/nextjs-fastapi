@@ -103,7 +103,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       </button> */}
 
       {/* Info Mode Button */}
-      <button
+      {/* Hidden: Do not render Info Button */}
+      {/* <button
         type="button"
         onClick={toggleInfo}
         className={`${styles.button} ${isInfoOn ? styles.stopButton : styles.startButton}`}
@@ -111,7 +112,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         aria-label="Info Mode"
       >
         {infoButtonText}
-      </button>
+      </button> */}
 
     </div>
   );
