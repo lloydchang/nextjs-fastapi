@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
 
             // If no bots generated a response, terminate the loop
             if (!hasResponse) {
-              logger.silly(`app/api/chat/route.ts - No bot responded in iteration ${iteration}. Ending interaction.`);
+              logger.silly(`app/api/chat/route.ts - No bot responded in iteration ${iteration} of ${maxIterations}. Ending interaction.`);
               break;
             }
           }
