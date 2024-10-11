@@ -18,8 +18,8 @@ export async function handleTextWithCloudflareLlamaTextModel(
 
   const endpoint = cloudflareLlamaEndpoint as string;
 
-  logger.debug(`handleTextWithCloudflareLlamaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithCloudflareLlamaTextModel - User prompt: ${userPrompt}`);
+  logger.silly(`handleTextWithCloudflareLlamaTextModel - Generating text for model: ${textModel}`);
+  logger.silly(`handleTextWithCloudflareLlamaTextModel - ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareLlama({ endpoint, prompt: userPrompt, model: textModel });

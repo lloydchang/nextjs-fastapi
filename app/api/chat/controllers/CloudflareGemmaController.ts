@@ -18,7 +18,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
   const { cloudflareGemmaEndpoint } = getConfig();
 
   // Validate required environment variables
-  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT'])) {
+  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT, CLOUDFLARE_GEMMA_ACCOUNT_ID, CLOUDFLARE_GEMMA_API_KEY'])) {
     logger.silly('handleTextWithCloudflareGemmaTextModel - Missing required environment variables.');
     return '';
   }
@@ -26,8 +26,8 @@ export async function handleTextWithCloudflareGemmaTextModel(
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = cloudflareGemmaEndpoint as string;
 
-  logger.debug(`handleTextWithCloudflareGemmaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithCloudflareGemmaTextModel - User prompt: ${userPrompt}`);
+  logger.silly(`handleTextWithCloudflareGemmaTextModel - Generating text for model: ${textModel}`);
+  logger.silly(`handleTextWithCloudflareGemmaTextModel - ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareGemma({

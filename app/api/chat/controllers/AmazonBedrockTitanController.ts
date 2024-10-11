@@ -8,10 +8,10 @@ export async function handleTextWithAmazonBedrockTitanTextModel({ userPrompt, te
   const { amazonBedrockTitanEndpoint } = getConfig(); // Get the Amazon Bedrock Titan endpoint from config
 
   // Debugging logs for endpoint and inputs
-  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Loaded config: ${JSON.stringify(config)}`);
-  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - AMAZON_BEDROCK_TITAN_ENDPOINT: ${amazonBedrockTitanEndpoint}`);
-  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Text model provided: ${textModel}`);
-  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - User prompt: ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Loaded config: ${JSON.stringify(config)}`);
+  logger.silly(`app/api/chat/controllers/AmazonBedrockTitanController.ts - AMAZON_BEDROCK_TITAN_ENDPOINT: ${amazonBedrockTitanEndpoint}`);
+  logger.silly(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Text model provided: ${textModel}`);
+  logger.silly(`app/api/chat/controllers/AmazonBedrockTitanController.ts - ${userPrompt}`);
 
   // Check if required environment variables are set
   if (!amazonBedrockTitanEndpoint || !textModel) {
@@ -26,7 +26,7 @@ export async function handleTextWithAmazonBedrockTitanTextModel({ userPrompt, te
   }
 
   const payload = { textModel, userPrompt };
-  logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Sending payload: ${JSON.stringify(payload)}`);
+  logger.silly(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Sending payload: ${JSON.stringify(payload)}`);
 
   // Sending request to the Amazon Bedrock Titan endpoint
   const response = await fetch(amazonBedrockTitanEndpoint, {
@@ -57,7 +57,7 @@ export async function handleTextWithAmazonBedrockTitanTextModel({ userPrompt, te
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
 
-    logger.debug(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Received chunk: ${chunk}`);
+    logger.silly(`app/api/chat/controllers/AmazonBedrockTitanController.ts - Received chunk: ${chunk}`);
 
     try {
       const parsed = JSON.parse(chunk);

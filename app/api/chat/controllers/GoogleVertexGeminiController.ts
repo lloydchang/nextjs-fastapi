@@ -10,15 +10,15 @@ export async function handleTextWithGoogleVertexGeminiTextModel(
 ): Promise<string> {
   // Get the configuration data and log its structure for inspection
   const configData = getConfig();
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Loaded config: ${JSON.stringify(configData)}`);
+  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Loaded config: ${JSON.stringify(configData)}`);
 
   // Destructure the Google Vertex Gemini endpoint from the configData object
   const { googleVertexGeminiEndpoint } = configData;
 
   // Debugging logs for endpoint and inputs
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - GOOGLE_VERTEX_GEMINI_ENDPOINT: ${googleVertexGeminiEndpoint}`);
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Text model provided: ${textModel}`);
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - User prompt: ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - GOOGLE_VERTEX_GEMINI_ENDPOINT: ${googleVertexGeminiEndpoint}`);
+  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Text model provided: ${textModel}`);
+  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - ${userPrompt}`);
 
   // Check if required environment variables are set
   if (!googleVertexGeminiEndpoint || !textModel) {
@@ -33,7 +33,7 @@ export async function handleTextWithGoogleVertexGeminiTextModel(
   }
 
   const payload = { textModel, userPrompt };
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Sending payload: ${JSON.stringify(payload)}`);
+  logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Sending payload: ${JSON.stringify(payload)}`);
 
   try {
     // Sending request to the Google Vertex Gemini endpoint
@@ -65,7 +65,7 @@ export async function handleTextWithGoogleVertexGeminiTextModel(
       const { value, done: streamDone } = await reader.read();
       const chunk = decoder.decode(value, { stream: true });
 
-      logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Received chunk: ${chunk}`);
+      logger.silly(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Received chunk: ${chunk}`);
 
       try {
         const parsed = JSON.parse(chunk);

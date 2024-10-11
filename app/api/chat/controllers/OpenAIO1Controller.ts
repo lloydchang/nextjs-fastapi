@@ -8,10 +8,10 @@ export async function handleTextWithOpenAIO1TextModel({ userPrompt, textModel }:
   const { openAIO1Endpoint } = getConfig(); // Get the OpenAI O1 endpoint from config
 
   // Debugging logs for endpoint and inputs
-  logger.debug(`app/api/chat/controllers/OpenAIO1Controller.ts - Loaded config: ${JSON.stringify(config)}`);
-  logger.debug(`app/api/chat/controllers/OpenAIO1Controller.ts - OPENAI_O1_ENDPOINT: ${openAIO1Endpoint}`);
-  logger.debug(`app/api/chat/controllers/OpenAIO1Controller.ts - Text model provided: ${textModel}`);
-  logger.debug(`app/api/chat/controllers/OpenAIO1Controller.ts - User prompt: ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/OpenAIO1Controller.ts - Loaded config: ${JSON.stringify(config)}`);
+  logger.silly(`app/api/chat/controllers/OpenAIO1Controller.ts - OPENAI_O1_ENDPOINT: ${openAIO1Endpoint}`);
+  logger.silly(`app/api/chat/controllers/OpenAIO1Controller.ts - Text model provided: ${textModel}`);
+  logger.silly(`app/api/chat/controllers/OpenAIO1Controller.ts - ${userPrompt}`);
 
   // Check if required environment variables are set
   if (!openAIO1Endpoint || !textModel) {
@@ -26,7 +26,7 @@ export async function handleTextWithOpenAIO1TextModel({ userPrompt, textModel }:
   }
 
   const payload = { textModel, userPrompt };
-  logger.debug(`app/api/chat/controllers/OpenAIO1Controller.ts - Sending payload: ${JSON.stringify(payload)}`);
+  logger.silly(`app/api/chat/controllers/OpenAIO1Controller.ts - Sending payload: ${JSON.stringify(payload)}`);
 
   // Sending request to the OpenAI O1 endpoint
   const response = await fetch(openAIO1Endpoint, {
@@ -57,7 +57,7 @@ export async function handleTextWithOpenAIO1TextModel({ userPrompt, textModel }:
     const { value, done: streamDone } = await reader.read();
     const chunk = decoder.decode(value, { stream: true });
 
-    logger.debug(`app/api/chat/controllers/OpenAIO1Controller.ts - Received chunk: ${chunk}`);
+    logger.silly(`app/api/chat/controllers/OpenAIO1Controller.ts - Received chunk: ${chunk}`);
 
     try {
       const parsed = JSON.parse(chunk);

@@ -27,7 +27,7 @@ export async function handleTextWithOllamaGemmaTextModel(
   const endpoint = ollamaGemmaEndpoint as string;
 
   logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - User prompt: ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaGemma({

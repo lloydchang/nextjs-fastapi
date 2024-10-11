@@ -18,8 +18,8 @@ export async function handleTextWithGoogleVertexLlamaTextModel(
 
   const endpoint = googleVertexLlamaEndpoint as string;
 
-  logger.debug(`handleTextWithGoogleVertexLlamaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithGoogleVertexLlamaTextModel - User prompt: ${userPrompt}`);
+  logger.silly(`handleTextWithGoogleVertexLlamaTextModel - Generating text for model: ${textModel}`);
+  logger.silly(`handleTextWithGoogleVertexLlamaTextModel - ${userPrompt}`);
 
   try {
     const response = await generateFromGoogleVertexLlama({ endpoint, prompt: userPrompt, model: textModel });

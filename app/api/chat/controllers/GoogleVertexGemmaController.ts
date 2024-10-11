@@ -26,8 +26,8 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = googleVertexGemmaEndpoint as string;
 
-  logger.debug(`handleTextWithGoogleVertexGemmaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithGoogleVertexGemmaTextModel - User prompt: ${userPrompt}`);
+  logger.silly(`handleTextWithGoogleVertexGemmaTextModel - Generating text for model: ${textModel}`);
+  logger.silly(`handleTextWithGoogleVertexGemmaTextModel - ${userPrompt}`);
 
   try {
     const response = await generateFromGoogleVertexGemma({

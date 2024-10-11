@@ -25,7 +25,7 @@ export async function handleTextWithOllamaLlamaTextModel(
   const endpoint = ollamaLlamaEndpoint as string;
 
   logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - User prompt: ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaLlama({ endpoint, prompt: userPrompt, model: textModel });
