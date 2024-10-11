@@ -163,7 +163,7 @@
     font-weight: bold;
     font-size: 0.5em; /* Adjust font size for better fit */
     transition: background-color 0.3s ease, transform 0.2s ease;
-    height: 10px; /* Ensure buttons have the same height as the input field */
+    height: 14px; /* Ensure buttons have the same height as the input field */
     display: flex;
     align-items: center; /* Center the button text vertically */
     justify-content: center; /* Center the button text horizontally */
