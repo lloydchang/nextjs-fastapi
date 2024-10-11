@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
               if (response && typeof response === 'string') {
                 const botPersona = botFunctions[index].persona;
 
-                logger.silly(`Response from ${botPersona}: ${response}`);
+                logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
 
                 // Add to the context for other bots to use
                 context.push({ role: 'bot', content: response, persona: botPersona });
