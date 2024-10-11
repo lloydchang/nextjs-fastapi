@@ -92,8 +92,8 @@ export async function POST(request: NextRequest) {
           },
         ];
 
-        // Set a maximum number of iterations to control the conversation length
-        const maxIterations = 1;
+        // Set a maximum number of iterations to run indefinitely
+        const maxIterations = Infinity;
         let iteration = 0;
 
         async function processBots() {
