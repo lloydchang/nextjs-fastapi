@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
+  position: relative; /* Control absolute positioning of children elements */
 }
 
 /* Persona Label Styling */
@@ -226,7 +227,7 @@
   display: none; /* Full message is hidden by default */
   position: absolute;
   top: 0;
-  left: 100%; /* Position the full message next to the original bubble */
+  left: calc(100% + 20px); /* Position the full message further to the right */
   background-color: #000000;
   color: #FFFFFF;
   padding: 8px 12px;
