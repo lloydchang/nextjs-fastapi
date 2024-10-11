@@ -14,13 +14,24 @@ import { systemPrompt } from 'app/api/chat/utils/prompt';
 import logger from 'app/api/chat/utils/logger';
 import jsesc from 'jsesc';
 
-// Utility function to randomly truncate the text to 1 or 2 sentences
-function truncateToRandomSentences(text: string): string {
-  // Regular expression pattern to capture sentences and special phrases like "(Applause)" or "(Laughter)"
+// Utility function to randomly select a section from the text with 1 or 2 sentences
+function randomlyTruncateSentences(text: string): string {
+  // Regular expression to capture sentences and special phrases like "(Applause)" or "(Laughter)"
   const sentencePattern = /[^.!?]*[.!?]+|[(][^)]*[)]/g;
   const sentences = text.match(sentencePattern) || [];
-  const numSentencesToKeep = Math.floor(Math.random() * 2) + 1; // Randomly choose between 1 and 2
-  return sentences.slice(0, numSentencesToKeep).join(' ').trim();
+
+  if (sentences.length === 0) return text; // If no sentences are found, return the original text
+
+  // Choose a random starting index for truncation
+  const startIndex = Math.floor(Math.random() * sentences.length);
+
+  // Choose 1 or 2 sentences to include after the starting index
+  const numSentencesToInclude = Math.floor(Math.random() * 2) + 1; // Randomly choose between 1 and 2
+
+  // Extract the selected range of sentences
+  const truncatedSentences = sentences.slice(startIndex, startIndex + numSentencesToInclude);
+
+  return truncatedSentences.join(' ').trim();
 }
 
 // Type Guard to ensure the result is fulfilled with a non-null, non-empty string
@@ -158,7 +169,7 @@ export async function POST(request: NextRequest) {
       if (isFulfilledStringResult(result)) {
         validResponses.push({
           persona: personaMap[index],
-          message: truncateToRandomSentences(result.value), // Apply random truncation here
+          message: randomlyTruncateSentences(result.value), // Apply the random truncation here
         });
       }
     });
@@ -169,7 +180,7 @@ export async function POST(request: NextRequest) {
       responses = validResponses;
     } else {
       logger.silly(`app/api/chat/route.ts - No valid responses, using Eliza as fallback.`);
-      const elizaResponse = truncateToRandomSentences(await generateElizaResponse([
+      const elizaResponse = randomlyTruncateSentences(await generateElizaResponse([
         { role: 'system', content: systemPrompt },
         ...recentMessages,
       ]));
