@@ -1583,6 +1583,12 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error(`Error in streaming bot interaction: ${error}`);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    }
+  
+    // Fallback for non-Error objects
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
