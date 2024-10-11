@@ -12,7 +12,6 @@ import { Message } from 'types'; // Import the unified Message type
 // Function to convert plain URLs into clickable links
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
   const urlPattern = /(?<!\S)(www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/\S*)?(?!\S)/g;
-
   return text.replace(urlPattern, (match) => {
     const url = match.startsWith('www.') ? `http://${match}` : `http://${match}`;
     return `[${match}](${url})`;
@@ -27,8 +26,6 @@ const hashPersonaToColor = (persona: string): string => {
   }
   const minColorValue = parseInt('777777', 16);
   const maxColorValue = parseInt('FFFFFF', 16);
-
-  // Convert hash to a value between the specified color range
   const rangeValue = minColorValue + (Math.abs(hash) % (maxColorValue - minColorValue));
   return `#${rangeValue.toString(16)}`;
 };
@@ -36,6 +33,7 @@ const hashPersonaToColor = (persona: string): string => {
 // Update the component to use the Message type directly for props
 const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) => {
   const [showFullMessage, setShowFullMessage] = useState(false); // State to control full message display
+  const [showFullScreen, setShowFullScreen] = useState(false); // State to control full-screen modal display
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
@@ -46,32 +44,54 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777'; // Default color if persona is undefined
 
   return (
-    <div
-      className={`${styles.messageContainer} ${
-        isUser ? styles.userMessage : styles.botMessage
-      } ${isInterim ? styles.interim : ''}`}
-      onClick={() => setShowFullMessage((prev) => !prev)} // Toggle message display on click
-      onMouseEnter={() => setShowFullMessage(true)} // Show full message on hover
-      onMouseLeave={() => setShowFullMessage(false)} // Hide full message on leave
-    >
-      {/* Display Persona Label for bot messages only */}
-      {sender === 'bot' && persona && (
-        <div className={styles.personaLabel} style={{ color: personaColor }}>
-          <strong>{persona}</strong> {/* Render persona name in bold */}
+    <>
+      {/* Full-Screen Modal */}
+      {showFullScreen && (
+        <div className={styles.modalBackdrop} onClick={() => setShowFullScreen(false)}>
+          <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                a: ({ node, ...props }) => <LinkRenderer {...props} />,
+              }}
+            >
+              {processedText}
+            </ReactMarkdown>
+            <button className={styles.closeButton} onClick={() => setShowFullScreen(false)}>
+              Close
+            </button>
+          </div>
         </div>
       )}
-      <div className={styles.text}>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeHighlight]}
-          components={{
-            a: ({ node, ...props }) => <LinkRenderer {...props} />,
-          }}
-        >
-          {showFullMessage ? processedText : shortenedText}
-        </ReactMarkdown>
+
+      <div
+        className={`${styles.messageContainer} ${
+          isUser ? styles.userMessage : styles.botMessage
+        } ${isInterim ? styles.interim : ''}`}
+        onMouseEnter={() => setShowFullMessage(true)} // Show full message on hover
+        onMouseLeave={() => setShowFullMessage(false)} // Hide full message on leave
+        onClick={() => setShowFullScreen(true)} // Toggle full-screen modal on click
+      >
+        {/* Display Persona Label for bot messages only */}
+        {sender === 'bot' && persona && (
+          <div className={styles.personaLabel} style={{ color: personaColor }}>
+            <strong>{persona}</strong> {/* Render persona name in bold */}
+          </div>
+        )}
+        <div className={styles.text}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeHighlight]}
+            components={{
+              a: ({ node, ...props }) => <LinkRenderer {...props} />,
+            }}
+          >
+            {showFullMessage ? processedText : shortenedText}
+          </ReactMarkdown>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

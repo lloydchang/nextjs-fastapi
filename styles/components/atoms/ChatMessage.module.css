@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-  position: relative; /* Control absolute positioning of children elements */
+  position: relative; /* Ensure the container can control the absolute positioning of children */
 }
 
 /* Persona Label Styling */
@@ -215,29 +215,46 @@
   }
 }
 
-/* --- New Additions --- */
+/* --- New Full-Screen Modal Additions --- */
 
-/* Hover style to show full message */
-.messageContainer:hover .fullMessage {
-  display: block; /* Show the full message on hover */
-}
-
-/* Default hidden state for the full message */
-.fullMessage {
-  display: none; /* Full message is hidden by default */
-  position: absolute;
+/* Backdrop styling */
+.modalBackdrop {
+  position: fixed;
   top: 0;
-  left: calc(100% + 20px); /* Position the full message further to the right */
-  background-color: #000000;
-  color: #FFFFFF;
-  padding: 8px 12px;
-  border-radius: 8px;
-  max-width: 300px; /* Limit width of the expanded message */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
-  z-index: 10; /* Make sure it is above other elements */
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  z-index: 999; /* High z-index to ensure it's above other elements */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* Full message styling when visible */
-.fullMessageVisible {
-  display: block; /* Force display when visible */
+/* Full-screen message modal */
+.fullScreenMessage {
+  background-color: #ffffff;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto; /* Enable scrolling if the message is long */
+  padding: 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Ensure the modal is above the backdrop */
+}
+
+/* Close button styling */
+.closeButton {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 20px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: #444;
 }
