@@ -13,7 +13,6 @@ const elizaPatterns = [
     { pattern: /Who would (.*)\??/i, response: "Who would benefit from $1?", type: 'eliza' },
     { pattern: /Who can (.*)\??/i, response: "Who can help with $1?", type: 'eliza' },
     { pattern: /Who is (.*)\??/i, response: "Who is $1 to you?", type: 'eliza' },
-    { pattern: /Who’s on first\??/i, response: "No, what’s on second!", type: 'humor' },
     { pattern: /Who cares\??/i, response: "Why do you think no one cares?", type: 'eliza' },
     { pattern: /Do you know who (.*)\??/i, response: "Who? $1? No, no, I know $2!", type: 'humor' },
 
@@ -44,7 +43,6 @@ const elizaPatterns = [
     { pattern: /Where do (.*)\??/i, response: "Where does $1 usually happen?", type: 'eliza' },
     { pattern: /Where could (.*)\??/i, response: "Where could $1 lead?", type: 'eliza' },
     { pattern: /Where should (.*)\??/i, response: "Where should $1 occur?", type: 'eliza' },
-    { pattern: /Where’s the (.*)\??/i, response: "Where’s $1? Check second base!", type: 'humor' },
     { pattern: /Where did (.*)\??/i, response: "Where did $1 go?", type: 'eliza' },
 
     // "Why" Questions

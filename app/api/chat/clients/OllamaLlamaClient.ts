@@ -2,7 +2,7 @@
 
 import { parseStream } from 'app/api/chat/utils/streamParser';
 import logger from 'app/api/chat/utils/logger';
-import { systemPrompt } from 'app/api/chat/utils/prompt';
+import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
 /**
  * Generates a response from Ollama Llama model.

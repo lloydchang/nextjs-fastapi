@@ -2,7 +2,7 @@
 
 import { parseStream } from 'app/api/chat/utils/streamParser';
 import logger from 'app/api/chat/utils/logger';
-import { systemPrompt } from 'app/api/chat/utils/prompt';
+import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
 export async function generateFromCloudflareLlama(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;

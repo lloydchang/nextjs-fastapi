@@ -10,40 +10,14 @@ import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/Oll
 import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { sanitizeInput } from 'app/api/chat/utils/sanitize';
-import { systemPrompt } from 'app/api/chat/utils/prompt';
+import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 import logger from 'app/api/chat/utils/logger';
 import jsesc from 'jsesc';
 
-// Utility function to randomly select a section from the text with 1 or 2 sentences
-function randomlyTruncateSentences(text: string): string {
-  // Regular expression to capture sentences and special phrases like "(Applause)" or "(Laughter)"
-  const sentencePattern = /[^.!?]*[.!?]+|[(][^)]*[)]/g;
-  const sentences = text.match(sentencePattern) || [];
-
-  if (sentences.length === 0) return text; // If no sentences are found, return the original text
-
-  // Choose a random starting index for truncation
-  const startIndex = Math.floor(Math.random() * sentences.length);
-
-  // Choose 1 or 2 sentences to include after the starting index
-  const numSentencesToInclude = Math.floor(Math.random() * 2) + 1; // Randomly choose between 1 and 2
-
-  // Extract the selected range of sentences
-  const truncatedSentences = sentences.slice(startIndex, startIndex + numSentencesToInclude);
-
-  return truncatedSentences.join(' ').trim();
-}
-
-// Type Guard to ensure the result is fulfilled with a non-null, non-empty string
-function isFulfilledStringResult(
-  result: PromiseSettledResult<string | null>
-): result is PromiseFulfilledResult<string> {
-  return (
-    result.status === 'fulfilled' &&
-    typeof result.value === 'string' &&
-    result.value.trim() !== ''
-  );
-}
+import { randomlyTruncateSentences } from 'app/api/chat/utils/truncate';
+import { isFulfilledStringResult } from 'app/api/chat/utils/validation';
+import { buildPrompt, createFilteredContext } from 'app/api/chat/utils/promptBuilder';
+import { createCombinedStream } from 'app/api/chat/utils/stream';
 
 const config = getConfig();
 
@@ -201,49 +175,4 @@ export async function POST(request: NextRequest) {
     logger.error(`app/api/chat/route.ts - Error: ${errorMessage}`, { stack: error instanceof Error ? error.stack : null });
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
-}
-
-// Build the prompt using the system prompt and user messages
-function buildPrompt(messages: Array<{ role: string; content: string }>): string {
-  const filteredContext = createFilteredContext(messages);
-  return `${systemPrompt}\n\n${filteredContext}\n\nUser Prompt:`;
-}
-
-// Create filtered context based on user messages without persona exceptions
-function createFilteredContext(
-  messages: Array<{ role: string; content: string }>
-): string {
-  return messages
-    .map((msg) => {
-      if (!msg.content) {
-        logger.error(`app/api/chat/route.ts - Invalid message content: ${JSON.stringify(msg)}`);
-        return ''; // Skip invalid messages
-      }
-      return msg.content;
-    })
-    .join('\n');  // Ensure the `join` is correctly aligned and closes the map.
-}
-
-// Function to create a combined stream for responses
-async function createCombinedStream(messages: Array<{ persona: string; message: string }>) {
-  const encoder = new TextEncoder();
-  const validMessages = messages.filter(({ message }) => message && message.trim() !== '');
-
-  return new ReadableStream({
-    async start(controller) {
-      try {
-        for (const { persona, message } of validMessages) {
-          const formattedMessage = jsesc({ persona, message }, { json: true });
-          controller.enqueue(encoder.encode(`data: ${formattedMessage}\n\n`));
-          logger.silly(`app/api/chat/route.ts - Streaming message: ${formattedMessage}`);
-        }
-        controller.close();
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Internal Server Error';
-        logger.error(`app/api/chat/route.ts - Error in stream: ${errorMessage}`);
-        controller.enqueue(encoder.encode(`data: {"error": "${errorMessage}"}\n\n`));
-        controller.close();
-      }
-    },
-  });
 }
