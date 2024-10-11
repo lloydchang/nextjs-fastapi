@@ -5,6 +5,9 @@ import logger from 'app/api/chat/utils/logger';
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 import { getConfig } from 'app/api/chat/utils/config';
 
+// Load environment variables
+const cloudflareGemmaApiKey = process.env.CLOUDFLARE_GEMMA_API_KEY;
+
 /**
  * Function to interact with the Cloudflare Gemma API.
  * @param params - The parameters including endpoint, prompt, and model name.
