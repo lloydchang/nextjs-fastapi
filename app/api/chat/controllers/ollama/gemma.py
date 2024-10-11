@@ -57,7 +57,7 @@ async def handle_text_with_ollama_gemma_text_model(
         )
         return ''
 
-    logger.info(
+    logger.debug(
         f'handle_text_with_ollama_gemma_text_model - Generated response: {response}'
     )
     return response
