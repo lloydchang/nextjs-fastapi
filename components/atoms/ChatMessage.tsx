@@ -1,6 +1,6 @@
 // File: components/atoms/ChatMessage.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -35,8 +35,13 @@ const hashPersonaToColor = (persona: string): string => {
 
 // Update the component to use the Message type directly for props
 const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) => {
+  const [showFullMessage, setShowFullMessage] = useState(false); // State to control full message display
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
+
+  // Shorten text if necessary
+  const shouldShorten = sender === 'bot' && text.split(' ').length > 10;
+  const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777'; // Default color if persona is undefined
 
@@ -45,6 +50,9 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
       className={`${styles.messageContainer} ${
         isUser ? styles.userMessage : styles.botMessage
       } ${isInterim ? styles.interim : ''}`}
+      onClick={() => setShowFullMessage((prev) => !prev)} // Toggle message display on click
+      onMouseEnter={() => setShowFullMessage(true)} // Show full message on hover
+      onMouseLeave={() => setShowFullMessage(false)} // Hide full message on leave
     >
       {/* Display Persona Label for bot messages only */}
       {sender === 'bot' && persona && (
@@ -60,7 +68,7 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
             a: ({ node, ...props }) => <LinkRenderer {...props} />,
           }}
         >
-          {processedText}
+          {showFullMessage ? processedText : shortenedText}
         </ReactMarkdown>
       </div>
     </div>
