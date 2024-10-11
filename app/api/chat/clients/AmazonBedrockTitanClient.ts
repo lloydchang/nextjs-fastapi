@@ -1,8 +1,8 @@
 // File: app/api/chat/clients/AmazonBedrockClient.ts
 
-import { validateEnvVars } from '../utils/validate';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 import logger from '../utils/logger';
-import { systemPrompt } from '../utils/prompt'; // Import systemPrompt
+import { systemPrompt } from 'app/api/chat/utils/systemPrompt'; // Import systemPrompt
 
 let hasWarnedAmazonBedrockTitan = false;
 
