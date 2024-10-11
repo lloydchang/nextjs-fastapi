@@ -1,4 +1,4 @@
-// components/organisms/ControlButtons.tsx
+// File: components/organisms/ControlButtons.tsx
 
 import React from 'react';
 import styles from '../../styles/components/organisms/ControlButtons.module.css';
@@ -13,8 +13,8 @@ interface ControlButtonsProps {
   togglePip: () => void;
   isMemOn: boolean;
   toggleMem: () => void;
-  eraseMemory: () => void; 
-  isInfoOn: boolean;
+  eraseMemory: () => void;
+  isInfoOn: boolean; // Prop name matches what is used in ChatPanel
   toggleInfo: () => void;
 }
 
@@ -103,8 +103,14 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       </button> */}
 
       {/* Info Mode Button */}
-      <button onClick={toggleInfo} title="Toggle Info Mode">
-        {isInfoOn ? 'ℹ️' : 'ℹ️'}
+      <button
+        type="button"
+        onClick={toggleInfo}
+        className={`${styles.button} ${isInfoOn ? styles.stopButton : styles.startButton}`}
+        aria-pressed={isInfoOn}
+        aria-label="Info Mode"
+      >
+        {infoButtonText}
       </button>
 
     </div>
