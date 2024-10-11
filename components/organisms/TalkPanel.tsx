@@ -81,7 +81,7 @@ const TalkPanel: React.FC = () => {
         const sendTranscript = await scrapeTranscript(transcriptUrl);
         const sendSdgTag = talks[i].sdg_tags.length > 0 ? sdgTitleMap[talks[i].sdg_tags[0]] : ''; // No SDG Tag
 
-        dispatch(sendMessage({ text: `${query} | ${talks[i].title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+        dispatch(sendMessage({ text: `${sendSdgTag} | ${query} | ${talks[i].title} | ${sendTranscript}`, hidden: true }));
         dispatch(setSelectedTalk(talks[i])); // Set the current successful talk as the selected one
         return; // Exit loop once a successful transcript is fetched
       } catch (error) {
