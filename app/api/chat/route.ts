@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
             if (!generatedResponse || typeof generatedResponse !== 'string') return null;
 
             let finalResponse = generatedResponse;
-            const recentResponses = context.slice(-5);
+            const recentResponses = context.slice(1);
             const userMessages = context.filter((msg) => msg.role === 'user');
 
             // Enhanced Reasoning and Acting Strategies
@@ -1453,12 +1453,6 @@ export async function POST(request: NextRequest) {
             const missingInfo = generatedResponse.includes('I don’t know') || generatedResponse.includes('uncertain');
             if (missingInfo) {
               finalResponse = `${finalResponse} Could you clarify or provide more information?`;
-            }
-
-            // 232. **Clarification Requests**
-            const ambiguousMessages = recentResponses.filter((msg) => msg.content.includes('?'));
-            if (ambiguousMessages.length > 0) {
-              finalResponse = `It seems there are some questions that need further clarification: ${ambiguousMessages.map((msg) => msg.content).join(', ')}.`;
             }
 
             // 233. **Summarization After Complex Contexts**
