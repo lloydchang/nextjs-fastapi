@@ -261,12 +261,12 @@
 
 /* File: styles/components/atoms/ChatMessage.module.css */
 
-/* Additional styling for the Persona Label inside the modal */
-.modalPersonaLabel {
-  position: absolute; /* Position it absolutely relative to the modal */
-  top: 20px; /* Adjust the top margin */
-  left: 20px; /* Adjust the left margin */
+.modalBackdropPersonaLabel {
+  position: absolute; /* Attach to the backdrop rather than the modal dialogue */
+  top: 20px; /* Fixed to top of the screen */
+  left: 20px; /* Fixed to left of the screen */
   background-color: rgba(0, 0, 0, 0.7); /* Slightly transparent background */
   padding: 4px 8px;
-  border-radius: 8px; /* Rounded corners */
+  border-radius: 8px;
+  z-index: 1001; /* Ensure it stays above the modal content */
 }

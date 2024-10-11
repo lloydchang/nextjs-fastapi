@@ -44,13 +44,13 @@ const ChatMessage: React.FC<Message> = ({ sender, text, isInterim, persona }) =>
       {/* Full-Screen Modal */}
       {showFullScreen && (
         <div className={styles.modalBackdrop} onClick={() => setShowFullScreen(false)}>
+          {/* Persona Label Positioned at the Top-Left of the Backdrop */}
+          {sender === 'bot' && persona && (
+            <div className={styles.modalBackdropPersonaLabel} style={{ color: personaColor }}>
+              <strong>{persona}</strong>
+            </div>
+          )}
           <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
-            {/* Display Persona Label in the Modal */}
-            {sender === 'bot' && persona && (
-              <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
-                <strong>{persona}</strong>
-              </div>
-            )}
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
