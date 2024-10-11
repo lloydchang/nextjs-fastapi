@@ -9,7 +9,7 @@ import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store'; // Ensure AppDispatch is imported for typed dispatch
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
 import { sendMessage } from 'store/chatSlice';
-import { Talk } from 'components/state/types';
+import { Talk } from 'types';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
 import { determineInitialKeyword, shuffleArray, scrapeTranscript } from 'components/utils/talkPanelUtils';
 import TalkItem from './TalkItem';
