@@ -143,31 +143,30 @@
     align-items: stretch; /* Stretch items to fill container */
   }
 
-  .searchInput {
-    padding: 8px; /* Reduced padding */
-    font-size: 1.5em; /* Adjust font size for better fit */
-  }
-
-  .button {
-    padding: 8px 12px; /* Reduced padding for buttons */
-    font-size: 1.5em; /* Adjust font size for better fit */
-  }
-}
-
-/* Ensure buttons stack vertically on smaller screens */
-@media (max-width: 500px) {
   .searchContainer {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 5px;
   }
+
   .searchInput {
     padding: 0px; /* Reduced padding */
     font-size: 0.5em; /* Adjust font size for better fit */
   }
+
   .button {
     padding:0px 0px; /* Reduced padding for buttons */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
     font-size: 0.5em; /* Adjust font size for better fit */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    height: 10px; /* Ensure buttons have the same height as the input field */
+    display: flex;
+    align-items: center; /* Center the button text vertically */
+    justify-content: center; /* Center the button text horizontally */
   }
+
 }
