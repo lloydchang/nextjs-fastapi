@@ -7,6 +7,8 @@ export interface Message {
   persona?: string;
   hidden?: boolean;
   isInterim?: boolean; // Optional property for interim status
+  role: string;
+  content: string;
 }
 
 /**
