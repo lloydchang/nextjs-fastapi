@@ -16,7 +16,9 @@ export interface AppConfig {
   azureOpenAIO1ApiKey?: string;
   cloudflareGemmaTextModel?: string;
   cloudflareGemmaEndpoint?: string;
-  cloudflareGemmaApiKey?: string;
+  cloudflareGemmaBearerToken?: string;
+  cloudflareGemmaXAuthEmail?: string;
+  cloudflareGemmaXAuthKey?: string;
   cloudflareLlamaTextModel?: string;                // Added Cloudflare Llama properties
   cloudflareLlamaEmbeddingModel?: string;           // Added Cloudflare Llama properties
   cloudflareLlamaEndpoint?: string;                 // Added Cloudflare Llama properties
@@ -63,7 +65,9 @@ export function getConfig(): AppConfig {
     azureOpenAIO1ApiKey: process.env.AZURE_OPENAI_O1_API_KEY,
     cloudflareGemmaTextModel: process.env.CLOUDFLARE_GEMMA_TEXT_MODEL,
     cloudflareGemmaEndpoint: process.env.CLOUDFLARE_GEMMA_ENDPOINT,
-    cloudflareGemmaApiKey: process.env.CLOUDFLARE_GEMMA_API_KEY,
+    cloudflareGemmaBearerToken: process.env.CLOUDFLARE_GEMMA_BEARER_TOKEN,
+    cloudflareGemmaXAuthEmail: process.env.CLOUDFLARE_GEMMA_X_AUTH_EMAIL,
+    cloudflareGemmaXAuthKey: process.env.CLOUDFLARE_GEMMA_X_AUTH_KEY,
     cloudflareLlamaTextModel: process.env.CLOUDFLARE_LLAMA_TEXT_MODEL,                // Added Cloudflare Llama model
     cloudflareLlamaEmbeddingModel: process.env.CLOUDFLARE_LLAMA_EMBEDDING_MODEL,      // Added Cloudflare Llama embedding model
     cloudflareLlamaEndpoint: process.env.CLOUDFLARE_LLAMA_ENDPOINT,                   // Added Cloudflare Llama endpoint

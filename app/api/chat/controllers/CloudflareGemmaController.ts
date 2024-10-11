@@ -15,10 +15,15 @@ export async function handleTextWithCloudflareGemmaTextModel(
   { userPrompt, textModel }: { userPrompt: string; textModel: string },
   config: any
 ): Promise<string> {
-  const { cloudflareGemmaEndpoint } = getConfig();
+  const {
+    cloudflareGemmaEndpoint,
+    cloudflareGemmaXAuthKey,
+    cloudflareGemmaXAuthEmail,
+    cloudflareGemmaBearerToken,  // Added Bearer Token
+  } = getConfig();
 
   // Validate required environment variables
-  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT, CLOUDFLARE_GEMMA_ACCOUNT_ID, CLOUDFLARE_GEMMA_API_KEY'])) {
+  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_X_AUTH_KEY', 'CLOUDFLARE_GEMMA_X_AUTH_EMAIL', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])) {
     logger.silly('handleTextWithCloudflareGemmaTextModel - Missing required environment variables.');
     return '';
   }
@@ -27,13 +32,16 @@ export async function handleTextWithCloudflareGemmaTextModel(
   const endpoint = cloudflareGemmaEndpoint as string;
 
   logger.silly(`handleTextWithCloudflareGemmaTextModel - Generating text for model: ${textModel}`);
-  logger.silly(`handleTextWithCloudflareGemmaTextModel - ${userPrompt}`);
+  logger.silly(`handleTextWithCloudflareGemmaTextModel - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareGemma({
       endpoint,
       prompt: userPrompt,
       model: textModel,
+      token: cloudflareGemmaBearerToken || '',         // Pass Bearer token for Authorization
+      xAuthEmail: cloudflareGemmaXAuthEmail || '',     // Changed to xAuthEmail
+      xAuthKey: cloudflareGemmaXAuthKey || '',         // Changed to xAuthKey
     });
 
     if (!response) {

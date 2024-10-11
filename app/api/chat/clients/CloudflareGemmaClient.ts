@@ -7,11 +7,11 @@ import { getConfig } from 'app/api/chat/utils/config';
 
 /**
  * Function to interact with the Cloudflare Gemma API.
- * @param params - The parameters including endpoint, prompt, model, token, authEmail, and authKey.
+ * @param params - The parameters including endpoint, prompt, model, token (Bearer), xAuthEmail, and xAuthKey.
  * @returns {Promise<string | null>} - The generated content or null if an error occurs.
  */
-export async function generateFromCloudflareGemma(params: { endpoint: string; prompt: string; model: string; token: string; authEmail: string; authKey: string; }): Promise<string | null> {
-  const { endpoint, prompt, model, token, authEmail, authKey } = params;
+export async function generateFromCloudflareGemma(params: { endpoint: string; prompt: string; model: string; token: string; xAuthEmail: string; xAuthKey: string; }): Promise<string | null> {
+  const { endpoint, prompt, model, token, xAuthEmail, xAuthKey } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
   logger.silly(`generateFromCloudflareGemma - Sending request to Cloudflare Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
@@ -19,8 +19,8 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
   // Retrieve configuration for temperature and streaming
   const { stream = true, temperature = 0.0 } = getConfig();  // Default values for stream and temperature
 
-  if (!authKey) {
-    logger.error('generateFromCloudflareGemma - Cloudflare Gemma API key (authKey) is not defined.');
+  if (!xAuthKey) {
+    logger.error('generateFromCloudflareGemma - Cloudflare Gemma API key (xAuthKey) is not defined.');
     return null;  // Or throw an error if appropriate
   }
 
@@ -46,9 +46,9 @@ export async function generateFromCloudflareGemma(params: { endpoint: string; pr
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 
-        // 'Authorization': `Bearer ${token}`, 
-        'X-Auth-Email': authEmail,
-        'X-Auth-Key': authKey,  // Use authKey from params
+        'Authorization': `Bearer ${token}`,   // Authorization: Bearer token
+        'X-Auth-Email': xAuthEmail,            // X-Auth-Email
+        'X-Auth-Key': xAuthKey,                // X-Auth-Key
         'Content-Type': 'application/json'
       },
       body: requestBody,

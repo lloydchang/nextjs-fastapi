@@ -94,8 +94,8 @@ export async function POST(request: NextRequest) {
 
         // Set a maximum number of iterations to run
         
-        // const maxIterations = Infinity;
-        const maxIterations = 1;
+        const maxIterations = Infinity;
+        // const maxIterations = 1;
 
         let iteration = 0;
 
