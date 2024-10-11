@@ -3,7 +3,7 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { setSelectedTalk } from 'store/talkSlice';
-import { Talk } from 'components/state/types';
+import { Talk } from 'Types.ts';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
 import styles from 'styles/components/organisms/TalkItem.module.css';
 
