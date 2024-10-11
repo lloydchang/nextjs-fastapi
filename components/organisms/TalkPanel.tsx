@@ -119,10 +119,7 @@ const TalkPanel: React.FC = () => {
         const sendSdgTag = firstTalk.sdg_tags.length > 0 ? sdgTitleMap[firstTalk.sdg_tags[0]] : ''; // No SDG Tag
 
         // Use typed dispatch for sendMessage without id
-        dispatch(sendMessage({ text: `${sendSearchQuery}`, hidden: true }));
-        dispatch(sendMessage({ text: `${sendTitle}`, hidden: true }));
-        dispatch(sendMessage({ text: `${sendTranscript}`, hidden: true }));
-        dispatch(sendMessage({ text: `${sendSdgTag}`, hidden: true }));
+        dispatch(sendMessage({ text: `${sendSearchQuery} | ${sendTitle} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
       }
     } catch (error) {
       dispatch(setError("Failed to fetch talks."));
