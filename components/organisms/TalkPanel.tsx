@@ -33,6 +33,19 @@ const TalkPanel: React.FC = () => {
   }, []);
 
   /**
+   * Handles search results, dispatches the talks and attempts to send the first transcript.
+   * @param query - The original search query.
+   * @param data - The array of fetched talks.
+   */
+  const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
+    dispatch(setTalks(data));
+    dispatch(setSelectedTalk(data[0] || null));
+
+    // Attempt to send the transcript of the first available talk to the chat
+    await sendFirstAvailableTranscript(query, data);
+  };
+
+  /**
    * Performs the search based on the query and dispatches results.
    * @param query - The search query.
    */
@@ -53,11 +66,9 @@ const TalkPanel: React.FC = () => {
         sdg_tags: result.sdg_tags || [],
       }));
 
-      dispatch(setTalks(data));
-      dispatch(setSelectedTalk(data[0] || null));
-
-      // Attempt to send the transcript of the first available talk to the chat
-      await sendFirstAvailableTranscript(query, data);
+      // Handle search results in a separate function
+      await handleSearchResults(query, data);
+      
     } catch (error) {
       console.error(error);
       dispatch(setError("Failed to fetch talks."));
@@ -79,7 +90,7 @@ const TalkPanel: React.FC = () => {
         const sendTranscript = await scrapeTranscript(transcriptUrl);
         const sendSdgTag = talks[i].sdg_tags.length > 0 ? sdgTitleMap[talks[i].sdg_tags[0]] : ''; // No SDG Tag
 
-        dispatch(sendMessage({ text: `${sendSdgTag} | ${query} | ${talks[i].title} | ${sendTranscript}`, hidden: true }));
+        dispatch(sendMessage({ text: `${query} | ${talks[i].title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
         dispatch(setSelectedTalk(talks[i])); // Set the current successful talk as the selected one
         return; // Exit loop once a successful transcript is fetched
       } catch (error) {
@@ -108,13 +119,16 @@ const TalkPanel: React.FC = () => {
   };
 
   /**
-   * Shuffles the current talks.
+   * Shuffles the current talks and attempts to send the transcript of the first available talk.
    */
-  const shuffleTalks = () => {
+  const shuffleTalks = async () => {
     if (talks.length > 0) {
       const shuffledTalks = shuffleArray([...talks]);
       dispatch(setTalks(shuffledTalks));
       dispatch(setSelectedTalk(shuffledTalks[0] || null));
+
+      // Handle shuffled results in the same way as search results
+      await handleSearchResults(searchQuery, shuffledTalks);
     }
   };
 
