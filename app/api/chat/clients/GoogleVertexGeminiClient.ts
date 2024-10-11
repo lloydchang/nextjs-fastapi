@@ -1,96 +1,43 @@
-// File: app/api/chat/controllers/GoogleVertexGeminiController.ts
+// File: app/api/chat/clients/GoogleVertexGeminiClient.ts
 
-import { NextResponse } from 'next/server';
-import logger from '../utils/logger';
-import { getConfig } from '../utils/config';
+import { parseStream } from 'app/api/chat/utils/streamParser';
+import logger from 'app/api/chat/utils/logger';
+import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
-export async function handleTextWithGoogleVertexGeminiTextModel(
-  { userPrompt, textModel }: { userPrompt: string; textModel: string },
-  config: any
-): Promise<string> {
-  // Get the configuration data and log its structure for inspection
-  const configData = getConfig();
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Loaded config: ${JSON.stringify(configData)}`);
+export async function generateFromGoogleVertexGemini(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
+  const { endpoint, prompt, model } = params;
+  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
 
-  // Destructure the Google Vertex Gemini endpoint from the configData object
-  const { googleVertexGeminiEndpoint } = configData;
-
-  // Debugging logs for endpoint and inputs
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - GOOGLE_VERTEX_GEMINI_ENDPOINT: ${googleVertexGeminiEndpoint}`);
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Text model provided: ${textModel}`);
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - User prompt: ${userPrompt}`);
-
-  // Check if required environment variables are set
-  if (!googleVertexGeminiEndpoint || !textModel) {
-    logger.error('app/api/chat/controllers/GoogleVertexGeminiController.ts - Missing required environment variables:');
-    if (!googleVertexGeminiEndpoint) {
-      logger.error('Google Vertex Gemini endpoint is missing.');
-    }
-    if (!textModel) {
-      logger.error('Text model is missing.');
-    }
-    return ''; // Return an empty string or a suitable fallback instead of throwing an error
-  }
-
-  const payload = { textModel, userPrompt };
-  logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Sending payload: ${JSON.stringify(payload)}`);
+  logger.silly(`app/api/chat/clients/GoogleVertexGeminiClient.ts - Sending request to GoogleVertex Gemini. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
-    // Sending request to the Google Vertex Gemini endpoint
-    const response = await fetch(googleVertexGeminiEndpoint, {
+    const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
+    logger.silly(`app/api/chat/clients/GoogleVertexGeminiClient.ts - Request body: ${requestBody}`);
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: requestBody,
     });
 
-    // Check for HTTP errors
     if (!response.ok) {
-      logger.error(`app/api/chat/controllers/GoogleVertexGeminiController.ts - HTTP error! status: ${response.status}`);
-      return ''; // Return an empty string or a suitable fallback instead of throwing an error
+      logger.error(`app/api/chat/clients/GoogleVertexGeminiClient.ts - HTTP error! Status: ${response.status}`);
+      return null;
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      logger.error('app/api/chat/controllers/GoogleVertexGeminiController.ts - Failed to access the response body stream.');
-      return ''; // Return an empty string or a suitable fallback instead of throwing an error
+      logger.error('app/api/chat/clients/GoogleVertexGeminiClient.ts - Failed to access the response body stream.');
+      return null;
     }
 
-    const decoder = new TextDecoder('utf-8');
-    let buffer = '';
-    let done = false;
-    const sentenceEndRegex = /[^0-9]\.\s*$|[!?]\s*$/;
+    const finalResponse = await parseStream(reader);
+    logger.silly(`app/api/chat/clients/GoogleVertexGeminiClient.ts - Received final response from GoogleVertex Gemini: ${finalResponse}`);
+    
+    return finalResponse;
 
-    // Reading the response stream
-    while (!done) {
-      const { value, done: streamDone } = await reader.read();
-      const chunk = decoder.decode(value, { stream: true });
-
-      logger.debug(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Received chunk: ${chunk}`);
-
-      try {
-        const parsed = JSON.parse(chunk);
-        if (parsed.response) {
-          buffer += parsed.response;
-
-          // Check if buffer has a complete segment
-          if (sentenceEndRegex.test(buffer)) {
-            const completeSegment = buffer.trim();
-            buffer = ''; // Clear buffer for next segment
-
-            logger.verbose(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Incoming segment: ${completeSegment}`);
-          }
-        }
-        done = parsed.done || streamDone;
-      } catch (e) {
-        logger.error(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Error parsing chunk: ${chunk}, Error: ${e}`);
-      }
-    }
-
-    // Return final buffer if there's remaining text
-    logger.verbose(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Final response: ${buffer.trim()}`);
-    return buffer.trim();
   } catch (error) {
-    logger.error(`app/api/chat/controllers/GoogleVertexGeminiController.ts - Error during fetch: ${error}`);
-    return ''; // Return an empty string or a suitable fallback instead of throwing an error
+    logger.warn(`app/api/chat/clients/GoogleVertexGeminiClient.ts - Error generating content from GoogleVertex Gemini: ${error}`);
+    return null;
   }
 }
