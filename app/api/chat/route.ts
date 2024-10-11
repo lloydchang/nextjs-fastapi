@@ -13,7 +13,6 @@ import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
 import logger from 'app/api/chat/utils/logger';
 
 const config = getConfig();
-const SHARED_GOAL = "Goal: Develop impactful project plans aligned with the UN SDGs."; // Updated shared goal as an instruction
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +21,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
     }
 
-    // Initial context includes the shared goal and recent user messages
-    let context = [{ role: 'system', content: SHARED_GOAL }, ...messages.slice(-7)]; // Add shared goal to context
+    // Initial context includes recent user messages only
+    let context = messages.slice(-7); // Keep the 7 most recent messages for context
 
     // Create a ReadableStream to send responses to the client in real-time
     const stream = new ReadableStream({
