@@ -162,4 +162,12 @@
     align-items: stretch;
     gap: 5px;
   }
+  .searchInput {
+    padding: 0px; /* Reduced padding */
+    font-size: 0.5em; /* Adjust font size for better fit */
+  }
+  .button {
+    padding:0px 0px; /* Reduced padding for buttons */
+    font-size: 0.5em; /* Adjust font size for better fit */
+  }
 }
