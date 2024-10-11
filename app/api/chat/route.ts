@@ -11,6 +11,7 @@ import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controlle
 import { randomlyTruncateSentences } from 'app/api/chat/utils/truncate';
 import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
 import logger from 'app/api/chat/utils/logger';
+import { AppError } from './types/ErrorTypes'; // Import the custom error type
 
 const config = getConfig();
 
@@ -145,8 +146,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Start the bot processing loop
-        processBots().catch((error) => {
-          logger.error(`Error in streaming bot interaction: ${error}`);
+        processBots().catch((error: AppError) => { // Use the custom AppError type
+          const errorMessage: string = (error instanceof Error) ? error.message : 'Unknown error occurred';
+          logger.error(`Error in streaming bot interaction: ${errorMessage}`);
           controller.error(error);
         });
       },
@@ -161,7 +163,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error(`Error in streaming bot interaction: ${error}`);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    const errorMessage: string = (error instanceof Error) ? error.message : 'Internal Server Error';
+    logger.error(`Error in streaming bot interaction: ${errorMessage}`);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
