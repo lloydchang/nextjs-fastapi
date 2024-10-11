@@ -1,0 +1,26 @@
+/* File: styles/components/organisms/LoadingSpinner.module.css */
+
+.loadingSpinnerContainer {
+    position: absolute;
+    right: 10px; /* Position spinner to the right within the input */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loadingSpinner {
+    animation: spin 1s linear infinite; /* The rotation animation */
+    transform-origin: 50% 50%; /* Ensure it spins from the center */
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  

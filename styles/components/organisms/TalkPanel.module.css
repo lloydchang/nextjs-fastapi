@@ -17,16 +17,6 @@
   font-size: 0.5em;
 }
 
-.searchRowContainer {
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  gap: 10px;
-  padding: 0px;
-  height: 30px; /* Fixed height */
-  box-sizing: border-box; /* Ensure padding/border are included in width */
-}
-
 .searchInputWrapper {
   position: relative;
   display: flex;
@@ -53,7 +43,7 @@
   font-weight: bold;
   font-size: 2em; /* Set font size to match the search input */
   transition: background-color 0.3s ease, transform 0.2s ease;
-  height: 54; /* Ensure buttons have the same height as the input field */
+  height: 54px; /* Ensure buttons have the same height as the input field */
   display: flex;
   align-items: center; /* Center the button text vertically */
   justify-content: center; /* Center the button text horizontally */
@@ -85,40 +75,15 @@
   transform: translateY(-2px);
 }
 
-/* Container to keep the spinner centered */
-.loadingSpinnerContainer {
-  position: absolute;
-  right: 10px; /* Position spinner to the right within the input */
-  top: 48px;
-  display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  height: 0px;
-  margin-top: -26px;
-}
-
-/* Spinner animation */
-.loadingSpinner {
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite; /* The rotation animation */
-  transform-origin: 50% 50%; /* Ensure it spins from the center */
-}
-
-/* Define the keyframes for the rotation */
-@keyframes spin {
-  0% {
-    transform: rotate(0deg); /* Start position */
-  }
-  100% {
-    transform: rotate(360deg); /* End position */
-  }
-}
-
 .errorContainer {
   margin-top: -10px; /* Add spacing above */
   margin-bottom: 0px; /* Add spacing below */
   text-align: center; /* Center the text inside */
+}
+
+.errorText {
+  color: #f44336;
+  text-align: center;
 }
 
 .nowPlaying {
@@ -127,55 +92,6 @@
 
 .videoFrame {
   border-radius: 0px;
-}
-
-.resultsContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.resultItem {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #000000;
-  color: white;
-  transition: background-color 0.3s ease;
-  cursor: pointer; /* Ensures the cursor indicates interactivity */
-}
-
-.resultItem:hover {
-  background-color: #f1f1f1;
-}
-
-.resultLink {
-  color: #2196f3;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.resultLink:hover {
-  text-decoration: underline;
-}
-
-.sdgTags {
-  color: #757575;
-  font-size: 0.9em;
-}
-
-.errorText {
-  color: #f44336;
-  text-align: center;
-}
-
-.successMessage {
-  color: #4caf50;
-  text-align: center;
-}
-
-.alignLeft {
-  text-align: left;
 }
 
 .scrollableContainer {
@@ -203,17 +119,18 @@
   background: #0070f3; /* Color on hover */
 }
 
+.resultsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* Responsive styles for various device sizes */
 @media (max-width: 800px) {
   .searchContainer {
     width: 100%;
     flex-direction: column; /* Stack items vertically */
     align-items: stretch; /* Stretch items to fill container */
-  }
-
-  .searchRowContainer {
-    width: 100%; /* Full width on smaller screens */
-    gap: 5px; /* Reduced gap */
   }
 
   .searchInput {
@@ -229,12 +146,10 @@
 
 /* Ensure buttons stack vertically on smaller screens */
 @media (max-width: 500px) {
-  .searchRowContainer {
+  .searchContainer {
     display: flex;
-    align-items: center;
     flex-direction: column;
+    align-items: stretch;
     gap: 5px;
-    height: 110px; /* Fixed height */
-    box-sizing: border-box; /* Ensure padding/border are included in width */
   }
 }

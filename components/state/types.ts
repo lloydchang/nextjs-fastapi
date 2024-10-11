@@ -8,4 +8,3 @@ export interface Talk {
     similarity_score?: number;    // Optional property
     url: string;
   }
-  
