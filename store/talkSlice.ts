@@ -1,7 +1,7 @@
 // File: store/talkSlice.ts
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Talk } from '../components/state/types'; // Adjust the import as necessary
+import { Talk } from 'types'; // Adjust the import as necessary
 
 interface TalkState {
   talks: Talk[];
