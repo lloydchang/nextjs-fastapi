@@ -3,7 +3,7 @@
 'use client';
 
 import React, { createContext, useState, ReactNode, useContext } from 'react';
-import { Talk } from '../types'; // Import the shared Talk type
+import { Talk } from 'types'; // Import the shared Talk type
 
 interface TalkContextType {
   talks: Talk[];
