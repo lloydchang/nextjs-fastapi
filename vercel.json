@@ -1,8 +1,9 @@
 {
   "version": 2,
-  "functions": {},
-  "defaults": {
-    "maxDuration": 30,
-    "memory": 1024
+  "functions": {
+    "api/*": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
   }
 }
