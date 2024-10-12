@@ -6,6 +6,12 @@ import { getConfig } from 'app/api/chat/utils/config';
 // Define custom log levels and colors
 const colors = {
   debug: 'brightBlue',
+  silly: 'magenta',
+  error: 'red',
+  warn: 'yellow',
+  info: 'green',
+  verbose: 'cyan',
+  http: 'white',
 };
 
 // Apply custom colors to Winston
