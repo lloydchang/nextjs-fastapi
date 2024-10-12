@@ -17,6 +17,21 @@
   padding: 0px 4px; /* Optional: Adds some spacing inside the label */
 }
 
+/* New Hovered Persona Label Styling */
+.personaLabelHovered {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 10;
+  padding: 0px 4px;
+  background-color: #FFFFFF; /* Optional: background color */
+  color: #0000000; /* Optional: foreground color */
+  border-radius: 8px 8px 0px 0px;
+  font-size: 0.85rem;
+  display: block;
+  margin-bottom: 0px; /* Adds space below the persona label */
+}
+
 /* User message styling */
 .userMessage {
   align-items: flex-end;
@@ -36,10 +51,25 @@
 .text {
   padding: 8px 12px;
   border-radius: 8px;
-  max-width: 70%;
+  max-width: 100%;
   word-wrap: break-word;
   color: #000000; /* Black text for readability */
   transition: background-color 0.3s, color 0.3s;
+}
+
+/* Add new hover style for message without moving other content */
+.textHovered {
+  position: absolute;
+  top: calc(100% + 16px); /* Start below the persona label */
+  right: 0;
+  z-index: 9;
+  background-color: #FFFFFF;
+  color: #000000;
+  padding: 4px 12px;
+  border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
+  max-width: 100%;
+  word-wrap: break-word;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Adds a shadow for emphasis */
 }
 
 /* Specific styles for user messages */

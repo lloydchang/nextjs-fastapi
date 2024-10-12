@@ -115,24 +115,42 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
         onMouseEnter={() => setShowFullMessage(true)}
         onMouseLeave={() => setShowFullMessage(false)}
         onClick={handleOpenModal}
+        style={{ position: 'relative' }} // Ensure the parent is relative
       >
         {/* Display Persona Label for bot messages only */}
         {sender === 'bot' && persona && (
-          <div className={styles.personaLabel} style={{ color: personaColor }}>
+          <div className={`${showFullMessage ? styles.personaLabelHovered : styles.personaLabel}`} style={{ color: personaColor }}>
             <strong>{persona}</strong>
           </div>
         )}
-        <div className={styles.text}>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
-            components={{
-              a: ({ node, ...props }) => <LinkRenderer {...props} />,
-            }}
-          >
-            {showFullMessage ? processedText : shortenedText}
-          </ReactMarkdown>
-        </div>
+        {/* Hovered text will be shown below the persona label */}
+        {showFullMessage && (
+          <div className={styles.textHovered}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                a: ({ node, ...props }) => <LinkRenderer {...props} />,
+              }}
+            >
+              {processedText}
+            </ReactMarkdown>
+          </div>
+        )}
+        {/* Shortened text for non-hover state */}
+        {!showFullMessage && (
+          <div className={styles.text}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                a: ({ node, ...props }) => <LinkRenderer {...props} />,
+              }}
+            >
+              {shortenedText}
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
     </>
   );
