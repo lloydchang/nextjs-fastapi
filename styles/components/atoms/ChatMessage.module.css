@@ -72,6 +72,11 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Adds a shadow for emphasis */
 }
 
+/* Shortened text styling */
+.text {
+  /* Existing styles remain unchanged */
+}
+
 /* Specific styles for user messages */
 .userMessage .text {
   background-color: #DCF8C6; /* Light green for user messages */
@@ -325,9 +330,9 @@
   background-color: #555; /* Lighter background on hover */
 }
 
-/* --- New: Info Mode Styles --- */
-.infoMode .text {
-  max-width: none; /* Remove width limit in Info mode */
+/* --- New: Full Screen Mode Styles --- */
+.fullScreenMode .text {
+  max-width: none; /* Remove width limit in Full Screen mode */
 }
 
 /* Add new hover style for message with inverted colors */

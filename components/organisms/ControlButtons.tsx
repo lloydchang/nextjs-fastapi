@@ -14,8 +14,8 @@ interface ControlButtonsProps {
   isMemOn: boolean;
   toggleMem: () => void;
   eraseMemory: () => void;
-  isInfoOn: boolean; // Prop name matches what is used in ChatPanel
-  toggleInfo: () => void;
+  isFullScreenOn: boolean; // Prop name matches what is used in ChatPanel
+  toggleFullScreen: () => void;
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -29,8 +29,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isMemOn,
   toggleMem,
   eraseMemory,
-  isInfoOn,
-  toggleInfo,
+  isFullScreenOn,
+  toggleFullScreen,
 }) => {
   console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
 
@@ -40,7 +40,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   const camButtonText = isCamOn ? '📷' : '📷';
   const pipButtonText = isPipOn ? '📹' : '📹';
   const memButtonText = isMemOn ? '🧠' : '🧠';
-  const infoButtonText = 'ℹ️';
+  const fullScreenButtonText = '⛶';
 
   return (
     <div className={styles.container}>
@@ -102,17 +102,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         {memButtonText}
       </button> */}
 
-      {/* Info Mode Button */}
-      {/* Hidden: Do not render Info Button */}
-      {/* <button
+      {/* Full Screen Mode Button */}
+      <button
         type="button"
-        onClick={toggleInfo}
-        className={`${styles.button} ${isInfoOn ? styles.stopButton : styles.startButton}`}
-        aria-pressed={isInfoOn}
-        aria-label="Info Mode"
+        onClick={toggleFullScreen}
+        className={`${styles.button} ${isFullScreenOn ? styles.stopButton : styles.startButton}`}
+        aria-pressed={isFullScreenOn}
+        aria-label="Full Screen Mode"
       >
-        {infoButtonText}
-      </button> */}
+        {fullScreenButtonText}
+      </button>
 
     </div>
   );

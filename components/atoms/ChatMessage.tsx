@@ -7,9 +7,9 @@ import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
 
-// New: Add a prop for Info mode detection
+// New: Add a prop for Full Screen mode detection
 interface ChatMessageProps extends Message {
-  isInfo: boolean;
+  isFullScreen: boolean;
 }
 
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
@@ -31,7 +31,7 @@ const hashPersonaToColor = (persona: string): string => {
   return `#${rangeValue.toString(16)}`;
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isInfo }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isFullScreen }) => {
   const [showFullMessage, setShowFullMessage] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
 

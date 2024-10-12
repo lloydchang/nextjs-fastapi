@@ -1,4 +1,4 @@
-/* File: styles/ChatPanel.module.css */
+/* File: styles/components/organisms/ChatPanel.module.css */
 
 .container {
   position: relative;
@@ -114,8 +114,8 @@
   }  
 }
 
-/* New: Additional styles for Info mode */
-.infoMode {
+/* New: Additional styles for Full Screen mode */
+.fullScreenMode {
   position: fixed;
   top: 0;
   left: 0;
@@ -132,7 +132,7 @@
   max-height: none; /* Remove max-height constraint */
 }
 
-/* New: Minimize Tools Layer in Info Mode */
+/* New: Minimize Tools Layer in Full Screen Mode */
 .minimized {
   width: 0px; /* Collapse the width */
   visibility: hidden; /* Hide the content */
