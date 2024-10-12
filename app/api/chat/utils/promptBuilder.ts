@@ -2,13 +2,14 @@
 
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 import logger from 'app/api/chat/utils/logger';
+import { UserPrompt } from 'types';
 
 /**
  * Builds the prompt for the AI model based on the current context.
  * @param messages - Array of message objects representing the conversation history.
  * @returns {string} - The constructed prompt string.
  */
-export function buildPrompt(messages: Array<{ role: string; content: string }>): string {
+export function buildPrompt(messages: UserPrompt[]): string {
   const filteredContext = createFilteredContext(messages);
   return `${systemPrompt}\n${filteredContext}`;
 }
@@ -20,7 +21,7 @@ export function buildPrompt(messages: Array<{ role: string; content: string }>):
  * @returns {string} - Filtered and concatenated message contents.
  */
 export function createFilteredContext(
-  messages: Array<{ role: string; content: string }>
+  messages: UserPrompt[]
 ): string {
   return messages
     .map((msg) => {
