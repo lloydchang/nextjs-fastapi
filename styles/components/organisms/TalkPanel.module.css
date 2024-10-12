@@ -1,5 +1,6 @@
 /* File: styles/components/organisms/TalkPanel.module.css */
 
+/* TalkPanel container styles */
 .TalkPanel {
   flex: 1;
   padding: 0px;
@@ -7,6 +8,7 @@
   overflow-y: auto;
 }
 
+/* Search Container styles */
 .searchContainer {
   display: flex;
   align-items: center;
@@ -17,6 +19,7 @@
   font-size: 0.5em;
 }
 
+/* Search input wrapper */
 .searchInputWrapper {
   position: relative;
   display: flex;
@@ -25,8 +28,9 @@
   flex-grow: 1; /* Allow the input box to take the available space */
 }
 
+/* Search input */
 .searchInput {
-  flex: 1; /* Allows the input to take available space within the fixed container */
+  flex: 1;
   font-size: 2em;
   padding: 10px;
   border-radius: 5px;
@@ -35,6 +39,7 @@
   box-sizing: border-box; /* Ensure padding/border are included in width */
 }
 
+/* Button styles */
 .button {
   padding: 10px 15px;
   border: none;
@@ -45,8 +50,8 @@
   transition: background-color 0.3s ease, transform 0.2s ease;
   height: 54px; /* Ensure buttons have the same height as the input field */
   display: flex;
-  align-items: center; /* Center the button text vertically */
-  justify-content: center; /* Center the button text horizontally */
+  align-items: center;
+  justify-content: center;
 }
 
 .searchButton {
@@ -85,10 +90,11 @@
   transform: translateY(-2px);
 }
 
+/* Error styling */
 .errorContainer {
-  margin-top: -10px; /* Add spacing above */
-  margin-bottom: 0px; /* Add spacing below */
-  text-align: center; /* Center the text inside */
+  margin-top: -10px;
+  margin-bottom: 0px;
+  text-align: center;
 }
 
 .errorText {
@@ -96,18 +102,20 @@
   text-align: center;
 }
 
+/* Now playing and video frame */
 .nowPlaying {
   margin-bottom: 10px;
-  width: 100%; /* Ensure the container is full width */
+  width: 100%;
 }
 
 .videoFrame {
-  width: 100%; /* Make the iframe take the full width of the parent */
-  height: auto; /* Allow height to adjust automatically based on width */
+  width: 100%;
+  height: auto;
   aspect-ratio: 16/9; /* Maintain the 16:9 aspect ratio */
   border-radius: 0px;
 }
 
+/* Scrollable container styles */
 .scrollableContainer {
   max-height: 400px;
   overflow-y: auto;
@@ -117,22 +125,23 @@
 
 /* Scrollbar styles */
 .scrollableContainer::-webkit-scrollbar {
-  width: 12px; /* Width of the scrollbar */
+  width: 12px;
 }
 
 .scrollableContainer::-webkit-scrollbar-track {
-  background: #f1f1f1; /* Track color */
+  background: #f1f1f1;
 }
 
 .scrollableContainer::-webkit-scrollbar-thumb {
-  background: #2196f3; /* Scrollbar color */
-  border-radius: 10px; /* Rounded corners */
+  background: #2196f3;
+  border-radius: 10px;
 }
 
 .scrollableContainer::-webkit-scrollbar-thumb:hover {
-  background: #0070f3; /* Color on hover */
+  background: #0070f3;
 }
 
+/* Results container */
 .resultsContainer {
   display: flex;
   flex-direction: column;
@@ -140,47 +149,92 @@
 }
 
 /* Responsive styles for various device sizes */
-@media (max-width: 800px) {
-  .searchContainer {
-    width: 100%;
-    flex-direction: column; /* Stack items vertically */
-    align-items: stretch; /* Stretch items to fill container */
+
+/* Desktop and large screens */
+@media (min-width: 1024px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+/* Tablets */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 767px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
 
   .searchContainer {
-    display: flex;
+    width: 100%;
     flex-direction: column;
     align-items: stretch;
     gap: 5px;
   }
 
   .searchInput {
-    padding: 0px; /* Reduced padding */
-    font-size: 2em; /* Adjust font size for better fit */
-    height: 28px; /* Ensure input field has the same height as the buttons */
+    padding: 5px;
+    font-size: 1.5em;
+    height: 40px;
   }
 
   .button {
-    padding:0px 0px; /* Reduced padding for buttons */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 2em; /* Adjust font size for better fit */
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    height: 28px; /* Ensure buttons have the same height as the input field */
-    display: flex;
-    align-items: center; /* Center the button text vertically */
-    justify-content: center; /* Center the button text horizontally */
+    padding: 5px 10px;
+    font-size: 1.5em;
+    height: 40px;
   }
 
-  .nowPlaying {
-    width: 100%; /* Ensure the container is still full width */
+  .nowPlaying, .videoFrame {
+    width: 100%;
+  }
+}
+
+/* Small wearable devices */
+@media (max-width: 480px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
   }
 
-  .videoFrame {
-    width: 100%; /* Iframe width will scale to the parent container */
-    height: auto; /* Maintain aspect ratio while scaling */
+  .searchContainer {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
   }
 
+  .searchInput {
+    padding: 5px;
+    font-size: 1.2em;
+    height: 35px;
+  }
+
+  .button {
+    padding: 5px 10px;
+    font-size: 1.2em;
+    height: 35px;
+  }
+
+  .nowPlaying, .videoFrame {
+    width: 100%;
+  }
+}
+
+/* Button hover effect */
+.button:hover {
+  background-color: #0056b3;
+}
+
+/* Error text styling */
+.error {
+  color: red;
+  font-weight: bold;
 }
