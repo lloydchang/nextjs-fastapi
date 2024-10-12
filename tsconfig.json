@@ -1,63 +1,32 @@
 // File: tsconfig.json
 {
   "compilerOptions": {
-    /* Basic Options */
-    "target": "ESNext", // Specify ECMAScript target version
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ], // Specify library files to be included in the compilation
-    "module": "ESNext", // Specify module code generation
-    "moduleResolution": "node", // Specify module resolution strategy
-    "resolveJsonModule": true, // Enable importing .json files
-    "isolatedModules": true, // Ensure that each file can be safely transpiled without relying on other imports
-    "jsx": "preserve", // Specify JSX code generation
-    /* Strict Type-Checking Options */
-    "strict": true, // Enable all strict type-checking options
-    "noImplicitAny": true, // Raise error on expressions and declarations with an implied 'any' type
-    "strictNullChecks": true, // Enable strict null checks
-    "strictFunctionTypes": true, // Enable strict checking of function types
-    "strictBindCallApply": true, // Enable strict 'bind', 'call', and 'apply' methods on functions
-    "noImplicitThis": true, // Raise error on 'this' expressions with an implied 'any' type
-    "alwaysStrict": true, // Parse in strict mode and emit "use strict" for each source file
-    /* Additional Checks */
-    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file
-    "skipLibCheck": true, // Skip type checking of declaration files
-    /* Emit Options */
-    "noEmit": true, // Do not emit outputs
-    /* Interop Options */
-    "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports
-    "allowSyntheticDefaultImports": true, // Allow default imports from modules with no default export
-    /* Advanced Options */
-    "baseUrl": ".", // Base directory to resolve non-relative module names
+    "target": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx", // Use "react" if you're using React 16 or earlier
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
     "paths": {
-      "*": [
-        "*"
-      ] // Match all paths relative to the project root
+      "*": ["*"]
     },
-    "typeRoots": [
-      "./src/types",
-      "node_modules/@types"
-    ], // List of folders to include type definitions from
-    /* Incremental Compilation */
-    "incremental": true, // Enable incremental compilation
-    /* Plugins */
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "allowJs": false
+    "typeRoots": ["./src/types", "node_modules/@types"],
+    "incremental": true
   },
-  /* Include and Exclude */
-  "include": [
-    "next-env.d.ts", // Next.js type definitions
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts" // Include Next.js types
-  ],
-  "exclude": [
-    "node_modules" // Exclude node_modules from compilation
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }
