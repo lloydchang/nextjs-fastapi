@@ -1,7 +1,7 @@
 // File: app/api/chat/utils/duckDuckGoSearch.ts
 
 import fetch from 'node-fetch';
-import logger from 'app/api/chat/utils/logger';
+import logger from 'app/api/chat/utils/logger'; // Adjust the import path if necessary
 
 /**
  * Performs a DuckDuckGo search and returns the top search results.
@@ -11,11 +11,13 @@ import logger from 'app/api/chat/utils/logger';
 export async function performInternetSearch(query: string): Promise<string[]> {
   try {
     const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`;
-
+    
     logger.silly(`Performing DuckDuckGo search for: ${query}`);
     logger.silly(`Search URL: ${searchUrl}`);
 
     const response = await fetch(searchUrl);
+    
+    // Log HTTP response details
     logger.silly(`DuckDuckGo response status: ${response.status}`);
     logger.silly(`DuckDuckGo response headers: ${JSON.stringify(response.headers.raw())}`);
 
@@ -36,7 +38,11 @@ export async function performInternetSearch(query: string): Promise<string[]> {
 
     return results;
   } catch (error) {
-    logger.error(`Error performing internet search: ${error.message}`);
+    if (error instanceof Error) {
+      logger.error(`Error performing internet search: ${error.message}`);
+    } else {
+      logger.error(`Unknown error occurred during internet search: ${String(error)}`);
+    }
     return [];
   }
 }

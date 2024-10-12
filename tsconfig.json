@@ -2,12 +2,16 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx", // Use "react" if you're using React 16 or earlier
+    "jsx": "preserve", // Use "react" if you're using React 16 or earlier
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -22,11 +26,29 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "*": ["*"]
+      "*": [
+        "*"
+      ]
     },
-    "typeRoots": ["./src/types", "node_modules/@types"],
-    "incremental": true
+    "typeRoots": [
+      "./src/types",
+      "node_modules/@types"
+    ],
+    "incremental": true,
+    "allowJs": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
