@@ -1,7 +1,7 @@
 // File: components/organisms/Tools.tsx
 
 import React from 'react';
-import styles from '../../styles/components/organisms/Tools.module.css';
+import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
   const openInNewTab = (url: string) => {
