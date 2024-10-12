@@ -11,7 +11,7 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
  */
 export async function generateFromOllamaGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
-  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
+  const combinedPrompt = `User Prompt: ${prompt}\n\nSystem Prompt:${systemPrompt}`;
 
   logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
@@ -38,9 +38,8 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
 
     const finalResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
     logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Received final response from Ollama Gemma: ${finalResponse}`);
-    
-    return finalResponse;
 
+    return finalResponse;
   } catch (error) {
     logger.error(`app/api/chat/clients/OllamaGemmaClient.ts - Error generating content from Ollama Gemma: ${error}`);
     return null;

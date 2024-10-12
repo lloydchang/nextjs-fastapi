@@ -8,7 +8,7 @@ import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controlle
 import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
 import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
-import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
+import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 
 const config = getConfig();
@@ -35,61 +35,61 @@ export async function POST(request: NextRequest) {
         // Define bot personas and their generation functions
         const botFunctions = [
           {
-            persona: 'Ollama Gemma',
+            persona: 'Ollama ' + config.ollamaGemmaTextModel,
             generate: (currentContext: any[]) =>
               config.ollamaGemmaTextModel
                 ? handleTextWithOllamaGemmaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.ollamaGemmaTextModel },
+                    { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaGemmaTextModel },
                     config
                   )
                 : Promise.resolve(null),
           },
           {
-            persona: 'Cloudflare Gemma',
+            persona: 'Cloudflare ' + config.cloudflareGemmaTextModel,
             generate: (currentContext: any[]) =>
               config.cloudflareGemmaTextModel
                 ? handleTextWithCloudflareGemmaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareGemmaTextModel },
+                    { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareGemmaTextModel },
                     config
                   )
                 : Promise.resolve(null),
           },
           {
-            persona: 'Google Vertex Gemma',
+            persona: 'Google Vertex ' + config.googleVertexGemmaTextModel,
             generate: (currentContext: any[]) =>
               config.googleVertexGemmaTextModel
                 ? handleTextWithGoogleVertexGemmaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexGemmaTextModel },
+                    { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexGemmaTextModel },
                     config
                   )
                 : Promise.resolve(null),
           },
           {
-            persona: 'Ollama Llama',
+            persona: 'Ollama ' + config.ollamaLlamaTextModel,
             generate: (currentContext: any[]) =>
               config.ollamaLlamaTextModel
                 ? handleTextWithOllamaLlamaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.ollamaLlamaTextModel },
+                    { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaLlamaTextModel },
                     config
                   )
                 : Promise.resolve(null),
           },
           {
-            persona: 'Cloudflare Llama',
+            persona: 'Cloudflare ' + config.cloudflareLlamaTextModel,
             generate: (currentContext: any[]) =>
               config.cloudflareLlamaTextModel
                 ? handleTextWithCloudflareLlamaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.cloudflareLlamaTextModel },
+                    { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareLlamaTextModel },
                     config
                   )
                 : Promise.resolve(null),
           },
           {
-            persona: 'Google Vertex Llama',
+            persona: 'Google Vertex ' + config.googleVertexLlamaTextModel,
             generate: (currentContext: any[]) =>
               config.googleVertexLlamaTextModel
                 ? handleTextWithGoogleVertexLlamaTextModel(
-                    { userPrompt: buildPrompt(currentContext), textModel: config.googleVertexLlamaTextModel },
+                    { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexLlamaTextModel },
                     config
                   )
                 : Promise.resolve(null),
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
         // Set a maximum number of iterations to run
         let maxIterations = Infinity;
-        maxIterations = 1; // Uncomment for testing limited iterations
+        // maxIterations = 1; // Uncomment for testing limited iterations
 
         let iteration = 0;
 
