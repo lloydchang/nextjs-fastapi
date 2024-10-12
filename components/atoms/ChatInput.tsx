@@ -1,7 +1,7 @@
 // File: components/atoms/ChatInput.tsx
 
 import React, { useRef } from 'react';
-import styles from 'styles/components/atoms/ChatInput.module.css';
+import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
 
 interface ChatInputProps {
