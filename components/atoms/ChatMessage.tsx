@@ -1,5 +1,3 @@
-// File: components/atoms/ChatMessage.tsx
-
 import React, { useState, useEffect, MouseEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -112,8 +110,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
         } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => setShowFullMessage(true)}
-        onMouseLeave={() => setShowFullMessage(false)}
+        onMouseEnter={() => !isUser && setShowFullMessage(true)}
+        onMouseLeave={() => !isUser && setShowFullMessage(false)}
         onClick={handleOpenModal}
         style={{ position: 'relative' }} // Ensure the parent is relative
       >
@@ -124,7 +122,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
           </div>
         )}
         {/* Hovered text will be shown below the persona label */}
-        {showFullMessage && (
+        {showFullMessage && !isUser && (
           <div className={styles.textHovered}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
