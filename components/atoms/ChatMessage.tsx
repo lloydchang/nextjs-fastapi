@@ -91,15 +91,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
                 Close
               </button>
             </div>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={{
-                a: ({ node, ...props }) => <LinkRenderer {...props} />,
-              }}
-            >
-              {processedText}
-            </ReactMarkdown>
+
+            {/* Apply the same .text class inside the modal to ensure markdown styles are inherited */}
+            <div className={styles.text}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+                components={{
+                  a: ({ node, ...props }) => <LinkRenderer {...props} />,
+                }}
+              >
+                {processedText}
+              </ReactMarkdown>
+            </div>
           </div>
         </div>
       )}
