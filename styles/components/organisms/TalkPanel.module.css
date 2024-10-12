@@ -156,7 +156,8 @@
 
   .searchInput {
     padding: 0px; /* Reduced padding */
-    font-size: 0.5em; /* Adjust font size for better fit */
+    font-size: 2em; /* Adjust font size for better fit */
+    height: 28px; /* Ensure input field has the same height as the buttons */
   }
 
   .button {
@@ -165,9 +166,9 @@
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 0.5em; /* Adjust font size for better fit */
+    font-size: 2em; /* Adjust font size for better fit */
     transition: background-color 0.3s ease, transform 0.2s ease;
-    height: 14px; /* Ensure buttons have the same height as the input field */
+    height: 28px; /* Ensure buttons have the same height as the input field */
     display: flex;
     align-items: center; /* Center the button text vertically */
     justify-content: center; /* Center the button text horizontally */
