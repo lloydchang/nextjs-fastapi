@@ -24,15 +24,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
     }
 
-    // Initial context includes recent user messages only
     let context = messages.slice(-7); // Start with the last 7 user messages for a new context
 
-    // Create a ReadableStream to send responses to the client in real-time
     const stream = new ReadableStream({
       async start(controller) {
         logger.silly(`app/api/chat/route.ts - Started streaming responses to the client.`);
 
-        // Define bot personas and their generation functions
         const botFunctions = [
           {
             persona: 'Ollama ' + config.ollamaGemmaTextModel,
@@ -96,10 +93,7 @@ export async function POST(request: NextRequest) {
           },
         ];
 
-        // Set a maximum number of iterations to run
         let maxIterations = Infinity;
-        // maxIterations = 1; // Uncomment for testing limited iterations
-
         let iteration = 0;
 
         async function processBots() {
@@ -107,15 +101,11 @@ export async function POST(request: NextRequest) {
             iteration++;
             logger.silly(`app/api/chat/route.ts - Iteration ${iteration}: Current context: ${JSON.stringify(context)}`);
 
-            // Run all bots concurrently, each generating a response based on the shared context
             const responses = await Promise.all(
               botFunctions.map((bot) => bot.generate(context))
             );
 
-            // If no responses, end the loop early
             let hasResponse = false;
-
-            // Process each bot response and add it to the context and stream
             for (let index = 0; index < responses.length; index++) {
               const response = responses[index];
               if (response && typeof response === 'string') {
@@ -123,10 +113,8 @@ export async function POST(request: NextRequest) {
 
                 logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
 
-                // Add to the context for other bots to use
                 context.push({ role: 'bot', content: response, persona: botPersona });
 
-                // Stream this response immediately to the client with data prefix
                 controller.enqueue(`data: ${JSON.stringify({
                   persona: botPersona,
                   message: response,
@@ -136,29 +124,24 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            // Limit context size to the last 20 bot messages
             context = context.slice(-maxContextMessages);
 
-            // Reset context and session if the timeout (1 hour) is reached
             if (Date.now() - lastInteractionTime > sessionTimeout) {
-              context = []; // Reset context after the session timeout
-              lastInteractionTime = Date.now(); // Reset the interaction timer
+              context = [];
+              lastInteractionTime = Date.now();
               logger.silly(`app/api/chat/route.ts - Session timed out. Context reset.`);
             }
 
-            // If no bots generated a response, terminate the loop
             if (!hasResponse) {
               logger.silly(`app/api/chat/route.ts - No bot responded in iteration ${iteration} of ${maxIterations}. Ending interaction.`);
               break;
             }
           }
 
-          // Send a completion message to indicate the end of the stream
           controller.enqueue('data: [DONE]\n\n');
           controller.close();
         }
 
-        // Start the bot processing loop
         processBots().catch((error) => {
           logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
           controller.error(error);
@@ -166,7 +149,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Return the streaming response
     return new NextResponse(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -177,11 +159,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
 
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
-    }
-
-    // Fallback for non-Error objects
-    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+    return error instanceof Error
+      ? NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+      : NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }
