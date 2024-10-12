@@ -9,7 +9,7 @@ import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
 
-// New: Add a prop for Full Screen mode detection
+// Add a prop for Full Screen mode detection
 interface ChatMessageProps extends Message {
   isFullScreen: boolean;
 }

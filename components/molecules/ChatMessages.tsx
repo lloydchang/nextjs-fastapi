@@ -7,7 +7,7 @@ import ChatMessage from 'components/atoms/ChatMessage'; // Ensure this path is c
 import styles from 'styles/components/molecules/ChatMessages.module.css'; // Ensure this path is correct
 import { Message } from 'types'; // Import the Message type to ensure prop compatibility
 
-// New: Add isFullScreen prop to handle Full Screen mode
+// Add isFullScreen prop to handle Full Screen mode
 interface ChatMessagesProps {
   isFullScreen: boolean;
 }
@@ -46,7 +46,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ isFullScreen }) => {
             isInterim={msg.isInterim} // Include isInterim if available
             role={msg.role} // Add the missing role property
             content={msg.content} // Add the missing content property
-            isFullScreen={isFullScreen} // New: Pass the isFullScreen prop to each ChatMessage
+            isFullScreen={isFullScreen} // Pass the isFullScreen prop to each ChatMessage
           />
         ))}
     </div>

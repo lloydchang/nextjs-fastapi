@@ -14,10 +14,10 @@
   margin-bottom: 0px;
   align-self: flex-start; /* Align persona label to the left */
   border-radius: 8px 8px 0px 0px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
-  padding: 0px 4px; /* Optional: Adds some spacing inside the label */
+  padding: 0px 4px; /* Adds some spacing inside the label */
 }
 
-/* Retained Hovered Persona Label Styling for Non-Full-Screen Mode */
+/* Hovered Persona Label Styling - Only in Non-Full-Screen Mode */
 .personaLabelHovered {
   position: absolute;
   top: 0px;
@@ -25,7 +25,7 @@
   z-index: 10;
   padding: 0px 4px;
   background-color: #FFFFFF; /* Optional: background color */
-  color: #0000000; /* Optional: foreground color */
+  color: #000000; /* Foreground color */
   border-radius: 8px 8px 0px 0px;
   font-size: 0.85rem;
   display: block;
@@ -57,7 +57,7 @@
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Add new hover style for message without moving other content */
+/* Hovered text styling - Only in Non-Full-Screen Mode */
 .textHovered {
   position: absolute;
   top: calc(100% + 17px); /* Start below the persona label */
@@ -81,7 +81,7 @@
 /* Specific styles for bot messages */
 .botMessage .text {
   background-color: #000000;
-  color: #000000;
+  color: #FFFFFF; /* Changed to white for readability */
   border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
 }
 
@@ -180,7 +180,7 @@
 }
 
 .text td {
-  color: #FFFFFF; /* Black text for table cells */
+  color: #FFFFFF; /* White text for table cells */
 }
 
 /* Task Lists */
@@ -260,8 +260,8 @@
   background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
   z-index: 999; /* High z-index to ensure it's above other elements */
   display: flex;
-  justify-content: left;
-  align-items: top;
+  justify-content: center; /* Center the modal */
+  align-items: center;
 }
 
 /* Close button styling */
@@ -269,8 +269,8 @@
   display: block;
   margin: 20px auto 0;
   padding: 10px 20px;
-  background: #0000000;
-  color: #fffffff;
+  background: #000000;
+  color: #ffffff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -280,8 +280,8 @@
 .fullScreenMessage {
   background-color: #000000;
   border-radius: 8px;
-  max-width: 100vw;
-  max-height: 100vh;
+  max-width: 90vw;
+  max-height: 90vh;
   overflow: auto; /* Enable scrolling if the message is long */
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -329,8 +329,6 @@
 .fullScreenMode .text {
   max-width: none; /* Remove width limit in Full Screen mode */
 }
-
-/* Removed hover styles since hover effects are disabled in full-screen mode */
 
 /* Ensure full-screen mode inherits markdown styles */
 .fullScreenMode .text {

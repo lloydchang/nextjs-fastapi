@@ -44,7 +44,7 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
-  // Updated: Function to toggle full-screen mode using standard API
+  // Function to toggle full-screen mode using standard API
   const toggleFullScreen = () => {
     const elem = document.documentElement;
 
