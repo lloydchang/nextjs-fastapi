@@ -12,6 +12,10 @@ import { buildPrompt } from 'app/api/chat/utils/promptBuilder';
 import logger from 'app/api/chat/utils/logger';
 
 const config = getConfig();
+const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout to reset context after inactivity
+const maxContextMessages = 20; // Keep only the last 20 bot messages in the running context
+
+let lastInteractionTime = Date.now(); // Track the last interaction time for session reset
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Initial context includes recent user messages only
-    let context = messages.slice(-7); // Keep the 7 most recent messages for context
+    let context = messages.slice(-7); // Start with the last 7 user messages for a new context
 
     // Create a ReadableStream to send responses to the client in real-time
     const stream = new ReadableStream({
@@ -95,7 +99,7 @@ export async function POST(request: NextRequest) {
         // Set a maximum number of iterations to run
         
         const maxIterations = Infinity;
-        // const maxIterations = 1;
+        // const maxIterations = 1; // Uncomment for testing limited iterations
 
         let iteration = 0;
 
@@ -131,6 +135,16 @@ export async function POST(request: NextRequest) {
 
                 hasResponse = true;
               }
+            }
+
+            // Limit context size to the last 20 bot messages
+            context = context.slice(-maxContextMessages);
+
+            // Reset context and session if the timeout (1 hour) is reached
+            if (Date.now() - lastInteractionTime > sessionTimeout) {
+              context = []; // Reset context after the session timeout
+              lastInteractionTime = Date.now(); // Reset the interaction timer
+              logger.silly(`app/api/chat/route.ts - Session timed out. Context reset.`);
             }
 
             // If no bots generated a response, terminate the loop
