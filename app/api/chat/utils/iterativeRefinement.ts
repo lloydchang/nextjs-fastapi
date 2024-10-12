@@ -21,8 +21,12 @@ export async function performIterativeRefinement(
   let context = '';
   let finalResponse = '';
   let hasMissingContent = true;
+  let iterationLimit = 10; // Set a limit to prevent infinite loops
+  let iterations = 0;
 
-  while (hasMissingContent) {
+  while (hasMissingContent && iterations < iterationLimit) {
+    iterations++; // Track the number of iterations to avoid endless loops
+
     // Generate the current system prompt based on context and user input
     const combinedPrompt = `User Prompt: ${userPrompt}\n\nSystem Prompt: ${basePrompt}\n\nContext: ${context}`;
 
@@ -78,8 +82,15 @@ export async function performIterativeRefinement(
     const { missingSentences: updatedMissingSentences } = detectMissingContent(basePrompt, finalResponse);
     const updatedHasPlaceholders = detectPlaceholders(finalResponse);
 
+    // Exit condition: no missing sentences and no placeholders
     if (updatedMissingSentences.length === 0 && !updatedHasPlaceholders) {
-      hasMissingContent = false;  // End loop
+      hasMissingContent = false;
+    }
+
+    // Safety check: stop if too many iterations
+    if (iterations >= iterationLimit) {
+      logger.error('Exceeded iteration limit during iterative refinement');
+      break;
     }
   }
 
