@@ -29,7 +29,9 @@ export interface AppConfig {
   cloudflareLlamaTextModel?: string;
   cloudflareLlamaEmbeddingModel?: string;
   cloudflareLlamaEndpoint?: string;
-  cloudflareLlamaApiKey?: string;
+  cloudflareLlamaBearerToken?: string;
+  cloudflareLlamaXAuthEmail?: string;
+  cloudflareLlamaXAuthKey?: string;
 
   // Google Vertex Gemini
   googleVertexGeminiTextModel?: string;
@@ -65,6 +67,7 @@ export interface AppConfig {
   openAIO1ApiKey?: string;
 
   // General Configurations
+  systemPrompt?: string;
   stream?: boolean;
   temperature?: number;
   winstonLoggerLevel: string;
@@ -97,7 +100,9 @@ export function getConfig(): AppConfig {
     cloudflareLlamaTextModel: process.env.CLOUDFLARE_LLAMA_TEXT_MODEL,
     cloudflareLlamaEmbeddingModel: process.env.CLOUDFLARE_LLAMA_EMBEDDING_MODEL,
     cloudflareLlamaEndpoint: process.env.CLOUDFLARE_LLAMA_ENDPOINT,
-    cloudflareLlamaApiKey: process.env.CLOUDFLARE_LLAMA_API_KEY,
+    cloudflareLlamaBearerToken: process.env.CLOUDFLARE_LLAMA_BEARER_TOKEN,
+    cloudflareLlamaXAuthEmail: process.env.CLOUDFLARE_LLAMA_X_AUTH_EMAIL,
+    cloudflareLlamaXAuthKey: process.env.CLOUDFLARE_LLAMA_X_AUTH_KEY,
 
     // Google Vertex Gemini
     googleVertexGeminiTextModel: process.env.GOOGLE_VERTEX_GEMINI_TEXT_MODEL,
@@ -133,8 +138,9 @@ export function getConfig(): AppConfig {
     openAIO1ApiKey: process.env.OPENAI_O1_API_KEY,
 
     // General Configurations
+    systemPrompt: process.env.SYSTEM_PROMPT || 'Default system prompt',
     stream: process.env.STREAM === 'true',
     temperature: parseFloat(process.env.TEMPERATURE || '0.0'),
-    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'silly', // Default log level to 'silly' if not set
+    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'silly',
   };
 }
