@@ -1,13 +1,24 @@
 // File: types.ts
 
+/**
+ * Represents a user or system prompt in the conversation.
+ */
+export interface UserPrompt {
+  role: 'system' | 'user' | 'bot';
+  content: string;
+}
+
+/**
+ * Represents a message in the conversation.
+ */
 export interface Message {
   id: string;
   sender: 'user' | 'bot';
-  text: string; // Ensure text is always a string
+  text: string; // Always a string
   persona?: string;
   hidden?: boolean;
   isInterim?: boolean; // Optional property for interim status
-  role: string;
+  role: 'system' | 'user' | 'bot';
   content: string;
 }
 
@@ -15,45 +26,8 @@ export interface Message {
  * Represents the request body structure for the chatbot API.
  */
 export interface ChatbotRequestBody {
-    model: string;
-    prompt: string;
-    temperature: number;
-  }
-  
-/**
- * Represents a segment of the response to be streamed back to the client.
- */
-export interface ResponseSegment {
-  message: string;
-  context: string | null;
-}
-
-  // File: components/state/types.ts
-
-export interface Talk {
-  title: string;
-  description?: string;         // Optional property
-  presenter?: string;           // Optional property
-  sdg_tags: string[];
-  similarity_score?: number;    // Optional property
-  url: string;
-}
-
-export interface Message {
-  id: string;
-  sender: 'user' | 'bot';
-  text: string; // Ensure text is always a string
-  persona?: string;
-  hidden?: boolean;
-  isInterim?: boolean; // Optional property for interim status
-}
-
-/**
- * Represents the request body structure for the chatbot API.
- */
-export interface ChatbotRequestBody {
   model: string;
-  prompt: string;
+  prompt: UserPrompt[]; // Changed from string to array of UserPrompt
   temperature: number;
 }
 
@@ -72,4 +46,13 @@ export interface Talk {
   title: string;
   url: string;
   sdg_tags: string[];
+}
+
+/**
+ * Defines the structure for each bot function.
+ */
+export interface BotFunction {
+  persona: string;
+  valid: boolean;
+  generate: (this: BotFunction, currentContext: UserPrompt[]) => Promise<string | null>;
 }
