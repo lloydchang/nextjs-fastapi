@@ -3,7 +3,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage for web
-import noopStorage from 'redux-persist/lib/storage/noop'; // Fallback storage
+import noopStorage from './noopStorage'; // Custom noopStorage
 import chatReducer from './chatSlice'; // Chat slice
 import talkReducer from './talkSlice'; // Talk slice
 
