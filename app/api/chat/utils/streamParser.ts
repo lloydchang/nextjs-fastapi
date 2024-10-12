@@ -4,12 +4,21 @@ import logger from 'app/api/chat/utils/logger';
 
 /**
  * Parses a readable stream and returns the accumulated result.
- * Handles cases where multiple JSON objects might be in the same chunk.
+ * Supports both standard JSON streams and Server-Sent Events (SSE) streams.
  * @param reader - The ReadableStream reader to parse.
- * @param doneSignal - The key in the parsed chunk that indicates the stream is done.
- * @returns A promise that resolves with the final parsed response.
+ * @param options - Optional parameters to customize parsing behavior.
+ * @returns {Promise<string>} - A promise that resolves with the final parsed response.
  */
-export async function parseStream(reader: ReadableStreamDefaultReader<Uint8Array>, doneSignal = 'done'): Promise<string> {
+interface ParseStreamOptions {
+  isSSE?: boolean;      // Flag to indicate if the stream uses SSE format
+  doneSignal?: string;  // The key or value indicating the stream is done
+}
+
+export async function parseStream(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  options: ParseStreamOptions = { isSSE: false, doneSignal: 'done' }
+): Promise<string> {
+  const { isSSE = false, doneSignal = 'done' } = options;
   const decoder = new TextDecoder('utf-8');
   let buffer = '';
   let response = '';
@@ -22,35 +31,77 @@ export async function parseStream(reader: ReadableStreamDefaultReader<Uint8Array
     const chunk = decoder.decode(value, { stream: true });
     buffer += chunk;
 
-    // Regular expression to split on JSON object boundaries: }{ or }\n{ or similar cases
-    let boundary = /}\s*{/.exec(buffer);
-    while (boundary) {
-      const boundaryIndex = boundary.index;
-      
-      // Extract complete JSON object up to the boundary and parse it
-      const completeJson = buffer.slice(0, boundaryIndex + 1);
-      buffer = buffer.slice(boundaryIndex + 1); // Remove parsed object from buffer
+    if (isSSE) {
+      // SSE parsing logic
+      const messages = buffer.split('\n\n');
+      buffer = messages.pop() || ''; // Keep the last partial message
 
-      try {
-        const parsed = JSON.parse(completeJson);
-        response += parsed.response || ''; // Accumulate response text
-        done = parsed[doneSignal] || streamDone; // Check for done condition
-      } catch (error) {
-        logger.error(`Error parsing chunk at boundary: ${completeJson}`, error);
+      for (const message of messages) {
+        if (message.startsWith('data: ')) {
+          const data = message.replace(/^data: /, '').trim();
+
+          if (data === '[DONE]') {
+            done = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.response) {
+              response += parsed.response;
+            }
+            if (parsed[doneSignal]) {
+              done = true;
+              break;
+            }
+          } catch (err) {
+            logger.error(`app/api/chat/utils/streamParser.ts - Error parsing SSE message: "${data}"`, err);
+          }
+        }
       }
+    } else {
+      // Non-SSE parsing logic (e.g., chunked transfer encoding)
+      // Split the buffer by JSON object boundaries: }{ or }\n{
+      let boundary = /}\s*{/.exec(buffer);
+      while (boundary) {
+        const boundaryIndex = boundary.index;
 
-      // Search for the next boundary in the remaining buffer
-      boundary = /}\s*{/.exec(buffer);
+        // Extract complete JSON object up to the boundary and parse it
+        const completeJson = buffer.slice(0, boundaryIndex + 1);
+        buffer = buffer.slice(boundaryIndex + 1); // Remove parsed object from buffer
+
+        try {
+          const parsed = JSON.parse(completeJson);
+          response += parsed.response || ''; // Accumulate response text
+          if (parsed[doneSignal] || false) {
+            done = true; // Check for done condition based on the key
+          }
+        } catch (error) {
+          logger.error(`app/api/chat/utils/streamParser.ts - Error parsing chunk at boundary: "${completeJson}"`, error);
+        }
+
+        // Search for the next boundary in the remaining buffer
+        boundary = /}\s*{/.exec(buffer);
+      }
     }
   }
 
   // Handle any remaining buffer content that wasn't split correctly
   if (buffer.trim()) {
     try {
-      const parsed = JSON.parse(buffer);
-      response += parsed.response || '';
+      const trimmedBuffer = buffer.trim();
+      if (isSSE && trimmedBuffer.startsWith('data: ')) {
+        const data = trimmedBuffer.replace(/^data: /, '').trim();
+        if (data !== '[DONE]') {
+          const parsed = JSON.parse(data);
+          response += parsed.response || '';
+        }
+      } else {
+        const parsed = JSON.parse(buffer);
+        response += parsed.response || '';
+      }
     } catch (error) {
-      logger.error(`Error parsing remaining buffer: "${buffer}"`, error);
+      logger.error(`app/api/chat/utils/streamParser.ts - Error parsing remaining buffer: "${buffer}"`, error);
     }
   }
 

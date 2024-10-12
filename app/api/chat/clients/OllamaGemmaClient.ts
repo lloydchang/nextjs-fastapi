@@ -4,6 +4,11 @@ import { parseStream } from 'app/api/chat/utils/streamParser';
 import logger from 'app/api/chat/utils/logger';
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
+/**
+ * Generates a response from the Ollama Gemma model.
+ * @param params - Parameters for the request, including endpoint, prompt, and model.
+ * @returns {Promise<string | null>} - The generated response, or null in case of an error.
+ */
 export async function generateFromOllamaGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
@@ -31,7 +36,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
       return null;
     }
 
-    const finalResponse = await parseStream(reader);
+    const finalResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
     logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Received final response from Ollama Gemma: ${finalResponse}`);
     
     return finalResponse;

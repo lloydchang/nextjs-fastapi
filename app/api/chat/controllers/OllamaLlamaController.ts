@@ -17,29 +17,35 @@ export async function handleTextWithOllamaLlamaTextModel(
 ): Promise<string> {
   const { ollamaLlamaEndpoint } = getConfig();
 
+  // Validate required environment variables
   if (!validateEnvVars(['OLLAMA_LLAMA_ENDPOINT'])) {
-    logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Missing required environment variables.');
+    logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Missing required endpoint environment variable');
     return '';
   }
 
   const endpoint = ollamaLlamaEndpoint as string;
 
   logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - ${userPrompt}`);
+  logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - User prompt: ${userPrompt}`);
 
   try {
-    const response = await generateFromOllamaLlama({ endpoint, prompt: userPrompt, model: textModel });
+    const response = await generateFromOllamaLlama({
+      endpoint,
+      prompt: userPrompt,
+      model: textModel,
+    });
 
     if (!response) {
-      logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Failed to generate text from Ollama Llama.');
+      logger.error('app/api/chat/controllers/OllamaLlamaController.ts - Failed to generate text from Ollama Llama.');
       return '';
     }
 
     logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generated response: ${response}`);
     return response;
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Error during text generation: ${errorMessage}`);
+    logger.error(`app/api/chat/controllers/OllamaLlamaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

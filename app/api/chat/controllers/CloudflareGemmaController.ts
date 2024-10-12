@@ -19,12 +19,20 @@ export async function handleTextWithCloudflareGemmaTextModel(
     cloudflareGemmaEndpoint,
     cloudflareGemmaXAuthKey,
     cloudflareGemmaXAuthEmail,
-    cloudflareGemmaBearerToken,  // Added Bearer Token
+    cloudflareGemmaBearerToken,
   } = getConfig();
 
   // Validate required environment variables
-  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_X_AUTH_KEY', 'CLOUDFLARE_GEMMA_X_AUTH_EMAIL', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])) {
-    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required environment variables');
+  if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT'])) {
+    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required endpoint environment variable');
+    return '';
+  }
+
+  const hasApiKeyAndEmail = validateEnvVars(['CLOUDFLARE_GEMMA_X_AUTH_KEY', 'CLOUDFLARE_GEMMA_X_AUTH_EMAIL']);
+  const hasBearerToken = validateEnvVars(['CLOUDFLARE_GEMMA_BEARER_TOKEN']);
+
+  if (!hasApiKeyAndEmail && !hasBearerToken) {
+    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required authentication environment variables. Either API Key + Email or Bearer Token is needed');
     return '';
   }
 

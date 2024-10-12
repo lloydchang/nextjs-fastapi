@@ -5,7 +5,7 @@ import logger from 'app/api/chat/utils/logger';
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
 /**
- * Generates a response from Ollama Llama model.
+ * Generates a response from the Ollama Llama model.
  * @param params - Parameters for the request, including endpoint, prompt, and model.
  * @returns {Promise<string | null>} - The generated response, or null in case of an error.
  */
@@ -36,7 +36,7 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
       return null;
     }
 
-    const finalResponse = await parseStream(reader);
+    const finalResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
     logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
 
     return finalResponse;

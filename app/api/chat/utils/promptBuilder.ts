@@ -4,15 +4,20 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 import logger from 'app/api/chat/utils/logger';
 
 /**
- * Build the prompt using the system prompt and user messages
+ * Builds the prompt for the AI model based on the current context.
+ * @param messages - Array of message objects representing the conversation history.
+ * @returns {string} - The constructed prompt string.
  */
 export function buildPrompt(messages: Array<{ role: string; content: string }>): string {
   const filteredContext = createFilteredContext(messages);
-  return `${filteredContext}`;
+  return `${systemPrompt}\n${filteredContext}`;
 }
 
 /**
- * Create filtered context based on user messages without persona exceptions
+ * Creates a filtered context by extracting valid message contents.
+ * Logs an error and skips any message without content.
+ * @param messages - Array of message objects.
+ * @returns {string} - Filtered and concatenated message contents.
  */
 export function createFilteredContext(
   messages: Array<{ role: string; content: string }>
@@ -20,10 +25,10 @@ export function createFilteredContext(
   return messages
     .map((msg) => {
       if (!msg.content) {
-        logger.error(`app/api/chat/route.ts - Invalid message content: ${JSON.stringify(msg)}`);
+        logger.error(`app/api/chat/utils/promptBuilder.ts - Invalid message content: ${JSON.stringify(msg)}`);
         return ''; // Skip invalid messages
       }
       return msg.content;
     })
-    .join('\n');  // Ensure the `join` is correctly aligned and closes the map.
+    .join('\n'); // Join messages with newline separators
 }
