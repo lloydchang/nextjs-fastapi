@@ -11,7 +11,7 @@ import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.gif';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
 import { useMedia } from 'components/state/hooks/useMedia';
-import ChatInput from 'components/atoms/ChatInput';
+import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
 

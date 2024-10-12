@@ -1,4 +1,4 @@
-// File: components/atoms/ChatInput.tsx
+// File: components/organisms/ChatInput.tsx
 
 import React, { useRef } from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
