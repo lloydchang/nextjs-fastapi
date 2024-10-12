@@ -201,17 +201,17 @@
 /* Adjustments for dark mode compatibility */
 @media (prefers-color-scheme: dark) {
   .text {
-    color: #E9EDEF; /* Light gray text for dark mode */
+    color: #FFFFFF; /* Light gray text for dark mode */
   }
 
   .userMessage .text {
     background-color: #005C4B; /* Dark green for user messages in dark mode */
-    color: #E9EDEF; /* Light gray text */
+    color: #FFFFFF; /* Light gray text */
   }
 
   .botMessage .text {
     background-color: #000000; /* Black for bot messages in dark mode */
-    color: #E9EDEF; /* Light gray text */
+    color: #FFFFFF; /* Light gray text */
   }
 
   .personaLabel {
@@ -230,7 +230,7 @@
   .text pre,
   .text code {
     background-color: #2A3942; /* Darker background for code in dark mode */
-    color: #E9EDEF; /* Light gray text */
+    color: #FFFFFF; /* Light gray text */
   }
 
   .text blockquote {
@@ -240,11 +240,11 @@
 
   .text th {
     background-color: #00A884; /* Adjusted green for table headers in dark mode */
-    color: #E9EDEF; /* Light gray text */
+    color: #FFFFFF; /* Light gray text */
   }
 
   .text td {
-    color: #E9EDEF; /* Light gray text for table cells in dark mode */
+    color: #FFFFFF; /* Light gray text for table cells in dark mode */
   }
 }
 
@@ -468,7 +468,7 @@
 @media (prefers-color-scheme: dark) {
   .textHovered {
     color: #000000; /* Inverse of the light text */
-    background-color: #E9EDEF; /* Inverted light background for dark mode */
+    background-color: #FFFFFF; /* Inverted light background for dark mode */
   }
 
   .textHovered a {
@@ -481,7 +481,7 @@
 
   .textHovered pre,
   .textHovered code {
-    background-color: #E9EDEF; /* Light background for code blocks and inline code */
+    background-color: #FFFFFF; /* Light background for code blocks and inline code */
     color: #000000; /* Black text in code blocks */
   }
 
