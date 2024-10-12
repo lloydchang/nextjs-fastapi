@@ -1,7 +1,8 @@
 // File: components/organisms/ControlButtons.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import styles from 'styles/components/organisms/ControlButtons.module.css';
+import Modal from 'components/atoms/Modal';
 
 interface ControlButtonsProps {
   isCamOn: boolean;
@@ -32,10 +33,14 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isFullScreenOn,
   toggleFullScreen,
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   const confirmEraseMemory = () => {
-    if (window.confirm('Are you sure you want to delete all your saved chat messages? This action cannot be undone.')) {
-      eraseMemory();
-    }
+    eraseMemory();
+    closeModal();
   };
 
   // Simplified micButtonText
@@ -59,7 +64,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       {/* Erase Button */}
       <button
         type="button"
-        onClick={confirmEraseMemory}
+        onClick={openModal}
         className={`${styles.button} ${styles.eraseButton}`}
         aria-label={eraseButtonText}
       >
@@ -76,6 +81,16 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       >
         {fullScreenButtonText}
       </button>
+
+      {/* Modal for Erase Confirmation */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onConfirm={confirmEraseMemory}
+        title="Erase chat messages?"
+        message="Are you sure? Cannot be undone."
+        confirmText="Erase Memory"
+      />
     </div>
   );
 };
