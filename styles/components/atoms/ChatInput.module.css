@@ -1,24 +1,24 @@
-/* styles/ChatInput.module.css */
+/* File: styles/components/atoms/ChatInput.module.css */
 
 .inputContainer {
   display: flex;
-  flex-wrap: wrap; /* Allow elements to wrap into multiple rows */
-  gap: 4px;
-  margin-top: 1px;
+  align-items: center;
+  gap: 8px; /* Adjust the gap between the elements */
+  width: 100%; /* Ensure full width of the container */
 }
 
 .input {
-  width: 100%; /* Full width within its row */
+  flex-grow: 1; /* Allow textarea to take remaining space */
   padding: 8px 12px;
   color: white;
   background-color: #005C4B;
   border: 1px solid #ccc;
   border-radius: 5px;
-  resize: none; /* Prevent resizing of textarea */
-  overflow-wrap: break-word; /* Handle long text wrapping */
-  word-wrap: break-word; /* Break long words */
-  height: auto; /* Allow height to adjust dynamically */
-  min-height: 30px; /* Minimum height */
+  resize: none;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  height: auto;
+  min-height: 30px;
 }
 
 .sendButton {

@@ -11,7 +11,6 @@ import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.gif';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
 import { useMedia } from 'components/state/hooks/useMedia';
-import ControlButtons from 'components/organisms/ControlButtons';
 import ChatInput from 'components/atoms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
@@ -107,8 +106,10 @@ const ChatPanel: React.FC = () => {
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           {/* Pass `isFullScreen` prop along with messages */}
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
-          <ChatInput chatInput={chatInput} setChatInput={setChatInput} handleChat={handleChat} />
-          <ControlButtons
+          <ChatInput 
+            chatInput={chatInput} 
+            setChatInput={setChatInput} 
+            handleChat={handleChat}
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
             toggleMic={toggleMic}
@@ -119,8 +120,8 @@ const ChatPanel: React.FC = () => {
             isMemOn={mediaState.isMemOn}
             toggleMem={toggleMem}
             eraseMemory={handleClearChat}
-            toggleFullScreen={toggleFullScreen} // Pass the toggle function
-            isFullScreenOn={isFullScreen} // Updated prop name to match ControlButtons
+            isFullScreenOn={isFullScreen}
+            toggleFullScreen={toggleFullScreen}
           />
         </div>
       </div>

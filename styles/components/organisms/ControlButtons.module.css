@@ -1,4 +1,4 @@
-/* styles/ControlButtons.module.css */
+/* File: styles/components/organisms/ControlButtons.module.css */
 
 .container {
   display: flex;
@@ -21,8 +21,7 @@
 }
 
 .stopButton {
-  background-color: #f44336; /* TED Red */
-  background-color: rgba(235, 0, 40, 0.25);
+  background-color: rgba(235, 0, 40, 0.25); /* Red */
   color: white;
 }
 

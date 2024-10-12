@@ -1,7 +1,7 @@
 // File: components/organisms/ControlButtons.tsx
 
 import React from 'react';
-import styles from '../../styles/components/organisms/ControlButtons.module.css';
+import styles from 'styles/components/organisms/ControlButtons.module.css';
 
 interface ControlButtonsProps {
   isCamOn: boolean;
@@ -14,7 +14,7 @@ interface ControlButtonsProps {
   isMemOn: boolean;
   toggleMem: () => void;
   eraseMemory: () => void;
-  isFullScreenOn: boolean; // Prop name matches what is used in ChatPanel
+  isFullScreenOn: boolean;
   toggleFullScreen: () => void;
 }
 
@@ -32,19 +32,19 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isFullScreenOn,
   toggleFullScreen,
 }) => {
-  console.log('ControlButtons props:', { isCamOn, isMicOn, isPipOn, isMemOn });
+  const confirmEraseMemory = () => {
+    if (window.confirm('Are you sure you want to delete all your saved chat messages? This action cannot be undone.')) {
+      eraseMemory();
+    }
+  };
 
-  // On : Off button text
-  const micButtonText = isMicOn ? '🎤' : '🎤';
+  // Simplified micButtonText
+  const micButtonText = '🎤';
   const eraseButtonText = '🗑️';
-  const camButtonText = isCamOn ? '📷' : '📷';
-  const pipButtonText = isPipOn ? '📹' : '📹';
-  const memButtonText = isMemOn ? '🧠' : '🧠';
   const fullScreenButtonText = '⛶';
 
   return (
     <div className={styles.container}>
-
       {/* Microphone Button */}
       <button
         type="button"
@@ -59,48 +59,12 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       {/* Erase Button */}
       <button
         type="button"
-        onClick={eraseMemory} 
+        onClick={confirmEraseMemory}
         className={`${styles.button} ${styles.eraseButton}`}
         aria-label={eraseButtonText}
       >
         {eraseButtonText}
       </button>
-
-      {/* Camera Button */}
-      {/* Hidden: Do not render Camera Button */}
-      {/* <button
-        type="button"
-        onClick={isCamOn ? stopCam : startCam}
-        className={`${styles.button} ${!isCamOn ? styles.startButton : styles.stopButton}`}
-        aria-pressed={isCamOn}
-        aria-label={camButtonText}
-      >
-        {camButtonText}
-      </button> */}
-
-      {/* Pip Button */}
-      {/* Hidden: Do not render Pip Button */}
-      {/* <button
-        type="button"
-        onClick={togglePip}
-        className={`${styles.button} ${!isPipOn ? styles.startButton : styles.stopButton}`}
-        aria-pressed={isPipOn}
-        aria-label={pipButtonText}
-      >
-        {pipButtonText}
-      </button> */}
-
-      {/* Memory Button */}
-      {/* Hidden: Do not render Memory Button */}
-      {/* <button
-        type="button"
-        onClick={toggleMem}
-        className={`${styles.button} ${isMemOn ? styles.stopButton : styles.startButton}`}
-        aria-pressed={isMemOn}
-        aria-label={memButtonText}
-      >
-        {memButtonText}
-      </button> */}
 
       {/* Full Screen Mode Button */}
       <button
@@ -112,7 +76,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       >
         {fullScreenButtonText}
       </button>
-
     </div>
   );
 };
