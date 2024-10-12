@@ -30,7 +30,7 @@ const hashPersonaToColor = (persona: string): string => {
   const minColorValue = parseInt('777777', 16);
   const maxColorValue = parseInt('FFFFFF', 16);
   const rangeValue = minColorValue + (Math.abs(hash) % (maxColorValue - minColorValue));
-  return `#${rangeValue.toString(16)}`;
+  return `#${rangeValue.toString(16).padStart(6, '0')}`; // Ensure it's 6 characters
 };
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isFullScreen }) => {
