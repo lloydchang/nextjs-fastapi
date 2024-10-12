@@ -1,0 +1,68 @@
+/* File: styles/components/atoms/Modal.module.css */
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8); /* Dark background with higher opacity */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modalContent {
+    background-color: #1e1e1e; /* Dark gray background */
+    color: #e0e0e0; /* Light gray text */
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    text-align: center;
+  }
+  
+  .modalTitle {
+    margin-top: 0;
+    color: #ffffff; /* White title */
+  }
+  
+  .modalMessage {
+    margin: 15px 0;
+    color: #c0c0c0; /* Slightly lighter gray for message */
+  }
+  
+  .buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .cancelButton {
+    background-color: #555; /* Dark gray for the cancel button */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .cancelButton:hover {
+    background-color: #777; /* Lighter gray on hover */
+  }
+  
+  .confirmButton {
+    background-color: #d32f2f; /* Red for the confirm (erase) button */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .confirmButton:hover {
+    background-color: #b71c1c; /* Darker red on hover */
+  }
+  
