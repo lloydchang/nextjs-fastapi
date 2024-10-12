@@ -2,14 +2,27 @@
 
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import storage from 'redux-persist/lib/storage'; // localStorage for web
+import noopStorage from 'redux-persist/lib/storage/noop'; // Fallback storage
 import chatReducer from './chatSlice'; // Chat slice
 import talkReducer from './talkSlice'; // Talk slice
+
+// Utility function to check for localStorage availability
+const isStorageAvailable = () => {
+  try {
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
 
 // Persist configuration
 const persistConfig = {
   key: 'root',
-  storage,
+  storage: isStorageAvailable() ? storage : noopStorage,
 };
 
 // Create persisted reducers
