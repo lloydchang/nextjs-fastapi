@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           },
         ];
 
-        let maxIterations = 0;
+        let maxIterations = 1;
         let iteration = 0;
 
         async function processBots() {
