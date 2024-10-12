@@ -1,4 +1,6 @@
-import React, { useState, useEffect, MouseEvent } from 'react';
+// File: components/atoms/ChatMessage.tsx
+
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -32,13 +34,14 @@ const hashPersonaToColor = (persona: string): string => {
 };
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isFullScreen }) => {
-  const [showFullMessage, setShowFullMessage] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [showFullMessage, setShowFullMessage] = useState(false); // Retained for non-full-screen mode
 
   const isUser = sender.toLowerCase() === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
-  const shouldShorten = sender === 'bot' && text.split(' ').length > 10;
+  // Update shortening logic to consider isFullScreen
+  const shouldShorten = sender === 'bot' && text.split(' ').length > 10 && !isFullScreen;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
@@ -112,8 +115,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
         } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => !isUser && setShowFullMessage(true)}
-        onMouseLeave={() => !isUser && setShowFullMessage(false)}
+        onMouseEnter={() => !isUser && !isFullScreen && setShowFullMessage(true)} // Retained for non-full-screen mode
+        onMouseLeave={() => !isUser && !isFullScreen && setShowFullMessage(false)} // Retained for non-full-screen mode
         onClick={handleOpenModal}
         style={{ position: 'relative' }} // Ensure the parent is relative
       >
@@ -124,7 +127,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
           </div>
         )}
         {/* Hovered text will be shown below the persona label */}
-        {showFullMessage && !isUser && (
+        {!isFullScreen && showFullMessage && !isUser && (
           <div className={styles.textHovered}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -137,20 +140,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
             </ReactMarkdown>
           </div>
         )}
-        {/* Shortened text for non-hover state */}
-        {!showFullMessage && (
-          <div className={styles.text}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={{
-                a: ({ node, ...props }) => <LinkRenderer {...props} />,
-              }}
-            >
-              {shortenedText}
-            </ReactMarkdown>
-          </div>
-        )}
+        {/* Shortened or Full text based on mode */}
+        <div className={styles.text}>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeHighlight]}
+            components={{
+              a: ({ node, ...props }) => <LinkRenderer {...props} />,
+            }}
+          >
+            {shouldShorten ? shortenedText : processedText}
+          </ReactMarkdown>
+        </div>
       </div>
     </>
   );

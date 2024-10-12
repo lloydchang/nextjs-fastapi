@@ -17,7 +17,7 @@
   padding: 0px 4px; /* Optional: Adds some spacing inside the label */
 }
 
-/* New Hovered Persona Label Styling */
+/* Retained Hovered Persona Label Styling for Non-Full-Screen Mode */
 .personaLabelHovered {
   position: absolute;
   top: 0px;
@@ -70,11 +70,6 @@
   max-width: 100%;
   word-wrap: break-word;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Adds a shadow for emphasis */
-}
-
-/* Shortened text styling */
-.text {
-  /* Existing styles remain unchanged */
 }
 
 /* Specific styles for user messages */
@@ -335,154 +330,9 @@
   max-width: none; /* Remove width limit in Full Screen mode */
 }
 
-/* Add new hover style for message with inverted colors */
-.textHovered {
-  position: absolute;
-  top: calc(100% + 17px);
-  right: 0;
-  z-index: 9;
-  background-color: #000000; /* Inverted to black */
-  color: #FFFFFF; /* Inverted to white */
-  padding: 12px 12px;
-  border-radius: 0px 8px 8px 8px;
-  max-width: 100%;
-  word-wrap: break-word;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Adds a shadow for emphasis */
-}
+/* Removed hover styles since hover effects are disabled in full-screen mode */
 
-/* Bold text */
-.textHovered strong {
-  font-weight: bold;
-}
-
-/* Italic text */
-.textHovered em {
-  font-style: italic;
-}
-
-/* Links with inverted colors */
-.textHovered a {
-  color: #53BDEB; /* Lighter blue for links in inverted mode */
-}
-
-.textHovered a:hover {
-  text-decoration: underline; /* Ensure links are underlined */
-}
-
-/* Lists with inverted colors */
-.textHovered ul,
-.textHovered ol {
-  padding-left: 20px; /* Ensure proper list indentation */
-  margin: 0.5em 0;
-  color: #000000; /* Ensure list items are white in the inverted background */
-}
-
-/* Code blocks with inverted colors */
-.textHovered pre {
-  background-color: #333333; /* Darker background for code blocks in inverted mode */
-  color: #000000; /* White text for code blocks */
-  padding: 10px;
-  border-radius: 5px;
-  overflow-x: auto;
-  font-family: 'Courier New', Courier, monospace;
-  margin: 0.5em 0;
-}
-
-/* Inline code with inverted colors */
-.textHovered code {
-  background-color: #AAAAAA; /* Darker background for inline code in inverted mode */
-  color: #000000; /* Black text for inline code */
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: 'Courier New', Courier, monospace;
-}
-
-/* Blockquotes with inverted colors */
-.textHovered blockquote {
-  border-left: 4px solid #25D366; /* Green left border */
-  padding-left: 10px;
-  color: #AAAAAA; /* Lighter gray for blockquote text in inverted mode */
-  margin: 0.5em 0;
-}
-
-/* Responsive Images */
-.textHovered img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
-  margin: 10px 0;
-}
-
-/* Tables with inverted colors */
-.textHovered table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 0.5em 0;
-}
-
-.textHovered th,
-.textHovered td {
-  border: 1px solid #666666; /* Light gray border for tables */
-  padding: 8px;
-}
-
-.textHovered th {
-  background-color: #25D366; /* Green header background */
-  color: #000000; /* Black text for header in inverted mode */
-  text-align: left;
-}
-
-.textHovered td {
-  color: #FFFFFF; /* White text for table cells */
-}
-
-/* Task Lists with inverted colors */
-.textHovered ul.task-list {
-  list-style: none;
-  padding-left: 0;
-}
-
-.textHovered ul.task-list li {
-  display: flex;
-  align-items: center;
-}
-
-.textHovered ul.task-list li input[type='checkbox'] {
-  margin-right: 8px;
-}
-
-/* Dark mode compatibility for hover text */
-@media (prefers-color-scheme: dark) {
-  .textHovered {
-    color: #000000; /* Inverse of the light text */
-    background-color: #FFFFFF; /* Inverted light background for dark mode */
-  }
-
-  .textHovered a {
-    color: #34B7F1; /* Lighter blue for links in dark mode */
-  }
-
-  .textHovered a:hover {
-    color: #34B7F1;
-  }
-
-  .textHovered pre,
-  .textHovered code {
-    background-color: #FFFFFF; /* Light background for code blocks and inline code */
-    color: #000000; /* Black text in code blocks */
-  }
-
-  .textHovered blockquote {
-    border-left-color: #00A884; /* Green for blockquotes */
-    color: #000000; /* Dark text for blockquotes */
-  }
-
-  .textHovered th {
-    background-color: #00A884; /* Green header background */
-    color: #000000; /* Dark text */
-  }
-
-  .textHovered td {
-    color: #000000; /* Dark text for table cells */
-  }
+/* Ensure full-screen mode inherits markdown styles */
+.fullScreenMode .text {
+  /* Inherit styles */
 }
