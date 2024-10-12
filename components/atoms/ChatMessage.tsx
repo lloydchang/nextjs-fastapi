@@ -44,7 +44,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
 
   const handleOpenModal = () => {
-    setShowFullScreen(true);
+    if (!isUser) {
+      setShowFullScreen(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -72,8 +74,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
 
   return (
     <>
-      {/* Full-Screen Modal */}
-      {showFullScreen && (
+      {/* Full-Screen Modal - Only for bot messages */}
+      {showFullScreen && !isUser && (
         <div className={styles.modalBackdrop} onClick={handleCloseModal}>
           <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
             {/* Modal Header with Persona Label and Close Button */}
