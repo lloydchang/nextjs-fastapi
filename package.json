@@ -6,7 +6,8 @@
     "fastapi-dev": "./run_fastapi-dev.sh",
     "fastapi-search": "fastapi-search/run_fastapi-search.sh",
     "next-dev": "next dev",
-    "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\"",
+    "both-dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\" --kill-others --success first",
+    "dev": "npm run next-dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
