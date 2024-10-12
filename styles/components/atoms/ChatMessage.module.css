@@ -60,12 +60,12 @@
 /* Add new hover style for message without moving other content */
 .textHovered {
   position: absolute;
-  top: calc(100% + 16px); /* Start below the persona label */
+  top: calc(100% + 17px); /* Start below the persona label */
   right: 0;
   z-index: 9;
   background-color: #FFFFFF;
   color: #000000;
-  padding: 4px 12px;
+  padding: 12px 12px;
   border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
   max-width: 100%;
   word-wrap: break-word;
@@ -252,21 +252,21 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 110vw;
+  height: 112vh;
   background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
   z-index: 999; /* High z-index to ensure it's above other elements */
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: left;
+  align-items: top;
 }
 
 /* Full-screen message modal */
 .fullScreenMessage {
   background-color: #000000;
   border-radius: 8px;
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 110vw;
+  max-height: 112vh;
   overflow: auto; /* Enable scrolling if the message is long */
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
