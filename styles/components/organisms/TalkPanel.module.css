@@ -98,9 +98,13 @@
 
 .nowPlaying {
   margin-bottom: 10px;
+  width: 100%; /* Ensure the container is full width */
 }
 
 .videoFrame {
+  width: 100%; /* Make the iframe take the full width of the parent */
+  height: auto; /* Allow height to adjust automatically based on width */
+  aspect-ratio: 16/9; /* Maintain the 16:9 aspect ratio */
   border-radius: 0px;
 }
 
@@ -167,6 +171,15 @@
     display: flex;
     align-items: center; /* Center the button text vertically */
     justify-content: center; /* Center the button text horizontally */
+  }
+
+  .nowPlaying {
+    width: 100%; /* Ensure the container is still full width */
+  }
+
+  .videoFrame {
+    width: 100%; /* Iframe width will scale to the parent container */
+    height: auto; /* Maintain aspect ratio while scaling */
   }
 
 }
