@@ -1,7 +1,18 @@
 // File: app/api/chat/utils/duckDuckGoSearch.ts
 
-import fetch from 'node-fetch';
 import logger from 'app/api/chat/utils/logger'; // Adjust the import path if necessary
+
+interface DuckDuckGoRelatedTopic {
+  Text: string;
+  FirstURL: string;
+  Icon: {
+    URL: string;
+  };
+}
+
+interface DuckDuckGoSearchResponse {
+  RelatedTopics: DuckDuckGoRelatedTopic[];
+}
 
 /**
  * Performs a DuckDuckGo search and returns the top search results.
@@ -25,7 +36,8 @@ export async function performInternetSearch(query: string): Promise<string[]> {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const searchData = await response.json();
+    // Explicitly type the response as DuckDuckGoSearchResponse
+    const searchData = await response.json() as DuckDuckGoSearchResponse;
     logger.silly(`DuckDuckGo response body: ${JSON.stringify(searchData)}`);
 
     if (searchData.RelatedTopics.length === 0) {
@@ -33,7 +45,7 @@ export async function performInternetSearch(query: string): Promise<string[]> {
       return [];
     }
 
-    const results = searchData.RelatedTopics.map((result: any) => result.Text);
+    const results = searchData.RelatedTopics.map((result) => result.Text);
     logger.silly(`Search results: ${results.join(', ')}`);
 
     return results;
