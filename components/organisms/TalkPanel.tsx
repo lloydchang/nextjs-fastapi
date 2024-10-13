@@ -11,7 +11,7 @@ import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice
 import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
-import { determineInitialKeyword, shuffleArray, scrapeTranscript } from 'components/utils/talkPanelUtils';
+import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
@@ -61,9 +61,10 @@ const TalkPanel: React.FC = () => {
 
       // Map the results into Talk objects
       let data: Talk[] = response.data.results.map((result: any) => ({
-        title: result.slug.replace(/_/g, ' '),
-        url: `https://www.ted.com/talks/${result.slug}`,
-        sdg_tags: result.sdg_tags || [],
+        title: result.document.slug.replace(/_/g, ' '),
+        url: `https://www.ted.com/talks/${result.document.slug}`,
+        sdg_tags: result.document.sdg_tags || [],
+        transcript: result.document.transcript || '', // Using the transcript from the response
       }));
 
       // Handle search results in a separate function
@@ -78,7 +79,7 @@ const TalkPanel: React.FC = () => {
   };
 
   /**
-   * Tries to scrape and send the transcript of the first available talk.
+   * Tries to send the transcript of the first available talk.
    * If the first one fails, it will try the next one.
    * @param query - The original search query.
    * @param talks - The array of fetched talks.
@@ -86,18 +87,17 @@ const TalkPanel: React.FC = () => {
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     for (let i = 0; i < talks.length; i++) {
       try {
-        const transcriptUrl = `${talks[i].url}/transcript?subtitle=en`;
-        const sendTranscript = await scrapeTranscript(transcriptUrl);
+        const sendTranscript = talks[i].transcript || 'Transcript not available';
         const sendSdgTag = talks[i].sdg_tags.length > 0 ? sdgTitleMap[talks[i].sdg_tags[0]] : ''; // No SDG Tag
 
         dispatch(sendMessage({ text: `${query} | ${talks[i].title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
         dispatch(setSelectedTalk(talks[i])); // Set the current successful talk as the selected one
-        return; // Exit loop once a successful transcript is fetched
+        return; // Exit loop once a successful transcript is sent
       } catch (error) {
-        console.error(`Failed to fetch transcript for ${talks[i].title}. Trying the next one...`);
+        console.error(`Failed to send transcript for ${talks[i].title}. Trying the next one...`);
       }
     }
-    dispatch(setError("Failed to fetch transcripts for all talks."));
+    dispatch(setError("Failed to send transcripts for all talks."));
   };
 
   /**
