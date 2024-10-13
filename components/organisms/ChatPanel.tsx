@@ -8,12 +8,13 @@ import { RootState, AppDispatch } from 'store/store';
 import { sendMessage, clearMessages, addMessage } from 'store/chatSlice';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import BackgroundImage from 'public/images/TEDxSDG.webp';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
 import { useMedia } from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
+
+// No import for images from public folder, use path directly
 
 // Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
@@ -25,11 +26,33 @@ const ChatPanel: React.FC = () => {
   const messages = useSelector((state: RootState) => state.chat.messages);
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false); // New state for Full Screen mode
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false); // State for Full Screen mode
+  const [backgroundImage, setBackgroundImage] = useState('/images/TEDxSDG-1024×924.webp'); // Default large image
 
+  // Detect network speed and screen size to set the appropriate image
   useEffect(() => {
-    console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
-  }, [messages]);
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const isFastConnection = connection && (connection.effectiveType === '4g' || connection.effectiveType === 'wifi');
+
+    const updateBackgroundImage = () => {
+      const screenWidth = window.innerWidth;
+      if (isFastConnection && screenWidth > 1024) {
+        setBackgroundImage('/images/TEDxSDG-1024×924.webp'); // Set large image for fast connection and larger screens
+      } else {
+        setBackgroundImage('/images/TEDxSDG-205x185.webp'); // Set small image for slow connection or smaller screens
+      }
+    };
+
+    updateBackgroundImage(); // Initial check
+
+    // Add event listener to update image on window resize
+    window.addEventListener('resize', updateBackgroundImage);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener('resize', updateBackgroundImage);
+    };
+  }, []);
 
   const handleChat = useCallback(() => {
     if (chatInput.trim()) {
@@ -94,13 +117,16 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
-      <Image src={BackgroundImage} alt="Background" fill className={styles.backgroundImage} />
+      <Image
+        src={backgroundImage} // Use the dynamically selected background image
+        alt="Background"
+        fill
+        className={styles.backgroundImage}
+      />
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
         <div className={`${styles.toolsLayer} ${isFullScreen ? styles.minimized : ''}`}>
-          {/* Optional: Hide or shrink Tools when in Full Screen mode */}
-          <Tools />
         </div>
 
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
