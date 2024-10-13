@@ -1,7 +1,5 @@
 // File: components/utils/talkPanelUtils.ts
 
-import fetch from 'node-fetch';
-
 /**
  * Determines an initial search keyword randomly from predefined options.
  */
@@ -50,6 +48,7 @@ export const shuffleArray = <T>(array: T[]): T[] => {
  */
 export const scrapeTranscript = async (transcriptUrl: string): Promise<string> => {
   try {
+    // Use native fetch in client-side code
     const response = await fetch(`/api/proxyTranscript?transcriptUrl=${encodeURIComponent(transcriptUrl)}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch transcript: ${response.statusText}`);
