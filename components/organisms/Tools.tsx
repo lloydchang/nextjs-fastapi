@@ -20,9 +20,16 @@ const Tools: React.FC = () => {
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap')}
+          onClick={() => openInNewTab('https://sdgs.un.org/topics/voluntary-local-reviews')}
         >
           Local
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() => openInNewTab('https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap')}
+        >
+          Map
         </button>
 
         <button
