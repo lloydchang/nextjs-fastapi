@@ -29,6 +29,8 @@ body {
     rgb(var(--background-start-rgb));
   transition: none !important; /* Disable any default body transitions */
   overflow: hidden; /* Prevent body scrolling */
+  position: relative; /* Ensure correct stacking order */
+  z-index: 1; /* Lower z-index to ensure modals and other components can stack above */
 }
 
 /* Animation for spinning elements */
@@ -43,6 +45,8 @@ body {
   padding: 0px;
   transition: none !important; /* Disable transitions for the container */
   overflow: auto; /* Allow scrolling inside the container */
+  position: relative; /* Ensure container respects modal positioning */
+  z-index: 1; /* Ensure it stays below the modal overlay */
   /* Width and height will be set dynamically by JS */
 }
 
@@ -68,7 +72,6 @@ body {
     grid-template-columns: 1fr 1fr; /* Split the container into two columns */
     grid-template-rows: auto; /* Allow height to adjust automatically */
   }
-
 }
 
 /* Small wearable devices */
@@ -77,7 +80,6 @@ body {
     grid-template-columns: 1fr 1fr; /* Split the container into two columns */
     grid-template-rows: auto; /* Allow height to adjust automatically */
   }
-
 }
 
 /* Scrollbar styles */

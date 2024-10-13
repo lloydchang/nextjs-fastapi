@@ -10,7 +10,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* Increased z-index to ensure the modal is on top */
+  z-index: 9999 !important; /* Increased z-index to ensure the modal is on top */
+  overflow: hidden; /* Ensure no overflow issues */
 }
 
 .modalContent {
@@ -22,6 +23,8 @@
   width: 100%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   text-align: center;
+  z-index: 10000; /* Ensure modal content is above everything */
+  position: relative; /* Required to honor the z-index */
 }
 
 .modalTitle {
