@@ -74,7 +74,6 @@
     align-items: center; /* Center the content vertically */
   }
 
-
   .modalContent {
     width: 50%; /* Modal takes up 50% of the screen width */
     max-width: none; /* Remove max-width constraint */
@@ -91,7 +90,7 @@
   .cancelButton, .confirmButton {
     width: 100%; /* Make buttons full width on mobile */
     margin: 5px 0; /* Add space between the buttons */
-    font-size: 10px; /* Reduce font size for smaller buttons */
+    font-size: 12px; /* Reduce font size for smaller buttons */
     padding: 8px 15px; /* Adjust padding to fit smaller buttons */
   }
 }
