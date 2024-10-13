@@ -89,7 +89,7 @@ export async function performIterativeRefinement(
     const updatedHasPlaceholders = detectPlaceholders(finalResponse);
 
     // Exit condition: no missing content and no placeholders
-    if (updatedMissingContent.length === 0 && !updatedHasPlaceholders) {
+    if (updatedMissingContent.missingSentences.length === 0 && !updatedHasPlaceholders) {
       hasIncompleteContent = false;
     }
 
