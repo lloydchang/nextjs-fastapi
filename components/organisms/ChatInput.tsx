@@ -62,23 +62,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className={styles.inputContainer}>
-      {/* First row with send button and input */}
+      {/* Row with input */}
       <div className={styles.inputRow}>
-        <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
-          Send
-        </button>
         <textarea
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Chat"
+          placeholder="Chat here…"
           className={styles.input}
           rows={1}
         />
       </div>
 
-      {/* Second row with control buttons */}
-      <div className={styles.controlRow}>
+      {/* Row with send button and control buttons */}
+      <div className={styles.buttonRow}>
+        <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
+          Send
+        </button>
         <ControlButtons
           isCamOn={isCamOn}
           isMicOn={isMicOn}
