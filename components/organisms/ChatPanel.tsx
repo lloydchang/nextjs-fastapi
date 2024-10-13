@@ -2,7 +2,7 @@
 
 'use client'; // Mark as Client Component
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { sendMessage, clearMessages, addMessage } from 'store/chatSlice';
@@ -13,8 +13,6 @@ import { useMedia } from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
-
-// No import for images from public folder, use path directly
 
 // Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
@@ -27,39 +25,35 @@ const ChatPanel: React.FC = () => {
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false); // State for Full Screen mode
-  const [backgroundImage, setBackgroundImage] = useState('/images/TEDxSDG-1024×924.webp'); // Default large image
+  const [isHighQualityLoaded, setIsHighQualityLoaded] = useState<boolean>(false); // To track if high-quality image is loaded
+  const [isTimeoutReached, setIsTimeoutReached] = useState<boolean>(false); // To track if 10 seconds have passed without loading
 
-  // Detect network speed and screen size to set the appropriate image
+  const lowQualityImage = '/images/TEDxSDG-205x185.webp'; // Low-quality image
+  const highQualityImage = '/images/TEDxSDG-1024×924.webp'; // High-quality image
+
+  // Handle when the high-quality image finishes loading
+  const handleHighQualityImageLoad = () => {
+    setIsHighQualityLoaded(true); // Indicate that the high-quality image has been loaded
+  };
+
+  // Set a timer for 10 seconds to fall back to low-quality image if high-quality image hasn't loaded
   useEffect(() => {
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const isFastConnection = connection && (connection.effectiveType === '4g' || connection.effectiveType === 'wifi');
-
-    const updateBackgroundImage = () => {
-      const screenWidth = window.innerWidth;
-      if (isFastConnection && screenWidth > 1024) {
-        setBackgroundImage('/images/TEDxSDG-1024×924.webp'); // Set large image for fast connection and larger screens
-      } else {
-        setBackgroundImage('/images/TEDxSDG-205x185.webp'); // Set small image for slow connection or smaller screens
+    const timer = setTimeout(() => {
+      if (!isHighQualityLoaded) {
+        setIsTimeoutReached(true); // Trigger fallback to low-quality image if high-quality hasn't loaded in 10 seconds
       }
-    };
+    }, 10000); // 10 seconds timeout
 
-    updateBackgroundImage(); // Initial check
+    // Cleanup the timer if the component unmounts or if the high-quality image loads
+    return () => clearTimeout(timer);
+  }, [isHighQualityLoaded]);
 
-    // Add event listener to update image on window resize
-    window.addEventListener('resize', updateBackgroundImage);
-
-    // Cleanup event listener on component unmount
-    return () => {
-      window.removeEventListener('resize', updateBackgroundImage);
-    };
-  }, []);
-
-  const handleChat = useCallback(() => {
+  const handleChat = () => {
     if (chatInput.trim()) {
       dispatch(sendMessage(chatInput)); // Send the chat message to the API and store it in Redux
       setChatInput(''); // Clear the input field
     }
-  }, [dispatch, chatInput]);
+  };
 
   const handleClearChat = () => {
     dispatch(clearMessages());
@@ -117,12 +111,26 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
+      {/* Render high-quality image initially */}
       <Image
-        src={backgroundImage} // Use the dynamically selected background image
-        alt="Background"
+        src={highQualityImage}
+        alt="High-Quality Background"
         fill
         className={styles.backgroundImage}
+        onLoadingComplete={handleHighQualityImageLoad} // Call function after the high-quality image is fully loaded
+        style={{ display: isTimeoutReached ? 'none' : 'block' }} // Hide high-quality image if timeout occurs
       />
+
+      {/* Fallback to low-quality image after 10 seconds if high-quality image doesn't load */}
+      {isTimeoutReached && (
+        <Image
+          src={lowQualityImage}
+          alt="Low-Quality Background"
+          fill
+          className={styles.backgroundImage}
+        />
+      )}
+
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
