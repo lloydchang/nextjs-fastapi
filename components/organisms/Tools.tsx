@@ -22,14 +22,28 @@ const Tools: React.FC = () => {
           className={styles['right-edge-button']}
           onClick={() => openInNewTab('https://sdgs.un.org/topics/voluntary-local-reviews')}
         >
-          Local
+          Voluntary
         </button>
 
         <button
           className={styles['right-edge-button']}
           onClick={() => openInNewTab('https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap')}
         >
-          Map
+          Local
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() => openInNewTab('https://www.local2030.org/vlrs')}
+        >
+          Reviews
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() => openInNewTab('https://www.iges.or.jp/en/projects/vlr')}
+        >
+          Lab
         </button>
 
         <button
