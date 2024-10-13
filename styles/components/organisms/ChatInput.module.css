@@ -2,8 +2,24 @@
 
 .inputContainer {
   display: flex;
+  flex-direction: column; /* Stack elements vertically */
   align-items: center;
-  gap: 8px; /* Adjust the gap between the elements */
+  gap: 8px; /* Adjust the gap between the rows */
+  width: 100%; /* Ensure full width of the container */
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 8px; /* Adjust the gap between the send button and textarea */
+}
+
+.controlRow {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the control buttons */
+  gap: 12px; /* Adjust the gap between the control buttons */
   width: 100%; /* Ensure full width of the container */
 }
 

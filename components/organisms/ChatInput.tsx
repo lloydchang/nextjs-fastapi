@@ -62,31 +62,38 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className={styles.inputContainer}>
-      <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
-        Send
-      </button>
-      <textarea
-        value={chatInput}
-        onChange={(e) => setChatInput(e.target.value)}
-        onKeyPress={handleKeyPress}
-        placeholder="Chat here…"
-        className={styles.input}
-        rows={1}
-      />
-      <ControlButtons
-        isCamOn={isCamOn}
-        isMicOn={isMicOn}
-        toggleMic={toggleMic}
-        startCam={startCam}
-        stopCam={stopCam}
-        isPipOn={isPipOn}
-        togglePip={togglePip}
-        isMemOn={isMemOn}
-        toggleMem={toggleMem}
-        eraseMemory={eraseMemory}
-        isFullScreenOn={isFullScreenOn}
-        toggleFullScreen={toggleFullScreen}
-      />
+      {/* First row with send button and input */}
+      <div className={styles.inputRow}>
+        <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
+          Send
+        </button>
+        <textarea
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Chat here…"
+          className={styles.input}
+          rows={1}
+        />
+      </div>
+
+      {/* Second row with control buttons */}
+      <div className={styles.controlRow}>
+        <ControlButtons
+          isCamOn={isCamOn}
+          isMicOn={isMicOn}
+          toggleMic={toggleMic}
+          startCam={startCam}
+          stopCam={stopCam}
+          isPipOn={isPipOn}
+          togglePip={togglePip}
+          isMemOn={isMemOn}
+          toggleMem={toggleMem}
+          eraseMemory={eraseMemory}
+          isFullScreenOn={isFullScreenOn}
+          toggleFullScreen={toggleFullScreen}
+        />
+      </div>
     </div>
   );
 };
