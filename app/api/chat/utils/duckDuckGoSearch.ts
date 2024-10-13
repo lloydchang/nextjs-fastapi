@@ -30,7 +30,13 @@ export async function performInternetSearch(query: string): Promise<string[]> {
     
     // Log HTTP response details
     logger.silly(`DuckDuckGo response status: ${response.status}`);
-    logger.silly(`DuckDuckGo response headers: ${JSON.stringify(response.headers.raw())}`);
+
+    // Log each header
+    const headers: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    logger.silly(`DuckDuckGo response headers: ${JSON.stringify(headers)}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
