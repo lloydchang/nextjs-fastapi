@@ -1,17 +1,17 @@
 /* File: styles/components/atoms/Modal.module.css */
 
 .modalOverlay {
-  position: fixed;
+  position: absolute; /* Change from fixed to absolute so it's relative to the chat panel */
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%; /* Full width within the chat panel */
+  height: 100%; /* Full height within the chat panel */
   background-color: rgba(0, 0, 0, 0.8); /* Dark background with higher opacity */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999 !important; /* Increased z-index to ensure the modal is on top */
-  overflow: hidden; /* Ensure no overflow issues */
+  z-index: 9999 !important; /* Ensure modal is on top of other elements in the chat panel */
+  overflow: hidden; /* Prevent any overflow issues */
 }
 
 .modalContent {
@@ -23,7 +23,7 @@
   width: 100%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   text-align: center;
-  z-index: 10000; /* Ensure modal content is above everything */
+  z-index: 10000; /* Ensure modal content is above other chat elements */
   position: relative; /* Required to honor the z-index */
 }
 
@@ -41,15 +41,17 @@
   margin-top: 20px;
   display: flex;
   justify-content: space-between;
+  gap: 10px; /* Add a gap between the buttons */
 }
 
-.cancelButton {
-  background-color: #555; /* Dark gray for the cancel button */
+.cancelButton, .confirmButton {
+  background-color: #555; /* Dark gray for buttons */
   color: white;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  flex: 1; /* Make buttons take equal space */
 }
 
 .cancelButton:hover {
@@ -58,13 +60,38 @@
 
 .confirmButton {
   background-color: #d32f2f; /* Red for the confirm (erase) button */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
 }
 
 .confirmButton:hover {
   background-color: #b71c1c; /* Darker red on hover */
+}
+
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+  .modalOverlay {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+  }
+
+
+  .modalContent {
+    width: 50%; /* Modal takes up 50% of the screen width */
+    max-width: none; /* Remove max-width constraint */
+    padding: 20px;
+    box-sizing: border-box;
+    margin-right: 5%; /* Add some space to the left to avoid sticking to the screen edge */
+  }
+
+  .buttons {
+    flex-direction: column; /* Stack buttons vertically on mobile */
+    width: 100%; /* Ensure buttons take full width within modal */
+  }
+
+  .cancelButton, .confirmButton {
+    width: 100%; /* Make buttons full width on mobile */
+    margin: 5px 0; /* Add space between the buttons */
+    font-size: 14px; /* Reduce font size for smaller buttons */
+    padding: 8px 15px; /* Adjust padding to fit smaller buttons */
+  }
 }

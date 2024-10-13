@@ -88,8 +88,13 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         onClose={closeModal}
         onConfirm={confirmEraseMemory}
         title="Erase chat messages?"
-        message="Are you sure? Cannot be undone."
-        confirmText="Erase Memory"
+        message={
+          <>
+            Are you sure?<br />
+            <strong>Cannot be undone.</strong>
+          </>
+        }
+        confirmText="Erase chat messages"
       />
     </div>
   );
