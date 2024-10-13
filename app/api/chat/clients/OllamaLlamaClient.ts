@@ -4,13 +4,16 @@ import logger from 'app/api/chat/utils/logger';
 import { parseStream } from 'app/api/chat/utils/streamParser';
 import { performIterativeRefinement } from 'app/api/chat/utils/iterativeRefinement';
 
+// Define the base system prompt
+const systemPrompt = "Your base system prompt goes here.";
+
 /**
  * Function to generate a response from the Ollama Llama model, using iterative refinement to complete the response
  * @param params - Contains endpoint, prompt, and model
  * @returns { Promise<string | null> } - The complete response after all iterations of refinement
  */
 export async function generateFromOllamaLlama(params: { endpoint: string; prompt: string; model: string }): Promise<string | null> {
-  const { endpoint, prompt, model } = params;
+  const { endpoint, model } = params;
 
   // Define the function that generates a response from the AI model
   const generateResponseFn = async (combinedPrompt: string): Promise<string> => {
@@ -65,8 +68,8 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     }
   };
 
-  // Perform iterative refinement using the base system prompt and user prompt
-  const finalCompleteResponse = await performIterativeRefinement(prompt, model, generateResponseFn);
+  // Perform iterative refinement using the base system prompt (not the user prompt)
+  const finalCompleteResponse = await performIterativeRefinement(systemPrompt, model, generateResponseFn);
 
   return finalCompleteResponse;
 }

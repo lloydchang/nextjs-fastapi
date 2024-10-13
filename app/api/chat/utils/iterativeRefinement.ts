@@ -3,8 +3,8 @@
 import { updateContextHistory } from 'app/api/chat/utils/contextManager';
 import { detectMissingContent } from 'app/api/chat/utils/detectMissingContent';
 import { detectPlaceholders } from 'app/api/chat/utils/detectPlaceholders';
-import { performInternetSearch } from 'app/api/chat/utils/duckDuckGoSearch'; 
-import logger from 'app/api/chat/utils/logger'; 
+import { performInternetSearch } from 'app/api/chat/utils/duckDuckGoSearch';
+import logger from 'app/api/chat/utils/logger';
 
 /**
  * Performs iterative refinement of the prompt until the response is complete, aggregating responses across iterations.
@@ -20,11 +20,11 @@ export async function performIterativeRefinement(
 ): Promise<string> {
   let context = '';
   let finalResponse = '';
-  let hasMissingContent = true;
-  let iterationLimit = 1; // Set a limit to prevent infinite loops
+  let hasIncompleteContent = true;
+  let iterationLimit = 5; // Adjust iteration limit for more flexibility
   let iterations = 0;
 
-  while (hasMissingContent && iterations < iterationLimit) {
+  while (hasIncompleteContent && iterations < iterationLimit) {
     iterations++; // Track the number of iterations to avoid endless loops
 
     // Generate the current system prompt based on context and user input
@@ -39,34 +39,35 @@ export async function performIterativeRefinement(
     // Update context history with the aggregated response
     context = updateContextHistory(context, latestResponse);
 
-    // Detect missing sentences in the aggregated response
-    const { missingSentences } = detectMissingContent(basePrompt, finalResponse);
+    // Detect missing or incomplete content in the aggregated response
+    const missingContent = detectMissingContent(basePrompt, finalResponse);
 
     // Detect placeholders in the latest response
     const hasPlaceholders = detectPlaceholders(latestResponse);
 
-    // Log the current state before performing the search
+    // Log the current state before further refinement
     logger.silly(`Current context: ${context}`);
-    logger.silly(`Missing sentences: ${JSON.stringify(missingSentences)}`);
+    logger.silly(`Missing content detected: ${JSON.stringify(missingContent)}`);
     logger.silly(`Has placeholders: ${hasPlaceholders}`);
 
-    // Handle missing sentences
-    for (const missingSentence of missingSentences) {
-      logger.silly(`Generating content for missing sentence: ${missingSentence}`);
+    // Handle incomplete content by generating focused prompts
+    for (const incompleteSection of missingContent) {
+      logger.silly(`Generating content for missing/incomplete section: ${incompleteSection}`);
 
-      // Create a shortened system prompt focusing on the missing sentence
-      const focusedPrompt = `Please generate content for the following missing sentence:\n"${missingSentence}"`;
+      // Create a focused prompt to generate content for the incomplete section
+      const focusedPrompt = `Please expand on or generate content for the following section:\n"${incompleteSection}"`;
       const generatedContent = await generateResponseFn(focusedPrompt);
 
-      // Replace missing sentence in the aggregated response
-      finalResponse = finalResponse.replace(missingSentence, generatedContent);
-      logger.silly(`Updated response after filling missing sentence: ${finalResponse}`);
+      // Replace incomplete section with the generated content
+      finalResponse = finalResponse.replace(incompleteSection, generatedContent);
+      logger.silly(`Updated response after filling missing/incomplete section: ${finalResponse}`);
     }
 
     // Handle placeholders by performing a DuckDuckGo search if necessary
     if (hasPlaceholders) {
-      const searchQuery = latestResponse.match(/\[(.*?)\]/)?.[1]; // Extract the placeholder text
-      if (searchQuery) {
+      const placeholderMatch = latestResponse.match(/\[(.*?)\]/);
+      if (placeholderMatch) {
+        const searchQuery = placeholderMatch[1]; // Extract the placeholder text
         const searchResults = await performInternetSearch(searchQuery);
         logger.silly(`DuckDuckGo search results for "${searchQuery}": ${JSON.stringify(searchResults)}`);
 
@@ -80,13 +81,13 @@ export async function performIterativeRefinement(
       }
     }
 
-    // Check again if there are any missing sentences or placeholders
-    const { missingSentences: updatedMissingSentences } = detectMissingContent(basePrompt, finalResponse);
+    // Check if there are still incomplete sections or placeholders
+    const updatedMissingContent = detectMissingContent(basePrompt, finalResponse);
     const updatedHasPlaceholders = detectPlaceholders(finalResponse);
 
-    // Exit condition: no missing sentences and no placeholders
-    if (updatedMissingSentences.length === 0 && !updatedHasPlaceholders) {
-      hasMissingContent = false;
+    // Exit condition: no missing content and no placeholders
+    if (updatedMissingContent.length === 0 && !updatedHasPlaceholders) {
+      hasIncompleteContent = false;
     }
 
     // Safety check: stop if too many iterations
