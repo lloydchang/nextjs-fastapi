@@ -158,16 +158,8 @@
   }
 }
 
-/* Tablets */
-@media (max-width: 1023px) and (min-width: 768px) {
-  .container {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto;
-  }
-}
-
-/* Mobile devices */
-@media (max-width: 767px) {
+/* Tablets and Mobile devices */
+@media (max-width: 1023px) {
   .container {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
