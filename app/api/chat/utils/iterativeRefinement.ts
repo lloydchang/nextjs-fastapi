@@ -21,7 +21,7 @@ export async function performIterativeRefinement(
   let context = '';
   let finalResponse = '';
   let hasMissingContent = true;
-  let iterationLimit = 10; // Set a limit to prevent infinite loops
+  let iterationLimit = 1; // Set a limit to prevent infinite loops
   let iterations = 0;
 
   while (hasMissingContent && iterations < iterationLimit) {
