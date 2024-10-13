@@ -8,7 +8,7 @@ import { RootState, AppDispatch } from 'store/store';
 import { sendMessage, clearMessages, addMessage } from 'store/chatSlice';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import BackgroundImage from 'public/images/TEDxSDG.gif';
+import BackgroundImage from 'public/images/TEDxSDG.webp';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
 import { useMedia } from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
