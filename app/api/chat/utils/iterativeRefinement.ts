@@ -50,8 +50,11 @@ export async function performIterativeRefinement(
     logger.silly(`Missing content detected: ${JSON.stringify(missingContent)}`);
     logger.silly(`Has placeholders: ${hasPlaceholders}`);
 
+    // Ensure missingContent is iterable
+    const missingSections = missingContent?.missingSentences || [];
+
     // Handle incomplete content by generating focused prompts
-    for (const incompleteSection of missingContent) {
+    for (const incompleteSection of missingSections) {
       logger.silly(`Generating content for missing/incomplete section: ${incompleteSection}`);
 
       // Create a focused prompt to generate content for the incomplete section
