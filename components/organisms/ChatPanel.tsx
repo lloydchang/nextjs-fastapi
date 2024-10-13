@@ -94,7 +94,7 @@ const ChatPanel: React.FC = () => {
       {/* Render high-quality image */}
       <Image
         src={highQualityImage}
-        alt="High-Quality Background"
+        alt=""
         fill
         className={styles.backgroundImage}
       />
