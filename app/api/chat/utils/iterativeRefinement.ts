@@ -7,7 +7,7 @@ import { performInternetSearch } from 'app/api/chat/utils/duckDuckGoSearch';
 import logger from 'app/api/chat/utils/logger'; 
 
 /**
- * Performs iterative refinement of the prompt until the response is complete
+ * Performs iterative refinement of the prompt until the response is complete, aggregating responses across iterations.
  * @param basePrompt - The initial base system prompt
  * @param userPrompt - The user's prompt for context
  * @param generateResponseFn - The function to generate a response from the AI model
@@ -32,14 +32,16 @@ export async function performIterativeRefinement(
 
     // Generate the response from the AI
     const latestResponse = await generateResponseFn(combinedPrompt);
-    finalResponse = latestResponse; // Set finalResponse to latestResponse
 
-    // Update context history with the latest response
+    // Aggregate the latest response with the existing final response
+    finalResponse += latestResponse; // Append latest response to finalResponse
+
+    // Update context history with the aggregated response
     context = updateContextHistory(context, latestResponse);
 
-    // Detect missing sentences in the response
-    const { missingSentences } = detectMissingContent(basePrompt, latestResponse);
-    
+    // Detect missing sentences in the aggregated response
+    const { missingSentences } = detectMissingContent(basePrompt, finalResponse);
+
     // Detect placeholders in the latest response
     const hasPlaceholders = detectPlaceholders(latestResponse);
 
@@ -56,7 +58,7 @@ export async function performIterativeRefinement(
       const focusedPrompt = `Please generate content for the following missing sentence:\n"${missingSentence}"`;
       const generatedContent = await generateResponseFn(focusedPrompt);
 
-      // Update the latest response with the generated content
+      // Replace missing sentence in the aggregated response
       finalResponse = finalResponse.replace(missingSentence, generatedContent);
       logger.silly(`Updated response after filling missing sentence: ${finalResponse}`);
     }
@@ -72,7 +74,7 @@ export async function performIterativeRefinement(
         const questionPrompt = `Based on the search result: "${searchResults[0]}", provide a single word or phrase for the placeholder [${searchQuery}].`;
         const placeholderResponse = await generateResponseFn(questionPrompt);
 
-        // Replace the placeholder in the response with the LLM's answer
+        // Replace the placeholder in the aggregated response
         finalResponse = finalResponse.replace(`[${searchQuery}]`, placeholderResponse);
         logger.silly(`Updated response after filling placeholder: ${finalResponse}`);
       }
