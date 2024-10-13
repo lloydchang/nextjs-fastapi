@@ -230,7 +230,7 @@
 
 /* Button hover effect */
 .button:hover {
-  background-color: #0056b3;
+  /* This can now be left blank or with a universal style that won't interfere with specific button styles */
 }
 
 /* Error text styling */
