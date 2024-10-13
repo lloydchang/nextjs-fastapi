@@ -71,7 +71,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Chat here…"
+          placeholder="Chat"
           className={styles.input}
           rows={1}
         />
