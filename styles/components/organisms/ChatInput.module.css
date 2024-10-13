@@ -29,10 +29,9 @@
 
 .buttonRow {
   display: flex;
-  justify-content: flex-end; /* Right-align send button and control buttons */
+  justify-content: space-between; /* Space between the send button and control buttons */
   align-items: center;
-  gap: 12px; /* Adjust the gap between the buttons */
-  width: 100%;
+  width: 100%; /* Ensure full width of the container */
 }
 
 .sendButton {
@@ -49,20 +48,19 @@
   background-color: #2196f3;
 }
 
-/* Control buttons */
+/* Control buttons always aligned to the right */
 .controlRow {
   display: flex;
   align-items: center;
   gap: 12px; /* Adjust the gap between the control buttons */
 }
 
-/* Mobile view styles */
 @media (max-width: 768px) {
   .inputContainer {
     gap: 8px;
   }
 
   .buttonRow {
-    justify-content: flex-end; /* Keep buttons right-aligned */
+    justify-content: space-between; /* Maintain left-right alignment on mobile */
   }
 }
