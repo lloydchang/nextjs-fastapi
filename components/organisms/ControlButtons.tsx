@@ -94,7 +94,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
             <strong>Cannot be undone.</strong>
           </>
         }
-        confirmText="Erase chat messages"
+        confirmText="Erase"
       />
     </div>
   );
