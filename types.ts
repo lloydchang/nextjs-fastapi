@@ -46,6 +46,7 @@ export interface Talk {
   title: string;
   url: string;
   sdg_tags: string[];
+  transcript: string; // Add the transcript property here
 }
 
 /**
