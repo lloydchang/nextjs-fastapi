@@ -91,7 +91,7 @@
   .cancelButton, .confirmButton {
     width: 100%; /* Make buttons full width on mobile */
     margin: 5px 0; /* Add space between the buttons */
-    font-size: 14px; /* Reduce font size for smaller buttons */
+    font-size: 10px; /* Reduce font size for smaller buttons */
     padding: 8px 15px; /* Adjust padding to fit smaller buttons */
   }
 }
