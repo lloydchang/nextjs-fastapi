@@ -8,7 +8,7 @@ interface ModalProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message: React.ReactNode; // Accept JSX
   confirmText: string;
 }
 
@@ -19,7 +19,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, messag
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
         <h2>{title}</h2>
-        <p>{message}</p>
+        <div>{message}</div> {/* Render JSX */}
         <div className={styles.buttons}>
           <button className={styles.cancelButton} onClick={onClose}>Cancel</button>
           <button className={styles.confirmButton} onClick={onConfirm}>{confirmText}</button>
