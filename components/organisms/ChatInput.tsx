@@ -79,20 +79,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
           Send
         </button>
-        <ControlButtons
-          isCamOn={isCamOn}
-          isMicOn={isMicOn}
-          toggleMic={toggleMic}
-          startCam={startCam}
-          stopCam={stopCam}
-          isPipOn={isPipOn}
-          togglePip={togglePip}
-          isMemOn={isMemOn}
-          toggleMem={toggleMem}
-          eraseMemory={eraseMemory}
-          isFullScreenOn={isFullScreenOn}
-          toggleFullScreen={toggleFullScreen}
-        />
+        <div className={styles.controlRow}>
+          <ControlButtons
+            isCamOn={isCamOn}
+            isMicOn={isMicOn}
+            toggleMic={toggleMic}
+            startCam={startCam}
+            stopCam={stopCam}
+            isPipOn={isPipOn}
+            togglePip={togglePip}
+            isMemOn={isMemOn}
+            toggleMem={toggleMem}
+            eraseMemory={eraseMemory}
+            isFullScreenOn={isFullScreenOn}
+            toggleFullScreen={toggleFullScreen}
+          />
+        </div>
       </div>
     </div>
   );
