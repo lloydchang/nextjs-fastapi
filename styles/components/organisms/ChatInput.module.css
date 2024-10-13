@@ -2,16 +2,16 @@
 
 .inputContainer {
   display: flex;
+  justify-content: space-between; /* Spread input/send and control buttons */
   align-items: center;
-  gap: 8px; /* Adjust the gap between the elements */
+  gap: 8px; /* Adjust the gap between elements */
   width: 100%; /* Ensure full width of the container */
-  flex-direction: row; /* Default to horizontal layout */
 }
 
 .inputRow {
   display: flex;
   align-items: center;
-  width: 100%;
+  flex-grow: 1; /* Take available space to push control buttons to the right */
   gap: 8px; /* Adjust the gap between the send button and textarea */
 }
 
@@ -43,25 +43,27 @@
   background-color: #2196f3;
 }
 
-/* Mobile view styles */
+/* Control buttons should always be right-aligned and in a single row */
+.controlRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Align the control buttons to the right */
+  gap: 12px; /* Adjust the gap between the control buttons */
+  width: auto; /* Control row adapts to the content width */
+}
+
 @media (max-width: 768px) {
   .inputContainer {
-    flex-direction: column; /* Stack elements vertically on mobile */
-    gap: 8px; /* Adjust the gap between the rows */
-  }
-
-  .inputRow {
-    display: flex;
-    align-items: center;
-    width: 100%;
+    flex-wrap: wrap; /* Allow wrapping in mobile if necessary */
     gap: 8px;
   }
 
+  .inputRow {
+    width: 100%;
+  }
+
   .controlRow {
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Center the control buttons */
-    gap: 12px; /* Adjust the gap between the control buttons */
-    width: 100%; /* Ensure full width of the container */
+    justify-content: flex-end; /* Keep control buttons right-aligned */
+    width: 100%; /* Control row spans full width on mobile */
   }
 }
