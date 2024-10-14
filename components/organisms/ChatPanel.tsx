@@ -15,7 +15,6 @@ import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
 
-// Dynamic import for heavy components to reduce initial load
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
 }) as React.ComponentType<{ messages: Message[]; isFullScreen: boolean }>;
@@ -30,7 +29,6 @@ const ChatPanel: React.FC = () => {
 
   useEffect(() => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
-    // Conditionally scroll to the bottom only when not in full-screen mode
     if (!isFullScreen && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -49,7 +47,6 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
-  // Function to toggle full-screen mode using standard API
   const toggleFullScreen = () => {
     const elem = document.documentElement;
 
@@ -73,7 +70,6 @@ const ChatPanel: React.FC = () => {
         isFullScreen ? styles.fullScreenMode : styles['Chat-panel']
       }`}
     >
-      {/* Add priority attribute to optimize loading for LCP */}
       <Image
         src={BackgroundImage}
         alt=""
@@ -86,7 +82,6 @@ const ChatPanel: React.FC = () => {
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
         <div className={`${styles.toolsLayer} ${isFullScreen ? styles.minimized : ''}`}>
-          {/* Optional: Hide or shrink Tools when in Full Screen mode */}
           <Tools />
         </div>
 
@@ -108,6 +103,7 @@ const ChatPanel: React.FC = () => {
             eraseMemory={handleClearChat}
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreen}
+            hasMessages={messages.length > 0} // Pass down if there are messages
           />
         </div>
       </div>

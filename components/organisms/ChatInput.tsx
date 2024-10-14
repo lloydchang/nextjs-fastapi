@@ -1,3 +1,5 @@
+// File: components/organisms/ChatInput.tsx
+
 import React from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
@@ -6,7 +8,6 @@ interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
   handleChat: () => void;
-  // Removed isSending prop
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
@@ -19,13 +20,13 @@ interface ChatInputProps {
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
+  hasMessages: boolean;  // New prop to pass down to ControlButtons
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   chatInput,
   setChatInput,
   handleChat,
-  // Removed isSending
   isCamOn,
   isMicOn,
   toggleMic,
@@ -38,6 +39,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   eraseMemory,
   isFullScreenOn,
   toggleFullScreen,
+  hasMessages,  // New prop
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -74,7 +76,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          // Removed disabled={isSending}
         >
           Send
         </button>
@@ -92,6 +93,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             eraseMemory={eraseMemory}
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
+            hasMessages={hasMessages} // Pass down hasMessages
           />
         </div>
       </div>

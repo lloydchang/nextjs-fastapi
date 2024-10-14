@@ -17,6 +17,7 @@ interface ControlButtonsProps {
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
+  hasMessages: boolean; // New prop to indicate if there are messages
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -32,6 +33,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   eraseMemory,
   isFullScreenOn,
   toggleFullScreen,
+  hasMessages, // New prop
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -67,6 +69,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         onClick={openModal}
         className={`${styles.button} ${styles.eraseButton}`}
         aria-label={eraseButtonText}
+        disabled={!hasMessages} // Disable button if there are no messages
       >
         {eraseButtonText}
       </button>
