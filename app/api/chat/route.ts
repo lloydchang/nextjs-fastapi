@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         async start(controller) {
           logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
 
-          const botFunctions = [];
+          const botFunctions: BotFunction[] = [];
 
           // Ollama Gemma
           if (isValidConfig(config.ollamaGemmaTextModel) && validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])) {
