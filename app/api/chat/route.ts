@@ -2,12 +2,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getConfig } from '../utils/config';
-import { handleTextWithOllamaGemmaTextModel } from '../controllers/OllamaGemmaController';
-import { logger } from '../utils/logger';
-import { validateEnvVars } from '../utils/validate';
+import { getConfig } from 'app/api/chat/utils/config';
+import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat//controllers/OllamaGemmaController';
+import { logger } from 'app/api/chat/utils/logger';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
-import { managePrompt } from '../utils/promptManager';
+import { managePrompt } from 'app/api/chat/utils/promptManager';
 
 const config = getConfig();
 

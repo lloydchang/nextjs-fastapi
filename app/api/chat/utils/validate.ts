@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/validate.ts
 
-import { logger } from './logger';
+import { logger } from 'app/api/chat/utils/logger';
 
 /**
  * Validates that all required environment variables are set and not placeholders.

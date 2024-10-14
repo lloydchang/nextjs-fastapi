@@ -1,10 +1,10 @@
 // File: app/api/chat/clients/OllamaGemmaClient.ts
 
-import { parseStream } from '../utils/streamParser';
-import { logger } from '../utils/logger';
-import { systemPrompt } from '../utils/systemPrompt';
-import { countTokens } from '../utils/tokenizer';
-import { managePrompt } from '../utils/promptManager';
+import { parseStream } from 'app/api/chat/utils/streamParser';
+import { logger } from 'app/api/chat/utils/logger';
+import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
+import { countTokens } from 'app/api/chat/utils/tokenizer';
+import { managePrompt } from 'app/api/chat/utils/promptManager';
 
 /**
  * Generates text using Ollama Gemma with effective prompt management.

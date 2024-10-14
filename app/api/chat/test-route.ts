@@ -1,9 +1,9 @@
 // File: app/api/chat/test-route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateFromOllamaGemma } from './clients/OllamaGemmaClient';
-import { getConfig } from './utils/config';
-import { logger } from './utils/logger';
+import { generateFromOllamaGemma } from 'app/api/chat/clients/OllamaGemmaClient';
+import { getConfig } from 'app/api/chat/utils/config';
+import { logger } from 'app/api/chat/utils/logger';
 
 /**
  * Test route to verify Ollama Gemma integration.

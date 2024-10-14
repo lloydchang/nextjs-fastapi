@@ -1,7 +1,7 @@
 // File: app/api/chat/utils/logger.ts
 
 import { createLogger, format, transports, addColors } from 'winston';
-import { getConfig } from './config';
+import { getConfig } from 'app/api/chat/utils/config';
 
 // Define custom log levels and colors
 const colors = {
