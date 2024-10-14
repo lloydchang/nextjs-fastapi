@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         async start(controller) {
           // logger.silly(
           //   `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
-          // );
+          );
 
           // Define the BotFunction interface
           interface BotFunction {
