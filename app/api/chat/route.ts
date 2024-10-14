@@ -1,25 +1,42 @@
 // File: app/api/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 import { getConfig } from 'app/api/chat/utils/config';
-import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
-import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
+import {
+  handleTextWithOllamaGemmaTextModel,
+  handleTextWithCloudflareGemmaTextModel,
+  handleTextWithGoogleVertexGemmaTextModel,
+  handleTextWithOllamaLlamaTextModel,
+  handleTextWithCloudflareLlamaTextModel,
+  handleTextWithGoogleVertexLlamaTextModel,
+} from 'app/api/chat/controllers'; // Adjusted imports
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 
 const config = getConfig();
-const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout to reset context after inactivity
-const maxContextMessages = 20; // Keep only the last 20 bot messages in the running context
 
-let lastInteractionTime = Date.now(); // Track the last interaction time for session reset
+console.log('Configuration Values:', config); // Log configuration values
+
+const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
+const maxContextMessages = 20; // Keep only the last 20 messages
+
+let lastInteractionTime = Date.now(); // Track last interaction time
+const processingLocks = new Map<string, boolean>(); // Moved to module scope
+
+// Helper function to check if a configuration value is valid
+function isValidConfig(value: any): boolean {
+  return (
+    typeof value === 'string' &&
+    value.trim() !== '' &&
+    value.trim().toLowerCase() !== 'undefined' &&
+    value.trim().toLowerCase() !== 'null'
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const requestId = Date.now().toString(); // Unique request identifier for logging
+    const requestId = uuidv4(); // Use UUID for unique request ID
     const { messages } = await request.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -28,10 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let context = messages.slice(-7); // Start with the last 7 user messages for a new context
-
-    // Move processingLocks inside the POST function to prevent multiple initializations
-    const processingLocks = new Map<string, boolean>(); // Store ongoing processing request IDs as locks
+    let context = messages.slice(-7); // Start with the last 7 user messages
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -44,7 +58,7 @@ export async function POST(request: NextRequest) {
           logger.silly(
             `app/api/chat/route.ts [${requestId}] - Already processing, skipping.`
           );
-          controller.close(); // Close the controller if already processing
+          controller.close();
           return;
         }
 
@@ -62,7 +76,7 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: !!config.ollamaGemmaTextModel,
+            isValid: isValidConfig(config.ollamaGemmaTextModel),
           },
           {
             persona: 'Cloudflare ' + config.cloudflareGemmaTextModel,
@@ -74,7 +88,7 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: !!config.cloudflareGemmaTextModel,
+            isValid: isValidConfig(config.cloudflareGemmaTextModel),
           },
           {
             persona: 'Google Vertex ' + config.googleVertexGemmaTextModel,
@@ -86,7 +100,7 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: !!config.googleVertexGemmaTextModel,
+            isValid: isValidConfig(config.googleVertexGemmaTextModel),
           },
           {
             persona: 'Ollama ' + config.ollamaLlamaTextModel,
@@ -98,7 +112,7 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: !!config.ollamaLlamaTextModel,
+            isValid: isValidConfig(config.ollamaLlamaTextModel),
           },
           {
             persona: 'Cloudflare ' + config.cloudflareLlamaTextModel,
@@ -110,7 +124,7 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: !!config.cloudflareLlamaTextModel,
+            isValid: isValidConfig(config.cloudflareLlamaTextModel),
           },
           {
             persona: 'Google Vertex ' + config.googleVertexLlamaTextModel,
@@ -122,9 +136,15 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: !!config.googleVertexLlamaTextModel,
+            isValid: isValidConfig(config.googleVertexLlamaTextModel),
           },
-        ].filter((bot) => bot.isValid); // Only keep valid bot configurations
+        ];
+
+        console.log('Bot Functions Before Filter:', botFunctions);
+
+        const validBotFunctions = botFunctions.filter((bot) => bot.isValid);
+
+        console.log('Bot Functions After Filter:', validBotFunctions);
 
         async function processBots() {
           logger.silly(
@@ -133,7 +153,7 @@ export async function POST(request: NextRequest) {
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
-            botFunctions.map((bot) => {
+            validBotFunctions.map((bot) => {
               logger.silly(
                 `app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`
               );
@@ -147,7 +167,7 @@ export async function POST(request: NextRequest) {
           for (let index = 0; index < responses.length; index++) {
             const response = responses[index];
             if (response && typeof response === 'string') {
-              const botPersona = botFunctions[index].persona;
+              const botPersona = validBotFunctions[index].persona;
 
               logger.debug(
                 `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
@@ -219,14 +239,9 @@ export async function POST(request: NextRequest) {
       `app/api/chat/route.ts - Error in streaming bot interaction: ${error}`
     );
 
-    return error instanceof Error
-      ? NextResponse.json(
-          { error: error.message || 'Internal Server Error' },
-          { status: 500 }
-        )
-      : NextResponse.json(
-          { error: 'An unexpected error occurred' },
-          { status: 500 }
-        );
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
