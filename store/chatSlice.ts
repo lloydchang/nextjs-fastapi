@@ -157,7 +157,7 @@ const debouncedApiCall = debounce(
       }
     }
   },
-  1500 // Debounce time
+  1000 // Debounce time: 1 second, resulting in exponential backoff of 2, 4, 8 seconds
 );
 
 export const sendMessage = (
