@@ -36,6 +36,7 @@ const TalkPanel: React.FC = () => {
       hasFetched.current = true; // Ensure only one fetch occurs
     } else if (!isMounted.current) {
       console.log('TalkPanel - Initial mount detected, skipping search.');
+      console.log('TalkPanel - Initial mount detected, skipping sendMessage.');
       isMounted.current = true;
     }
 
