@@ -64,8 +64,6 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  logger.info(`Received POST request [${requestId}] from clientId: ${clientId}`);
-
   // Implement Server-Side Rate Limiting
   const now = Date.now();
   const rateInfo = rateLimitMap.get(clientId);
@@ -117,7 +115,6 @@ export async function POST(request: NextRequest) {
     try {
       const { messages } = await request.json();
       if (!Array.isArray(messages) || messages.length === 0) {
-        logger.warn(`Request [${requestId}] from clientId: ${clientId} has invalid format or no messages.`);
         return NextResponse.json(
           { error: 'Invalid request format or no messages provided.' },
           { status: 400 }
@@ -129,13 +126,11 @@ export async function POST(request: NextRequest) {
       if (context.length === 0) {
         // Initialize with system prompt
         context = [{ role: 'system', content: config.systemPrompt }];
-        logger.debug(`Initialized context for clientId: ${clientId} with system prompt.`);
       }
 
       // Append new user messages to the context
       const userMessages = messages.map(msg => ({ role: 'user', content: msg.content }));
       context = [...context, ...userMessages];
-      logger.debug(`Appended user messages to context for clientId: ${clientId}. Current context length: ${context.length}`);
 
       // Ensure the context doesn't exceed the maximum allowed messages
       context = context.slice(-maxTotalContextMessages);
@@ -151,8 +146,6 @@ export async function POST(request: NextRequest) {
             ...context.filter(msg => msg.role !== 'system'), // Exclude additional system prompts
           ];
 
-          logger.debug(`Structured messages for Ollama Gemma: ${JSON.stringify(structuredMessages)}`);
-
           const textModel = config.ollamaGemmaTextModel;
 
           if (isValidConfig(textModel) && validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
@@ -167,8 +160,6 @@ export async function POST(request: NextRequest) {
                 `data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`
               );
 
-              logger.info(`Generated response for clientId: ${clientId}: ${response}`);
-
               // Update context with bot response
               const botMessage = {
                 role: 'assistant', // Use 'assistant' to align with structured messaging
@@ -181,10 +172,7 @@ export async function POST(request: NextRequest) {
               const assistantMessages = context.filter(msg => msg.role === 'assistant');
               if (assistantMessages.length > maxBotResponsesInContext) {
                 const indexToRemove = context.findIndex(msg => msg.role === 'assistant');
-                if (indexToRemove !== -1) {
-                  context.splice(indexToRemove, 1);
-                  logger.debug(`Removed oldest assistant message from context for clientId: ${clientId}.`);
-                }
+                if (indexToRemove !== -1) context.splice(indexToRemove, 1);
               }
 
               // Ensure we don't exceed the total context size
@@ -192,11 +180,7 @@ export async function POST(request: NextRequest) {
 
               // Update context in the map
               clientContexts.set(clientId, context);
-            } else {
-              logger.error(`handleTextWithOllamaGemmaTextModel returned null for clientId: ${clientId}.`);
             }
-          } else {
-            logger.error(`Invalid configuration for model: ${textModel} or missing environment variables.`);
           }
 
           controller.enqueue('data: [DONE]\n\n');
