@@ -108,21 +108,44 @@ export async function POST(request: NextRequest) {
             isValidConfig(config.ollamaGemmaTextModel) &&
             validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
           ) {
-            const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel"; // Default model
+            const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel";
             const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint;
             
-            const summarizeWithOllama = async (text: string): Promise<string | null> => {
+            const summarizeWithOllamaGemma = async (text: string): Promise<string | null> => {
               return handleTextWithOllamaGemmaTextModel({ userPrompt: text, textModel: ollamaGemmaTextModel }, config);
             };
             
             botFunctions.push({
-              persona: 'Ollama ' + ollamaGemmaTextModel,
+              persona: 'Ollama Gemma ' + ollamaGemmaTextModel,
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllama);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaGemma);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
+              },
+            });
+          }
+
+          // Ollama Llama
+          if (
+            isValidConfig(config.ollamaLlamaTextModel) &&
+            validateEnvVars(['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'])
+          ) {
+            const ollamaLlamaTextModel = config.ollamaLlamaTextModel || "defaultModel";
+            
+            const summarizeWithOllamaLlama = async (text: string): Promise<string | null> => {
+              return handleTextWithOllamaLlamaTextModel({ userPrompt: text, textModel: ollamaLlamaTextModel }, config);
+            };
+            
+            botFunctions.push({
+              persona: 'Ollama Llama ' + ollamaLlamaTextModel,
+              generate: async (currentContext: any[]) => {
+                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
+                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaLlama);
+                clientPrompts.set(clientId, prompt);
+                return handleTextWithOllamaLlamaTextModel({ userPrompt: prompt, textModel: ollamaLlamaTextModel }, config);
               },
             });
           }
@@ -132,29 +155,92 @@ export async function POST(request: NextRequest) {
             isValidConfig(config.cloudflareGemmaTextModel) &&
             validateEnvVars(['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])
           ) {
-            const summarizeWithCloudflare = async (text: string): Promise<string | null> => {
-              return handleTextWithCloudflareGemmaTextModel(
-                { userPrompt: text, textModel: config.cloudflareGemmaTextModel! },
-                config
-              );
+            const cloudflareGemmaTextModel = config.cloudflareGemmaTextModel!;
+            
+            const summarizeWithCloudflareGemma = async (text: string): Promise<string | null> => {
+              return handleTextWithCloudflareGemmaTextModel({ userPrompt: text, textModel: cloudflareGemmaTextModel }, config);
             };
 
             botFunctions.push({
-              persona: 'Cloudflare ' + config.cloudflareGemmaTextModel!,
+              persona: 'Cloudflare Gemma ' + cloudflareGemmaTextModel,
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflare);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma);
                 clientPrompts.set(clientId, prompt);
-                return handleTextWithCloudflareGemmaTextModel(
-                  { userPrompt: prompt, textModel: config.cloudflareGemmaTextModel! },
-                  config
-                );
+                return handleTextWithCloudflareGemmaTextModel({ userPrompt: prompt, textModel: cloudflareGemmaTextModel }, config);
               },
             });
           }
 
-          // Add other bots similarly...
+          // Cloudflare Llama
+          if (
+            isValidConfig(config.cloudflareLlamaTextModel) &&
+            validateEnvVars(['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'])
+          ) {
+            const cloudflareLlamaTextModel = config.cloudflareLlamaTextModel!;
+            
+            const summarizeWithCloudflareLlama = async (text: string): Promise<string | null> => {
+              return handleTextWithCloudflareLlamaTextModel({ userPrompt: text, textModel: cloudflareLlamaTextModel }, config);
+            };
+
+            botFunctions.push({
+              persona: 'Cloudflare Llama ' + cloudflareLlamaTextModel,
+              generate: async (currentContext: any[]) => {
+                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
+                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama);
+                clientPrompts.set(clientId, prompt);
+                return handleTextWithCloudflareLlamaTextModel({ userPrompt: prompt, textModel: cloudflareLlamaTextModel }, config);
+              },
+            });
+          }
+
+          // Google Vertex Gemma
+          if (
+            isValidConfig(config.googleVertexGemmaTextModel) &&
+            validateEnvVars(['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'])
+          ) {
+            const googleVertexGemmaTextModel = config.googleVertexGemmaTextModel!;
+            
+            const summarizeWithGoogleVertexGemma = async (text: string): Promise<string | null> => {
+              return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: text, textModel: googleVertexGemmaTextModel }, config);
+            };
+
+            botFunctions.push({
+              persona: 'Google Vertex Gemma ' + googleVertexGemmaTextModel,
+              generate: async (currentContext: any[]) => {
+                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
+                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma);
+                clientPrompts.set(clientId, prompt);
+                return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: prompt, textModel: googleVertexGemmaTextModel }, config);
+              },
+            });
+          }
+
+          // Google Vertex Llama
+          if (
+            isValidConfig(config.googleVertexLlamaTextModel) &&
+            validateEnvVars(['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'])
+          ) {
+            const googleVertexLlamaTextModel = config.googleVertexLlamaTextModel!;
+            
+            const summarizeWithGoogleVertexLlama = async (text: string): Promise<string | null> => {
+              return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: text, textModel: googleVertexLlamaTextModel }, config);
+            };
+
+            botFunctions.push({
+              persona: 'Google Vertex Llama ' + googleVertexLlamaTextModel,
+              generate: async (currentContext: any[]) => {
+                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
+                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama);
+                clientPrompts.set(clientId, prompt);
+                return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: prompt, textModel: googleVertexLlamaTextModel }, config);
+              },
+            });
+          }
 
           async function processBots() {
             logger.silly(`Starting bot processing for clientId: ${clientId}.`);
