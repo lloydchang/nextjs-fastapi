@@ -2,21 +2,17 @@
 
 import { parseStream } from 'app/api/chat/utils/streamParser';
 import logger from 'app/api/chat/utils/logger';
-import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
 /**
- * Generates text using Ollama Gemma with the system and user prompts clearly defined.
- * @param params - Parameters for the request, including endpoint, userPrompt, and model.
+ * Generates text using Ollama Gemma with structured messages.
+ * @param params - Parameters for the request, including endpoint, messages, and model.
  * @returns {Promise<string | null>} - The generated response or null in case of an error.
  */
-export async function generateFromOllamaGemma(params: { endpoint: string; userPrompt: string; model: string; }): Promise<string | null> {
-  const { endpoint, userPrompt, model } = params;
-
-  // Define the combined prompt with explicit role labels
-  const combinedPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+export async function generateFromOllamaGemma(params: { endpoint: string; messages: { role: string; content: string; }[]; model: string; }): Promise<string | null> {
+  const { endpoint, messages, model } = params;
 
   try {
-    const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
+    const requestBody = JSON.stringify({ messages, model });
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -30,14 +26,14 @@ export async function generateFromOllamaGemma(params: { endpoint: string; userPr
 
     const reader = response.body?.getReader();
     if (!reader) {
-      logger.error('OllamaGemmaClient.ts - Failed to access the response body stream for user prompt.');
+      logger.error('OllamaGemmaClient.ts - Failed to access the response body stream.');
       return null;
     }
 
     const finalUserResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
     return finalUserResponse;
   } catch (error) {
-    logger.error(`OllamaGemmaClient.ts - Error sending user prompt request to Ollama Gemma: ${error}`);
+    logger.error(`OllamaGemmaClient.ts - Error sending request to Ollama Gemma: ${error}`);
     return null;
   }
 }
