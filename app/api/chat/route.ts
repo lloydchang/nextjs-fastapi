@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { logger } from 'app/api/chat/utils/logger';
-import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
 
@@ -90,15 +89,28 @@ export async function POST(request: NextRequest) {
       prompt += `\n\nUser: ${userPrompt}`;
       logger.debug(`Updated prompt for clientId: ${clientId}: ${prompt}`);
 
-      prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, config.ollamaGemmaEndpoint, config.ollamaGemmaTextModel);
+      // Check if ollamaGemmaEndpoint and ollamaGemmaTextModel are defined
+      if (!config.ollamaGemmaEndpoint || !config.ollamaGemmaTextModel) {
+        logger.error(`Missing Ollama Gemma configuration values for clientId: ${clientId}`);
+        return NextResponse.json(
+          { error: 'Ollama Gemma configuration is missing or invalid.' },
+          { status: 500 }
+        );
+      }
+
+      // Cast the endpoint and model as strings after validating their existence
+      const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint as string;
+      const ollamaGemmaTextModel = config.ollamaGemmaTextModel as string;
+
+      prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel);
       logger.debug(`Managed prompt for clientId: ${clientId}: ${prompt}`);
 
       clientPrompts.set(clientId, prompt);
 
-      const response = await handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: config.ollamaGemmaTextModel }, config);
+      const response = await handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
 
       if (response) {
-        const botPersona = 'Ollama ' + config.ollamaGemmaTextModel;
+        const botPersona = 'Ollama ' + ollamaGemmaTextModel;
         const stream = new ReadableStream({
           async start(controller) {
             controller.enqueue(`data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`);
