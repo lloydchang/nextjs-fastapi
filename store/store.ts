@@ -10,7 +10,6 @@ export const store = configureStore({
   reducer: {
     chat: chatReducer,
     talk: talkReducer,
-    api: apiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
