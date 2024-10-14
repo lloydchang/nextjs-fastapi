@@ -24,21 +24,20 @@ export async function* managePrompt(
 
   while (currentPrompt.length > maxLength) {
     // Calculate the excess length beyond maxLength
-    const excessLength = currentPrompt.length - maxLength + 500; // Reserving extra space for the summary
+    const excessLength = currentPrompt.length - maxLength;
     const partToSummarize = currentPrompt.substring(0, excessLength);
-    
+
     logger.debug(`app/api/chat/utils/promptManager.ts - Summarizing ${excessLength} characters for clientId: ${clientId} using model: ${model}`);
 
     const summary = await summarizeFn(partToSummarize);
 
-    if (summary) {
-      // Replace the summarized part with the summary
-      currentPrompt = `${summary}`;
-
+    if (summary && summary.length < partToSummarize.length) {
+      // Replace only the summarized part and append the remaining part of the prompt
+      currentPrompt = `${summary} ${currentPrompt.substring(excessLength)}`;
       // Yield partial result to the caller
       yield currentPrompt;
     } else {
-      // If summarization fails, truncate instead
+      // If summarization fails or doesn't reduce the length enough, truncate instead
       currentPrompt = truncatePrompt(currentPrompt, maxLength);
       logger.debug(`app/api/chat/utils/promptManager.ts - Prompt truncated for clientId: ${clientId}`);
       yield currentPrompt; // Send the truncated prompt

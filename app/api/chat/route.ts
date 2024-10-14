@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
-                // Update the last message in the context with the summarized version
-                if (context.length > 0) {
+                // Update the last message in the context with the summarized version, if it's new
+                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                   context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                 }
                 clientContexts.set(clientId, context);
@@ -146,8 +146,8 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
-                // Update the last message in the context with the summarized version
-                if (context.length > 0) {
+                // Update the last message in the context with the summarized version, if it's new
+                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                   context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                 }
                 clientContexts.set(clientId, context);
@@ -180,8 +180,8 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
-                // Update the last message in the context with the summarized version
-                if (context.length > 0) {
+                // Update the last message in the context with the summarized version, if it's new
+                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                   context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                 }
                 clientContexts.set(clientId, context);
@@ -214,8 +214,8 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
-                // Update the last message in the context with the summarized version
-                if (context.length > 0) {
+                // Update the last message in the context with the summarized version, if it's new
+                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                   context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                 }
                 clientContexts.set(clientId, context);
@@ -248,8 +248,8 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
-                // Update the last message in the context with the summarized version
-                if (context.length > 0) {
+                // Update the last message in the context with the summarized version, if it's new
+                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                   context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                 }
                 clientContexts.set(clientId, context);
@@ -282,8 +282,8 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
-                // Update the last message in the context with the summarized version
-                if (context.length > 0) {
+                // Update the last message in the context with the summarized version, if it's new
+                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                   context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                 }
                 clientContexts.set(clientId, context);
