@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Image from 'next/image';
 import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store'; // Ensure AppDispatch is imported for typed dispatch
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';
@@ -14,6 +13,7 @@ import { sdgTitleMap } from 'components/constants/sdgTitles';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
+import debounce from 'lodash/debounce';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
 const TalkPanel: React.FC = () => {
@@ -21,6 +21,7 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
+  const [lastDispatchedTalkId, setLastDispatchedTalkId] = useState<string | null>(null); // Track the last dispatched talk
   const initialRender = useRef(true);
 
   // Perform an initial search when the component mounts
@@ -30,8 +31,7 @@ const TalkPanel: React.FC = () => {
       performSearch(searchQuery);
       initialRender.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchQuery]);
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - handleSearchResults called. Query:', query, 'Results:', data);
@@ -72,8 +72,13 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  // Reusable function to send the transcript of a talk
   const sendTranscriptForTalk = async (query: string, talk: Talk): Promise<void> => {
+    // Avoid dispatching the same talk multiple times
+    if (talk.title === lastDispatchedTalkId) {
+      console.log('TalkPanel - Duplicate talk detected, skipping:', talk.title);
+      return;
+    }
+
     console.log('TalkPanel - Processing talk:', talk);
 
     const sendTranscript = talk.transcript || 'Transcript not available';
@@ -85,18 +90,21 @@ const TalkPanel: React.FC = () => {
       const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
       console.log(`TalkPanel - Message dispatched for: ${talk.title}. Dispatch result:`, result);
       dispatch(setSelectedTalk(talk));
+      setLastDispatchedTalkId(talk.title); // Update the last dispatched talk
     } catch (dispatchError) {
       console.error(`TalkPanel - Error dispatching message for: ${talk.title}. Error:`, dispatchError);
       dispatch(setError(`Failed to send transcript for ${talk.title}.`));
     }
   };
 
+  const debouncedSendTranscriptForTalk = debounce(sendTranscriptForTalk, 1000); // Add debounce to prevent multiple dispatches
+
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - sendFirstAvailableTranscript started. Query:', query, 'Talks:', talks);
 
     for (let i = 0; i < talks.length; i++) {
       try {
-        await sendTranscriptForTalk(query, talks[i]);
+        await debouncedSendTranscriptForTalk(query, talks[i]);
         return; // Exit once a successful transcript is sent
       } catch (error) {
         console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
@@ -111,10 +119,9 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (selectedTalk) {
       console.log('TalkPanel - New talk selected:', selectedTalk.title);
-      sendTranscriptForTalk(searchQuery, selectedTalk);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTalk]);
+  }, [selectedTalk, searchQuery]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('TalkPanel - Search input changed. Value:', e.target.value);
