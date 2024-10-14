@@ -1,3 +1,5 @@
+// File: components/organisms/ChatInput.tsx
+
 import React from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
@@ -6,7 +8,6 @@ interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
   handleChat: () => void;
-  isSending: boolean; // Added isSending prop
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
@@ -25,7 +26,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   chatInput,
   setChatInput,
   handleChat,
-  isSending,
   isCamOn,
   isMicOn,
   toggleMic,
@@ -74,7 +74,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          disabled={isSending} // Disable button when isSending is true
         >
           Send
         </button>

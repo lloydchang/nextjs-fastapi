@@ -1,3 +1,5 @@
+/* File: styles/components/organisms/ChatInput.module.css */
+
 .inputContainer {
   display: flex;
   flex-direction: column; /* Stack chat input and button rows */
@@ -45,11 +47,6 @@
 
 .sendButton:hover {
   background-color: #2196f3;
-}
-
-.sendButton:disabled {
-  background-color: gray;
-  cursor: not-allowed;
 }
 
 /* Control buttons always aligned to the right */
