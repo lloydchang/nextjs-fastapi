@@ -127,6 +127,12 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
+                // Update the last message in the context with the summarized version
+                if (context.length > 0) {
+                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                }
+                clientContexts.set(clientId, context);
+
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
               },
@@ -154,6 +160,12 @@ export async function POST(request: NextRequest) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama Llama', message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
+
+                // Update the last message in the context with the summarized version
+                if (context.length > 0) {
+                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                }
+                clientContexts.set(clientId, context);
 
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithOllamaLlamaTextModel({ userPrompt: prompt, textModel: ollamaLlamaTextModel }, config);
@@ -183,6 +195,12 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
+                // Update the last message in the context with the summarized version
+                if (context.length > 0) {
+                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                }
+                clientContexts.set(clientId, context);
+
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithCloudflareGemmaTextModel({ userPrompt: prompt, textModel: cloudflareGemmaTextModel }, config);
               },
@@ -210,6 +228,12 @@ export async function POST(request: NextRequest) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare Llama', message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
+
+                // Update the last message in the context with the summarized version
+                if (context.length > 0) {
+                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                }
+                clientContexts.set(clientId, context);
 
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithCloudflareLlamaTextModel({ userPrompt: prompt, textModel: cloudflareLlamaTextModel }, config);
@@ -239,6 +263,12 @@ export async function POST(request: NextRequest) {
                   finalPrompt = updatedPrompt;
                 }
 
+                // Update the last message in the context with the summarized version
+                if (context.length > 0) {
+                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                }
+                clientContexts.set(clientId, context);
+
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: prompt, textModel: googleVertexGemmaTextModel }, config);
               },
@@ -266,6 +296,12 @@ export async function POST(request: NextRequest) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex Llama', message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
+
+                // Update the last message in the context with the summarized version
+                if (context.length > 0) {
+                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                }
+                clientContexts.set(clientId, context);
 
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: prompt, textModel: googleVertexLlamaTextModel }, config);
