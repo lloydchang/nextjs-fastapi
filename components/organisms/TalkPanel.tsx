@@ -35,8 +35,7 @@ const TalkPanel: React.FC = () => {
       performSearchWithExponentialBackoff(searchQuery);
       hasFetched.current = true; // Ensure only one fetch occurs
     } else if (!isMounted.current) {
-      console.log('TalkPanel - Initial mount detected, skipping search.');
-      console.log('TalkPanel - Initial mount detected, skipping sendMessage.');
+      console.log('TalkPanel - Initial mount detected, skipping performSearchWithExponentialBackoff and sendTranscriptForTalk.');
       isMounted.current = true;
     }
 
