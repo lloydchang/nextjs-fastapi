@@ -1,3 +1,5 @@
+// File: app/api/chat/chatSlice.ts
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch, RootState } from 'store/store';
 import he from 'he';
@@ -110,8 +112,47 @@ const debouncedApiCall = debounce(
             throw new ApiError(response.status, response.statusText);
           }
 
-          // ... (rest of the function remains the same)
+          const reader = response.body?.getReader();
+          if (reader) {
+            const decoder = new TextDecoder();
+            let textBuffer = '';
 
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+
+              textBuffer += decoder.decode(value, { stream: true });
+
+              const messages = textBuffer.split('\n\n');
+              textBuffer = messages.pop() || '';
+
+              for (const message of messages) {
+                if (message.startsWith('data: ')) {
+                  const jsonString = message.substring(6).trim();
+                  console.log(`chatSlice - Raw incoming message: ${jsonString}`);
+
+                  try {
+                    const parsedData = parseIncomingMessage(jsonString);
+                    if (parsedData?.message && parsedData?.persona) {
+                      const botMessage: Message = {
+                        id: `${Date.now()}`,
+                        sender: 'bot',
+                        text: parsedData.message,
+                        role: 'bot',
+                        content: parsedData.message,
+                        persona: parsedData.persona,
+                      };
+                      dispatch(addMessage(botMessage));
+                    }
+                  } catch (e) {
+                    console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
+                  }
+                }
+              }
+            }
+          }
+          resolve();
+          return;
         } catch (error) {
           console.error('Error in API call:', error);
           
