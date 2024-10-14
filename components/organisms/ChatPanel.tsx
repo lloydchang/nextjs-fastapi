@@ -1,6 +1,8 @@
+// File: components/organisms/ChatPanel.tsx
+
 'use client'; // Mark as Client Component
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { sendMessage, clearMessages } from 'store/chatSlice';
@@ -21,22 +23,24 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-  // Removed isSending state
-  // const [isSending, setIsSending] = useState<boolean>(false);
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const scrollRef = useRef<HTMLDivElement>(null); // Ref to handle scrolling
 
   useEffect(() => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
-  }, [messages]);
+    // Conditionally scroll to the bottom only when not in full-screen mode
+    if (!isFullScreen && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isFullScreen]);
 
   const handleChat = useCallback(() => {
     if (chatInput.trim()) {
       const messageToSend = chatInput;
       setChatInput(''); // Clear the input immediately
       dispatch(sendMessage(messageToSend));
-      // Removed isSending logic
     }
   }, [dispatch, chatInput]);
 
@@ -50,12 +54,10 @@ const ChatPanel: React.FC = () => {
     const elem = document.documentElement;
 
     if (!isFullScreen) {
-      // Enter fullscreen mode using standard API
       elem.requestFullscreen().catch((err) => {
         console.error(`Failed to enter fullscreen mode: ${err.message}`);
       });
     } else {
-      // Exit fullscreen mode using standard API
       if (document.fullscreenElement) {
         document.exitFullscreen().catch((err) => {
           console.error(`Failed to exit fullscreen mode: ${err.message}`);
@@ -88,14 +90,12 @@ const ChatPanel: React.FC = () => {
           <Tools />
         </div>
 
-        <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
-          {/* Pass `isFullScreen` prop along with messages */}
+        <div ref={scrollRef} className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
           <ChatInput
             chatInput={chatInput}
             setChatInput={setChatInput}
             handleChat={handleChat}
-            // Removed isSending prop
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
             toggleMic={toggleMic}
