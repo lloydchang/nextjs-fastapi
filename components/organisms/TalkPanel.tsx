@@ -140,14 +140,11 @@ const TalkPanel: React.FC = () => {
   };
 
   const openTranscriptInNewTab = () => {
-    if (!selectedTalk) {
-      console.warn('Transcript button clicked but no talk is selected.');
-      return;
+    if (selectedTalk) {
+      const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
+      console.log('TalkPanel - Opening transcript in new tab. URL:', transcriptUrl);
+      window.open(transcriptUrl, '_blank');
     }
-
-    const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
-    console.log('TalkPanel - Opening transcript in new tab. URL:', transcriptUrl);
-    window.open(transcriptUrl, '_blank');
   };
 
   return (
@@ -156,7 +153,7 @@ const TalkPanel: React.FC = () => {
         <div className={styles.searchInputWrapper}>
           <input
             type="text"
-            placeholder="Search for talks..."
+            placeholder=""
             value={searchQuery}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
@@ -174,19 +171,17 @@ const TalkPanel: React.FC = () => {
         <button
           onClick={shuffleTalks}
           className={`${styles.button} ${styles.shuffleButton}`}
-          disabled={loading || talks.length === 0}
-          title={talks.length === 0 ? 'No talks to shuffle' : 'Shuffle talks'}
         >
           Shuffle
         </button>
-        <button
-          onClick={openTranscriptInNewTab}
-          className={`${styles.button} ${styles.tedButton}`}
-          disabled={!selectedTalk}
-          title={!selectedTalk ? 'Select a talk to view the transcript' : 'Open Transcript'}
-        >
-          Transcript
-        </button>
+        {selectedTalk && (
+          <button
+            onClick={openTranscriptInNewTab}
+            className={`${styles.button} ${styles.tedButton}`}
+          >
+            Transcript
+          </button>
+        )}
       </div>
 
       {error && (

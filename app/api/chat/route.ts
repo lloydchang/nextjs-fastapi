@@ -232,11 +232,11 @@ export async function POST(request: NextRequest) {
 
             clientContexts.set(clientId, context);
 
-            // if (!hasResponded) {
-            //   logger.silly(
-            //     `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
-            //   );
-            // }
+            if (!hasResponded) {
+              logger.silly(
+                `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
+              );
+            }
 
             controller.enqueue('data: [DONE]\n\n');
             controller.close();
