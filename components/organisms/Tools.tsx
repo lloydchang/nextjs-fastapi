@@ -119,29 +119,6 @@ const Tools: React.FC = () => {
         >
           News
         </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://go-goals.org/'
-            )
-          }
-        >
-          Game
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://actnow.aworld.org/'
-            )
-          }
-        >
-          App
-        </button>
-
       </div>
     </div>
   );
