@@ -50,8 +50,7 @@ const chatSlice = createSlice({
   },
 });
 
-// Destructure and export all actions at once to avoid duplication
-export const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
+const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
 
 const throttledApiCall = throttle(
   async (
@@ -247,4 +246,5 @@ function logDetailedErrorInfo(jsonString: string, error: Error) {
   console.error('chatSlice - JSON Snippet (End):', endSnippet);
 }
 
+export const { clearMessages, saveMessage } = chatSlice.actions;
 export default chatSlice.reducer;
