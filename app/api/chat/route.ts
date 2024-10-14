@@ -88,7 +88,15 @@ export async function POST(request: NextRequest) {
           },
         ].filter(bot => bot.isValid); // Only keep valid bot configurations
 
+        let isProcessing = false; // Safeguard against multiple processBot executions
+
         async function processBots() {
+          if (isProcessing) {
+            logger.silly(`app/api/chat/route.ts [${requestId}] - Already processing, skipping.`);
+            return; // Prevent multiple executions
+          }
+
+          isProcessing = true; // Set the processing flag
           logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing`);
 
           // Fetch all bot responses in parallel
