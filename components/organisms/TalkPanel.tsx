@@ -22,6 +22,7 @@ const TalkPanel: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
   const [lastDispatchedTalkId, setLastDispatchedTalkId] = useState<string | null>(null);
+  const [isSearchInProgress, setIsSearchInProgress] = useState(false); // Track if search is in progress
   const initialRender = useRef(true);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ const TalkPanel: React.FC = () => {
     }
   }, [searchQuery]);
 
+  // Handle search results
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
     dispatch(setTalks(data));
@@ -39,9 +41,17 @@ const TalkPanel: React.FC = () => {
     await sendFirstAvailableTranscript(query, data);
   };
 
+  // Utility function to wait
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+  // Perform search with exponential backoff logic
   const performSearchWithExponentialBackoff = async (query: string) => {
+    if (isSearchInProgress) {
+      console.log('TalkPanel - Search is already in progress, skipping this request.');
+      return;
+    }
+
+    setIsSearchInProgress(true); // Mark search as in progress
     dispatch(setError(null));
     dispatch(setLoading(true));
 
@@ -52,12 +62,12 @@ const TalkPanel: React.FC = () => {
       try {
         console.log(`TalkPanel - Performing search with query: ${query}`);
         const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
-        
+
         if (response.status !== 200) {
           throw new Error(`Error: ${response.status} - ${response.statusText}`);
         }
 
-        let data: Talk[] = response.data.results.map((result: any) => ({
+        const data: Talk[] = response.data.results.map((result: any) => ({
           title: result.document.slug.replace(/_/g, ' '),
           url: `https://www.ted.com/talks/${result.document.slug}`,
           sdg_tags: result.document.sdg_tags || [],
@@ -67,7 +77,8 @@ const TalkPanel: React.FC = () => {
         console.log('TalkPanel - Successfully fetched talks:', data);
         await handleSearchResults(query, data);
         dispatch(setLoading(false));
-        return; // Successful fetch, exit the loop
+        setIsSearchInProgress(false); // Mark search as completed
+        return; // Exit loop on success
       } catch (error) {
         console.error('TalkPanel - Error during performSearch:', error);
         retryCount++;
@@ -78,11 +89,13 @@ const TalkPanel: React.FC = () => {
         } else {
           dispatch(setError('Failed to fetch talks after multiple attempts.'));
           dispatch(setLoading(false));
+          setIsSearchInProgress(false); // Mark search as completed even if failed
         }
       }
     }
   };
 
+  // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
     if (talk.title === lastDispatchedTalkId) {
       console.log(`TalkPanel - Skipping already dispatched talk: ${talk.title}`);
@@ -99,7 +112,7 @@ const TalkPanel: React.FC = () => {
       dispatch(setSelectedTalk(talk));
       setLastDispatchedTalkId(talk.title);
     } catch (dispatchError) {
-      if (retryCount < 3) { // Retry logic with exponential backoff
+      if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
         console.error(`TalkPanel - Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
         await wait(delay);
@@ -111,11 +124,13 @@ const TalkPanel: React.FC = () => {
     }
   };
 
+  // Debounced send for talk transcript
   const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
     console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
     sendTranscriptForTalk(query, talk);
-  }, 1500); // Debounce duration remains the same
+  }, 1500); // 1500 ms debounce
 
+  // Send the first available transcript from a list of talks
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - Sending first available transcript for query:', query);
     for (let i = 0; i < talks.length; i++) {
