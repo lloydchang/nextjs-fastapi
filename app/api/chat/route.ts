@@ -19,6 +19,7 @@ let lastInteractionTime = Date.now(); // Track the last interaction time for ses
 
 export async function POST(request: NextRequest) {
   try {
+    const requestId = Date.now();  // Unique request identifier for logging
     const { messages } = await request.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const stream = new ReadableStream({
       async start(controller) {
-        logger.silly(`app/api/chat/route.ts - Started streaming responses to the client.`);
+        logger.silly(`app/api/chat/route.ts [${requestId}] - Started streaming responses to the client.`);
 
         const botFunctions = [
           {
@@ -88,12 +89,12 @@ export async function POST(request: NextRequest) {
         ].filter(bot => bot.isValid); // Only keep valid bot configurations
 
         async function processBots() {
-          logger.silly(`app/api/chat/route.ts - Starting parallel bot processing`);
+          logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing`);
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
             botFunctions.map((bot, index) => {
-              logger.silly(`app/api/chat/route.ts - Starting parallel bot processing for ${bot.persona}`);
+              logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`);
               return bot.generate(context);
             })
           );
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
             if (response && typeof response === 'string') {
               const botPersona = botFunctions[index].persona;
 
-              logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+              logger.debug(`app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`);
 
               context.push({ role: 'bot', content: response, persona: botPersona });
 
@@ -126,11 +127,11 @@ export async function POST(request: NextRequest) {
           if (Date.now() - lastInteractionTime > sessionTimeout) {
             context = [];
             lastInteractionTime = Date.now();
-            logger.silly(`app/api/chat/route.ts - Session timed out. Context reset.`);
+            logger.silly(`app/api/chat/route.ts [${requestId}] - Session timed out. Context reset.`);
           }
 
           if (!hasResponse) {
-            logger.silly(`app/api/chat/route.ts - No bot responded. Ending interaction.`);
+            logger.silly(`app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`);
           }
 
           controller.enqueue('data: [DONE]\n\n');
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
         }
 
         processBots().catch((error) => {
-          logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
+          logger.error(`app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`);
           controller.error(error);
         });
       },
