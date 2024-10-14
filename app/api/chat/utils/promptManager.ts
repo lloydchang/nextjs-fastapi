@@ -1,6 +1,3 @@
-// File: app/api/chat/utils/promptManager.ts
-
-import { summarizeText } from 'app/api/chat/clients/OllamaGemmaClient';
 import { truncatePrompt } from 'app/api/chat/utils/promptTruncator';
 import logger from 'app/api/chat/utils/logger';
 
@@ -8,15 +5,13 @@ import logger from 'app/api/chat/utils/logger';
  * Manages the prompt by truncating or summarizing when necessary.
  * @param prompt - The current prompt.
  * @param maxLength - The maximum allowed character length.
- * @param endpoint - The API endpoint for summarization.
- * @param model - The model used for summarization.
+ * @param summarizeFn - A generic summarization function that takes (text: string) and returns a summary.
  * @returns {Promise<string>} - The managed prompt.
  */
 export async function managePrompt(
   prompt: string,
   maxLength: number,
-  endpoint: string,
-  model: string
+  summarizeFn: (text: string) => Promise<string | null>
 ): Promise<string> {
   if (prompt.length <= maxLength) return prompt;
 
@@ -25,7 +20,7 @@ export async function managePrompt(
   const partToSummarize = prompt.substring(0, excessLength);
   logger.debug(`managePrompt - Summarizing first ${excessLength} characters.`);
 
-  const summary = await summarizeText(endpoint, partToSummarize, model);
+  const summary = await summarizeFn(partToSummarize);
 
   if (summary) {
     // Replace the old part with the summary
