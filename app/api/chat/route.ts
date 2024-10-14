@@ -111,9 +111,9 @@ export async function POST(request: NextRequest) {
             validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
           ) {
             const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel";
-            const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint;
             
             const summarizeWithOllamaGemma = async (text: string): Promise<string | null> => {
+              logger.debug(`app/api/chat/route.ts - Using Ollama Gemma model (${ollamaGemmaTextModel}) for clientId: ${clientId}`);
               return handleTextWithOllamaGemmaTextModel({ userPrompt: text, textModel: ollamaGemmaTextModel }, config);
             };
             
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaGemma);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
               },
@@ -137,6 +137,7 @@ export async function POST(request: NextRequest) {
             const ollamaLlamaTextModel = config.ollamaLlamaTextModel || "defaultModel";
             
             const summarizeWithOllamaLlama = async (text: string): Promise<string | null> => {
+              logger.debug(`app/api/chat/route.ts - Using Ollama Llama model (${ollamaLlamaTextModel}) for clientId: ${clientId}`);
               return handleTextWithOllamaLlamaTextModel({ userPrompt: text, textModel: ollamaLlamaTextModel }, config);
             };
             
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaLlama);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithOllamaLlamaTextModel({ userPrompt: prompt, textModel: ollamaLlamaTextModel }, config);
               },
@@ -160,6 +161,7 @@ export async function POST(request: NextRequest) {
             const cloudflareGemmaTextModel = config.cloudflareGemmaTextModel!;
             
             const summarizeWithCloudflareGemma = async (text: string): Promise<string | null> => {
+              logger.debug(`app/api/chat/route.ts - Using Cloudflare Gemma model (${cloudflareGemmaTextModel}) for clientId: ${clientId}`);
               return handleTextWithCloudflareGemmaTextModel({ userPrompt: text, textModel: cloudflareGemmaTextModel }, config);
             };
 
@@ -168,7 +170,7 @@ export async function POST(request: NextRequest) {
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithCloudflareGemmaTextModel({ userPrompt: prompt, textModel: cloudflareGemmaTextModel }, config);
               },
@@ -183,6 +185,7 @@ export async function POST(request: NextRequest) {
             const cloudflareLlamaTextModel = config.cloudflareLlamaTextModel!;
             
             const summarizeWithCloudflareLlama = async (text: string): Promise<string | null> => {
+              logger.debug(`app/api/chat/route.ts - Using Cloudflare Llama model (${cloudflareLlamaTextModel}) for clientId: ${clientId}`);
               return handleTextWithCloudflareLlamaTextModel({ userPrompt: text, textModel: cloudflareLlamaTextModel }, config);
             };
 
@@ -191,7 +194,7 @@ export async function POST(request: NextRequest) {
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithCloudflareLlamaTextModel({ userPrompt: prompt, textModel: cloudflareLlamaTextModel }, config);
               },
@@ -206,6 +209,7 @@ export async function POST(request: NextRequest) {
             const googleVertexGemmaTextModel = config.googleVertexGemmaTextModel!;
             
             const summarizeWithGoogleVertexGemma = async (text: string): Promise<string | null> => {
+              logger.debug(`app/api/chat/route.ts - Using Google Vertex Gemma model (${googleVertexGemmaTextModel}) for clientId: ${clientId}`);
               return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: text, textModel: googleVertexGemmaTextModel }, config);
             };
 
@@ -214,7 +218,7 @@ export async function POST(request: NextRequest) {
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: prompt, textModel: googleVertexGemmaTextModel }, config);
               },
@@ -229,6 +233,7 @@ export async function POST(request: NextRequest) {
             const googleVertexLlamaTextModel = config.googleVertexLlamaTextModel!;
             
             const summarizeWithGoogleVertexLlama = async (text: string): Promise<string | null> => {
+              logger.debug(`app/api/chat/route.ts - Using Google Vertex Llama model (${googleVertexLlamaTextModel}) for clientId: ${clientId}`);
               return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: text, textModel: googleVertexLlamaTextModel }, config);
             };
 
@@ -237,7 +242,7 @@ export async function POST(request: NextRequest) {
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: prompt, textModel: googleVertexLlamaTextModel }, config);
               },
