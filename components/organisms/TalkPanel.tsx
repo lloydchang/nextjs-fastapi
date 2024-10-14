@@ -27,15 +27,18 @@ const TalkPanel: React.FC = () => {
   const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
   const lastDispatchedTalkId = useRef<string | null>(null); // Track the last dispatched talk ID
 
+  // Enhanced logic to prevent multiple fetches in Strict Mode
   useEffect(() => {
     if (initialRender.current && !hasFetched.current) {
       console.log('TalkPanel - Initial render, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
-      initialRender.current = false;
-      hasFetched.current = true; // Prevent multiple fetches due to strict mode
+      hasFetched.current = true; // Ensure only one fetch occurs
     } else {
       console.log('TalkPanel - Not the initial render, skipping search:', searchQuery);
     }
+
+    // After initial render, set this to false to avoid re-fetching
+    initialRender.current = false;
   }, [searchQuery]);
 
   // Handle search results
