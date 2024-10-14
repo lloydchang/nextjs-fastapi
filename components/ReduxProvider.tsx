@@ -5,25 +5,31 @@
 import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store } from '../store/store';
-import { persistStore, Persistor } from 'redux-persist';
+import { store, createPersistedStore } from '../store/store';
+import type { Store } from '@reduxjs/toolkit';
+import type { Persistor } from 'redux-persist';
 
 const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [persistedStore, setPersistedStore] = useState<Store>(store);
   const [persistor, setPersistor] = useState<Persistor | null>(null);
 
   useEffect(() => {
-    // This runs only on the client side
-    const persistorInstance = persistStore(store);
-    setPersistor(persistorInstance);
+    const initializeStore = async () => {
+      const { persistedStore, persistor } = await createPersistedStore();
+      setPersistedStore(persistedStore);
+      setPersistor(persistor);
+    };
+
+    initializeStore();
   }, []);
 
   if (!persistor) {
-    // Render without PersistGate during SSR
-    return <Provider store={store}>{children}</Provider>;
+    // Render without PersistGate during SSR or while initializing
+    return <Provider store={persistedStore}>{children}</Provider>;
   }
 
   return (
-    <Provider store={store}>
+    <Provider store={persistedStore}>
       <PersistGate loading={null} persistor={persistor}>
         {children}
       </PersistGate>
