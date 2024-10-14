@@ -32,7 +32,7 @@ export async function* managePrompt(
     const summary = await summarizeFn(partToSummarize);
 
     if (summary) {
-      // Replace the summarized part with the summary and append the remaining prompt
+      // Replace the summarized part with the summary
       const remainingPrompt = currentPrompt.substring(excessLength);
       currentPrompt = `${summary}`;
 
