@@ -2,7 +2,7 @@
 
 .tools-container {
   position: absolute;       /* Use absolute positioning */
-  bottom: -400px;           /* Greater negative numbers move container further down */
+  bottom: -360px;           /* Greater negative numbers move container further down */
   right: -14px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
