@@ -61,9 +61,13 @@ export async function POST(request: NextRequest) {
         processingLocks.set(requestId, true); // Lock this request ID
         logger.silly(`app/api/chat/route.ts [${requestId}] - Lock acquired.`);
 
-        const botFunctions = [
-          {
-            persona: 'Ollama ' + config.ollamaGemmaTextModel,
+        // Initialize an empty array for valid bot functions
+        const botFunctions = [];
+
+        // Only add bots with valid configurations
+        if (isValidConfig(config.ollamaGemmaTextModel)) {
+          botFunctions.push({
+            persona: 'Ollama ' + config.ollamaGemmaTextModel!,
             generate: (currentContext: any[]) =>
               handleTextWithOllamaGemmaTextModel(
                 {
@@ -72,10 +76,12 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: isValidConfig(config.ollamaGemmaTextModel),
-          },
-          {
-            persona: 'Cloudflare ' + config.cloudflareGemmaTextModel,
+          });
+        }
+
+        if (isValidConfig(config.cloudflareGemmaTextModel)) {
+          botFunctions.push({
+            persona: 'Cloudflare ' + config.cloudflareGemmaTextModel!,
             generate: (currentContext: any[]) =>
               handleTextWithCloudflareGemmaTextModel(
                 {
@@ -84,10 +90,12 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: isValidConfig(config.cloudflareGemmaTextModel),
-          },
-          {
-            persona: 'Google Vertex ' + config.googleVertexGemmaTextModel,
+          });
+        }
+
+        if (isValidConfig(config.googleVertexGemmaTextModel)) {
+          botFunctions.push({
+            persona: 'Google Vertex ' + config.googleVertexGemmaTextModel!,
             generate: (currentContext: any[]) =>
               handleTextWithGoogleVertexGemmaTextModel(
                 {
@@ -96,10 +104,12 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: isValidConfig(config.googleVertexGemmaTextModel),
-          },
-          {
-            persona: 'Ollama ' + config.ollamaLlamaTextModel,
+          });
+        }
+
+        if (isValidConfig(config.ollamaLlamaTextModel)) {
+          botFunctions.push({
+            persona: 'Ollama ' + config.ollamaLlamaTextModel!,
             generate: (currentContext: any[]) =>
               handleTextWithOllamaLlamaTextModel(
                 {
@@ -108,10 +118,12 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: isValidConfig(config.ollamaLlamaTextModel),
-          },
-          {
-            persona: 'Cloudflare ' + config.cloudflareLlamaTextModel,
+          });
+        }
+
+        if (isValidConfig(config.cloudflareLlamaTextModel)) {
+          botFunctions.push({
+            persona: 'Cloudflare ' + config.cloudflareLlamaTextModel!,
             generate: (currentContext: any[]) =>
               handleTextWithCloudflareLlamaTextModel(
                 {
@@ -120,10 +132,12 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: isValidConfig(config.cloudflareLlamaTextModel),
-          },
-          {
-            persona: 'Google Vertex ' + config.googleVertexLlamaTextModel,
+          });
+        }
+
+        if (isValidConfig(config.googleVertexLlamaTextModel)) {
+          botFunctions.push({
+            persona: 'Google Vertex ' + config.googleVertexLlamaTextModel!,
             generate: (currentContext: any[]) =>
               handleTextWithGoogleVertexLlamaTextModel(
                 {
@@ -132,11 +146,8 @@ export async function POST(request: NextRequest) {
                 },
                 config
               ),
-            isValid: isValidConfig(config.googleVertexLlamaTextModel),
-          },
-        ];
-
-        const validBotFunctions = botFunctions.filter((bot) => bot.isValid);
+          });
+        }
 
         async function processBots() {
           logger.silly(
@@ -145,7 +156,7 @@ export async function POST(request: NextRequest) {
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
-            validBotFunctions.map((bot) => {
+            botFunctions.map((bot) => {
               logger.silly(
                 `app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`
               );
@@ -159,7 +170,7 @@ export async function POST(request: NextRequest) {
           for (let index = 0; index < responses.length; index++) {
             const response = responses[index];
             if (response && typeof response === 'string') {
-              const botPersona = validBotFunctions[index].persona;
+              const botPersona = botFunctions[index].persona;
 
               logger.debug(
                 `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
