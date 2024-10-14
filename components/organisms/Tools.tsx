@@ -142,6 +142,28 @@ const Tools: React.FC = () => {
           App
         </button>
 
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/sustainabledevelopment/climate-action-superheroes/'
+            )
+          }
+        >
+          Heroes
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/en/actnow'
+            )
+          }
+        >
+          Act
+        </button>
+
       </div>
     </div>
   );
