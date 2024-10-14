@@ -32,14 +32,14 @@ const ChatPanel: React.FC = () => {
 
   const handleChat = useCallback(async () => {
     if (chatInput.trim()) {
-      setIsSending(true); // Set isSending to true when sending starts
+      setIsSending(true);
+      setChatInput(''); // Clear the input immediately
       try {
         await dispatch(sendMessage(chatInput));
-        setChatInput(''); // Clear the input after sending
       } catch (error) {
         console.error('Failed to send message:', error);
       } finally {
-        setIsSending(false); // Reset isSending regardless of success or failure
+        setIsSending(false);
       }
     }
   }, [dispatch, chatInput]);
