@@ -97,7 +97,7 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  const debouncedSendTranscriptForTalk = debounce(sendTranscriptForTalk, 1000); // Add debounce to prevent multiple dispatches
+  const debouncedSendTranscriptForTalk = debounce(sendTranscriptForTalk, 1500); // Add debounce to prevent multiple dispatches
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - sendFirstAvailableTranscript started. Query:', query, 'Talks:', talks);
