@@ -94,7 +94,7 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
-      <Image src={BackgroundImage} alt="" fill className={styles.backgroundImage} />
+      <Image src={BackgroundImage} alt="" fill className={styles.backgroundImage} unoptimized />
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>

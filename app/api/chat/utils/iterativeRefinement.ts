@@ -21,7 +21,7 @@ export async function performIterativeRefinement(
   let context = '';
   let finalResponse = '';
   let hasIncompleteContent = true;
-  let iterationLimit = 5; // Adjust iteration limit for more flexibility
+  let iterationLimit = 1; // Adjust iteration limit for more flexibility
   let iterations = 0;
 
   while (hasIncompleteContent && iterations < iterationLimit) {
@@ -46,16 +46,16 @@ export async function performIterativeRefinement(
     const hasPlaceholders = detectPlaceholders(latestResponse);
 
     // Log the current state before further refinement
-    logger.silly(`Current context: ${context}`);
-    logger.silly(`Missing content detected: ${JSON.stringify(missingContent)}`);
-    logger.silly(`Has placeholders: ${hasPlaceholders}`);
+    logger.silly(`app/api/chat/utils/iterativeRefinement.ts - Current context: ${context}`);
+    logger.silly(`app/api/chat/utils/iterativeRefinement.ts - Missing content detected: ${JSON.stringify(missingContent)}`);
+    logger.silly(`app/api/chat/utils/iterativeRefinement.ts - Has placeholders: ${hasPlaceholders}`);
 
     // Ensure missingContent is iterable
     const missingSections = missingContent?.missingSentences || [];
 
     // Handle incomplete content by generating focused prompts
     for (const incompleteSection of missingSections) {
-      logger.silly(`Generating content for missing/incomplete section: ${incompleteSection}`);
+      logger.silly(`app/api/chat/utils/iterativeRefinement.ts - Generating content for missing/incomplete section: ${incompleteSection}`);
 
       // Create a focused prompt to generate content for the incomplete section
       const focusedPrompt = `Please expand on or generate content for the following section:\n"${incompleteSection}"`;
@@ -63,7 +63,7 @@ export async function performIterativeRefinement(
 
       // Replace incomplete section with the generated content
       finalResponse = finalResponse.replace(incompleteSection, generatedContent);
-      logger.silly(`Updated response after filling missing/incomplete section: ${finalResponse}`);
+      logger.silly(`app/api/chat/utils/iterativeRefinement.ts - Updated response after filling missing/incomplete section: ${finalResponse}`);
     }
 
     // Handle placeholders by performing a DuckDuckGo search if necessary
@@ -72,7 +72,7 @@ export async function performIterativeRefinement(
       if (placeholderMatch) {
         const searchQuery = placeholderMatch[1]; // Extract the placeholder text
         const searchResults = await performInternetSearch(searchQuery);
-        logger.silly(`DuckDuckGo search results for "${searchQuery}": ${JSON.stringify(searchResults)}`);
+        logger.silly(`app/api/chat/utils/iterativeRefinement.ts - DuckDuckGo search results for "${searchQuery}": ${JSON.stringify(searchResults)}`);
 
         // Assume the first search result is relevant; frame a question
         const questionPrompt = `Based on the search result: "${searchResults[0]}", provide a single word or phrase for the placeholder [${searchQuery}].`;
@@ -80,7 +80,7 @@ export async function performIterativeRefinement(
 
         // Replace the placeholder in the aggregated response
         finalResponse = finalResponse.replace(`[${searchQuery}]`, placeholderResponse);
-        logger.silly(`Updated response after filling placeholder: ${finalResponse}`);
+        logger.silly(`app/api/chat/utils/iterativeRefinement.ts - Updated response after filling placeholder: ${finalResponse}`);
       }
     }
 
@@ -95,7 +95,7 @@ export async function performIterativeRefinement(
 
     // Safety check: stop if too many iterations
     if (iterations >= iterationLimit) {
-      logger.error('Exceeded iteration limit during iterative refinement');
+      logger.error('app/api/chat/utils/iterativeRefinement.ts - Exceeded iteration limit during iterative refinement');
       break;
     }
   }
