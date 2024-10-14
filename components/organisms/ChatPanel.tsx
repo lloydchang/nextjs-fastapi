@@ -94,7 +94,8 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
-      <Image src={BackgroundImage} alt="" fill className={styles.backgroundImage} unoptimized />
+      {/* Add priority attribute to optimize loading for LCP */}
+      <Image src={BackgroundImage} alt="" fill className={styles.backgroundImage} priority unoptimized />
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
