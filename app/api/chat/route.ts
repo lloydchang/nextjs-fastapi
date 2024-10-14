@@ -87,49 +87,47 @@ export async function POST(request: NextRequest) {
           },
         ].filter(bot => bot.isValid); // Only keep valid bot configurations
 
-        let maxIterations = 1;
-        let iteration = 0;
-
         async function processBots() {
-          while (iteration < maxIterations) {
-            iteration++;
-            logger.silly(`app/api/chat/route.ts - Iteration ${iteration}: Current context: ${JSON.stringify(context)}`);
+          logger.silly(`app/api/chat/route.ts - Starting parallel bot processing`);
 
-            const responses = await Promise.all(
-              botFunctions.map((bot) => bot.generate(context))
-            );
+          // Fetch all bot responses in parallel
+          const responses = await Promise.all(
+            botFunctions.map((bot) => bot.generate(context))
+          );
 
-            let hasResponse = false;
-            for (let index = 0; index < responses.length; index++) {
-              const response = responses[index];
-              if (response && typeof response === 'string') {
-                const botPersona = botFunctions[index].persona;
+          let hasResponse = false;
 
-                logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+          // Process the bot responses
+          for (let index = 0; index < responses.length; index++) {
+            const response = responses[index];
+            if (response && typeof response === 'string') {
+              const botPersona = botFunctions[index].persona;
 
-                context.push({ role: 'bot', content: response, persona: botPersona });
+              logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
 
-                controller.enqueue(`data: ${JSON.stringify({
-                  persona: botPersona,
-                  message: response,
-                })}\n\n`);
+              context.push({ role: 'bot', content: response, persona: botPersona });
 
-                hasResponse = true;
-              }
+              // Send the bot response to the client immediately
+              controller.enqueue(`data: ${JSON.stringify({
+                persona: botPersona,
+                message: response,
+              })}\n\n`);
+
+              hasResponse = true;
             }
+          }
 
-            context = context.slice(-maxContextMessages);
+          // Keep context within limits
+          context = context.slice(-maxContextMessages);
 
-            if (Date.now() - lastInteractionTime > sessionTimeout) {
-              context = [];
-              lastInteractionTime = Date.now();
-              logger.silly(`app/api/chat/route.ts - Session timed out. Context reset.`);
-            }
+          if (Date.now() - lastInteractionTime > sessionTimeout) {
+            context = [];
+            lastInteractionTime = Date.now();
+            logger.silly(`app/api/chat/route.ts - Session timed out. Context reset.`);
+          }
 
-            if (!hasResponse) {
-              logger.silly(`app/api/chat/route.ts - No bot responded in iteration ${iteration} of ${maxIterations}. Ending interaction.`);
-              break;
-            }
+          if (!hasResponse) {
+            logger.silly(`app/api/chat/route.ts - No bot responded. Ending interaction.`);
           }
 
           controller.enqueue('data: [DONE]\n\n');
