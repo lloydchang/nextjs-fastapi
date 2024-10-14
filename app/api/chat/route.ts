@@ -17,16 +17,8 @@ const config = getConfig();
 const maxTotalContextMessages = 10; // Adjust as needed
 const maxBotResponsesInContext = 1;
 
-// Rate Limiting Configuration
-const RATE_LIMIT = 5; // Max requests
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
-
-// Maps to track client contexts and mutexes
 const clientContexts = new Map<string, any[]>();
 const clientMutexes = new Map<string, Mutex>();
-
-// Map to track rate limiting per client
-const rateLimitMap = new Map<string, { count: number; firstRequestTime: number }>();
 
 // Optional: To track last activity for cleanup
 const lastActivityMap = new Map<string, number>();
@@ -44,7 +36,6 @@ function isValidConfig(value: any): boolean {
 // Cleanup mechanism to prevent memory leaks
 setInterval(() => {
   const now = Date.now();
-  // Cleanup inactive clients
   for (const [clientId, lastActivity] of lastActivityMap.entries()) {
     if (now - lastActivity > INACTIVITY_LIMIT) {
       clientContexts.delete(clientId);
@@ -53,14 +44,7 @@ setInterval(() => {
       logger.info(`Cleaned up context and mutex for inactive clientId: ${clientId}`);
     }
   }
-
-  // Cleanup rate limit entries
-  for (const [clientId, rateInfo] of rateLimitMap.entries()) {
-    if (now - rateInfo.firstRequestTime > RATE_LIMIT_WINDOW) {
-      rateLimitMap.delete(clientId);
-    }
-  }
-}, 60 * 1000); // Runs every minute
+}, INACTIVITY_LIMIT);
 
 // Main POST handler
 export async function POST(request: NextRequest) {
@@ -69,42 +53,6 @@ export async function POST(request: NextRequest) {
 
   // Log incoming request
   logger.info(`Received POST request [${requestId}] from clientId: ${clientId}`);
-
-  // Implement Server-Side Rate Limiting
-  const now = Date.now();
-  const rateInfo = rateLimitMap.get(clientId);
-
-  if (rateInfo) {
-    if (now - rateInfo.firstRequestTime < RATE_LIMIT_WINDOW) {
-      // Within the rate limit window
-      if (rateInfo.count >= RATE_LIMIT) {
-        // Exceeded rate limit
-        logger.warn(`ClientId: ${clientId} has exceeded the rate limit.`);
-        return NextResponse.json(
-          {
-            error: 'Too Many Requests',
-            message: `You have exceeded the limit of ${RATE_LIMIT} requests per minute. Please try again later.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': `${Math.ceil((RATE_LIMIT_WINDOW - (now - rateInfo.firstRequestTime)) / 1000)}`, // In seconds
-            },
-          }
-        );
-      } else {
-        // Increment the request count
-        rateInfo.count += 1;
-        rateLimitMap.set(clientId, rateInfo);
-      }
-    } else {
-      // Rate limit window has passed, reset the count
-      rateLimitMap.set(clientId, { count: 1, firstRequestTime: now });
-    }
-  } else {
-    // First request from this client
-    rateLimitMap.set(clientId, { count: 1, firstRequestTime: now });
-  }
 
   // Get or create a mutex for the client
   let mutex = clientMutexes.get(clientId);

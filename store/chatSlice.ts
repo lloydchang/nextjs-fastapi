@@ -7,7 +7,6 @@ import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import throttle from 'lodash/throttle'; // Import throttle
 import { setLoading } from './apiSlice'; // Import setLoading
-import { showNotification } from './notificationSlice'; // Import showNotification
 
 interface ChatState {
   messages: Message[];
@@ -52,127 +51,95 @@ const chatSlice = createSlice({
 
 const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
 
+// Define a throttled API call function
 const throttledApiCall = throttle(
-  async (
+  (
     dispatch: AppDispatch,
     getState: () => RootState,
     input: any,
     clientId: string
   ): Promise<void> => {
-    // Check if an API call is already in progress
-    const state = getState();
+    return new Promise(async (resolve, reject) => {
+      const state = getState();
 
-    if (state.api?.isLoading) {
-      console.log('API call already in progress, skipping');
-      return;
-    }
+      // If already loading, skip this call
+      if (state.api?.isLoading) {
+        console.log('API call already in progress, skipping');
+        resolve();
+        return;
+      }
 
-    // Set loading to true
-    dispatch(setLoading(true));
+      // Set loading to true
+      dispatch(setLoading(true));
 
-    try {
-      const messagesArray = [
-        { role: 'user', content: typeof input === 'string' ? input : input.text },
-      ];
+      try {
+        const messagesArray = [
+          { role: 'user', content: typeof input === 'string' ? input : input.text },
+        ];
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-client-id': clientId,
-        },
-        body: JSON.stringify({ messages: messagesArray }),
-      });
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-client-id': clientId,
+          },
+          body: JSON.stringify({ messages: messagesArray }),
+        });
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          // Handle rate limiting
-          const retryAfter = response.headers.get('Retry-After');
-          const retrySeconds = retryAfter ? parseInt(retryAfter, 10) : 60; // Default to 60 seconds
-
-          dispatch(
-            showNotification({
-              message: `Rate limit exceeded. Please try again in ${retrySeconds} seconds.`,
-              type: 'warning',
-            })
-          );
-
-          console.error(`chatSlice - Rate limit exceeded: ${response.statusText}`);
+        if (!response.ok) {
+          console.error(`chatSlice - Error response from API: ${response.statusText}`);
+          reject(new Error(response.statusText));
           return;
         }
 
-        // Handle other error statuses
-        dispatch(
-          showNotification({
-            message: `Error: ${response.status} - ${response.statusText}`,
-            type: 'error',
-          })
-        );
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          let textBuffer = '';
 
-        console.error(`chatSlice - Error response from API: ${response.statusText}`);
-        throw new Error(response.statusText);
-      }
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-      const reader = response.body?.getReader();
-      if (reader) {
-        const decoder = new TextDecoder();
-        let textBuffer = '';
+            textBuffer += decoder.decode(value, { stream: true });
 
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
+            const messages = textBuffer.split('\n\n');
+            textBuffer = messages.pop() || '';
 
-          textBuffer += decoder.decode(value, { stream: true });
+            for (const message of messages) {
+              if (message.startsWith('data: ')) {
+                const jsonString = message.substring(6).trim();
+                console.log(`chatSlice - Raw incoming message: ${jsonString}`);
 
-          const messages = textBuffer.split('\n\n');
-          textBuffer = messages.pop() || '';
-
-          for (const message of messages) {
-            if (message.startsWith('data: ')) {
-              const jsonString = message.substring(6).trim();
-              console.log(`chatSlice - Raw incoming message: ${jsonString}`);
-
-              try {
-                const parsedData = parseIncomingMessage(jsonString);
-                if (parsedData?.message && parsedData?.persona) {
-                  const botMessage: Message = {
-                    id: uuidv4(), // Use UUID for uniqueness
-                    sender: 'bot',
-                    text: parsedData.message,
-                    role: 'bot',
-                    content: parsedData.message,
-                    persona: parsedData.persona,
-                  };
-                  dispatch(addMessage(botMessage));
+                try {
+                  const parsedData = parseIncomingMessage(jsonString);
+                  if (parsedData?.message && parsedData?.persona) {
+                    const botMessage: Message = {
+                      id: uuidv4(), // Use UUID for uniqueness
+                      sender: 'bot',
+                      text: parsedData.message,
+                      role: 'bot',
+                      content: parsedData.message,
+                      persona: parsedData.persona,
+                    };
+                    dispatch(addMessage(botMessage));
+                  }
+                } catch (e) {
+                  console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
                 }
-              } catch (e) {
-                console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
               }
             }
           }
         }
+        resolve();
+      } catch (error) {
+        console.error(`chatSlice - Error sending message to API: ${error}`);
+        reject(error);
+      } finally {
+        // Reset loading state
+        dispatch(setLoading(false));
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        dispatch(
-          showNotification({
-            message: `An error occurred: ${error.message}`,
-            type: 'error',
-          })
-        );
-      } else {
-        dispatch(
-          showNotification({
-            message: 'An unexpected error occurred.',
-            type: 'error',
-          })
-        );
-      }
-      console.error(`chatSlice - Error sending message to API: ${error}`);
-    } finally {
-      // Reset loading state
-      dispatch(setLoading(false));
-    }
+    });
   },
   1000, // Throttle limit: 1000 milliseconds (1 second)
   { leading: true, trailing: false } // Options: execute on the leading edge only
