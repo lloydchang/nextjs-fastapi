@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel)) {
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama Gemma', message: updatedPrompt })}\n\n`);
+                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama Gemma ' + ollamaGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel)) {
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama Llama', message: updatedPrompt })}\n\n`);
+                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama Llama ' + ollamaLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
 
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel)) {
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare Gemma', message: updatedPrompt })}\n\n`);
+                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare Gemma ' + cloudflareGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
 
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel)) {
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare Llama', message: updatedPrompt })}\n\n`);
+                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare Llama ' + cloudflareLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
 
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel)) {
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex Gemma', message: updatedPrompt })}\n\n`);
+                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex Gemma ' + googleVertexGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
 
@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel)) {
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex Llama', message: updatedPrompt })}\n\n`);
+                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex Llama ' + googleVertexLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
 
