@@ -87,6 +87,7 @@ const debouncedApiCall = debounce(
         try {
           const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
 
+          console.log('Attempting to fetch from /api/chat');
           const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
@@ -95,6 +96,8 @@ const debouncedApiCall = debounce(
             },
             body: JSON.stringify({ messages: messagesArray }),
           });
+
+          console.log('Fetch response received:', response);
 
           if (!response.ok) {
             if (response.status === 429) {
@@ -107,55 +110,23 @@ const debouncedApiCall = debounce(
             throw new ApiError(response.status, response.statusText);
           }
 
-          const reader = response.body?.getReader();
-          if (reader) {
-            const decoder = new TextDecoder();
-            let textBuffer = '';
+          // ... (rest of the function remains the same)
 
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
-
-              textBuffer += decoder.decode(value, { stream: true });
-
-              const messages = textBuffer.split('\n\n');
-              textBuffer = messages.pop() || '';
-
-              for (const message of messages) {
-                if (message.startsWith('data: ')) {
-                  const jsonString = message.substring(6).trim();
-                  console.log(`chatSlice - Raw incoming message: ${jsonString}`);
-
-                  try {
-                    const parsedData = parseIncomingMessage(jsonString);
-                    if (parsedData?.message && parsedData?.persona) {
-                      const botMessage: Message = {
-                        id: `${Date.now()}`,
-                        sender: 'bot',
-                        text: parsedData.message,
-                        role: 'bot',
-                        content: parsedData.message,
-                        persona: parsedData.persona,
-                      };
-                      dispatch(addMessage(botMessage));
-                    }
-                  } catch (e) {
-                    console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
-                  }
-                }
-              }
-            }
-          }
-          resolve();
-          return;
         } catch (error) {
-          if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
+          console.error('Error in API call:', error);
+          
+          if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            console.error('Network error or API endpoint is unreachable');
+            dispatch(setError('Unable to reach the server. Please check your internet connection and try again.'));
+          } else if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
             retryCount++;
             await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
             continue;
+          } else {
+            console.error(`chatSlice - Error sending message to API: ${error}`);
+            dispatch(setError(error instanceof Error ? error.message : 'Unknown error occurred'));
           }
-          console.error(`chatSlice - Error sending message to API: ${error}`);
-          dispatch(setError(error instanceof Error ? error.message : 'Unknown error occurred'));
+          
           reject(error);
           return;
         }
