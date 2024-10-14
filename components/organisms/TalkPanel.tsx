@@ -26,19 +26,22 @@ const TalkPanel: React.FC = () => {
   const hasFetched = useRef(false); // Track if data has been fetched
   const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
   const lastDispatchedTalkId = useRef<string | null>(null); // Track the last dispatched talk ID
+  const isMounted = useRef(false); // Track if component is mounted
 
   // Enhanced logic to prevent multiple fetches and message sends in Strict Mode
   useEffect(() => {
-    if (initialRender.current && !hasFetched.current) {
+    if (isMounted.current && !hasFetched.current) {
       console.log('TalkPanel - Initial render, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
       hasFetched.current = true; // Ensure only one fetch occurs
-    } else {
-      console.log('TalkPanel - Not the initial render, skipping search:', searchQuery);
+    } else if (!isMounted.current) {
+      console.log('TalkPanel - Initial mount detected, skipping search.');
+      isMounted.current = true;
     }
 
-    // After initial render, set this to false to avoid re-fetching
-    initialRender.current = false;
+    return () => {
+      isMounted.current = false;
+    };
   }, [searchQuery]);
 
   // Handle search results
