@@ -12,22 +12,16 @@ import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controlle
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
+import pQueue from 'p-queue';
 
 const config = getConfig();
 
-const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
-const maxContextMessages = 20; // Keep only the last 20 messages
+const sessionTimeout = 60 * 60 * 1000;
+const maxContextMessages = 20;
 
-// Map to store context per clientId
 const clientContexts = new Map<string, any[]>();
+const clientQueues = new Map<string, pQueue>();
 
-// Map to store per-client request queues
-const clientRequestQueues = new Map<string, (() => Promise<void>)[]>();
-
-// Map to track if a client's queue is being processed
-const clientProcessingFlags = new Map<string, boolean>();
-
-// Helper function to check if a configuration value is valid
 function isValidConfig(value: any): boolean {
   return (
     typeof value === 'string' &&
@@ -38,11 +32,16 @@ function isValidConfig(value: any): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const requestId = uuidv4(); // Use UUID for unique request ID
+  const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  // Wrap the request processing in a function
-  const processRequest = async () => {
+  let queue = clientQueues.get(clientId);
+  if (!queue) {
+    queue = new pQueue({ concurrency: 1 });
+    clientQueues.set(clientId, queue);
+  }
+
+  return queue.add(async () => {
     try {
       const { messages } = await request.json();
       if (!Array.isArray(messages) || messages.length === 0) {
@@ -52,32 +51,20 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Get or initialize the context for this client
       let context = clientContexts.get(clientId) || [];
-      context = [...context, ...messages]; // Append new messages to the context
-
-      // Keep context within limits
+      context = [...context, ...messages];
       context = context.slice(-maxContextMessages);
-      clientContexts.set(clientId, context); // Update the context map
+      clientContexts.set(clientId, context);
 
       const stream = new ReadableStream({
         async start(controller) {
-          // logger.silly(
-          //   `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
-          // );
-
-          // Define the BotFunction interface
           interface BotFunction {
             persona: string;
             generate: (currentContext: any[]) => Promise<string>;
           }
 
-          // Initialize an empty array for valid bot functions
           const botFunctions: BotFunction[] = [];
 
-          // Only add bots with valid configurations and environment variables
-
-          // Ollama Gemma
           if (
             isValidConfig(config.ollamaGemmaTextModel) &&
             validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
@@ -95,7 +82,6 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          // Cloudflare Gemma
           if (
             isValidConfig(config.cloudflareGemmaTextModel) &&
             validateEnvVars([
@@ -117,26 +103,15 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          // Add other bot functions similarly...
+          // Add other bot functions here...
 
           async function processBots() {
-            // logger.silly(
-            //   `app/api/chat/route.ts [${requestId}] - Starting bot processing for clientId: ${clientId}.`
-            // );
-
-            // Fetch all bot responses in parallel
             const responses = await Promise.all(
-              botFunctions.map((bot) => {
-                // logger.silly(
-                //   `app/api/chat/route.ts [${requestId}] - Processing bot ${bot.persona}`
-                // );
-                return bot.generate(context);
-              })
+              botFunctions.map((bot) => bot.generate(context))
             );
 
             let hasResponse = false;
 
-            // Process the bot responses
             for (let index = 0; index < responses.length; index++) {
               const response = responses[index];
               if (response && typeof response === 'string') {
@@ -146,7 +121,6 @@ export async function POST(request: NextRequest) {
                   `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
                 );
 
-                // Send the bot response to the client immediately
                 controller.enqueue(
                   `data: ${JSON.stringify({
                     persona: botPersona,
@@ -154,7 +128,6 @@ export async function POST(request: NextRequest) {
                   })}\n\n`
                 );
 
-                // Add bot response to context
                 context.push({
                   role: 'bot',
                   content: response,
@@ -165,9 +138,8 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            // Keep context within limits
             context = context.slice(-maxContextMessages);
-            clientContexts.set(clientId, context); // Update the context map
+            clientContexts.set(clientId, context);
 
             if (!hasResponse) {
               logger.silly(
@@ -199,53 +171,6 @@ export async function POST(request: NextRequest) {
         { error: error instanceof Error ? error.message : 'Internal Server Error' },
         { status: 500 }
       );
-    } finally {
-      // After processing, check if there are more requests in the queue
-      processNextInQueue(clientId).catch((error) => {
-        console.error(`Error processing queue for clientId ${clientId}:`, error);
-        clientProcessingFlags.set(clientId, false);
-      });
     }
-  };
-
-  // Function to process the next request in the queue
-  async function processNextInQueue(clientId: string) {
-    const queue = clientRequestQueues.get(clientId);
-    if (queue && queue.length > 0) {
-      const nextRequest = queue.shift();
-      if (nextRequest) {
-        await nextRequest(); // Await the processing of the request
-        // After processing, proceed to the next request
-        await processNextInQueue(clientId);
-      }
-    } else {
-      clientProcessingFlags.set(clientId, false);
-    }
-  }
-
-  // Function to add the request to the client's queue
-  function enqueueRequest(clientId: string, requestFunction: () => Promise<void>) {
-    if (!clientRequestQueues.has(clientId)) {
-      clientRequestQueues.set(clientId, []);
-    }
-    const queue = clientRequestQueues.get(clientId)!;
-    queue.push(requestFunction);
-
-    // If not already processing, start processing the queue
-    if (!clientProcessingFlags.get(clientId)) {
-      clientProcessingFlags.set(clientId, true);
-      processNextInQueue(clientId).catch((error) => {
-        console.error(`Error processing queue for clientId ${clientId}:`, error);
-        clientProcessingFlags.set(clientId, false);
-      });
-    }
-  }
-
-  // Return a promise that will be resolved when the request is processed
-  return new Promise<NextResponse>((resolve, reject) => {
-    enqueueRequest(clientId, async () => {
-      const response = await processRequest();
-      resolve(response);
-    });
   });
 }
