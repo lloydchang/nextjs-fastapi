@@ -1,11 +1,8 @@
-// File: store/chatSlice.ts
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch, RootState } from 'store/store';
 import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
-import { setLoading } from './apiSlice';
 import debounce from 'lodash/debounce';
 
 interface ChatState {
@@ -49,83 +46,96 @@ const chatSlice = createSlice({
   },
 });
 
-const debouncedApiCall = debounce(async (dispatch: AppDispatch, getState: () => RootState, input: any, clientId: string) => {
-  const state = getState();
-  if (state.api.isLoading) {
-    console.log('API call already in progress, skipping');
-    return;
-  }
+const { addMessage } = chatSlice.actions;
 
-  dispatch(setLoading(true));
+// Wrap debouncedApiCall in a Promise to handle async/await
+const debouncedApiCall = debounce(
+  (
+    dispatch: AppDispatch,
+    getState: () => RootState,
+    input: any,
+    clientId: string
+  ): Promise<void> => {
+    return new Promise(async (resolve, reject) => {
+      const state = getState();
+      if (state.api?.isLoading) {
+        console.log('API call already in progress, skipping');
+        resolve();
+        return;
+      }
 
-  try {
-    const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
+      try {
+        const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
 
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-client-id': clientId,
-      },
-      body: JSON.stringify({ messages: messagesArray }),
-    });
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-client-id': clientId,
+          },
+          body: JSON.stringify({ messages: messagesArray }),
+        });
 
-    if (!response.ok) {
-      console.error(`chatSlice - Error response from API: ${response.statusText}`);
-      return;
-    }
+        if (!response.ok) {
+          console.error(`chatSlice - Error response from API: ${response.statusText}`);
+          reject(new Error(response.statusText));
+          return;
+        }
 
-    const reader = response.body?.getReader();
-    if (reader) {
-      const decoder = new TextDecoder();
-      let textBuffer = '';
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          let textBuffer = '';
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-        textBuffer += decoder.decode(value, { stream: true });
+            textBuffer += decoder.decode(value, { stream: true });
 
-        const messages = textBuffer.split('\n\n');
-        textBuffer = messages.pop() || '';
+            const messages = textBuffer.split('\n\n');
+            textBuffer = messages.pop() || '';
 
-        for (const message of messages) {
-          if (message.startsWith('data: ')) {
-            const jsonString = message.substring(6).trim();
-            console.log(`chatSlice - Raw incoming message: ${jsonString}`);
+            for (const message of messages) {
+              if (message.startsWith('data: ')) {
+                const jsonString = message.substring(6).trim();
+                console.log(`chatSlice - Raw incoming message: ${jsonString}`);
 
-            try {
-              const parsedData = parseIncomingMessage(jsonString);
-              if (parsedData?.message && parsedData?.persona) {
-                const botMessage: Message = {
-                  id: `${Date.now()}`,
-                  sender: 'bot',
-                  text: parsedData.message,
-                  role: 'bot',
-                  content: parsedData.message,
-                  persona: parsedData.persona,
-                };
-                dispatch(addMessage(botMessage));
+                try {
+                  const parsedData = parseIncomingMessage(jsonString);
+                  if (parsedData?.message && parsedData?.persona) {
+                    const botMessage: Message = {
+                      id: `${Date.now()}`,
+                      sender: 'bot',
+                      text: parsedData.message,
+                      role: 'bot',
+                      content: parsedData.message,
+                      persona: parsedData.persona,
+                    };
+                    dispatch(addMessage(botMessage));
+                  }
+                } catch (e) {
+                  console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
+                }
               }
-            } catch (e) {
-              console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
             }
           }
         }
+        resolve();
+      } catch (error) {
+        console.error(`chatSlice - Error sending message to API: ${error}`);
+        reject(error);
       }
-    }
-  } catch (error) {
-    console.error(`chatSlice - Error sending message to API: ${error}`);
-  } finally {
-    dispatch(setLoading(false));
-  }
-}, 300);
+    });
+  },
+  300
+);
 
 export const sendMessage = (
   input:
     | string
     | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
-) => (dispatch: AppDispatch, getState: () => RootState) => {
+) => async (dispatch: AppDispatch, getState: () => RootState) => {
   console.log('sendMessage - Function called with input:', input);
 
   let clientId: string;
@@ -157,7 +167,8 @@ export const sendMessage = (
 
   dispatch(addMessage(userMessage));
 
-  debouncedApiCall(dispatch, getState, input, clientId);
+  // Wait for debouncedApiCall to complete
+  await debouncedApiCall(dispatch, getState, input, clientId);
 };
 
 export function parseIncomingMessage(jsonString: string) {
@@ -188,5 +199,5 @@ function logDetailedErrorInfo(jsonString: string, error: Error) {
   console.error('chatSlice - JSON Snippet (End):', endSnippet);
 }
 
-export const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
+export const { clearMessages, saveMessage } = chatSlice.actions;
 export default chatSlice.reducer;
