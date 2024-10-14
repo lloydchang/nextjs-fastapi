@@ -3,7 +3,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import chatReducer from './chatSlice';
 import talkReducer from './talkSlice';
-import apiReducer from './apiSlice';
 
 // Create the Redux store without persistence for SSR
 export const store = configureStore({
