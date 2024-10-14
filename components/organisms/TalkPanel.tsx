@@ -79,7 +79,7 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  const sendTranscriptForTalk = async (query: string, talk: Talk): Promise<void> => {
+  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
     if (talk.title === lastDispatchedTalkId) {
       return;
     }
@@ -92,11 +92,21 @@ const TalkPanel: React.FC = () => {
       dispatch(setSelectedTalk(talk));
       setLastDispatchedTalkId(talk.title);
     } catch (dispatchError) {
-      dispatch(setError(`Failed to send transcript for ${talk.title}.`));
+      if (retryCount < 3) { // Retry logic with exponential backoff
+        const delay = Math.pow(2, retryCount) * 1000;
+        console.error(`Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
+        await wait(delay);
+        await sendTranscriptForTalk(query, talk, retryCount + 1); // Recursive retry
+      } else {
+        console.error(`Failed to send transcript for ${talk.title} after multiple attempts.`);
+        dispatch(setError(`Failed to send transcript for ${talk.title}.`));
+      }
     }
   };
 
-  const debouncedSendTranscriptForTalk = debounce(sendTranscriptForTalk, 1500);
+  const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
+    sendTranscriptForTalk(query, talk);
+  }, 1500); // Debounce duration remains the same
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     for (let i = 0; i < talks.length; i++) {
