@@ -67,6 +67,8 @@ export const sendMessage = (
     clientId = uuidv4(); // Fallback for server environment
   }
 
+};
+
   const userMessage: Message =
     typeof input === 'string'
       ? {
