@@ -15,6 +15,7 @@ import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
+import { BotFunction } from 'types';
 
 const config = getConfig();
 
