@@ -33,7 +33,6 @@ export async function* managePrompt(
 
     if (summary) {
       // Replace the summarized part with the summary
-      const remainingPrompt = currentPrompt.substring(excessLength);
       currentPrompt = `${summary}`;
 
       // Yield partial result to the caller
