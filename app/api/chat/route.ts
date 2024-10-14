@@ -11,21 +11,19 @@ import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
-import { validateEnvVars } from 'app/api/chat/utils/validate';
+import { validateEnvVars } from 'app/api/chat/utils/validate'; // Import validateEnvVars
 
 const config = getConfig();
 
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 20; // Keep only the last 20 messages
 
-// Map to store context per clientId
-const clientContexts = new Map<string, any[]>();
+// Remove the processingLocks map
+// const processingLocks = new Map<string, boolean>();
+const lastInteractionTimes = new Map<string, number>(); // Track last interaction time per client
 
-// Map to store per-client request queues
-const clientRequestQueues = new Map<string, (() => Promise<void>)[]>();
-
-// Map to track if a client's queue is being processed
-const clientProcessingFlags = new Map<string, boolean>();
+// Use a Map to store context per client
+const clientContexts = new Map<string, any[]>(); // Map to store context per clientId
 
 // Helper function to check if a configuration value is valid
 function isValidConfig(value: any): boolean {
@@ -38,162 +36,263 @@ function isValidConfig(value: any): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const requestId = uuidv4(); // Use UUID for unique request ID
-  const clientId = request.headers.get('x-client-id') || 'unknown-client';
+  try {
+    const requestId = uuidv4(); // Use UUID for unique request ID
+    const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  // Wrap the request processing in a function
-  const processRequest = async () => {
-    try {
-      const { messages } = await request.json();
-      if (!Array.isArray(messages) || messages.length === 0) {
-        return NextResponse.json(
-          { error: 'Invalid request format or no messages provided.' },
-          { status: 400 }
+    const { messages } = await request.json();
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid request format or no messages provided.' },
+        { status: 400 }
+      );
+    }
+
+    // Get or initialize the context for this client
+    let context = clientContexts.get(clientId) || [];
+    context = [...context, ...messages]; // Append new messages to the context
+
+    // Keep context within limits
+    context = context.slice(-maxContextMessages);
+    clientContexts.set(clientId, context); // Update the context map
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        logger.silly(
+          `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
         );
-      }
 
-      // Get or initialize the context for this client
-      let context = clientContexts.get(clientId) || [];
-      context = [...context, ...messages]; // Append new messages to the context
+        // Remove per-client locking mechanism
 
-      // Keep context within limits
-      context = context.slice(-maxContextMessages);
-      clientContexts.set(clientId, context); // Update the context map
+        // Get last interaction time for this client
+        let lastInteractionTime = lastInteractionTimes.get(clientId) || Date.now();
 
-      const stream = new ReadableStream({
-        async start(controller) {
+        // Initialize an empty array for valid bot functions
+        const botFunctions = [];
+
+        // Only add bots with valid configurations and environment variables
+
+        // Ollama Gemma
+        if (
+          isValidConfig(config.ollamaGemmaTextModel) &&
+          validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
+        ) {
+          botFunctions.push({
+            persona: 'Ollama ' + config.ollamaGemmaTextModel!,
+            generate: (currentContext: any[]) =>
+              handleTextWithOllamaGemmaTextModel(
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.ollamaGemmaTextModel!,
+                },
+                config
+              ),
+          });
+        }
+
+        // Cloudflare Gemma
+        if (
+          isValidConfig(config.cloudflareGemmaTextModel) &&
+          validateEnvVars([
+            'CLOUDFLARE_GEMMA_TEXT_MODEL',
+            'CLOUDFLARE_GEMMA_ENDPOINT',
+            'CLOUDFLARE_GEMMA_BEARER_TOKEN',
+          ])
+        ) {
+          botFunctions.push({
+            persona: 'Cloudflare ' + config.cloudflareGemmaTextModel!,
+            generate: (currentContext: any[]) =>
+              handleTextWithCloudflareGemmaTextModel(
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.cloudflareGemmaTextModel!,
+                },
+                config
+              ),
+          });
+        }
+
+        // Google Vertex Gemma
+        if (
+          isValidConfig(config.googleVertexGemmaTextModel) &&
+          validateEnvVars([
+            'GOOGLE_VERTEX_GEMMA_TEXT_MODEL',
+            'GOOGLE_VERTEX_GEMMA_ENDPOINT',
+            'GOOGLE_VERTEX_GEMMA_LOCATION',
+          ])
+        ) {
+          botFunctions.push({
+            persona: 'Google Vertex ' + config.googleVertexGemmaTextModel!,
+            generate: (currentContext: any[]) =>
+              handleTextWithGoogleVertexGemmaTextModel(
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.googleVertexGemmaTextModel!,
+                },
+                config
+              ),
+          });
+        }
+
+        // Ollama Llama
+        if (
+          isValidConfig(config.ollamaLlamaTextModel) &&
+          validateEnvVars(['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'])
+        ) {
+          botFunctions.push({
+            persona: 'Ollama ' + config.ollamaLlamaTextModel!,
+            generate: (currentContext: any[]) =>
+              handleTextWithOllamaLlamaTextModel(
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.ollamaLlamaTextModel!,
+                },
+                config
+              ),
+          });
+        }
+
+        // Cloudflare Llama
+        if (
+          isValidConfig(config.cloudflareLlamaTextModel) &&
+          validateEnvVars([
+            'CLOUDFLARE_LLAMA_TEXT_MODEL',
+            'CLOUDFLARE_LLAMA_ENDPOINT',
+            'CLOUDFLARE_LLAMA_BEARER_TOKEN',
+          ])
+        ) {
+          botFunctions.push({
+            persona: 'Cloudflare ' + config.cloudflareLlamaTextModel!,
+            generate: (currentContext: any[]) =>
+              handleTextWithCloudflareLlamaTextModel(
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.cloudflareLlamaTextModel!,
+                },
+                config
+              ),
+          });
+        }
+
+        // Google Vertex Llama
+        if (
+          isValidConfig(config.googleVertexLlamaTextModel) &&
+          validateEnvVars([
+            'GOOGLE_VERTEX_LLAMA_TEXT_MODEL',
+            'GOOGLE_VERTEX_LLAMA_ENDPOINT',
+            'GOOGLE_VERTEX_LLAMA_LOCATION',
+          ])
+        ) {
+          botFunctions.push({
+            persona: 'Google Vertex ' + config.googleVertexLlamaTextModel!,
+            generate: (currentContext: any[]) =>
+              handleTextWithGoogleVertexLlamaTextModel(
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.googleVertexLlamaTextModel!,
+                },
+                config
+              ),
+          });
+        }
+
+        async function processBots() {
           logger.silly(
-            `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
+            `app/api/chat/route.ts [${requestId}] - Starting bot processing for clientId: ${clientId}.`
           );
 
-          // Initialize an empty array for valid bot functions
-          const botFunctions = [];
-
-          // Only add bots with valid configurations and environment variables
-
-          // [Add your botFunctions here as in your existing code]
-
-          // For brevity, assuming botFunctions are populated as before
-
-          async function processBots() {
-            logger.silly(
-              `app/api/chat/route.ts [${requestId}] - Starting bot processing for clientId: ${clientId}.`
-            );
-
-            // Fetch all bot responses in parallel
-            const responses = await Promise.all(
-              botFunctions.map((bot) => {
-                logger.silly(
-                  `app/api/chat/route.ts [${requestId}] - Processing bot ${bot.persona}`
-                );
-                return bot.generate(context);
-              })
-            );
-
-            let hasResponse = false;
-
-            // Process the bot responses
-            for (let index = 0; index < responses.length; index++) {
-              const response = responses[index];
-              if (response && typeof response === 'string') {
-                const botPersona = botFunctions[index].persona;
-
-                logger.debug(
-                  `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
-                );
-
-                // Send the bot response to the client immediately
-                controller.enqueue(
-                  `data: ${JSON.stringify({
-                    persona: botPersona,
-                    message: response,
-                  })}\n\n`
-                );
-
-                // Add bot response to context
-                context.push({
-                  role: 'bot',
-                  content: response,
-                  persona: botPersona,
-                });
-
-                hasResponse = true;
-              }
-            }
-
-            // Keep context within limits
-            context = context.slice(-maxContextMessages);
-            clientContexts.set(clientId, context); // Update the context map
-
-            if (!hasResponse) {
+          // Fetch all bot responses in parallel
+          const responses = await Promise.all(
+            botFunctions.map((bot) => {
               logger.silly(
-                `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
+                `app/api/chat/route.ts [${requestId}] - Processing bot ${bot.persona}`
               );
-            }
+              return bot.generate(context);
+            })
+          );
 
-            controller.enqueue('data: [DONE]\n\n');
-            controller.close();
+          let hasResponse = false;
+
+          // Process the bot responses
+          for (let index = 0; index < responses.length; index++) {
+            const response = responses[index];
+            if (response && typeof response === 'string') {
+              const botPersona = botFunctions[index].persona;
+
+              logger.debug(
+                `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
+              );
+
+              // Send the bot response to the client immediately
+              controller.enqueue(
+                `data: ${JSON.stringify({
+                  persona: botPersona,
+                  message: response,
+                })}\n\n`
+              );
+
+              // Add bot response to context
+              context.push({
+                role: 'bot',
+                content: response,
+                persona: botPersona,
+              });
+
+              hasResponse = true;
+            }
           }
 
-          await processBots();
-        },
-      });
+          // Keep context within limits
+          context = context.slice(-maxContextMessages);
+          clientContexts.set(clientId, context); // Update the context map
 
-      return new NextResponse(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-        },
-      });
-    } catch (error) {
-      logger.error(
-        `app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
-      );
+          // Update last interaction time
+          lastInteractionTime = Date.now();
+          lastInteractionTimes.set(clientId, lastInteractionTime);
 
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Internal Server Error' },
-        { status: 500 }
-      );
-    } finally {
-      // After processing, check if there are more requests in the queue
-      processNextInQueue(clientId);
-    }
-  };
+          // Handle session timeout
+          if (Date.now() - lastInteractionTime > sessionTimeout) {
+            clientContexts.delete(clientId);
+            lastInteractionTimes.delete(clientId);
+            logger.silly(
+              `app/api/chat/route.ts [${requestId}] - Session timed out for clientId: ${clientId}. Context reset.`
+            );
+          }
 
-  // Function to process the next request in the queue
-  function processNextInQueue(clientId: string) {
-    const queue = clientRequestQueues.get(clientId);
-    if (queue && queue.length > 0) {
-      const nextRequest = queue.shift();
-      if (nextRequest) {
-        nextRequest();
-      }
-    } else {
-      clientProcessingFlags.set(clientId, false);
-    }
-  }
+          if (!hasResponse) {
+            logger.silly(
+              `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
+            );
+          }
 
-  // Function to add the request to the client's queue
-  function enqueueRequest(clientId: string, requestFunction: () => Promise<void>) {
-    if (!clientRequestQueues.has(clientId)) {
-      clientRequestQueues.set(clientId, []);
-    }
-    const queue = clientRequestQueues.get(clientId)!;
-    queue.push(requestFunction);
+          controller.enqueue('data: [DONE]\n\n');
+          controller.close();
+        }
 
-    // If not already processing, start processing the queue
-    if (!clientProcessingFlags.get(clientId)) {
-      clientProcessingFlags.set(clientId, true);
-      processNextInQueue(clientId);
-    }
-  }
-
-  // Return a promise that will be resolved when the request is processed
-  return new Promise<NextResponse>((resolve) => {
-    enqueueRequest(clientId, async () => {
-      const response = await processRequest();
-      resolve(response);
+        processBots().catch((error) => {
+          logger.error(
+            `app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
+          );
+          controller.error(error);
+        });
+      },
     });
-  });
+
+    return new NextResponse(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
+  } catch (error) {
+    logger.error(
+      `app/api/chat/route.ts - Error in streaming bot interaction: ${error}`
+    );
+
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
 }
