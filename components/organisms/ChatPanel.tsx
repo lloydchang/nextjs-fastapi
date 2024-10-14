@@ -1,12 +1,9 @@
-// File: components/organisms/ChatPanel.tsx
-
 'use client'; // Mark as Client Component
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { sendMessage, clearMessages } from 'store/chatSlice';
-import throttle from 'lodash/throttle'; // Import throttle
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.webp';
@@ -34,22 +31,14 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
   }, [messages]);
 
-  // Throttled version of handleChat to prevent multiple rapid dispatches
-  const throttledHandleChat = useCallback(
-    throttle(() => {
-      if (chatInput.trim()) {
-        const messageToSend = chatInput;
-        setChatInput(''); // Clear the input immediately
-        dispatch(sendMessage(messageToSend));
-        // Removed isSending logic
-      }
-    }, 1000, { leading: true, trailing: false }), // Adjust throttle duration as needed
-    [dispatch, chatInput]
-  );
-
-  const handleChat = () => {
-    throttledHandleChat();
-  };
+  const handleChat = useCallback(() => {
+    if (chatInput.trim()) {
+      const messageToSend = chatInput;
+      setChatInput(''); // Clear the input immediately
+      dispatch(sendMessage(messageToSend));
+      // Removed isSending logic
+    }
+  }, [dispatch, chatInput]);
 
   const handleClearChat = () => {
     dispatch(clearMessages());

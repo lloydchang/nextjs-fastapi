@@ -1,5 +1,3 @@
-// File: components/organisms/ChatInput.tsx
-
 import React from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
@@ -63,7 +61,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <textarea
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
-          onKeyDown={handleKeyPress}
+          onKeyPress={handleKeyPress}
           placeholder="Chat here…"
           className={styles.input}
           rows={1}
