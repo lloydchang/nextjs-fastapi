@@ -18,12 +18,11 @@ const config = getConfig();
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 20; // Keep only the last 20 messages
 
-// Remove the processingLocks map
-// const processingLocks = new Map<string, boolean>();
-const lastInteractionTimes = new Map<string, number>(); // Track last interaction time per client
+// Map to store last interaction time per client
+const lastInteractionTimes = new Map<string, number>(); 
 
 // Use a Map to store context per client
-const clientContexts = new Map<string, any[]>(); // Map to store context per clientId
+const clientContexts = new Map<string, any[]>(); 
 
 // Helper function to check if a configuration value is valid
 function isValidConfig(value: any): boolean {
@@ -62,15 +61,9 @@ export async function POST(request: NextRequest) {
           `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
         );
 
-        // Remove per-client locking mechanism
-
-        // Get last interaction time for this client
         let lastInteractionTime = lastInteractionTimes.get(clientId) || Date.now();
 
-        // Initialize an empty array for valid bot functions
         const botFunctions = [];
-
-        // Only add bots with valid configurations and environment variables
 
         // Ollama Gemma
         if (
@@ -246,11 +239,9 @@ export async function POST(request: NextRequest) {
           context = context.slice(-maxContextMessages);
           clientContexts.set(clientId, context); // Update the context map
 
-          // Update last interaction time
           lastInteractionTime = Date.now();
           lastInteractionTimes.set(clientId, lastInteractionTime);
 
-          // Handle session timeout
           if (Date.now() - lastInteractionTime > sessionTimeout) {
             clientContexts.delete(clientId);
             lastInteractionTimes.delete(clientId);
