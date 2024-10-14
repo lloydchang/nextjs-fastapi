@@ -34,7 +34,7 @@ export async function* managePrompt(
     if (summary) {
       // Replace the summarized part with the summary and append the remaining prompt
       const remainingPrompt = currentPrompt.substring(excessLength);
-      currentPrompt = `Summary of previous conversation: ${summary}\n\n${remainingPrompt}`;
+      currentPrompt = `${summary}\n\n${remainingPrompt}`;
 
       // Yield partial result to the caller
       yield currentPrompt;
