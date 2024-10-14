@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
                 clientContexts.set(clientId, context);
 
                 clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
+                return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt ?? '', textModel: ollamaGemmaTextModel }, config);
               },
             });
           }
