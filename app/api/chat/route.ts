@@ -11,6 +11,7 @@ import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers
 import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
+import { validateEnvVars } from 'app/api/chat/utils/validate'; // Import validateEnvVars
 
 const config = getConfig();
 
@@ -64,8 +65,13 @@ export async function POST(request: NextRequest) {
         // Initialize an empty array for valid bot functions
         const botFunctions = [];
 
-        // Only add bots with valid configurations
-        if (isValidConfig(config.ollamaGemmaTextModel)) {
+        // Only add bots with valid configurations and environment variables
+
+        // Ollama Gemma
+        if (
+          isValidConfig(config.ollamaGemmaTextModel) &&
+          validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
+        ) {
           botFunctions.push({
             persona: 'Ollama ' + config.ollamaGemmaTextModel!,
             generate: (currentContext: any[]) =>
@@ -79,7 +85,15 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (isValidConfig(config.cloudflareGemmaTextModel)) {
+        // Cloudflare Gemma
+        if (
+          isValidConfig(config.cloudflareGemmaTextModel) &&
+          validateEnvVars([
+            'CLOUDFLARE_GEMMA_TEXT_MODEL',
+            'CLOUDFLARE_GEMMA_ENDPOINT',
+            'CLOUDFLARE_GEMMA_BEARER_TOKEN',
+          ])
+        ) {
           botFunctions.push({
             persona: 'Cloudflare ' + config.cloudflareGemmaTextModel!,
             generate: (currentContext: any[]) =>
@@ -93,7 +107,15 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (isValidConfig(config.googleVertexGemmaTextModel)) {
+        // Google Vertex Gemma
+        if (
+          isValidConfig(config.googleVertexGemmaTextModel) &&
+          validateEnvVars([
+            'GOOGLE_VERTEX_GEMMA_TEXT_MODEL',
+            'GOOGLE_VERTEX_GEMMA_ENDPOINT',
+            'GOOGLE_VERTEX_GEMMA_LOCATION',
+          ])
+        ) {
           botFunctions.push({
             persona: 'Google Vertex ' + config.googleVertexGemmaTextModel!,
             generate: (currentContext: any[]) =>
@@ -107,7 +129,11 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (isValidConfig(config.ollamaLlamaTextModel)) {
+        // Ollama Llama
+        if (
+          isValidConfig(config.ollamaLlamaTextModel) &&
+          validateEnvVars(['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'])
+        ) {
           botFunctions.push({
             persona: 'Ollama ' + config.ollamaLlamaTextModel!,
             generate: (currentContext: any[]) =>
@@ -121,7 +147,15 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (isValidConfig(config.cloudflareLlamaTextModel)) {
+        // Cloudflare Llama
+        if (
+          isValidConfig(config.cloudflareLlamaTextModel) &&
+          validateEnvVars([
+            'CLOUDFLARE_LLAMA_TEXT_MODEL',
+            'CLOUDFLARE_LLAMA_ENDPOINT',
+            'CLOUDFLARE_LLAMA_BEARER_TOKEN',
+          ])
+        ) {
           botFunctions.push({
             persona: 'Cloudflare ' + config.cloudflareLlamaTextModel!,
             generate: (currentContext: any[]) =>
@@ -135,7 +169,15 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        if (isValidConfig(config.googleVertexLlamaTextModel)) {
+        // Google Vertex Llama
+        if (
+          isValidConfig(config.googleVertexLlamaTextModel) &&
+          validateEnvVars([
+            'GOOGLE_VERTEX_LLAMA_TEXT_MODEL',
+            'GOOGLE_VERTEX_LLAMA_ENDPOINT',
+            'GOOGLE_VERTEX_LLAMA_LOCATION',
+          ])
+        ) {
           botFunctions.push({
             persona: 'Google Vertex ' + config.googleVertexLlamaTextModel!,
             generate: (currentContext: any[]) =>
