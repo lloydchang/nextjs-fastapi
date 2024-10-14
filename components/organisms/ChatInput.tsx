@@ -1,13 +1,13 @@
 // File: components/organisms/ChatInput.tsx
 
-import React, { useState } from 'react';
+import React from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
 
 interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
-  handleChat: () => Promise<void>;
+  handleChat: () => void;
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
@@ -39,29 +39,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isFullScreenOn,
   toggleFullScreen,
 }) => {
-  const [isSending, setIsSending] = useState(false);
-
-  const handleKeyPress = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !isSending) {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault(); // Prevent default newline on Enter
-      if (chatInput.trim() === '') return;
-      setIsSending(true);
-      try {
-        await handleChat();
-      } finally {
-        setIsSending(false);
+      if (chatInput.trim() !== '') {
+        handleChat();
       }
     }
   };
 
-  const handleButtonClick = async () => {
-    if (!isSending && chatInput.trim() !== '') {
-      setIsSending(true);
-      try {
-        await handleChat();
-      } finally {
-        setIsSending(false);
-      }
+  const handleButtonClick = () => {
+    if (chatInput.trim() !== '') {
+      handleChat();
     }
   };
 
@@ -76,7 +65,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Chat here…"
           className={styles.input}
           rows={1}
-          disabled={isSending}
         />
       </div>
 
@@ -86,7 +74,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          disabled={isSending}
         >
           Send
         </button>

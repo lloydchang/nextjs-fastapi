@@ -18,8 +18,12 @@ const config = getConfig();
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 20; // Keep only the last 20 messages
 
-const processingLocks = new Map<string, boolean>(); // Use clientId for locks
+// Remove the processingLocks map
+// const processingLocks = new Map<string, boolean>();
 const lastInteractionTimes = new Map<string, number>(); // Track last interaction time per client
+
+// Use a Map to store context per client
+const clientContexts = new Map<string, any[]>(); // Map to store context per clientId
 
 // Helper function to check if a configuration value is valid
 function isValidConfig(value: any): boolean {
@@ -44,7 +48,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let context = messages.slice(-7); // Start with the last 7 user messages
+    // Get or initialize the context for this client
+    let context = clientContexts.get(clientId) || [];
+    context = [...context, ...messages]; // Append new messages to the context
+
+    // Keep context within limits
+    context = context.slice(-maxContextMessages);
+    clientContexts.set(clientId, context); // Update the context map
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -52,17 +62,7 @@ export async function POST(request: NextRequest) {
           `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
         );
 
-        // Prevent concurrent processing for the same client ID
-        if (processingLocks.has(clientId)) {
-          logger.silly(
-            `app/api/chat/route.ts [${requestId}] - Already processing for clientId: ${clientId}, skipping.`
-          );
-          controller.close();
-          return;
-        }
-
-        processingLocks.set(clientId, true); // Lock this client ID
-        logger.silly(`app/api/chat/route.ts [${requestId}] - Lock acquired for clientId: ${clientId}.`);
+        // Remove per-client locking mechanism
 
         // Get last interaction time for this client
         let lastInteractionTime = lastInteractionTimes.get(clientId) || Date.now();
@@ -198,14 +198,14 @@ export async function POST(request: NextRequest) {
 
         async function processBots() {
           logger.silly(
-            `app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for clientId: ${clientId}.`
+            `app/api/chat/route.ts [${requestId}] - Starting bot processing for clientId: ${clientId}.`
           );
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
             botFunctions.map((bot) => {
               logger.silly(
-                `app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`
+                `app/api/chat/route.ts [${requestId}] - Processing bot ${bot.persona}`
               );
               return bot.generate(context);
             })
@@ -223,12 +223,6 @@ export async function POST(request: NextRequest) {
                 `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
               );
 
-              context.push({
-                role: 'bot',
-                content: response,
-                persona: botPersona,
-              });
-
               // Send the bot response to the client immediately
               controller.enqueue(
                 `data: ${JSON.stringify({
@@ -237,20 +231,29 @@ export async function POST(request: NextRequest) {
                 })}\n\n`
               );
 
+              // Add bot response to context
+              context.push({
+                role: 'bot',
+                content: response,
+                persona: botPersona,
+              });
+
               hasResponse = true;
             }
           }
 
           // Keep context within limits
           context = context.slice(-maxContextMessages);
+          clientContexts.set(clientId, context); // Update the context map
 
           // Update last interaction time
           lastInteractionTime = Date.now();
           lastInteractionTimes.set(clientId, lastInteractionTime);
 
+          // Handle session timeout
           if (Date.now() - lastInteractionTime > sessionTimeout) {
-            context = [];
-            lastInteractionTimes.set(clientId, Date.now());
+            clientContexts.delete(clientId);
+            lastInteractionTimes.delete(clientId);
             logger.silly(
               `app/api/chat/route.ts [${requestId}] - Session timed out for clientId: ${clientId}. Context reset.`
             );
@@ -264,8 +267,6 @@ export async function POST(request: NextRequest) {
 
           controller.enqueue('data: [DONE]\n\n');
           controller.close();
-          processingLocks.delete(clientId); // Release the lock after processing
-          logger.silly(`app/api/chat/route.ts [${requestId}] - Lock released for clientId: ${clientId}.`);
         }
 
         processBots().catch((error) => {
@@ -273,10 +274,6 @@ export async function POST(request: NextRequest) {
             `app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
           );
           controller.error(error);
-          processingLocks.delete(clientId); // Ensure the lock is released on error
-          logger.silly(
-            `app/api/chat/route.ts [${requestId}] - Lock released after error for clientId: ${clientId}.`
-          );
         });
       },
     });

@@ -31,9 +31,9 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
   }, [messages]);
 
-  const handleChat = useCallback(async () => {
+  const handleChat = useCallback(() => {
     if (chatInput.trim()) {
-      await dispatch(sendMessage(chatInput));
+      dispatch(sendMessage(chatInput));
       setChatInput('');
     }
   }, [dispatch, chatInput]);

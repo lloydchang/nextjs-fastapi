@@ -100,12 +100,6 @@ export const sendMessage = (
       body: JSON.stringify({ messages: messagesArray }),
     });
 
-    if (response.status === 429) {
-      console.warn('A request is already in progress. Please wait.');
-      // Optionally, dispatch an action to inform the user
-      return;
-    }
-
     if (!response.ok) {
       console.error(`chatSlice - Error response from API: ${response.statusText}`);
       // Optionally, handle other status codes
