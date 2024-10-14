@@ -16,6 +16,7 @@ const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout to reset context after 
 const maxContextMessages = 20; // Keep only the last 20 bot messages in the running context
 
 let lastInteractionTime = Date.now(); // Track the last interaction time for session reset
+let processingLocks = new Set(); // Store ongoing processing request IDs
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +31,14 @@ export async function POST(request: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         logger.silly(`app/api/chat/route.ts [${requestId}] - Started streaming responses to the client.`);
+
+        // Prevent concurrent processing for the same request ID
+        if (processingLocks.has(requestId)) {
+          logger.silly(`app/api/chat/route.ts [${requestId}] - Already processing, skipping.`);
+          controller.close(); // Close the controller if already processing
+          return;
+        }
+        processingLocks.add(requestId); // Lock this request ID
 
         const botFunctions = [
           {
@@ -88,15 +97,7 @@ export async function POST(request: NextRequest) {
           },
         ].filter(bot => bot.isValid); // Only keep valid bot configurations
 
-        let isProcessing = false; // Safeguard against multiple processBot executions
-
         async function processBots() {
-          if (isProcessing) {
-            logger.silly(`app/api/chat/route.ts [${requestId}] - Already processing, skipping.`);
-            return; // Prevent multiple executions
-          }
-
-          isProcessing = true; // Set the processing flag
           logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing`);
 
           // Fetch all bot responses in parallel
@@ -144,11 +145,13 @@ export async function POST(request: NextRequest) {
 
           controller.enqueue('data: [DONE]\n\n');
           controller.close();
+          processingLocks.delete(requestId); // Release the lock after processing
         }
 
         processBots().catch((error) => {
           logger.error(`app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`);
           controller.error(error);
+          processingLocks.delete(requestId); // Ensure the lock is released on error
         });
       },
     });
