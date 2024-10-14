@@ -94,15 +94,18 @@ const ChatPanel: React.FC = () => {
 
   return (
     <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
+      {/* Add priority attribute to optimize loading for LCP */}
       <Image src={BackgroundImage} alt="" fill className={styles.backgroundImage} priority unoptimized />
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
         <div className={`${styles.toolsLayer} ${isFullScreen ? styles.minimized : ''}`}>
+          {/* Optional: Hide or shrink Tools when in Full Screen mode */}
           <Tools />
         </div>
 
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
+          {/* Pass `isFullScreen` prop along with messages */}
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
           <ChatInput 
             chatInput={chatInput} 
