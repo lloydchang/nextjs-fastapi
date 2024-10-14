@@ -27,10 +27,16 @@ const TalkPanel: React.FC = () => {
   const hasFetched = useRef(false); // Track if data has been fetched
   const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
 
+  // Debounce the performSearch function to prevent multiple rapid fetches
+  const debouncedSearch = debounce((query: string) => {
+    performSearchWithExponentialBackoff(query);
+  }, 1000); // 1 second debounce
+
   useEffect(() => {
+    // Ensure the search only happens once on initial render and when the query intentionally changes
     if (initialRender.current && !hasFetched.current) {
       console.log('TalkPanel - Initial render, performing search:', searchQuery);
-      performSearchWithExponentialBackoff(searchQuery);
+      debouncedSearch(searchQuery);
       initialRender.current = false;
       hasFetched.current = true; // Prevent multiple fetches due to strict mode
     }
@@ -101,7 +107,7 @@ const TalkPanel: React.FC = () => {
   // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
     if (talk.title === lastDispatchedTalkId || hasSentMessage.current.has(talk.title)) {
-      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`)
+      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
       return;
     }
 
@@ -132,7 +138,7 @@ const TalkPanel: React.FC = () => {
   const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
     console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
     sendTranscriptForTalk(query, talk);
-  }, 1000); // Debounce time: 1 second, resulting in exponential backoff of 2, 4, 8 seconds
+  }, 1000); // Debounce time: 1 second
 
   // Send the first available transcript from a list of talks
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
@@ -165,7 +171,7 @@ const TalkPanel: React.FC = () => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       console.log('TalkPanel - Enter key pressed. Performing search.');
-      performSearchWithExponentialBackoff(searchQuery);
+      debouncedSearch(searchQuery);
     }
   };
 
@@ -203,7 +209,7 @@ const TalkPanel: React.FC = () => {
           {loading && <LoadingSpinner />}
         </div>
         <button
-          onClick={() => performSearchWithExponentialBackoff(searchQuery)}
+          onClick={() => debouncedSearch(searchQuery)}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={loading}
         >
