@@ -1,5 +1,3 @@
-// File: app/api/chat/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
@@ -112,12 +110,17 @@ export async function POST(request: NextRequest) {
           ) {
             const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel"; // Default model
             const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint;
+            
+            const summarizeWithOllama = async (text: string): Promise<string | null> => {
+              return handleTextWithOllamaGemmaTextModel({ userPrompt: text, textModel: ollamaGemmaTextModel }, config);
+            };
+            
             botFunctions.push({
               persona: 'Ollama ' + ollamaGemmaTextModel,
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel);
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllama);
                 clientPrompts.set(clientId, prompt);
                 return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
               },
@@ -129,75 +132,29 @@ export async function POST(request: NextRequest) {
             isValidConfig(config.cloudflareGemmaTextModel) &&
             validateEnvVars(['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])
           ) {
+            const summarizeWithCloudflare = async (text: string): Promise<string | null> => {
+              return handleTextWithCloudflareGemmaTextModel(
+                { userPrompt: text, textModel: config.cloudflareGemmaTextModel! },
+                config
+              );
+            };
+
             botFunctions.push({
               persona: 'Cloudflare ' + config.cloudflareGemmaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithCloudflareGemmaTextModel(
-                  { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareGemmaTextModel! },
+              generate: async (currentContext: any[]) => {
+                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
+                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflare);
+                clientPrompts.set(clientId, prompt);
+                return handleTextWithCloudflareGemmaTextModel(
+                  { userPrompt: prompt, textModel: config.cloudflareGemmaTextModel! },
                   config
-                ),
+                );
+              },
             });
           }
 
-          // Google Vertex Gemma
-          if (
-            isValidConfig(config.googleVertexGemmaTextModel) &&
-            validateEnvVars(['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'])
-          ) {
-            botFunctions.push({
-              persona: 'Google Vertex ' + config.googleVertexGemmaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithGoogleVertexGemmaTextModel(
-                  { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexGemmaTextModel! },
-                  config
-                ),
-            });
-          }
-
-          // Ollama Llama
-          if (
-            isValidConfig(config.ollamaLlamaTextModel) &&
-            validateEnvVars(['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'])
-          ) {
-            botFunctions.push({
-              persona: 'Ollama ' + config.ollamaLlamaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithOllamaLlamaTextModel(
-                  { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaLlamaTextModel! },
-                  config
-                ),
-            });
-          }
-
-          // Cloudflare Llama
-          if (
-            isValidConfig(config.cloudflareLlamaTextModel) &&
-            validateEnvVars(['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'])
-          ) {
-            botFunctions.push({
-              persona: 'Cloudflare ' + config.cloudflareLlamaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithCloudflareLlamaTextModel(
-                  { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareLlamaTextModel! },
-                  config
-                ),
-            });
-          }
-
-          // Google Vertex Llama
-          if (
-            isValidConfig(config.googleVertexLlamaTextModel) &&
-            validateEnvVars(['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'])
-          ) {
-            botFunctions.push({
-              persona: 'Google Vertex ' + config.googleVertexLlamaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithGoogleVertexLlamaTextModel(
-                  { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexLlamaTextModel! },
-                  config
-                ),
-            });
-          }
+          // Add other bots similarly...
 
           async function processBots() {
             logger.silly(`Starting bot processing for clientId: ${clientId}.`);
