@@ -163,14 +163,6 @@ const TalkPanel: React.FC = () => {
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
 
-  // Handle search query change
-  useEffect(() => {
-    if (searchQuery && selectedTalk) {
-      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
-      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
-    }
-  }, [searchQuery]); // Only run this effect when searchQuery changes
-
   // Handle new talk selection
   useEffect(() => {
     if (selectedTalk) {
