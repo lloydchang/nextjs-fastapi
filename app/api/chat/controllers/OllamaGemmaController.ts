@@ -8,9 +8,11 @@ import { validateEnvVars } from 'app/api/chat/utils/validate';
 /**
  * Handles text generation using the Ollama Gemma model.
  * @param params - Contains the user prompt and text model to be used.
+ * @param config - Configuration object.
  * @returns {Promise<string>} - Generated response text.
  */
-export async function handleTextWithOllamaGemmaTextModel(params: { userPrompt: string; textModel: string; }): Promise<string> {
+export async function handleTextWithOllamaGemmaTextModel(
+userPrompt: string, userPrompt: string, params: { userPrompt: string; textModel: string; }, config: any): Promise<string> {
   const { userPrompt, textModel } = params;
   const { ollamaGemmaEndpoint } = getConfig();
 
@@ -25,7 +27,7 @@ export async function handleTextWithOllamaGemmaTextModel(params: { userPrompt: s
   try {
     const response = await generateFromOllamaGemma({
       endpoint,
-      userPrompt, // Correct parameter
+      userPrompt: userPrompt, // Correct parameter
       model: textModel,
     });
 
