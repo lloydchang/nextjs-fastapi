@@ -201,22 +201,17 @@ export async function POST(request: NextRequest) {
       );
     } finally {
       // After processing, check if there are more requests in the queue
-      processNextInQueue(clientId).catch((error) => {
-        console.error(`Error processing queue for clientId ${clientId}:`, error);
-        clientProcessingFlags.set(clientId, false);
-      });
+      processNextInQueue(clientId);
     }
   };
 
   // Function to process the next request in the queue
-  async function processNextInQueue(clientId: string) {
+  function processNextInQueue(clientId: string) {
     const queue = clientRequestQueues.get(clientId);
     if (queue && queue.length > 0) {
       const nextRequest = queue.shift();
       if (nextRequest) {
-        await nextRequest(); // Await the processing of the request
-        // After processing, proceed to the next request
-        await processNextInQueue(clientId);
+        nextRequest();
       }
     } else {
       clientProcessingFlags.set(clientId, false);
@@ -234,15 +229,12 @@ export async function POST(request: NextRequest) {
     // If not already processing, start processing the queue
     if (!clientProcessingFlags.get(clientId)) {
       clientProcessingFlags.set(clientId, true);
-      processNextInQueue(clientId).catch((error) => {
-        console.error(`Error processing queue for clientId ${clientId}:`, error);
-        clientProcessingFlags.set(clientId, false);
-      });
+      processNextInQueue(clientId);
     }
   }
 
   // Return a promise that will be resolved when the request is processed
-  return new Promise<NextResponse>((resolve, reject) => {
+  return new Promise<NextResponse>((resolve) => {
     enqueueRequest(clientId, async () => {
       const response = await processRequest();
       resolve(response);
