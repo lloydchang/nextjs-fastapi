@@ -14,9 +14,9 @@ export function validateEnvVars(vars: string[]): boolean {
   });
 
   if (!areValid) {
-    logger.silly(`app/api/chat/utils/validate.ts - Validation failed for environment variables: ${vars.join(', ')}`);
+    // logger.silly(`app/api/chat/utils/validate.ts - Validation failed for environment variables: ${vars.join(', ')}`);
   } else {
-    logger.silly(`app/api/chat/utils/validate.ts - Validated environment variables: ${vars.join(', ')}`);
+    // logger.silly(`app/api/chat/utils/validate.ts - Validated environment variables: ${vars.join(', ')}`);
   }
 
   return areValid;
