@@ -29,13 +29,9 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      // Avoid duplicate messages by checking for an existing message with the same ID
       const existingMessage = state.messages.find((msg) => msg.id === action.payload.id);
       if (!existingMessage) {
-        console.log('addMessage - Dispatching message with ID:', action.payload.id);
         state.messages.push(action.payload);
-      } else {
-        console.log('addMessage - Duplicate message, skipping:', action.payload.id);
       }
     },
     clearMessages: (state) => {
@@ -74,7 +70,6 @@ const { addMessage, setError, clearError } = chatSlice.actions;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Debounce ensures that multiple API calls do not fire within a short time frame
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -84,7 +79,6 @@ const debouncedApiCall = debounce(
   ): Promise<void> => {
     const state = getState();
     if (state.api?.isLoading) {
-      console.log('API call already in progress, skipping');
       return;
     }
 
@@ -95,7 +89,6 @@ const debouncedApiCall = debounce(
       try {
         const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
 
-        console.log('Attempting to fetch from /api/chat');
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
@@ -105,12 +98,9 @@ const debouncedApiCall = debounce(
           body: JSON.stringify({ messages: messagesArray }),
         });
 
-        console.log('Fetch response received:', response);
-
         if (!response.ok) {
           if (response.status === 429) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-            console.log(`Rate limited. Retrying after ${retryAfter} seconds.`);
             await wait(retryAfter * 1000);
             retryCount++;
             continue;
@@ -135,8 +125,6 @@ const debouncedApiCall = debounce(
             for (const message of messages) {
               if (message.startsWith('data: ')) {
                 const jsonString = message.substring(6).trim();
-                console.log(`chatSlice - Raw incoming message: ${jsonString}`);
-
                 try {
                   const parsedData = parseIncomingMessage(jsonString);
                   if (parsedData?.message && parsedData?.persona) {
@@ -151,7 +139,7 @@ const debouncedApiCall = debounce(
                     dispatch(addMessage(botMessage));
                   }
                 } catch (e) {
-                  console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
+                  console.error('Error parsing incoming message:', jsonString, e);
                 }
               }
             }
@@ -159,26 +147,17 @@ const debouncedApiCall = debounce(
         }
         return;
       } catch (error) {
-        console.error('Error in API call:', error);
-
-        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-          console.error('Network error or API endpoint is unreachable');
-          dispatch(setError('Unable to reach the server. Please check your internet connection and try again.'));
-        } else if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
+        if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
           retryCount++;
           await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
-        } else {
-          console.error(`chatSlice - Error sending message to API: ${error}`);
-          dispatch(setError(error instanceof Error ? error.message : 'Unknown error occurred'));
         }
+        dispatch(setError('Max retries reached. Please try again later.'));
         return;
       }
     }
-
-    dispatch(setError('Max retries reached. Please try again later.'));
   },
-  1500 // Increased debounce delay to reduce multiple requests
+  1500 // Debounce time
 );
 
 export const sendMessage = (
@@ -186,8 +165,6 @@ export const sendMessage = (
     | string
     | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
-  console.log('sendMessage - Function called with input:', input);
-
   dispatch(clearError());
 
   let clientId: string;
@@ -217,10 +194,8 @@ export const sendMessage = (
           persona: input.persona,
         };
 
-  console.log('sendMessage - Dispatching user message:', userMessage);
   dispatch(addMessage(userMessage));
 
-  // Wait for debouncedApiCall to complete
   await debouncedApiCall(dispatch, getState, input, clientId);
 };
 
@@ -230,26 +205,14 @@ export function parseIncomingMessage(jsonString: string) {
     const parsedData = JSON.parse(sanitizedString);
 
     if (!parsedData.persona || !parsedData.message) {
-      console.error(`chatSlice - Incomplete message data received: ${sanitizedString}`);
       return null;
     }
 
     return parsedData;
   } catch (error) {
-    logDetailedErrorInfo(jsonString, error as Error);
+    console.error('Error parsing message:', jsonString, error);
     return null;
   }
-}
-
-function logDetailedErrorInfo(jsonString: string, error: Error) {
-  console.error(`chatSlice - Error Type: ${error.name}`);
-  console.error(`chatSlice - Error Message: ${error.message}`);
-  const snippetLength = 100;
-  const startSnippet = jsonString.slice(0, snippetLength);
-  const endSnippet = jsonString.slice(-snippetLength);
-
-  console.error('chatSlice - JSON Snippet (Start):', startSnippet);
-  console.error('chatSlice - JSON Snippet (End):', endSnippet);
 }
 
 export const { clearMessages, saveMessage } = chatSlice.actions;
