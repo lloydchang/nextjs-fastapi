@@ -6,7 +6,7 @@ interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
   handleChat: () => void;
-  isSending: boolean; // Added isSending prop
+  // Removed isSending prop
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
@@ -25,7 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   chatInput,
   setChatInput,
   handleChat,
-  isSending,
+  // Removed isSending
   isCamOn,
   isMicOn,
   toggleMic,
@@ -74,7 +74,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          disabled={isSending} // Disable button when isSending is true
+          // Removed disabled={isSending}
         >
           Send
         </button>
