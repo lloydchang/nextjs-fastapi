@@ -175,7 +175,7 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (selectedTalk) {
       console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
-      // debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [selectedTalk]);
 
