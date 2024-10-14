@@ -100,7 +100,6 @@ const TalkPanel: React.FC = () => {
 
   // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
-  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
     if (talk.title === lastDispatchedTalkId || hasSentMessage.current.has(talk.title)) {
       console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`)
       return;
