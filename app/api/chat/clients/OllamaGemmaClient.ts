@@ -12,40 +12,11 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 export async function generateFromOllamaGemma(params: { endpoint: string; userPrompt: string; model: string; }): Promise<string | null> {
   const { endpoint, userPrompt, model } = params;
 
-  // Define first system prompt last user prompt
-  const firstSystemLastUserPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+  // Define the combined prompt with explicit role labels
+  const combinedPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
   try {
-    const requestBody = JSON.stringify({ prompt: firstSystemLastUserPrompt, model });
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: requestBody,
-    });
-
-    if (!response.ok) {
-      logger.error(`OllamaGemmaClient.ts - HTTP error! Status: ${response.status}`);
-      return null;
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      logger.error('OllamaGemmaClient.ts - Failed to access the response body stream for user prompt.');
-      return null;
-    }
-
-    const finalUserResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
-    return finalUserResponse;
-  } catch (error) {
-    logger.error(`OllamaGemmaClient.ts - Error sending user prompt request to Ollama Gemma: ${error}`);
-    return null;
-  }
-
-  // Define first user last system prompt
-  const firstUserLastSystemPrompt = `User: ${userPrompt}\n\nSystem: ${systemPrompt}`;
-
-  try {
-    const requestBody = JSON.stringify({ prompt: firstUserLastSystemPrompt, model });
+    const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
