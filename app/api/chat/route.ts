@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel) || "defaultPrompt";
+      prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel);
       logger.debug(`Managed prompt for clientId: ${clientId}: ${prompt}`);
 
       clientPrompts.set(clientId, prompt);
