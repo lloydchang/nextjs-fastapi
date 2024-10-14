@@ -33,6 +33,8 @@ const TalkPanel: React.FC = () => {
       performSearchWithExponentialBackoff(searchQuery);
       initialRender.current = false;
       hasFetched.current = true; // Prevent multiple fetches due to strict mode
+    } else {
+      console.log('TalkPanel - Not the initial render, skipping search:', searchQuery);
     }
   }, [searchQuery]);
 
@@ -100,6 +102,10 @@ const TalkPanel: React.FC = () => {
 
   // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
+    console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
+    console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
+    console.log('HasSentMessage set:', [...hasSentMessage.current]);
+
     if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
       console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
       return;
@@ -115,6 +121,8 @@ const TalkPanel: React.FC = () => {
       dispatch(setSelectedTalk(talk));
       lastDispatchedTalkId.current = talk.title; // Update the last dispatched talk ID
       hasSentMessage.current.add(talk.title); // Mark message as sent
+      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
+      console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
     } catch (dispatchError) {
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
@@ -139,6 +147,7 @@ const TalkPanel: React.FC = () => {
     console.log('TalkPanel - Sending first available transcript for query:', query);
     for (let i = 0; i < talks.length; i++) {
       try {
+        console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
         await debouncedSendTranscriptForTalk(query, talks[i]);
         return;
       } catch (error) {
