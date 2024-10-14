@@ -20,6 +20,18 @@ interface OllamaLlamaResponse {
 }
 
 /**
+ * Utility function to safely extract error message
+ * @param error - The error object of unknown type
+ * @returns { string } - The error message or a stringified version of the error
+ */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
+/**
  * Validates the input parameters for generateFromOllamaLlama
  * @param params - The parameters to validate
  */
@@ -43,7 +55,6 @@ function validateParams(params: GenerateFromOllamaLlamaParams) {
 function getHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    // Add more headers here if needed
   };
 
   if (process.env.API_TOKEN) {
@@ -116,10 +127,10 @@ export async function generateFromOllamaLlama(params: GenerateFromOllamaLlamaPar
       return finalResponse;
 
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         logger.error('app/api/chat/clients/OllamaLlamaClient.ts - Request timed out.');
       } else {
-        logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - Error during fetch: ${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - Error during fetch: ${getErrorMessage(error)}`);
       }
       throw error;
     }
@@ -130,7 +141,7 @@ export async function generateFromOllamaLlama(params: GenerateFromOllamaLlamaPar
     const finalCompleteResponse = await performIterativeRefinement(systemPrompt, model, generateResponseFn);
     return finalCompleteResponse;
   } catch (error) {
-    logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - Iterative refinement failed: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(`app/api/chat/clients/OllamaLlamaClient.ts - Iterative refinement failed: ${getErrorMessage(error)}`);
     return null;
   }
 }
@@ -142,6 +153,5 @@ export async function generateFromOllamaLlama(params: GenerateFromOllamaLlamaPar
  */
 function sanitizeRequestBody(body: string): string {
   // Implement sanitization logic, e.g., remove API tokens or sensitive fields
-  // Example: Remove Authorization header content
   return body.replace(/"Authorization":\s*"Bearer\s[^"]+"/, '"Authorization": "Bearer [REDACTED]"');
 }

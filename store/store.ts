@@ -3,7 +3,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage for web
-import noopStorage from './noopStorage'; // Custom noopStorage
+import noopStorage from './noopStorage'; // Custom noopStorage for SSR
 import chatReducer from './chatSlice'; // Chat slice
 import talkReducer from './talkSlice'; // Talk slice
 
@@ -22,7 +22,7 @@ const isStorageAvailable = () => {
 // Persist configuration
 const persistConfig = {
   key: 'root',
-  storage: isStorageAvailable() ? storage : noopStorage,
+  storage: isStorageAvailable() ? storage : noopStorage,  // Use localStorage if available, else noopStorage
 };
 
 // Create persisted reducers
@@ -33,11 +33,11 @@ const persistedTalkReducer = persistReducer(persistConfig, talkReducer);
 export const store = configureStore({
   reducer: {
     chat: persistedChatReducer,
-    talk: persistedTalkReducer, // Ensure the talk slice is included
+    talk: persistedTalkReducer,  // Ensure the talk slice is included
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: false,  // Disable serializable check for redux-persist
     }),
 });
 
