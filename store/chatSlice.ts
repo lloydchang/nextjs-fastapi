@@ -42,16 +42,31 @@ const chatSlice = createSlice({
 });
 
 // Async function to send a message and get a response from the API
-export const sendMessage = (input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }) => async (dispatch: AppDispatch) => {
-  const userMessage: Message = typeof input === 'string' 
-    ? { id: `${Date.now()}`, sender: 'user', text: input, role: 'user', content: input }
-    : { id: `${Date.now()}`, sender: input.sender || 'user', text: input.text, role: 'user', content: input.text, hidden: input.hidden || false, persona: input.persona };
+export const sendMessage = (
+  input:
+    | string
+    | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
+) => async (dispatch: AppDispatch) => {
+  console.log('sendMessage - Function called with input:', input); // Added logging
+
+  const userMessage: Message =
+    typeof input === 'string'
+      ? { id: `${Date.now()}`, sender: 'user', text: input, role: 'user', content: input }
+      : {
+          id: `${Date.now()}`,
+          sender: input.sender || 'user',
+          text: input.text,
+          role: 'user',
+          content: input.text,
+          hidden: input.hidden || false,
+          persona: input.persona,
+        };
 
   dispatch(addMessage(userMessage));
 
   try {
     const messagesArray = [{ role: 'user', content: userMessage.text.trim() }];
-    
+
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,18 +99,22 @@ export const sendMessage = (input: string | { text: string; hidden?: boolean; se
             try {
               const parsedData = parseIncomingMessage(jsonString);
               if (parsedData?.message && parsedData?.persona) {
-                const botMessage: Message = { 
-                  id: `${Date.now()}`, 
-                  sender: 'bot', 
+                const botMessage: Message = {
+                  id: `${Date.now()}`,
+                  sender: 'bot',
                   text: parsedData.message,
                   role: 'bot',
                   content: parsedData.message,
-                  persona: parsedData.persona
+                  persona: parsedData.persona,
                 };
                 dispatch(addMessage(botMessage)); // Add bot response to the Redux state
               }
             } catch (e) {
-              console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
+              console.error(
+                'chatSlice - Error parsing incoming event message:',
+                jsonString,
+                e
+              );
             }
           }
         }
