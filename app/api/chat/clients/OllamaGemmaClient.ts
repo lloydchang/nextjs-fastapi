@@ -4,7 +4,6 @@ import { parseStream } from 'app/api/chat/utils/streamParser';
 import { logger } from 'app/api/chat/utils/logger';
 import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 import { countTokens } from 'app/api/chat/utils/tokenizer';
-import { managePrompt } from 'app/api/chat/utils/promptManager';
 
 /**
  * Generates text using Ollama Gemma with effective prompt management.
