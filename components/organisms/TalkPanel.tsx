@@ -72,40 +72,49 @@ const TalkPanel: React.FC = () => {
     }
   };
 
+  // Reusable function to send the transcript of a talk
+  const sendTranscriptForTalk = async (query: string, talk: Talk): Promise<void> => {
+    console.log('TalkPanel - Processing talk:', talk);
+
+    const sendTranscript = talk.transcript || 'Transcript not available';
+    const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+
+    console.log(`TalkPanel - Sending message for talk: ${talk.title}, Transcript: ${sendTranscript}, SDG Tag: ${sendSdgTag}`);
+
+    try {
+      const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+      console.log(`TalkPanel - Message dispatched for: ${talk.title}. Dispatch result:`, result);
+      dispatch(setSelectedTalk(talk));
+    } catch (dispatchError) {
+      console.error(`TalkPanel - Error dispatching message for: ${talk.title}. Error:`, dispatchError);
+      dispatch(setError(`Failed to send transcript for ${talk.title}.`));
+    }
+  };
+
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - sendFirstAvailableTranscript started. Query:', query, 'Talks:', talks);
-  
+
     for (let i = 0; i < talks.length; i++) {
       try {
-        const talk = talks[i];
-        console.log(`TalkPanel - Processing talk #${i}:`, talk);
-  
-        const sendTranscript = talk.transcript || 'Transcript not available';
-        const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
-  
-        console.log(`TalkPanel - Sending message for talk: ${talk.title}, Transcript: ${sendTranscript}, SDG Tag: ${sendSdgTag}`);
-  
-        // Wrapping the dispatch in try-catch to log any possible errors
-        try {
-          const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
-          console.log(`TalkPanel - Message dispatched for: ${talk.title}. Dispatch result:`, result);
-        } catch (dispatchError) {
-          console.error(`TalkPanel - Error dispatching message for: ${talk.title}. Error:`, dispatchError);
-          continue; // Move to the next talk if this one fails
-        }
-  
-        dispatch(setSelectedTalk(talk));
-        console.log(`TalkPanel - Successfully sent transcript and selected talk for: ${talk.title}`);
-        return; // Exit loop once a successful transcript is sent
-  
+        await sendTranscriptForTalk(query, talks[i]);
+        return; // Exit once a successful transcript is sent
       } catch (error) {
-        console.error(`TalkPanel - Failed to process transcript for talk: ${talks[i].title}. Error:`, error);
+        console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
       }
     }
-  
+
     console.error('TalkPanel - Failed to send transcripts for all talks.');
     dispatch(setError('Failed to send transcripts for all talks.'));
-  };  
+  };
+
+  // Trigger sending a transcript whenever a new talk is selected in the UI
+  useEffect(() => {
+    if (selectedTalk) {
+      console.log('TalkPanel - New talk selected:', selectedTalk.title);
+      sendTranscriptForTalk(searchQuery, selectedTalk);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTalk]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('TalkPanel - Search input changed. Value:', e.target.value);
