@@ -16,7 +16,7 @@ const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout to reset context after 
 const maxContextMessages = 20; // Keep only the last 20 bot messages in the running context
 
 let lastInteractionTime = Date.now(); // Track the last interaction time for session reset
-let processingLocks = new Set(); // Store ongoing processing request IDs
+const processingLocks = new Map(); // Store ongoing processing request IDs
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +38,8 @@ export async function POST(request: NextRequest) {
           controller.close(); // Close the controller if already processing
           return;
         }
-        processingLocks.add(requestId); // Lock this request ID
+        processingLocks.set(requestId, true); // Lock this request ID
+        logger.silly(`app/api/chat/route.ts [${requestId}] - Lock acquired.`);
 
         const botFunctions = [
           {
@@ -146,12 +147,14 @@ export async function POST(request: NextRequest) {
           controller.enqueue('data: [DONE]\n\n');
           controller.close();
           processingLocks.delete(requestId); // Release the lock after processing
+          logger.silly(`app/api/chat/route.ts [${requestId}] - Lock released.`);
         }
 
         processBots().catch((error) => {
           logger.error(`app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`);
           controller.error(error);
           processingLocks.delete(requestId); // Ensure the lock is released on error
+          logger.silly(`app/api/chat/route.ts [${requestId}] - Lock released after error.`);
         });
       },
     });
