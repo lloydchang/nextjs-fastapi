@@ -167,7 +167,7 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (searchQuery && selectedTalk) {
       console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
-      // debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [searchQuery]); // Only run this effect when searchQuery changes
 
