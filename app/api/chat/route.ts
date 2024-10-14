@@ -17,7 +17,7 @@ import pQueue from 'p-queue';
 const config = getConfig();
 
 const sessionTimeout = 60 * 60 * 1000;
-const maxBotsSharedContextMessages = 1;
+const maxContextMessages = 20;
 
 const clientContexts = new Map<string, any[]>();
 const clientQueues = new Map<string, pQueue>();
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
       let context = clientContexts.get(clientId) || [];
       context = [...context, ...messages];
-      context = context.slice(-maxBotsSharedContextMessages);
+      context = context.slice(-maxContextMessages);
       clientContexts.set(clientId, context);
 
       const stream = new ReadableStream({
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            context = context.slice(-maxBotsSharedContextMessages);
+            context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
 
             if (!hasResponse) {
