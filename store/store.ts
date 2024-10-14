@@ -6,20 +6,47 @@ import apiReducer from './apiSlice';
 import notificationReducer from './notificationSlice';
 import talkReducer from './talkSlice';
 
-const store = configureStore({
-  reducer: {
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
+import storage from 'redux-persist/lib/storage'; // Defaults to localStorage for web
+
+// Define the persist configuration
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['chat', 'notification'], // Specify which reducers you want to persist
+};
+
+// Create a persisted reducer
+const persistedReducer = persistReducer(persistConfig, configureRootReducer());
+
+// Function to configure root reducer
+function configureRootReducer() {
+  return {
     chat: chatReducer,
     api: apiReducer,
     notification: notificationReducer,
     talk: talkReducer,
-  },
+  };
+}
+
+// Configure the store with the persisted reducer
+const store = configureStore({
+  reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false, // Adjust if needed
+      serializableCheck: {
+        // Ignore these action types for redux-persist
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
     }),
 });
 
+// Create the persistor
+const persistor = persistStore(store);
+
+// Export both store and persistor
+export { store, persistor };
+
+// Export types for usage in components
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-
-export default store;
