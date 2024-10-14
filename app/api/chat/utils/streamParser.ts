@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/streamParser.ts
 
-import logger from 'app/api/chat/utils/logger';
+import { logger } from './logger';
 
 /**
  * Parses a readable stream and returns the accumulated result.
@@ -55,7 +55,7 @@ export async function parseStream(
               break;
             }
           } catch (err) {
-            logger.error(`app/api/chat/utils/streamParser.ts - Error parsing SSE message: "${data}"`, err);
+            logger.error(`streamParser.ts - Error parsing SSE message: "${data}"`, err);
           }
         }
       }
@@ -77,7 +77,7 @@ export async function parseStream(
             done = true; // Check for done condition based on the key
           }
         } catch (error) {
-          logger.error(`app/api/chat/utils/streamParser.ts - Error parsing chunk at boundary: "${completeJson}"`, error);
+          logger.error(`streamParser.ts - Error parsing chunk at boundary: "${completeJson}"`, error);
         }
 
         // Search for the next boundary in the remaining buffer
@@ -101,7 +101,7 @@ export async function parseStream(
         response += parsed.response || '';
       }
     } catch (error) {
-      logger.error(`app/api/chat/utils/streamParser.ts - Error parsing remaining buffer: "${buffer}"`, error);
+      logger.error(`streamParser.ts - Error parsing remaining buffer: "${buffer}"`, error);
     }
   }
 

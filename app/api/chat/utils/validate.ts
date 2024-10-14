@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/validate.ts
 
-import logger from 'app/api/chat/utils/logger';
+import { logger } from './logger';
 
 /**
  * Validates that all required environment variables are set and not placeholders.
@@ -14,9 +14,9 @@ export function validateEnvVars(vars: string[]): boolean {
   });
 
   if (!areValid) {
-    // logger.silly(`app/api/chat/utils/validate.ts - Validation failed for environment variables: ${vars.join(', ')}`);
+    // logger.error(`validate.ts - Validation failed for environment variables: ${vars.join(', ')}`);
   } else {
-    // logger.silly(`app/api/chat/utils/validate.ts - Validated environment variables: ${vars.join(', ')}`);
+    // logger.debug(`validate.ts - Validated environment variables: ${vars.join(', ')}`);
   }
 
   return areValid;
