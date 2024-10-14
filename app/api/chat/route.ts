@@ -92,7 +92,10 @@ export async function POST(request: NextRequest) {
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
-            botFunctions.map((bot) => bot.generate(context))
+            botFunctions.map((bot, index) => {
+              logger.silly(`app/api/chat/route.ts - Starting parallel bot processing for ${bot.persona}`);
+              return bot.generate(context);
+            })
           );
 
           let hasResponse = false;
