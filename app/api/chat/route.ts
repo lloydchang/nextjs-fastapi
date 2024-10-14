@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
       const stream = new ReadableStream({
         async start(controller) {
-          logger.silly(
-            `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
+          // logger.silly(
+          //   `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client for clientId: ${clientId}.`
           );
 
           // Define the BotFunction interface
@@ -120,16 +120,16 @@ export async function POST(request: NextRequest) {
           // Add other bot functions similarly...
 
           async function processBots() {
-            logger.silly(
-              `app/api/chat/route.ts [${requestId}] - Starting bot processing for clientId: ${clientId}.`
-            );
+            // logger.silly(
+            //   `app/api/chat/route.ts [${requestId}] - Starting bot processing for clientId: ${clientId}.`
+            // );
 
             // Fetch all bot responses in parallel
             const responses = await Promise.all(
               botFunctions.map((bot) => {
-                logger.silly(
-                  `app/api/chat/route.ts [${requestId}] - Processing bot ${bot.persona}`
-                );
+                // logger.silly(
+                //   `app/api/chat/route.ts [${requestId}] - Processing bot ${bot.persona}`
+                // );
                 return bot.generate(context);
               })
             );
