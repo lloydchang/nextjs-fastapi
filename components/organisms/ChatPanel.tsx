@@ -21,8 +21,7 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-  // Removed isSending state
-  // const [isSending, setIsSending] = useState<boolean>(false);
+  const [isSending, setIsSending] = useState<boolean>(false); // Added isSending state
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
@@ -31,12 +30,17 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
   }, [messages]);
 
-  const handleChat = useCallback(() => {
+  const handleChat = useCallback(async () => {
     if (chatInput.trim()) {
-      const messageToSend = chatInput;
-      setChatInput(''); // Clear the input immediately
-      dispatch(sendMessage(messageToSend));
-      // Removed isSending logic
+      setIsSending(true); // Set isSending to true when sending starts
+      try {
+        await dispatch(sendMessage(chatInput));
+        setChatInput(''); // Clear the input after sending
+      } catch (error) {
+        console.error('Failed to send message:', error);
+      } finally {
+        setIsSending(false); // Reset isSending regardless of success or failure
+      }
     }
   }, [dispatch, chatInput]);
 
@@ -95,7 +99,7 @@ const ChatPanel: React.FC = () => {
             chatInput={chatInput}
             setChatInput={setChatInput}
             handleChat={handleChat}
-            // Removed isSending prop
+            isSending={isSending} // Pass isSending prop to ChatInput
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
             toggleMic={toggleMic}
