@@ -20,7 +20,7 @@ interface ChatInputProps {
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
-  hasMessages: boolean;  // New prop to pass down to ControlButtons
+  hasVisibleMessages: boolean;  // New prop to track if there are visible messages
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -39,7 +39,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   eraseMemory,
   isFullScreenOn,
   toggleFullScreen,
-  hasMessages,  // New prop
+  hasVisibleMessages,  // New prop
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -93,7 +93,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             eraseMemory={eraseMemory}
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
-            hasMessages={hasMessages} // Pass down hasMessages
+            hasMessages={hasVisibleMessages}  // Pass down visible messages state
           />
         </div>
       </div>

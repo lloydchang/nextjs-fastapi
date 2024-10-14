@@ -30,11 +30,11 @@
 }
 
 .eraseButton {
-  background-color: rgba(0, 0, 0, 0.25);
+  background-color: rgba(235, 0, 40, 0.25);
   color: black;
 }
 
 .button:disabled {
-  background-color: #cccccc;
+  background-color: rgba(0, 0, 0, 0.0);
   cursor: not-allowed;
 }

@@ -17,7 +17,7 @@ interface ControlButtonsProps {
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
-  hasMessages: boolean; // New prop to indicate if there are messages
+  hasVisibleMessages: boolean; // New prop to indicate if there are visible messages
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({

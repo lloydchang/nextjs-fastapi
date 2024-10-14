@@ -34,6 +34,9 @@ const ChatPanel: React.FC = () => {
     }
   }, [messages, isFullScreen]);
 
+  // Determine if there are any visible messages
+  const hasVisibleMessages = messages.some((message) => !message.hidden);
+
   const handleChat = useCallback(() => {
     if (chatInput.trim()) {
       const messageToSend = chatInput;
@@ -103,7 +106,7 @@ const ChatPanel: React.FC = () => {
             eraseMemory={handleClearChat}
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreen}
-            hasMessages={messages.length > 0} // Pass down if there are messages
+            hasVisibleMessages={hasVisibleMessages} // Pass down visible messages state
           />
         </div>
       </div>
