@@ -3,14 +3,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 import { getConfig } from 'app/api/chat/utils/config';
-import {
-  handleTextWithOllamaGemmaTextModel,
-  handleTextWithCloudflareGemmaTextModel,
-  handleTextWithGoogleVertexGemmaTextModel,
-  handleTextWithOllamaLlamaTextModel,
-  handleTextWithCloudflareLlamaTextModel,
-  handleTextWithGoogleVertexLlamaTextModel,
-} from 'app/api/chat/controllers'; // Adjusted imports
+import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
+import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
+import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
+import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
+import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 
