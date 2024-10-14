@@ -13,19 +13,14 @@ export async function generateFromOllamaGemma(params: { endpoint: string; messag
 
   try {
     const requestBody = JSON.stringify({ messages, model });
-    logger.debug(`OllamaGemmaClient.ts - Sending request to Ollama Gemma: ${requestBody}`);
-
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: requestBody,
     });
 
-    logger.debug(`OllamaGemmaClient.ts - Received response status: ${response.status}`);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      logger.error(`OllamaGemmaClient.ts - HTTP error! Status: ${response.status}. Response: ${errorText}`);
+      logger.error(`OllamaGemmaClient.ts - HTTP error! Status: ${response.status}`);
       return null;
     }
 
@@ -36,7 +31,6 @@ export async function generateFromOllamaGemma(params: { endpoint: string; messag
     }
 
     const finalUserResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
-    logger.debug(`OllamaGemmaClient.ts - Generated response: ${finalUserResponse}`);
     return finalUserResponse;
   } catch (error) {
     logger.error(`OllamaGemmaClient.ts - Error sending request to Ollama Gemma: ${error}`);
