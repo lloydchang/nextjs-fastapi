@@ -34,64 +34,58 @@ export async function POST(request: NextRequest) {
           {
             persona: 'Ollama ' + config.ollamaGemmaTextModel,
             generate: (currentContext: any[]) =>
-              config.ollamaGemmaTextModel
-                ? handleTextWithOllamaGemmaTextModel(
-                    { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaGemmaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
+              handleTextWithOllamaGemmaTextModel(
+                { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaGemmaTextModel },
+                config
+              ),
+            isValid: !!config.ollamaGemmaTextModel,
           },
           {
             persona: 'Cloudflare ' + config.cloudflareGemmaTextModel,
             generate: (currentContext: any[]) =>
-              config.cloudflareGemmaTextModel
-                ? handleTextWithCloudflareGemmaTextModel(
-                    { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareGemmaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
+              handleTextWithCloudflareGemmaTextModel(
+                { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareGemmaTextModel },
+                config
+              ),
+            isValid: !!config.cloudflareGemmaTextModel,
           },
           {
             persona: 'Google Vertex ' + config.googleVertexGemmaTextModel,
             generate: (currentContext: any[]) =>
-              config.googleVertexGemmaTextModel
-                ? handleTextWithGoogleVertexGemmaTextModel(
-                    { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexGemmaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
+              handleTextWithGoogleVertexGemmaTextModel(
+                { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexGemmaTextModel },
+                config
+              ),
+            isValid: !!config.googleVertexGemmaTextModel,
           },
           {
             persona: 'Ollama ' + config.ollamaLlamaTextModel,
             generate: (currentContext: any[]) =>
-              config.ollamaLlamaTextModel
-                ? handleTextWithOllamaLlamaTextModel(
-                    { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaLlamaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
+              handleTextWithOllamaLlamaTextModel(
+                { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaLlamaTextModel },
+                config
+              ),
+            isValid: !!config.ollamaLlamaTextModel,
           },
           {
             persona: 'Cloudflare ' + config.cloudflareLlamaTextModel,
             generate: (currentContext: any[]) =>
-              config.cloudflareLlamaTextModel
-                ? handleTextWithCloudflareLlamaTextModel(
-                    { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareLlamaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
+              handleTextWithCloudflareLlamaTextModel(
+                { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareLlamaTextModel },
+                config
+              ),
+            isValid: !!config.cloudflareLlamaTextModel,
           },
           {
             persona: 'Google Vertex ' + config.googleVertexLlamaTextModel,
             generate: (currentContext: any[]) =>
-              config.googleVertexLlamaTextModel
-                ? handleTextWithGoogleVertexLlamaTextModel(
-                    { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexLlamaTextModel },
-                    config
-                  )
-                : Promise.resolve(null),
+              handleTextWithGoogleVertexLlamaTextModel(
+                { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexLlamaTextModel },
+                config
+              ),
+            isValid: !!config.googleVertexLlamaTextModel,
           },
-        ];
+        ].filter(bot => bot.isValid); // Only keep valid bot configurations
 
         let maxIterations = 1;
         let iteration = 0;
