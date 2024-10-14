@@ -2,35 +2,18 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, createPersistedStore } from 'store/store';
-import type { Store } from '@reduxjs/toolkit';
-import type { Persistor } from 'redux-persist';
+import { store, persistor } from 'store/store'; // Use named imports
+import Notification from './atoms/Notification'; // Adjust the path as necessary
 
 const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [persistedStore, setPersistedStore] = useState<Store>(store);
-  const [persistor, setPersistor] = useState<Persistor | null>(null);
-
-  useEffect(() => {
-    const initializeStore = async () => {
-      const { persistedStore, persistor } = await createPersistedStore();
-      setPersistedStore(persistedStore);
-      setPersistor(persistor);
-    };
-
-    initializeStore();
-  }, []);
-
-  if (!persistor) {
-    // Render without PersistGate during SSR or while initializing
-    return <Provider store={persistedStore}>{children}</Provider>;
-  }
-
   return (
-    <Provider store={persistedStore}>
+    <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
+        {/* Notification component is now inside the Provider and PersistGate */}
+        <Notification />
         {children}
       </PersistGate>
     </Provider>
