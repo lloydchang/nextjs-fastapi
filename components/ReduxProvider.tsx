@@ -18,13 +18,13 @@ const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, []);
 
   if (!persistor) {
-    // You can return a loading indicator if you prefer
-    return null;
+    // Render without PersistGate during SSR
+    return <Provider store={store}>{children}</Provider>;
   }
 
   return (
     <Provider store={store}>
-      <PersistGate persistor={persistor}>
+      <PersistGate loading={null} persistor={persistor}>
         {children}
       </PersistGate>
     </Provider>

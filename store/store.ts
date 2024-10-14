@@ -1,7 +1,7 @@
 // File: store/store.ts
 
 import { configureStore } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
+import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage for web
 import noopStorage from './noopStorage'; // Custom noopStorage for SSR
 import chatReducer from './chatSlice'; // Chat slice
@@ -10,7 +10,7 @@ import talkReducer from './talkSlice'; // Talk slice
 // Persist configuration
 const persistConfig = {
   key: 'root',
-  storage: typeof window !== 'undefined' ? storage : noopStorage,  // Use localStorage only in the browser
+  storage: typeof window !== 'undefined' ? storage : noopStorage, // Use localStorage only in the browser
 };
 
 // Create persisted reducers
@@ -21,16 +21,17 @@ const persistedTalkReducer = persistReducer(persistConfig, talkReducer);
 export const store = configureStore({
   reducer: {
     chat: persistedChatReducer,
-    talk: persistedTalkReducer,  // Ensure the talk slice is included
+    talk: persistedTalkReducer, // Ensure the talk slice is included
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,  // Disable serializable check for redux-persist
+      serializableCheck: false, // Disable serializable check for redux-persist
     }),
 });
 
-// Create the persisted store
-export const persistor = persistStore(store);
+// Remove the creation of persistor here
+// We will handle persistor creation in ReduxProvider.tsx
+// export const persistor = persistStore(store);
 
 // Export RootState and AppDispatch types
 export type RootState = ReturnType<typeof store.getState>;

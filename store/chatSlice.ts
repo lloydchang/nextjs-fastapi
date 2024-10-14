@@ -56,16 +56,18 @@ export const sendMessage = (
     | string
     | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch) => {
-  console.log('sendMessage - Function called with input:', input); // Added logging
+  console.log('sendMessage - Function called with input:', input);
 
   // Generate or retrieve the client ID
   let clientId: string;
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && window.localStorage) {
     clientId = localStorage.getItem('clientId') || uuidv4();
     localStorage.setItem('clientId', clientId);
   } else {
-    clientId = uuidv4(); // Fallback for server environment, though this code shouldn't run server-side
+    clientId = uuidv4(); // Fallback for server environment
   }
+
+};
 
   const userMessage: Message =
     typeof input === 'string'
