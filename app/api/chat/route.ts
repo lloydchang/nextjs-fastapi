@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
                 }
                 clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt);
+                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
                 return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
               },
             });
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
                 }
                 clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt);
+                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
                 return handleTextWithOllamaLlamaTextModel({ userPrompt: prompt, textModel: ollamaLlamaTextModel }, config);
               },
             });
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
                 }
                 clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt);
+                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
                 return handleTextWithCloudflareGemmaTextModel({ userPrompt: prompt, textModel: cloudflareGemmaTextModel }, config);
               },
             });
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
                 }
                 clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt);
+                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
                 return handleTextWithCloudflareLlamaTextModel({ userPrompt: prompt, textModel: cloudflareLlamaTextModel }, config);
               },
             });
@@ -260,7 +260,7 @@ export async function POST(request: NextRequest) {
                 }
                 clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt);
+                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
                 return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: prompt, textModel: googleVertexGemmaTextModel }, config);
               },
             });
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
                 }
                 clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt);
+                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
                 return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: prompt, textModel: googleVertexLlamaTextModel }, config);
               },
             });
