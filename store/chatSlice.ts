@@ -1,11 +1,12 @@
-// File: chatSlice.ts
+// File: store/chatSlice.ts
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AppDispatch, RootState } from 'store/store';
+import { AppDispatch, RootState } from './store'; // Adjust the import path if necessary
 import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import throttle from 'lodash/throttle'; // Import throttle
+import { setLoading } from './apiSlice'; // Import setLoading
 
 interface ChatState {
   messages: Message[];
@@ -35,7 +36,7 @@ const chatSlice = createSlice({
       }>
     ) => {
       const newMessage: Message = {
-        id: `${Date.now()}`,
+        id: uuidv4(), // Use UUID for uniqueness
         sender: action.payload.sender || 'bot',
         text: action.payload.text,
         role: action.payload.sender === 'user' ? 'user' : 'bot',
@@ -48,7 +49,7 @@ const chatSlice = createSlice({
   },
 });
 
-const { addMessage } = chatSlice.actions;
+const { addMessage, clearMessages, saveMessage } = chatSlice.actions;
 
 // Define a throttled API call function
 const throttledApiCall = throttle(
@@ -60,11 +61,16 @@ const throttledApiCall = throttle(
   ): Promise<void> => {
     return new Promise(async (resolve, reject) => {
       const state = getState();
+
+      // If already loading, skip this call
       if (state.api?.isLoading) {
         console.log('API call already in progress, skipping');
         resolve();
         return;
       }
+
+      // Set loading to true
+      dispatch(setLoading(true));
 
       try {
         const messagesArray = [
@@ -109,7 +115,7 @@ const throttledApiCall = throttle(
                   const parsedData = parseIncomingMessage(jsonString);
                   if (parsedData?.message && parsedData?.persona) {
                     const botMessage: Message = {
-                      id: `${Date.now()}`,
+                      id: uuidv4(), // Use UUID for uniqueness
                       sender: 'bot',
                       text: parsedData.message,
                       role: 'bot',
@@ -129,6 +135,9 @@ const throttledApiCall = throttle(
       } catch (error) {
         console.error(`chatSlice - Error sending message to API: ${error}`);
         reject(error);
+      } finally {
+        // Reset loading state
+        dispatch(setLoading(false));
       }
     });
   },
@@ -154,14 +163,14 @@ export const sendMessage = (
   const userMessage: Message =
     typeof input === 'string'
       ? {
-          id: `${Date.now()}`,
+          id: uuidv4(),
           sender: 'user',
           text: input,
           role: 'user',
           content: input,
         }
       : {
-          id: `${Date.now()}`,
+          id: uuidv4(),
           sender: input.sender || 'user',
           text: input.text,
           role: 'user',

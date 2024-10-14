@@ -4,7 +4,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Image from 'next/image';
 import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store'; // Ensure AppDispatch is imported for typed dispatch
 import { setTalks, setSelectedTalk, setError, setLoading } from 'store/talkSlice';

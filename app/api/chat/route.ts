@@ -51,6 +51,9 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
+  // Log incoming request
+  logger.info(`Received POST request [${requestId}] from clientId: ${clientId}`);
+
   // Get or create a mutex for the client
   let mutex = clientMutexes.get(clientId);
   if (!mutex) {
@@ -83,6 +86,9 @@ export async function POST(request: NextRequest) {
 
       // Update the context in the map
       clientContexts.set(clientId, context);
+
+      // Log context size
+      logger.debug(`Context size for clientId ${clientId}: ${context.length}`);
 
       const stream = new ReadableStream({
         async start(controller) {
