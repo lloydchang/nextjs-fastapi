@@ -40,11 +40,11 @@ async function sendSystemPromptRequest(params: { endpoint: string; model: string
 }
 
 /**
- * Generates text using Ollama Gemma with the user prompt and system prompt combined.
+ * Sends a request to Ollama Gemma with the user prompt and system prompt combined.
  * @param params - Parameters for the request, including endpoint, userPrompt, and model.
- * @returns {Promise<string | null>} - The generated response or null in case of an error.
+ * @returns {Promise<string | null>} - The user prompt response or null in case of an error.
  */
-export async function generateFromOllamaGemma(params: { endpoint: string; userPrompt: string; model: string; }): Promise<string | null> {
+export async function sendUserPromptRequest(params: { endpoint: string; userPrompt: string; model: string; }): Promise<string | null> {
   const { endpoint, userPrompt, model } = params;
   const combinedPrompt = `System Prompt: ${systemPrompt}\n\nUser Prompt: ${userPrompt}`;
 
