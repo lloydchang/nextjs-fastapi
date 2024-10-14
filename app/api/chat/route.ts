@@ -93,10 +93,8 @@ export async function POST(request: NextRequest) {
       const ollamaGemmaEndpoint: string = config.ollamaGemmaEndpoint ?? "defaultEndpoint"; 
       const ollamaGemmaTextModel: string = config.ollamaGemmaTextModel ?? "defaultModel"; 
 
-      // Ensure managePrompt returns a string or fallback to "defaultPrompt"
-      const managedPrompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel);
-
-      prompt = typeof managedPrompt === 'string' ? managedPrompt : "defaultPrompt";
+      // Pass only valid strings to managePrompt
+      prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel) || "defaultPrompt";
       logger.debug(`Managed prompt for clientId: ${clientId}: ${prompt}`);
 
       clientPrompts.set(clientId, prompt);
