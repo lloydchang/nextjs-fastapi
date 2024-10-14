@@ -5,10 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
-import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
+// ... other imports
+
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
@@ -16,7 +14,6 @@ import pQueue from 'p-queue';
 
 const config = getConfig();
 
-const sessionTimeout = 60 * 60 * 1000;
 const maxTotalContextMessages = 10; // Adjust as needed
 const maxBotResponsesInContext = 1;
 
@@ -52,9 +49,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Retrieve the existing context or initialize it
       let context = clientContexts.get(clientId) || [];
+
+      // Append new messages to the context
       context = [...context, ...messages.map(msg => ({ ...msg, role: 'user' }))];
+
+      // Ensure the context doesn't exceed the maximum allowed messages
       context = context.slice(-maxTotalContextMessages);
+
+      // Update the context in the map
       clientContexts.set(clientId, context);
 
       const stream = new ReadableStream({
@@ -66,6 +70,7 @@ export async function POST(request: NextRequest) {
 
           const botFunctions: BotFunction[] = [];
 
+          // Add your bot functions here
           if (
             isValidConfig(config.ollamaGemmaTextModel) &&
             validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
@@ -83,40 +88,32 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          if (
-            isValidConfig(config.cloudflareGemmaTextModel) &&
-            validateEnvVars([
-              'CLOUDFLARE_GEMMA_TEXT_MODEL',
-              'CLOUDFLARE_GEMMA_ENDPOINT',
-              'CLOUDFLARE_GEMMA_BEARER_TOKEN',
-            ])
-          ) {
-            botFunctions.push({
-              persona: 'Cloudflare ' + config.cloudflareGemmaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithCloudflareGemmaTextModel(
-                  {
-                    userPrompt: extractValidMessages(currentContext),
-                    textModel: config.cloudflareGemmaTextModel!,
-                  },
-                  config
-                ),
-            });
-          }
+          // Add other bot functions as needed...
 
-          // Add other bot functions here...
-
+          // Process bots sequentially and stop after one response
           async function processBots() {
-            const responses = await Promise.all(
-              botFunctions.map((bot) => bot.generate(context))
-            );
+            let hasResponded = false;
 
-            let hasResponse = false;
+            for (const bot of botFunctions) {
+              if (hasResponded) break;
 
-            for (let index = 0; index < responses.length; index++) {
-              const response = responses[index];
+              // Create a new context considering only up to the latest user message
+              const lastUserMessageIndex = context.slice().reverse().findIndex(msg => msg.role === 'user');
+              if (lastUserMessageIndex === -1) {
+                // No user message found; skip processing
+                continue;
+              }
+
+              // Calculate the index of the latest user message in the original context
+              const latestUserMessageIndex = context.length - 1 - lastUserMessageIndex;
+
+              // Build the context up to and including the latest user message
+              const botContext = context.slice(0, latestUserMessageIndex + 1);
+
+              const response = await bot.generate(botContext);
+
               if (response && typeof response === 'string') {
-                const botPersona = botFunctions[index].persona;
+                const botPersona = bot.persona;
 
                 logger.debug(
                   `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
@@ -147,13 +144,14 @@ export async function POST(request: NextRequest) {
                 // Ensure we don't exceed the total context size
                 context = context.slice(-maxTotalContextMessages);
 
-                hasResponse = true;
+                hasResponded = true;
+                break; // Stop processing other bots
               }
             }
 
             clientContexts.set(clientId, context);
 
-            if (!hasResponse) {
+            if (!hasResponded) {
               logger.silly(
                 `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
               );
