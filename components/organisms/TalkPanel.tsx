@@ -40,7 +40,7 @@ const TalkPanel: React.FC = () => {
   
     return () => {
       isMounted.current = false;
-      // No reset of hasFetched.current, as you don't want to refetch
+      // Intentionally, no reset of hasFetched.current nor hasSentMessage.current
     };
   }, [searchQuery, selectedTalk]);  
 
