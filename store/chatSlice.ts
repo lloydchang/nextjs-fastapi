@@ -7,11 +7,20 @@ import debounce from 'lodash/debounce';
 
 interface ChatState {
   messages: Message[];
+  error: string | null;
 }
 
 const initialState: ChatState = {
   messages: [],
+  error: null,
 };
+
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 const chatSlice = createSlice({
   name: 'chat',
@@ -43,12 +52,19 @@ const chatSlice = createSlice({
       };
       state.messages.push(newMessage);
     },
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
   },
 });
 
-const { addMessage } = chatSlice.actions;
+const { addMessage, setError, clearError } = chatSlice.actions;
 
-// Wrap debouncedApiCall in a Promise to handle async/await
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const debouncedApiCall = debounce(
   (
     dispatch: AppDispatch,
@@ -64,68 +80,89 @@ const debouncedApiCall = debounce(
         return;
       }
 
-      try {
-        const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
+      const maxRetries = 3;
+      let retryCount = 0;
 
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-client-id': clientId,
-          },
-          body: JSON.stringify({ messages: messagesArray }),
-        });
+      while (retryCount < maxRetries) {
+        try {
+          const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
 
-        if (!response.ok) {
-          console.error(`chatSlice - Error response from API: ${response.statusText}`);
-          reject(new Error(response.statusText));
-          return;
-        }
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-client-id': clientId,
+            },
+            body: JSON.stringify({ messages: messagesArray }),
+          });
 
-        const reader = response.body?.getReader();
-        if (reader) {
-          const decoder = new TextDecoder();
-          let textBuffer = '';
+          if (!response.ok) {
+            if (response.status === 429) {
+              const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+              console.log(`Rate limited. Retrying after ${retryAfter} seconds.`);
+              await wait(retryAfter * 1000);
+              retryCount++;
+              continue;
+            }
+            throw new ApiError(response.status, response.statusText);
+          }
 
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
+          const reader = response.body?.getReader();
+          if (reader) {
+            const decoder = new TextDecoder();
+            let textBuffer = '';
 
-            textBuffer += decoder.decode(value, { stream: true });
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
 
-            const messages = textBuffer.split('\n\n');
-            textBuffer = messages.pop() || '';
+              textBuffer += decoder.decode(value, { stream: true });
 
-            for (const message of messages) {
-              if (message.startsWith('data: ')) {
-                const jsonString = message.substring(6).trim();
-                console.log(`chatSlice - Raw incoming message: ${jsonString}`);
+              const messages = textBuffer.split('\n\n');
+              textBuffer = messages.pop() || '';
 
-                try {
-                  const parsedData = parseIncomingMessage(jsonString);
-                  if (parsedData?.message && parsedData?.persona) {
-                    const botMessage: Message = {
-                      id: `${Date.now()}`,
-                      sender: 'bot',
-                      text: parsedData.message,
-                      role: 'bot',
-                      content: parsedData.message,
-                      persona: parsedData.persona,
-                    };
-                    dispatch(addMessage(botMessage));
+              for (const message of messages) {
+                if (message.startsWith('data: ')) {
+                  const jsonString = message.substring(6).trim();
+                  console.log(`chatSlice - Raw incoming message: ${jsonString}`);
+
+                  try {
+                    const parsedData = parseIncomingMessage(jsonString);
+                    if (parsedData?.message && parsedData?.persona) {
+                      const botMessage: Message = {
+                        id: `${Date.now()}`,
+                        sender: 'bot',
+                        text: parsedData.message,
+                        role: 'bot',
+                        content: parsedData.message,
+                        persona: parsedData.persona,
+                      };
+                      dispatch(addMessage(botMessage));
+                    }
+                  } catch (e) {
+                    console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
                   }
-                } catch (e) {
-                  console.error('chatSlice - Error parsing incoming event message:', jsonString, e);
                 }
               }
             }
           }
+          resolve();
+          return;
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
+            retryCount++;
+            await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
+            continue;
+          }
+          console.error(`chatSlice - Error sending message to API: ${error}`);
+          dispatch(setError(error instanceof Error ? error.message : 'Unknown error occurred'));
+          reject(error);
+          return;
         }
-        resolve();
-      } catch (error) {
-        console.error(`chatSlice - Error sending message to API: ${error}`);
-        reject(error);
       }
+
+      dispatch(setError('Max retries reached. Please try again later.'));
+      reject(new Error('Max retries reached'));
     });
   },
   300
@@ -137,6 +174,8 @@ export const sendMessage = (
     | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
   console.log('sendMessage - Function called with input:', input);
+
+  dispatch(clearError()); // Clear any previous errors
 
   let clientId: string;
   if (typeof window !== 'undefined' && window.localStorage) {
