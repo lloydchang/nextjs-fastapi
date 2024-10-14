@@ -34,7 +34,7 @@ export async function handleTextWithOllamaGemmaTextModel(
     });
 
     if (!response) {
-      logger.error('OllamaGemmaController.ts - Failed to generate text from Ollama Gemma.');
+      logger.error('OllamaGemmaController.ts - Failed to generate text from Ollama Gemma. Response was null.');
       return '';
     }
 
