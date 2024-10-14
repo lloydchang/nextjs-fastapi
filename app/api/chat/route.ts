@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       clientPrompts.set(clientId, prompt);
 
       try {
-        const response = await handleTextWithOllamaGemmaTextModel(ollamaGemmaTextModel || "defaultModel", clientId);
+        const response = await handleTextWithOllamaGemmaTextModel(userPrompt, ollamaGemmaTextModel);
         if (response) {
           return NextResponse.json(response, { status: 200 });
         } else {
