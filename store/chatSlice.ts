@@ -4,6 +4,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch } from 'store/store';
 import he from 'he'; // For HTML entity decoding
 import { Message } from 'types'; // Import the unified Message type
+import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 for client ID generation
+
+// Generate or retrieve the client ID
+const clientId = localStorage.getItem('clientId') || uuidv4();
+localStorage.setItem('clientId', clientId);
 
 // Define the ChatState interface
 interface ChatState {
@@ -26,7 +31,15 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
-    saveMessage: (state, action: PayloadAction<{ text: string; sender?: 'user' | 'bot'; hidden?: boolean; persona?: string }>) => {
+    saveMessage: (
+      state,
+      action: PayloadAction<{
+        text: string;
+        sender?: 'user' | 'bot';
+        hidden?: boolean;
+        persona?: string;
+      }>
+    ) => {
       const newMessage: Message = {
         id: `${Date.now()}`,
         sender: action.payload.sender || 'bot',
@@ -69,7 +82,10 @@ export const sendMessage = (
 
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-client-id': clientId, // Include client ID in headers
+      },
       body: JSON.stringify({ messages: messagesArray }),
     });
 
