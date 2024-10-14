@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
                 
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel)) {
+                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel)) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel)) {
+                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel)) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
 
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel)) {
+                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel)) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
 
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel)) {
+                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel)) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
 
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel)) {
+                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel)) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
 
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt, MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel)) {
+                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel)) {
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
