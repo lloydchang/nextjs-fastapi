@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
   // Log incoming request
-  logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
+  logger.info(`Received POST request [${requestId}] from clientId: ${clientId}`);
 
   // Implement Server-Side Rate Limiting
   const now = Date.now();
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
       clientContexts.set(clientId, context);
 
       // Log context size
-      // logger.debug(`app/api/chat/route.ts - Context size for clientId ${clientId}: ${context.length}`);
+      logger.debug(`Context size for clientId ${clientId}: ${context.length}`);
 
       const stream = new ReadableStream({
         async start(controller) {
