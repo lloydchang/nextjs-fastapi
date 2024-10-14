@@ -24,7 +24,7 @@ export async function managePrompt(
   // Option 1: Summarize the older part
   const excessLength = prompt.length - maxLength + 500; // Reserve extra for the summary
   const partToSummarize = prompt.substring(0, excessLength);
-  logger.debug(`app/api/chat/utils/promptManager.ts - managePrompt - Summarizing first ${excessLength} characters for clientId: ${clientId} using model: ${model}`);
+  logger.debug(`app/api/chat/utils/promptManager.ts - Summarizing first ${excessLength} characters for clientId: ${clientId} using model: ${model}`);
 
   const summary = await summarizeFn(partToSummarize);
 
@@ -32,12 +32,12 @@ export async function managePrompt(
     // Replace the old part with the summary
     const remainingPrompt = prompt.substring(excessLength);
     const newPrompt = `Summary of previous conversation: ${summary}\n\n${remainingPrompt}`;
-    logger.debug(`app/api/chat/utils/promptManager.ts - managePrompt - Prompt managed by summarization for clientId: ${clientId} using model: ${model}`);
+    logger.debug(`app/api/chat/utils/promptManager.ts - Prompt managed by summarization for clientId: ${clientId} using model: ${model}`);
     return newPrompt;
   }
 
   // Option 2: Truncate if summarization fails
   const truncatedPrompt = truncatePrompt(prompt, maxLength);
-  logger.debug(`app/api/chat/utils/promptManager.ts - managePrompt - Prompt managed by truncation for clientId: ${clientId}`);
+  logger.debug(`app/api/chat/utils/promptManager.ts - Prompt managed by truncation for clientId: ${clientId}`);
   return truncatedPrompt;
 }
