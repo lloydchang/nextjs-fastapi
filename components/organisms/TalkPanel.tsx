@@ -128,7 +128,7 @@ const TalkPanel: React.FC = () => {
   const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
     console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
     sendTranscriptForTalk(query, talk);
-  }, 1000); // Debounce time: 1 second
+  }, 1000); // Debounce time: 1 second, resulting in exponential backoff of 2, 4, 8 seconds
 
   // Send the first available transcript from a list of talks
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
