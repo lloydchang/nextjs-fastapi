@@ -1,9 +1,11 @@
+// File: chatSlice.ts
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppDispatch, RootState } from 'store/store';
 import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
-import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle'; // Import throttle
 
 interface ChatState {
   messages: Message[];
@@ -48,8 +50,8 @@ const chatSlice = createSlice({
 
 const { addMessage } = chatSlice.actions;
 
-// Wrap debouncedApiCall in a Promise to handle async/await
-const debouncedApiCall = debounce(
+// Define a throttled API call function
+const throttledApiCall = throttle(
   (
     dispatch: AppDispatch,
     getState: () => RootState,
@@ -65,7 +67,9 @@ const debouncedApiCall = debounce(
       }
 
       try {
-        const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
+        const messagesArray = [
+          { role: 'user', content: typeof input === 'string' ? input : input.text },
+        ];
 
         const response = await fetch('/api/chat', {
           method: 'POST',
@@ -128,7 +132,8 @@ const debouncedApiCall = debounce(
       }
     });
   },
-  300
+  1000, // Throttle limit: 1000 milliseconds (1 second)
+  { leading: true, trailing: false } // Options: execute on the leading edge only
 );
 
 export const sendMessage = (
@@ -167,8 +172,8 @@ export const sendMessage = (
 
   dispatch(addMessage(userMessage));
 
-  // Wait for debouncedApiCall to complete
-  await debouncedApiCall(dispatch, getState, input, clientId);
+  // Call the throttled API call (no need to await since throttling controls execution)
+  throttledApiCall(dispatch, getState, input, clientId);
 };
 
 export function parseIncomingMessage(jsonString: string) {
