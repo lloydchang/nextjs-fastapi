@@ -152,7 +152,7 @@ const debouncedApiCall = debounce(
           await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
         }
-        dispatch(setError('Max retries reached. Please try again later.'));
+        // dispatch(setError('Max retries reached. Please try again later.'));
         return;
       }
     }
