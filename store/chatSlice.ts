@@ -6,10 +6,6 @@ import he from 'he'; // For HTML entity decoding
 import { Message } from 'types'; // Import the unified Message type
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 for client ID generation
 
-// Generate or retrieve the client ID
-const clientId = localStorage.getItem('clientId') || uuidv4();
-localStorage.setItem('clientId', clientId);
-
 // Define the ChatState interface
 interface ChatState {
   messages: Message[];
@@ -61,6 +57,15 @@ export const sendMessage = (
     | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch) => {
   console.log('sendMessage - Function called with input:', input); // Added logging
+
+  // Generate or retrieve the client ID
+  let clientId: string;
+  if (typeof window !== 'undefined') {
+    clientId = localStorage.getItem('clientId') || uuidv4();
+    localStorage.setItem('clientId', clientId);
+  } else {
+    clientId = uuidv4(); // Fallback for server environment, though this code shouldn't run server-side
+  }
 
   const userMessage: Message =
     typeof input === 'string'
