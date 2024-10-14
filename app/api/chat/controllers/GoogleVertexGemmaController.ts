@@ -19,15 +19,15 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['GOOGLE_VERTEX_GEMMA_ENDPOINT'])) {
-    logger.silly('app/api/chat/controllers/GoogleVertexGemmaController.ts - Missing required environment variables.');
+    // logger.silly('app/api/chat/controllers/GoogleVertexGemmaController.ts - Missing required environment variables.');
     return '';
   }
 
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = googleVertexGemmaEndpoint as string;
 
-  logger.silly(`app/api/chat/controllers/GoogleVertexGemmaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/GoogleVertexGemmaController.ts - ${userPrompt}`);
+  // logger.silly(`app/api/chat/controllers/GoogleVertexGemmaController.ts - Generating text for model: ${textModel}`);
+  // logger.silly(`app/api/chat/controllers/GoogleVertexGemmaController.ts - ${userPrompt}`);
 
   try {
     const response = await generateFromGoogleVertexGemma({
@@ -41,7 +41,7 @@ export async function handleTextWithGoogleVertexGemmaTextModel(
       return '';
     }
 
-    logger.silly(`app/api/chat/controllers/GoogleVertexGemmaController.ts - Generated response: ${response}`);
+    // logger.silly(`app/api/chat/controllers/GoogleVertexGemmaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {

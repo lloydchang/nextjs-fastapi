@@ -24,7 +24,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['CLOUDFLARE_GEMMA_ENDPOINT'])) {
-    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required endpoint environment variable');
+    // logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required endpoint environment variable');
     return '';
   }
 
@@ -32,15 +32,15 @@ export async function handleTextWithCloudflareGemmaTextModel(
   const hasBearerToken = validateEnvVars(['CLOUDFLARE_GEMMA_BEARER_TOKEN']);
 
   if (!hasApiKeyAndEmail && !hasBearerToken) {
-    logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required authentication environment variables. Either API Key + Email or Bearer Token is needed');
+    // logger.silly('app/api/chat/controllers/CloudflareGemmaController.ts - Missing required authentication environment variables. Either API Key + Email or Bearer Token is needed');
     return '';
   }
 
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = cloudflareGemmaEndpoint as string;
 
-  logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - User prompt: ${userPrompt}`);
+  // logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - Generating text for model: ${textModel}`);
+  // logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromCloudflareGemma({
@@ -57,7 +57,7 @@ export async function handleTextWithCloudflareGemmaTextModel(
       return '';
     }
 
-    logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - Generated response: ${response}`);
+    // logger.silly(`app/api/chat/controllers/CloudflareGemmaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {
