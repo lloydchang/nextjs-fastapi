@@ -5,6 +5,7 @@ import logger from 'app/api/chat/utils/logger';
 
 /**
  * Manages the prompt by truncating or summarizing when necessary.
+ * Iteratively handles large prompts and ensures they fit within the maximum length.
  * @param prompt - The current prompt.
  * @param maxLength - The maximum allowed character length.
  * @param summarizeFn - A generic summarization function that takes (text: string) and returns a summary.
@@ -19,25 +20,28 @@ export async function managePrompt(
   clientId?: string, // Optional client ID for logging
   model?: string     // Optional model name for logging
 ): Promise<string> {
-  if (prompt.length <= maxLength) return prompt;
+  let currentPrompt = prompt;
+  
+  while (currentPrompt.length > maxLength) {
+    // Calculate the excess length beyond maxLength
+    const excessLength = currentPrompt.length - maxLength + 500; // Reserving extra space for the summary
+    const partToSummarize = currentPrompt.substring(0, excessLength);
+    
+    logger.debug(`app/api/chat/utils/promptManager.ts - Summarizing first ${excessLength} characters for clientId: ${clientId} using model: ${model}`);
 
-  // Option 1: Summarize the older part
-  const excessLength = prompt.length - maxLength + 500; // Reserve extra for the summary
-  const partToSummarize = prompt.substring(0, excessLength);
-  logger.debug(`app/api/chat/utils/promptManager.ts - Summarizing first ${excessLength} characters for clientId: ${clientId} using model: ${model}`);
+    const summary = await summarizeFn(partToSummarize);
 
-  const summary = await summarizeFn(partToSummarize);
-
-  if (summary) {
-    // Replace the old part with the summary
-    const remainingPrompt = prompt.substring(excessLength);
-    const newPrompt = `Summary of previous conversation: ${summary}\n\n${remainingPrompt}`;
-    logger.debug(`app/api/chat/utils/promptManager.ts - Prompt managed by summarization for clientId: ${clientId} using model: ${model}`);
-    return newPrompt;
+    if (summary) {
+      // Replace the summarized part with the summary and append the remaining prompt
+      const remainingPrompt = currentPrompt.substring(excessLength);
+      currentPrompt = `Summary of previous conversation: ${summary}\n\n${remainingPrompt}`;
+    } else {
+      // If summarization fails, truncate instead
+      currentPrompt = truncatePrompt(currentPrompt, maxLength);
+      logger.debug(`app/api/chat/utils/promptManager.ts - Prompt truncated for clientId: ${clientId}`);
+      break;
+    }
   }
 
-  // Option 2: Truncate if summarization fails
-  const truncatedPrompt = truncatePrompt(prompt, maxLength);
-  logger.debug(`app/api/chat/utils/promptManager.ts - Prompt managed by truncation for clientId: ${clientId}`);
-  return truncatedPrompt;
+  return currentPrompt;
 }
