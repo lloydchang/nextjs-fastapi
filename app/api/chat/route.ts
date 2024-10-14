@@ -1,3 +1,5 @@
+// File: app/api/chat/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  logger.info(`Received POST request [${requestId}] from clientId: ${clientId}`);
+  logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
 
   const now = Date.now();
   const rateInfo = rateLimitMap.get(clientId);
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
   if (rateInfo) {
     if (now - rateInfo.firstRequestTime < RATE_LIMIT_WINDOW) {
       if (rateInfo.count >= RATE_LIMIT) {
-        logger.warn(`ClientId: ${clientId} has exceeded the rate limit.`);
+        logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
         return NextResponse.json(
           {
             error: 'Too Many Requests',
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
     try {
       const { messages } = await request.json();
       if (!Array.isArray(messages) || messages.length === 0) {
-        logger.warn(`Request [${requestId}] from clientId: ${clientId} has invalid format or no messages.`);
+        logger.warn(`app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no messages.`);
         return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
       }
 
@@ -99,7 +101,7 @@ export async function POST(request: NextRequest) {
 
       const stream = new ReadableStream({
         async start(controller) {
-          logger.silly(`Started streaming responses to the client for clientId: ${clientId}.`);
+          logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
 
           const botFunctions = [];
 
@@ -243,7 +245,7 @@ export async function POST(request: NextRequest) {
           }
 
           async function processBots() {
-            logger.silly(`Starting bot processing for clientId: ${clientId}.`);
+            logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
 
             const responses = await Promise.all(
               botFunctions.map((bot) => bot.generate(context))
@@ -256,7 +258,7 @@ export async function POST(request: NextRequest) {
               if (response && typeof response === 'string') {
                 const botPersona = botFunctions[index].persona;
 
-                logger.debug(`Response from ${botPersona}: ${response}`);
+                logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
 
                 controller.enqueue(
                   `data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`
@@ -273,11 +275,11 @@ export async function POST(request: NextRequest) {
             if (Date.now() - lastInteractionTimes.get(clientId)! > sessionTimeout) {
               clientContexts.delete(clientId);
               lastInteractionTimes.delete(clientId);
-              logger.silly(`Session timed out for clientId: ${clientId}. Context reset.`);
+              logger.silly(`app/api/chat/route.ts - Session timed out for clientId: ${clientId}. Context reset.`);
             }
 
             if (!hasResponse) {
-              logger.silly(`No bot responded. Ending interaction.`);
+              logger.silly(`app/api/chat/route.ts - No bot responded. Ending interaction.`);
             }
 
             controller.enqueue('data: [DONE]\n\n');
@@ -285,7 +287,7 @@ export async function POST(request: NextRequest) {
           }
 
           processBots().catch((error) => {
-            logger.error(`Error in streaming bot interaction: ${error}`);
+            logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
             controller.error(error);
           });
         },
@@ -299,7 +301,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (error) {
-      logger.error(`Error in streaming bot interaction: ${error}`);
+      logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
       return NextResponse.json(
         { error: error instanceof Error ? error.message : 'Internal Server Error' },
         { status: 500 }

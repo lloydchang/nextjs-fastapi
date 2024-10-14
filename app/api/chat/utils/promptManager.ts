@@ -1,3 +1,5 @@
+// File: app/api/chat/utils/promptManager.ts
+
 import { truncatePrompt } from 'app/api/chat/utils/promptTruncator';
 import logger from 'app/api/chat/utils/logger';
 
@@ -18,7 +20,7 @@ export async function managePrompt(
   // Option 1: Summarize the older part
   const excessLength = prompt.length - maxLength + 500; // Reserve extra for the summary
   const partToSummarize = prompt.substring(0, excessLength);
-  logger.debug(`managePrompt - Summarizing first ${excessLength} characters.`);
+  logger.debug(`app/api/chat/utils/promptManager.ts - managePrompt - Summarizing first ${excessLength} characters.`);
 
   const summary = await summarizeFn(partToSummarize);
 
@@ -26,12 +28,12 @@ export async function managePrompt(
     // Replace the old part with the summary
     const remainingPrompt = prompt.substring(excessLength);
     const newPrompt = `Summary of previous conversation: ${summary}\n\n${remainingPrompt}`;
-    logger.debug('managePrompt - Prompt managed by summarization.');
+    logger.debug('app/api/chat/utils/promptManager.ts - managePrompt - Prompt managed by summarization.');
     return newPrompt;
   }
 
   // Option 2: Truncate if summarization fails
   const truncatedPrompt = truncatePrompt(prompt, maxLength);
-  logger.debug('managePrompt - Prompt managed by truncation.');
+  logger.debug('app/api/chat/utils/promptManager.ts - managePrompt - Prompt managed by truncation.');
   return truncatedPrompt;
 }

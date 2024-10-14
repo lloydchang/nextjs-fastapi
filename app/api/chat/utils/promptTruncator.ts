@@ -23,6 +23,6 @@ export function truncatePrompt(prompt: string, maxLength: number): string {
     truncated = line + '\n' + truncated;
   }
 
-  logger.debug(`truncatePrompt - Prompt truncated. New length: ${truncated.length}`);
+  logger.debug(`app/api/chat/utils/promptTruncator.ts - Prompt truncated. New length: ${truncated.length}`);
   return truncated.trim();
 }
