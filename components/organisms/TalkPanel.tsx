@@ -26,118 +26,115 @@ const TalkPanel: React.FC = () => {
   // Perform an initial search when the component mounts
   useEffect(() => {
     if (initialRender.current) {
+      console.log('TalkPanel - Initial render, performing search with query:', searchQuery);
       performSearch(searchQuery);
       initialRender.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Handles search results, dispatches the talks and attempts to send the first transcript.
-   * @param query - The original search query.
-   * @param data - The array of fetched talks.
-   */
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
+    console.log('TalkPanel - handleSearchResults called. Query:', query, 'Results:', data);
     dispatch(setTalks(data));
     dispatch(setSelectedTalk(data[0] || null));
 
-    // Attempt to send the transcript of the first available talk to the chat
     await sendFirstAvailableTranscript(query, data);
   };
 
-  /**
-   * Performs the search based on the query and dispatches results.
-   * @param query - The search query.
-   */
   const performSearch = async (query: string): Promise<void> => {
+    console.log('TalkPanel - Performing search for query:', query);
     dispatch(setError(null));
     dispatch(setLoading(true));
 
     try {
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
+      console.log('TalkPanel - Received response:', response);
+
       if (response.status !== 200) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 
-      // Map the results into Talk objects
       let data: Talk[] = response.data.results.map((result: any) => ({
         title: result.document.slug.replace(/_/g, ' '),
         url: `https://www.ted.com/talks/${result.document.slug}`,
         sdg_tags: result.document.sdg_tags || [],
-        transcript: result.document.transcript || '', // Using the transcript from the response
+        transcript: result.document.transcript || 'Transcript not available',
       }));
 
-      // Handle search results in a separate function
+      console.log('TalkPanel - Mapped response data into talks:', data);
       await handleSearchResults(query, data);
-      
+
     } catch (error) {
-      console.error(error);
-      dispatch(setError("Failed to fetch talks."));
+      console.error('TalkPanel - Error during performSearch:', error);
+      dispatch(setError('Failed to fetch talks.'));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  /**
-   * Tries to send the transcript of the first available talk.
-   * If the first one fails, it will try the next one.
-   * @param query - The original search query.
-   * @param talks - The array of fetched talks.
-   */
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
+    console.log('TalkPanel - sendFirstAvailableTranscript started. Query:', query, 'Talks:', talks);
+  
     for (let i = 0; i < talks.length; i++) {
       try {
-        const sendTranscript = talks[i].transcript || 'Transcript not available';
-        const sendSdgTag = talks[i].sdg_tags.length > 0 ? sdgTitleMap[talks[i].sdg_tags[0]] : ''; // No SDG Tag
-
-        dispatch(sendMessage({ text: `${query} | ${talks[i].title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
-        dispatch(setSelectedTalk(talks[i])); // Set the current successful talk as the selected one
+        const talk = talks[i];
+        console.log(`TalkPanel - Processing talk #${i}:`, talk);
+  
+        const sendTranscript = talk.transcript || 'Transcript not available';
+        const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+  
+        console.log(`TalkPanel - Sending message for talk: ${talk.title}, Transcript: ${sendTranscript}, SDG Tag: ${sendSdgTag}`);
+  
+        // Wrapping the dispatch in try-catch to log any possible errors
+        try {
+          const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+          console.log(`TalkPanel - Message dispatched for: ${talk.title}. Dispatch result:`, result);
+        } catch (dispatchError) {
+          console.error(`TalkPanel - Error dispatching message for: ${talk.title}. Error:`, dispatchError);
+          continue; // Move to the next talk if this one fails
+        }
+  
+        dispatch(setSelectedTalk(talk));
+        console.log(`TalkPanel - Successfully sent transcript and selected talk for: ${talk.title}`);
         return; // Exit loop once a successful transcript is sent
+  
       } catch (error) {
-        console.error(`Failed to send transcript for ${talks[i].title}. Trying the next one...`);
+        console.error(`TalkPanel - Failed to process transcript for talk: ${talks[i].title}. Error:`, error);
       }
     }
-    dispatch(setError("Failed to send transcripts for all talks."));
-  };
+  
+    console.error('TalkPanel - Failed to send transcripts for all talks.');
+    dispatch(setError('Failed to send transcripts for all talks.'));
+  };  
 
-  /**
-   * Handles input change for the search query.
-   * @param e - The change event.
-   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('TalkPanel - Search input changed. Value:', e.target.value);
     setSearchQuery(e.target.value);
   };
 
-  /**
-   * Handles "Enter" key press to trigger search.
-   * @param e - The keyboard event.
-   */
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      console.log('TalkPanel - Enter key pressed. Performing search.');
       performSearch(searchQuery);
     }
   };
 
-  /**
-   * Shuffles the current talks and attempts to send the transcript of the first available talk.
-   */
   const shuffleTalks = async () => {
+    console.log('TalkPanel - Shuffle button clicked.');
     if (talks.length > 0) {
       const shuffledTalks = shuffleArray([...talks]);
+      console.log('TalkPanel - Talks shuffled. New order:', shuffledTalks);
       dispatch(setTalks(shuffledTalks));
       dispatch(setSelectedTalk(shuffledTalks[0] || null));
 
-      // Handle shuffled results in the same way as search results
       await handleSearchResults(searchQuery, shuffledTalks);
     }
   };
 
-  /**
-   * Opens the transcript in a new tab for the selected talk.
-   */
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
       const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
+      console.log('TalkPanel - Opening transcript in new tab. URL:', transcriptUrl);
       window.open(transcriptUrl, '_blank');
     }
   };
@@ -148,7 +145,7 @@ const TalkPanel: React.FC = () => {
         <div className={styles.searchInputWrapper}>
           <input
             type="text"
-            placeholder="Search talks…"
+            placeholder=""
             value={searchQuery}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
