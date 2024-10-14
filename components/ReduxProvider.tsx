@@ -11,7 +11,6 @@ import Notification from './atoms/Notification'; // Adjust the path as necessary
 const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <Provider store={store}>
-      {/* PersistGate delays the rendering of your app's UI until the persisted state has been retrieved and saved to redux */}
       <PersistGate loading={null} persistor={persistor}>
         {/* Notification component is now inside the Provider and PersistGate */}
         <Notification />
