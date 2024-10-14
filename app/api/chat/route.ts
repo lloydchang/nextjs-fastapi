@@ -14,8 +14,6 @@ import logger from 'app/api/chat/utils/logger';
 
 const config = getConfig();
 
-console.log('Configuration Values:', config); // Log configuration values
-
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 20; // Keep only the last 20 messages
 
@@ -138,11 +136,7 @@ export async function POST(request: NextRequest) {
           },
         ];
 
-        console.log('Bot Functions Before Filter:', botFunctions);
-
         const validBotFunctions = botFunctions.filter((bot) => bot.isValid);
-
-        console.log('Bot Functions After Filter:', validBotFunctions);
 
         async function processBots() {
           logger.silly(
