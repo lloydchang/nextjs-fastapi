@@ -69,7 +69,13 @@ export const sendMessage = (
 
   const userMessage: Message =
     typeof input === 'string'
-      ? { id: `${Date.now()}`, sender: 'user', text: input, role: 'user', content: input }
+      ? {
+          id: `${Date.now()}`,
+          sender: 'user',
+          text: input,
+          role: 'user',
+          content: input,
+        }
       : {
           id: `${Date.now()}`,
           sender: input.sender || 'user',
@@ -93,6 +99,18 @@ export const sendMessage = (
       },
       body: JSON.stringify({ messages: messagesArray }),
     });
+
+    if (response.status === 429) {
+      console.warn('A request is already in progress. Please wait.');
+      // Optionally, dispatch an action to inform the user
+      return;
+    }
+
+    if (!response.ok) {
+      console.error(`chatSlice - Error response from API: ${response.statusText}`);
+      // Optionally, handle other status codes
+      return;
+    }
 
     const reader = response.body?.getReader();
     if (reader) {

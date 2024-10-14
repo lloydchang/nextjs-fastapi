@@ -1,13 +1,13 @@
 // File: components/organisms/ChatInput.tsx
 
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
 
 interface ChatInputProps {
   chatInput: string;
   setChatInput: (input: string) => void;
-  handleChat: (isManual: boolean) => void;
+  handleChat: () => Promise<void>;
   isCamOn: boolean;
   isMicOn: boolean;
   toggleMic: () => void;
@@ -39,24 +39,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isFullScreenOn,
   toggleFullScreen,
 }) => {
-  const isSendingRef = useRef(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !isSendingRef.current) {
+  const handleKeyPress = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !isSending) {
+      e.preventDefault(); // Prevent default newline on Enter
       if (chatInput.trim() === '') return;
-      isSendingRef.current = true;
-      handleChat(true);
-      setChatInput('');
-      isSendingRef.current = false;
+      setIsSending(true);
+      try {
+        await handleChat();
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
-  const handleButtonClick = () => {
-    if (!isSendingRef.current && chatInput.trim() !== '') {
-      isSendingRef.current = true;
-      handleChat(true);
-      setChatInput('');
-      isSendingRef.current = false;
+  const handleButtonClick = async () => {
+    if (!isSending && chatInput.trim() !== '') {
+      setIsSending(true);
+      try {
+        await handleChat();
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -71,12 +76,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Chat here…"
           className={styles.input}
           rows={1}
+          disabled={isSending}
         />
       </div>
 
       {/* Row with send button and control buttons */}
       <div className={styles.buttonRow}>
-        <button type="button" onClick={handleButtonClick} className={styles.sendButton}>
+        <button
+          type="button"
+          onClick={handleButtonClick}
+          className={styles.sendButton}
+          disabled={isSending}
+        >
           Send
         </button>
         <div className={styles.controlRow}>

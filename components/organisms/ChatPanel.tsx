@@ -25,16 +25,16 @@ const ChatPanel: React.FC = () => {
   const messages = useSelector((state: RootState) => state.chat.messages);
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false); // New state for Full Screen mode
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
 
   useEffect(() => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
   }, [messages]);
 
-  const handleChat = useCallback(() => {
+  const handleChat = useCallback(async () => {
     if (chatInput.trim()) {
-      dispatch(sendMessage(chatInput)); // Send the chat message to the API and store it in Redux
-      setChatInput(''); // Clear the input field
+      await dispatch(sendMessage(chatInput));
+      setChatInput('');
     }
   }, [dispatch, chatInput]);
 
@@ -63,12 +63,21 @@ const ChatPanel: React.FC = () => {
     setIsFullScreen(!isFullScreen);
   };
 
-  // Removed the useEffect with EventSource to prevent multiple API invocations
-
   return (
-    <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
+    <div
+      className={`${styles.container} ${
+        isFullScreen ? styles.fullScreenMode : styles['Chat-panel']
+      }`}
+    >
       {/* Add priority attribute to optimize loading for LCP */}
-      <Image src={BackgroundImage} alt="" fill className={styles.backgroundImage} priority unoptimized />
+      <Image
+        src={BackgroundImage}
+        alt=""
+        fill
+        className={styles.backgroundImage}
+        priority
+        unoptimized
+      />
       <div className={styles.overlay} />
 
       <div className={`${styles.container} ${styles['Chat-panel']}`}>
@@ -80,10 +89,10 @@ const ChatPanel: React.FC = () => {
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           {/* Pass `isFullScreen` prop along with messages */}
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
-          <ChatInput 
-            chatInput={chatInput} 
-            setChatInput={setChatInput} 
-            handleChat={handleChat}
+          <ChatInput
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            handleChat={handleChat} // Updated to match the new signature
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
             toggleMic={toggleMic}
