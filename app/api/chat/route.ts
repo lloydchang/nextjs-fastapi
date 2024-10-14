@@ -10,7 +10,7 @@ import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
-import pQueue from 'p-queue';
+import { Mutex } from 'async-mutex';
 
 const config = getConfig();
 
@@ -18,7 +18,11 @@ const maxTotalContextMessages = 10; // Adjust as needed
 const maxBotResponsesInContext = 1;
 
 const clientContexts = new Map<string, any[]>();
-const clientQueues = new Map<string, pQueue>();
+const clientMutexes = new Map<string, Mutex>();
+
+// Optional: To track last activity for cleanup
+const lastActivityMap = new Map<string, number>();
+const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 function isValidConfig(value: any): boolean {
   return (
@@ -29,17 +33,36 @@ function isValidConfig(value: any): boolean {
   );
 }
 
+// Cleanup mechanism to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [clientId, lastActivity] of lastActivityMap.entries()) {
+    if (now - lastActivity > INACTIVITY_LIMIT) {
+      clientContexts.delete(clientId);
+      clientMutexes.delete(clientId);
+      lastActivityMap.delete(clientId);
+      logger.info(`Cleaned up context and mutex for inactive clientId: ${clientId}`);
+    }
+  }
+}, INACTIVITY_LIMIT);
+
+// Main POST handler
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  let queue = clientQueues.get(clientId);
-  if (!queue) {
-    queue = new pQueue({ concurrency: 1 });
-    clientQueues.set(clientId, queue);
+  // Get or create a mutex for the client
+  let mutex = clientMutexes.get(clientId);
+  if (!mutex) {
+    mutex = new Mutex();
+    clientMutexes.set(clientId, mutex);
   }
 
-  return queue.add(async () => {
+  // Acquire the mutex before processing
+  return mutex.runExclusive(async () => {
+    // Update last activity timestamp
+    lastActivityMap.set(clientId, Date.now());
+
     try {
       const { messages } = await request.json();
       if (!Array.isArray(messages) || messages.length === 0) {
