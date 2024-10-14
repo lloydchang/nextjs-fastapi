@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
   // Log incoming request
-  // logger.silly(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
+  logger.silly(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
 
   // Implement Server-Side Rate Limiting
   const now = Date.now();
