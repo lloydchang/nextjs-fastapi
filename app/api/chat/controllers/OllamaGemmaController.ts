@@ -1,26 +1,25 @@
 // File: app/api/chat/controllers/OllamaGemmaController.ts
 
-import { logger } from '../utils/logger';
-import { generateFromOllamaGemma } from '../clients/OllamaGemmaClient';
-import { getConfig } from '../utils/config';
-import { validateEnvVars } from '../utils/validate';
+import logger from 'app/api/chat/utils/logger';
+import { generateFromOllamaGemma } from 'app/api/chat/clients/OllamaGemmaClient'; // Updated import
+import { getConfig } from 'app/api/chat/utils/config';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 
 /**
  * Handles text generation using the Ollama Gemma model.
- * @param params - Contains the user prompt and text model to be used.
- * @param config - Configuration object.
+ * @param param0 - Contains the user prompt and text model to be used.
+ * @param config - Configuration object, if passed separately.
  * @returns {Promise<string>} - Generated response text.
  */
 export async function handleTextWithOllamaGemmaTextModel(
-  params: { userPrompt: string; textModel: string; },
+  { userPrompt, textModel }: { userPrompt: string; textModel: string },
   config: any
 ): Promise<string> {
-  const { userPrompt, textModel } = params;
   const { ollamaGemmaEndpoint } = getConfig();
 
   // Validate required environment variables
   if (!validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
-    logger.error('OllamaGemmaController.ts - Missing required endpoint environment variable');
+    logger.error('app/api/chat/controllers/OllamaGemmaController.ts - Missing required endpoint environment variable');
     return '';
   }
 
@@ -34,7 +33,7 @@ export async function handleTextWithOllamaGemmaTextModel(
     });
 
     if (!response) {
-      logger.error('OllamaGemmaController.ts - Failed to generate text from Ollama Gemma.');
+      logger.error('app/api/chat/controllers/OllamaGemmaController.ts - Failed to generate text from Ollama Gemma.');
       return '';
     }
 
@@ -42,7 +41,7 @@ export async function handleTextWithOllamaGemmaTextModel(
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`OllamaGemmaController.ts - Error during text generation: ${errorMessage}`);
+    logger.error(`app/api/chat/controllers/OllamaGemmaController.ts - Error during text generation: ${errorMessage}`);
     return '';
   }
 }

@@ -2,23 +2,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getConfig } from '../utils/config';
-import { handleTextWithOllamaGemmaTextModel } from '../controllers/OllamaGemmaController';
-import { logger } from '../utils/logger';
-import { validateEnvVars } from '../utils/validate';
+import { getConfig } from 'app/api/chat/utils/config';
+import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
+import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
+// ... other imports
+
+import { extractValidMessages } from 'app/api/chat/utils/filterContext';
+import logger from 'app/api/chat/utils/logger';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
-import { managePrompt } from '../utils/promptManager';
 
 const config = getConfig();
 
-const MAX_PROMPT_LENGTH = 4000; // Adjust based on Ollama Gemma's token limit
+const maxTotalContextMessages = 10; // Adjust as needed
+const maxBotResponsesInContext = 1;
 
 // Rate Limiting Configuration
 const RATE_LIMIT = 5; // Max requests
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
 
-// Maps to track client prompts and mutexes
-const clientPrompts = new Map<string, string>();
+// Maps to track client contexts and mutexes
+const clientContexts = new Map<string, any[]>();
 const clientMutexes = new Map<string, Mutex>();
 
 // Map to track rate limiting per client
@@ -28,11 +32,6 @@ const rateLimitMap = new Map<string, { count: number; firstRequestTime: number }
 const lastActivityMap = new Map<string, number>();
 const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
-/**
- * Checks if a configuration value is valid.
- * @param value - The configuration value.
- * @returns {boolean} - True if valid, false otherwise.
- */
 function isValidConfig(value: any): boolean {
   return (
     typeof value === 'string' &&
@@ -48,10 +47,10 @@ setInterval(() => {
   // Cleanup inactive clients
   for (const [clientId, lastActivity] of lastActivityMap.entries()) {
     if (now - lastActivity > INACTIVITY_LIMIT) {
-      clientPrompts.delete(clientId);
+      clientContexts.delete(clientId);
       clientMutexes.delete(clientId);
       lastActivityMap.delete(clientId);
-      logger.info(`Cleaned up prompt and mutex for inactive clientId: ${clientId}`);
+      logger.info(`Cleaned up context and mutex for inactive clientId: ${clientId}`);
     }
   }
 
@@ -63,17 +62,13 @@ setInterval(() => {
   }
 }, 60 * 1000); // Runs every minute
 
-/**
- * Main POST handler for the chat API.
- * Manages rate limiting, concurrency, prompt management, and streaming responses.
- * @param request - Incoming HTTP request.
- * @returns {Promise<NextResponse>} - Streamed response or JSON error.
- */
+// Main POST handler
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  logger.info(`Received POST request [${requestId}] from clientId: ${clientId}`);
+  // Log incoming request
+  // logger.silly(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
 
   // Implement Server-Side Rate Limiting
   const now = Date.now();
@@ -124,72 +119,143 @@ export async function POST(request: NextRequest) {
     lastActivityMap.set(clientId, Date.now());
 
     try {
-      const { userPrompt } = await request.json();
-      if (typeof userPrompt !== 'string' || userPrompt.trim() === '') {
-        logger.warn(`Request [${requestId}] from clientId: ${clientId} has invalid format or no userPrompt.`);
+      const { messages } = await request.json();
+      if (!Array.isArray(messages) || messages.length === 0) {
         return NextResponse.json(
-          { error: 'Invalid request format or no userPrompt provided.' },
+          { error: 'Invalid request format or no messages provided.' },
           { status: 400 }
         );
       }
 
-      // Retrieve the existing prompt or initialize it with system prompt
-      let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-      logger.debug(`Current prompt for clientId: ${clientId}: ${prompt}`);
+      // Retrieve the existing context or initialize it
+      let context = clientContexts.get(clientId) || [];
 
-      // Append the new user prompt
-      prompt += `\n\nUser: ${userPrompt}`;
-      logger.debug(`Updated prompt for clientId: ${clientId}: ${prompt}`);
+      // Append new messages to the context
+      context = [...context, ...messages.map(msg => ({ ...msg, role: 'user' }))];
 
-      // Manage prompt length (truncation or summarization)
-      prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, config.ollamaGemmaEndpoint, config.ollamaGemmaTextModel);
-      logger.debug(`Managed prompt for clientId: ${clientId}: ${prompt}`);
+      // Ensure the context doesn't exceed the maximum allowed messages
+      context = context.slice(-maxTotalContextMessages);
 
-      // Update the prompt in the map
-      clientPrompts.set(clientId, prompt);
+      // Update the context in the map
+      clientContexts.set(clientId, context);
 
-      // Send the prompt to Ollama Gemma and handle the response
-      const response = await handleTextWithOllamaGemmaTextModel({
-        userPrompt: prompt,
-        textModel: config.ollamaGemmaTextModel!,
-      }, config);
+      // Log context size
+      // logger.debug(`app/api/chat/route.ts - Context size for clientId ${clientId}: ${context.length}`);
 
-      if (response) {
-        const botPersona = 'Ollama ' + config.ollamaGemmaTextModel!;
-        const stream = new ReadableStream({
-          async start(controller) {
-            controller.enqueue(
-              `data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`
-            );
+      const stream = new ReadableStream({
+        async start(controller) {
+          interface BotFunction {
+            persona: string;
+            generate: (currentContext: any[]) => Promise<string>;
+          }
 
-            logger.info(`Generated response for clientId: ${clientId}: ${response}`);
+          const botFunctions: BotFunction[] = [];
 
-            // Append the assistant's response to maintain context
-            prompt += `\n\nAssistant: ${response}`;
-            clientPrompts.set(clientId, prompt);
+          // Add your bot functions here
+          if (
+            isValidConfig(config.ollamaGemmaTextModel) &&
+            validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
+          ) {
+            botFunctions.push({
+              persona: 'Ollama ' + config.ollamaGemmaTextModel!,
+              generate: (currentContext: any[]) =>
+                handleTextWithOllamaGemmaTextModel(
+                  {
+                    userPrompt: extractValidMessages(currentContext),
+                    textModel: config.ollamaGemmaTextModel!,
+                  },
+                  config
+                ),
+            });
+          }
+
+          // Add other bot functions as needed...
+
+          // Process bots sequentially and stop after one response
+          async function processBots() {
+            let hasResponded = false;
+
+            for (const bot of botFunctions) {
+              if (hasResponded) break;
+
+              // Create a new context considering only up to the latest user message
+              const lastUserMessageIndex = context.slice().reverse().findIndex(msg => msg.role === 'user');
+              if (lastUserMessageIndex === -1) {
+                // No user message found; skip processing
+                continue;
+              }
+
+              // Calculate the index of the latest user message in the original context
+              const latestUserMessageIndex = context.length - 1 - lastUserMessageIndex;
+
+              // Build the context up to and including the latest user message
+              const botContext = context.slice(0, latestUserMessageIndex + 1);
+
+              const response = await bot.generate(botContext);
+
+              if (response && typeof response === 'string') {
+                const botPersona = bot.persona;
+
+                logger.debug(
+                  `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
+                );
+
+                controller.enqueue(
+                  `data: ${JSON.stringify({
+                    persona: botPersona,
+                    message: response,
+                  })}\n\n`
+                );
+
+                const botMessage = {
+                  role: 'bot',
+                  content: response,
+                  persona: botPersona,
+                };
+
+                context.push(botMessage);
+
+                // Limit the number of bot messages in the context
+                const botMessages = context.filter(msg => msg.role === 'bot');
+                if (botMessages.length > maxBotResponsesInContext) {
+                  const indexToRemove = context.findIndex(msg => msg.role === 'bot');
+                  context.splice(indexToRemove, 1);
+                }
+
+                // Ensure we don't exceed the total context size
+                context = context.slice(-maxTotalContextMessages);
+
+                hasResponded = true;
+                break; // Stop processing other bots
+              }
+            }
+
+            clientContexts.set(clientId, context);
+
+            // if (!hasResponded) {
+            //   logger.silly(
+            //     `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
+            //   );
+            // }
 
             controller.enqueue('data: [DONE]\n\n');
             controller.close();
-          },
-        });
+          }
 
-        return new NextResponse(stream, {
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-          },
-        });
-      } else {
-        logger.error(`handleTextWithOllamaGemmaTextModel returned null for clientId: ${clientId}.`);
-        return NextResponse.json(
-          { error: 'Failed to generate text from Ollama Gemma.' },
-          { status: 500 }
-        );
-      }
+          await processBots();
+        },
+      });
+
+      return new NextResponse(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+      });
     } catch (error) {
       logger.error(
-        `route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
+        `app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
       );
 
       return NextResponse.json(
