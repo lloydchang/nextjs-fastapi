@@ -29,6 +29,7 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
+      console.log('addMessage - Dispatching message with ID:', action.payload.id); // Log the message ID
       state.messages.push(action.payload);
     },
     clearMessages: (state) => {
@@ -142,6 +143,7 @@ const debouncedApiCall = debounce(
                         content: parsedData.message,
                         persona: parsedData.persona,
                       };
+                      console.log('debouncedApiCall - Dispatching bot message:', botMessage);
                       dispatch(addMessage(botMessage));
                     }
                   } catch (e) {
@@ -177,7 +179,7 @@ const debouncedApiCall = debounce(
       reject(new Error('Max retries reached'));
     });
   },
-  300
+  1000  // Increased debounce delay to 1000ms for testing
 );
 
 export const sendMessage = (
@@ -216,6 +218,7 @@ export const sendMessage = (
           persona: input.persona,
         };
 
+  console.log('sendMessage - Dispatching user message:', userMessage);
   dispatch(addMessage(userMessage));
 
   // Wait for debouncedApiCall to complete
