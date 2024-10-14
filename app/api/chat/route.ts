@@ -1,7 +1,7 @@
 // File: app/api/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID library
+import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
               handleTextWithOllamaGemmaTextModel(
                 {
                   userPrompt: extractValidMessages(currentContext),
-                  textModel: config.ollamaGemmaTextModel,
+                  textModel: config.ollamaGemmaTextModel!,
                 },
                 config
               ),
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
               handleTextWithCloudflareGemmaTextModel(
                 {
                   userPrompt: extractValidMessages(currentContext),
-                  textModel: config.cloudflareGemmaTextModel,
+                  textModel: config.cloudflareGemmaTextModel!,
                 },
                 config
               ),
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
               handleTextWithGoogleVertexGemmaTextModel(
                 {
                   userPrompt: extractValidMessages(currentContext),
-                  textModel: config.googleVertexGemmaTextModel,
+                  textModel: config.googleVertexGemmaTextModel!,
                 },
                 config
               ),
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
               handleTextWithOllamaLlamaTextModel(
                 {
                   userPrompt: extractValidMessages(currentContext),
-                  textModel: config.ollamaLlamaTextModel,
+                  textModel: config.ollamaLlamaTextModel!,
                 },
                 config
               ),
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
               handleTextWithCloudflareLlamaTextModel(
                 {
                   userPrompt: extractValidMessages(currentContext),
-                  textModel: config.cloudflareLlamaTextModel,
+                  textModel: config.cloudflareLlamaTextModel!,
                 },
                 config
               ),
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
               handleTextWithGoogleVertexLlamaTextModel(
                 {
                   userPrompt: extractValidMessages(currentContext),
-                  textModel: config.googleVertexLlamaTextModel,
+                  textModel: config.googleVertexLlamaTextModel!,
                 },
                 config
               ),
