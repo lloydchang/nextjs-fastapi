@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
 
             botFunctions.push({
               persona: 'Ollama ' + ollamaGemmaTextModel,
-              valid: () => isValidConfig(config.ollamaGemmaTextModel),
+              valid: isValidConfig(config.ollamaGemmaTextModel),
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
 
             botFunctions.push({
               persona: 'Ollama ' + ollamaLlamaTextModel,
-              valid: () => isValidConfig(config.ollamaLlamaTextModel),
+              valid: isValidConfig(config.ollamaLlamaTextModel),
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
 
             botFunctions.push({
               persona: 'Cloudflare ' + cloudflareGemmaTextModel,
-              valid: () => isValidConfig(config.cloudflareGemmaTextModel),
+              valid: isValidConfig(config.cloudflareGemmaTextModel),
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
 
             botFunctions.push({
               persona: 'Cloudflare ' + cloudflareLlamaTextModel,
-              valid: () => isValidConfig(config.cloudflareLlamaTextModel),
+              valid: isValidConfig(config.cloudflareLlamaTextModel),
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
 
             botFunctions.push({
               persona: 'Google Vertex ' + googleVertexGemmaTextModel,
-              valid: () => isValidConfig(config.googleVertexGemmaTextModel),
+              valid: isValidConfig(config.googleVertexGemmaTextModel),
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
@@ -277,7 +277,7 @@ export async function POST(request: NextRequest) {
 
             botFunctions.push({
               persona: 'Google Vertex ' + googleVertexLlamaTextModel,
-              valid: () => isValidConfig(config.googleVertexLlamaTextModel),
+              valid: isValidConfig(config.googleVertexLlamaTextModel),
               generate: async (currentContext: any[]) => {
                 let prompt = clientPrompts.get(clientId) || config.systemPrompt;
                 prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
