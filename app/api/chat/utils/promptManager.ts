@@ -32,8 +32,8 @@ export async function* managePrompt(
     const summary = await summarizeFn(partToSummarize);
 
     if (summary && summary.length < partToSummarize.length) {
-      // Replace only the summarized part and append the remaining part of the prompt
-      currentPrompt = `${summary} ${currentPrompt.substring(excessLength)}`;
+      // Replace only the summarized part without concatenating the remaining prompt
+      currentPrompt = summary;
       // Yield partial result to the caller
       yield currentPrompt;
     } else {
