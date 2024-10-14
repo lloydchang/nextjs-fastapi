@@ -23,7 +23,6 @@ const TalkPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
   const [lastDispatchedTalkId, setLastDispatchedTalkId] = useState<string | null>(null);
   const [isSearchInProgress, setIsSearchInProgress] = useState(false); // Track if search is in progress
-  const initialRender = useRef(true);
   const initialRender = useRef(true); // Track initial render
   const hasFetched = useRef(false); // Track if data has been fetched
   const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
