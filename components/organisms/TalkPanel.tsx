@@ -21,11 +21,11 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const [lastDispatchedTalkId, setLastDispatchedTalkId] = useState<string | null>(null);
-  const [isSearchInProgress, setIsSearchInProgress] = useState(false); // Track if search is in progress
+  const isSearchInProgress = useRef(false); // Track if search is in progress
   const initialRender = useRef(true); // Track initial render
   const hasFetched = useRef(false); // Track if data has been fetched
   const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
+  const lastDispatchedTalkId = useRef<string | null>(null); // Track the last dispatched talk ID
 
   useEffect(() => {
     if (initialRender.current && !hasFetched.current) {
@@ -49,12 +49,12 @@ const TalkPanel: React.FC = () => {
 
   // Perform search with exponential backoff logic
   const performSearchWithExponentialBackoff = async (query: string) => {
-    if (isSearchInProgress) {
-      console.log('TalkPanel - Search is already in progress, skipping this request.');
+    if (isSearchInProgress.current) {
+      console.log('TalkPanel - Search is already in progress, skipping new search.');
       return;
     }
 
-    setIsSearchInProgress(true); // Mark search as in progress
+    isSearchInProgress.current = true; // Mark search as in progress
     dispatch(setError(null));
     dispatch(setLoading(true));
 
@@ -80,19 +80,19 @@ const TalkPanel: React.FC = () => {
         console.log('TalkPanel - Successfully fetched talks:', data);
         await handleSearchResults(query, data);
         dispatch(setLoading(false));
-        setIsSearchInProgress(false); // Mark search as completed
-        return; // Exit loop on success
+        isSearchInProgress.current = false;
+        return;
       } catch (error) {
         console.error('TalkPanel - Error during performSearch:', error);
         retryCount++;
         if (retryCount < maxRetries) {
-          const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          const delay = Math.pow(2, retryCount) * 1000;
           console.log(`TalkPanel - Retrying in ${delay / 1000} seconds...`);
           await wait(delay);
         } else {
           dispatch(setError('Failed to fetch talks after multiple attempts.'));
           dispatch(setLoading(false));
-          setIsSearchInProgress(false); // Mark search as completed even if failed
+          isSearchInProgress.current = false;
         }
       }
     }
@@ -100,8 +100,8 @@ const TalkPanel: React.FC = () => {
 
   // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
-    if (talk.title === lastDispatchedTalkId || hasSentMessage.current.has(talk.title)) {
-      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`)
+    if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
+      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
       return;
     }
 
@@ -113,7 +113,7 @@ const TalkPanel: React.FC = () => {
       const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
       console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
       dispatch(setSelectedTalk(talk));
-      setLastDispatchedTalkId(talk.title);
+      lastDispatchedTalkId.current = talk.title; // Update the last dispatched talk ID
       hasSentMessage.current.add(talk.title); // Mark message as sent
     } catch (dispatchError) {
       if (retryCount < 3) {
@@ -132,14 +132,13 @@ const TalkPanel: React.FC = () => {
   const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
     console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
     sendTranscriptForTalk(query, talk);
-  }, 1000); // Debounce time: 1 second, resulting in exponential backoff of 2, 4, 8 seconds
+  }, 1000); // Debounce time: 1 second
 
   // Send the first available transcript from a list of talks
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - Sending first available transcript for query:', query);
     for (let i = 0; i < talks.length; i++) {
       try {
-        console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
         await debouncedSendTranscriptForTalk(query, talks[i]);
         return;
       } catch (error) {
@@ -158,22 +157,18 @@ const TalkPanel: React.FC = () => {
   }, [selectedTalk, searchQuery]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('TalkPanel - Search input changed. Value:', e.target.value);
     setSearchQuery(e.target.value);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      console.log('TalkPanel - Enter key pressed. Performing search.');
       performSearchWithExponentialBackoff(searchQuery);
     }
   };
 
   const shuffleTalks = async () => {
-    console.log('TalkPanel - Shuffle button clicked.');
     if (talks.length > 0) {
       const shuffledTalks = shuffleArray([...talks]);
-      console.log('TalkPanel - Talks shuffled. New order:', shuffledTalks);
       dispatch(setTalks(shuffledTalks));
       dispatch(setSelectedTalk(shuffledTalks[0] || null));
       await handleSearchResults(searchQuery, shuffledTalks);
@@ -183,7 +178,6 @@ const TalkPanel: React.FC = () => {
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
       const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
-      console.log('TalkPanel - Opening transcript in new tab. URL:', transcriptUrl);
       window.open(transcriptUrl, '_blank');
     }
   };
@@ -194,7 +188,6 @@ const TalkPanel: React.FC = () => {
         <div className={styles.searchInputWrapper}>
           <input
             type="text"
-            placeholder=""
             value={searchQuery}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
@@ -209,17 +202,11 @@ const TalkPanel: React.FC = () => {
         >
           Search
         </button>
-        <button
-          onClick={shuffleTalks}
-          className={`${styles.button} ${styles.shuffleButton}`}
-        >
+        <button onClick={shuffleTalks} className={`${styles.button} ${styles.shuffleButton}`}>
           Shuffle
         </button>
         {selectedTalk && (
-          <button
-            onClick={openTranscriptInNewTab}
-            className={`${styles.button} ${styles.tedButton}`}
-          >
+          <button onClick={openTranscriptInNewTab} className={`${styles.button} ${styles.tedButton}`}>
             Transcript
           </button>
         )}
