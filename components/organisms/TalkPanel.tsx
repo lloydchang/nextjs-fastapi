@@ -28,7 +28,6 @@ const TalkPanel: React.FC = () => {
   const lastDispatchedTalkId = useRef<string | null>(null); // Track the last dispatched talk ID
   const isMounted = useRef(false); // Track if component is mounted
 
-  // Enhanced logic to prevent multiple fetches and message sends in Strict Mode
   useEffect(() => {
     if (isMounted.current && !hasFetched.current) {
       console.log('TalkPanel - Initial render, performing search:', searchQuery);
@@ -38,11 +37,12 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - Initial mount detected, skipping performSearchWithExponentialBackoff and sendTranscriptForTalk.');
       isMounted.current = true;
     }
-
+  
     return () => {
       isMounted.current = false;
+      // No reset of hasFetched.current, as you don't want to refetch
     };
-  }, [searchQuery]);
+  }, [searchQuery, selectedTalk]);  
 
   // Handle search results
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
@@ -163,13 +163,13 @@ const TalkPanel: React.FC = () => {
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
 
-  // Handle new talk selection
+  // Handle search query change
   useEffect(() => {
-    if (selectedTalk) {
-      console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
+    if (selectedTalk && searchQuery) {
+      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
       debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
-  }, [selectedTalk, searchQuery]);
+  }, [searchQuery]); // Only run this effect when searchQuery changes
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
