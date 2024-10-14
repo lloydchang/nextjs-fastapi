@@ -2,7 +2,7 @@
 
 import { summarizeText } from 'app/api/chat/clients/OllamaGemmaClient';
 import { truncatePrompt } from 'app/api/chat/utils/promptTruncator';
-import { logger } from 'app/api/chat/utils/logger';
+import logger from 'app/api/chat/utils/logger';
 
 /**
  * Manages the prompt by truncating or summarizing when necessary.
