@@ -90,24 +90,14 @@ export async function POST(request: NextRequest) {
       logger.debug(`Updated prompt for clientId: ${clientId}: ${prompt}`);
 
       // Check if ollamaGemmaEndpoint is defined
-      if (!config.ollamaGemmaEndpoint) {
-        logger.error(`Missing Ollama Gemma endpoint for clientId: ${clientId}`);
-        return NextResponse.json(
-          { error: 'Ollama Gemma endpoint is missing.' },
-          { status: 500 }
-        );
-      }
       const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint || "defaultEndpoint"; // This is now guaranteed to be a string
 
       // Provide a default value for ollamaGemmaTextModel or throw an error if undefined
       const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel"; // Provide a sensible default
 
-      if (!config.ollamaGemmaTextModel) {
+      if (ollamaGemmaTextModel === "defaultModel") {
         logger.error(`Ollama Gemma text model is not defined for clientId: ${clientId}`);
-        return NextResponse.json(
-          { error: 'Ollama Gemma text model is not defined.' },
-          { status: 500 }
-        );
+        return;
       }
 
       prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel) || "defaultPrompt";
