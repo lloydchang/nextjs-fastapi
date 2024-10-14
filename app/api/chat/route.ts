@@ -1,7 +1,7 @@
 // File: app/api/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from uuid; // Import UUID library
+import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
