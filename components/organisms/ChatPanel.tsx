@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
-import { sendMessage, clearMessages, addMessage } from 'store/chatSlice';
+import { sendMessage, clearMessages } from 'store/chatSlice';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.webp';
@@ -63,34 +63,7 @@ const ChatPanel: React.FC = () => {
     setIsFullScreen(!isFullScreen);
   };
 
-  useEffect(() => {
-    const eventSource = new EventSource('/api/chat');
-
-    eventSource.onmessage = (event) => {
-      if (event.data !== '[DONE]') {
-        try {
-          const parsedData = JSON.parse(event.data);
-          dispatch(
-            addMessage({
-              id: parsedData.id || Date.now().toString(),
-              sender: 'bot',
-              text: parsedData.message,
-              role: parsedData.persona || 'bot',
-              content: parsedData.message,
-            })
-          );
-        } catch (error) {
-          console.error('Error parsing SSE message:', error);
-        }
-      } else {
-        eventSource.close();
-      }
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, [dispatch]);
+  // Removed the useEffect with EventSource to prevent multiple API invocations
 
   return (
     <div className={`${styles.container} ${isFullScreen ? styles.fullScreenMode : styles['Chat-panel']}`}>
