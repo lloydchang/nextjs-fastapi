@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
+import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
@@ -18,15 +19,12 @@ import { managePrompt } from 'app/api/chat/utils/promptManager';
 const config = getConfig();
 
 const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's default token limit of 2000
-const RATE_LIMIT = 1; // Max number of requests per client during the rate limit window
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 20; // Keep only the last 20 messages
 
 // Maps to track client-specific data
 const clientPrompts = new Map<string, string>();
 const clientMutexes = new Map<string, Mutex>();
-const rateLimitMap = new Map<string, { count: number; firstRequestTime: number }>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
@@ -46,35 +44,22 @@ export async function POST(request: NextRequest) {
 
   logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
 
-  const now = Date.now();
-  const rateInfo = rateLimitMap.get(clientId);
-
   // Handle rate limiting
-  if (rateInfo) {
-    if (now - rateInfo.firstRequestTime < RATE_LIMIT_WINDOW) {
-      if (rateInfo.count >= RATE_LIMIT) {
-        logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
-        return NextResponse.json(
-          {
-            error: 'Too Many Requests',
-            message: `You have exceeded the limit of ${RATE_LIMIT} requests per minute. Please try again later.`,
-          },
-          {
-            status: 429,
-            headers: {
-              'Retry-After': `${Math.ceil((RATE_LIMIT_WINDOW - (now - rateInfo.firstRequestTime)) / 1000)}`,
-            },
-          }
-        );
-      } else {
-        rateInfo.count += 1;
-        rateLimitMap.set(clientId, rateInfo);
+  const { limited, retryAfter } = checkRateLimit(clientId);
+  if (limited) {
+    logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
+    return NextResponse.json(
+      {
+        error: 'Too Many Requests',
+        message: `You have exceeded the rate limit. Please try again later.`,
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': `${retryAfter}`,
+        },
       }
-    } else {
-      rateLimitMap.set(clientId, { count: 1, firstRequestTime: now });
-    }
-  } else {
-    rateLimitMap.set(clientId, { count: 1, firstRequestTime: now });
+    );
   }
 
   let mutex = clientMutexes.get(clientId);
