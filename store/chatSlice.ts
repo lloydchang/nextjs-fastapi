@@ -74,6 +74,7 @@ const { addMessage, setError, clearError } = chatSlice.actions;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Debounce ensures that multiple API calls do not fire within a short time frame
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -177,7 +178,7 @@ const debouncedApiCall = debounce(
 
     dispatch(setError('Max retries reached. Please try again later.'));
   },
-  1000 // Increased debounce delay to reduce multiple requests
+  1500 // Increased debounce delay to reduce multiple requests
 );
 
 export const sendMessage = (
