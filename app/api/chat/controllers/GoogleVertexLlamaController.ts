@@ -19,15 +19,15 @@ export async function handleTextWithGoogleVertexLlamaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['GOOGLE_VERTEX_GEMMA_ENDPOINT'])) {
-    logger.silly('app/api/chat/controllers/GoogleVertexLlamaController.ts - Missing required environment variables.');
+    // logger.silly('app/api/chat/controllers/GoogleVertexLlamaController.ts - Missing required environment variables.');
     return '';
   }
 
   // Type assertion to ensure TypeScript knows the endpoint is defined
   const endpoint = googleVertexLlamaEndpoint as string;
 
-  logger.silly(`app/api/chat/controllers/GoogleVertexLlamaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/GoogleVertexLlamaController.ts - ${userPrompt}`);
+  // logger.silly(`app/api/chat/controllers/GoogleVertexLlamaController.ts - Generating text for model: ${textModel}`);
+  // logger.silly(`app/api/chat/controllers/GoogleVertexLlamaController.ts - ${userPrompt}`);
 
   try {
     const response = await generateFromGoogleVertexLlama({
@@ -41,7 +41,7 @@ export async function handleTextWithGoogleVertexLlamaTextModel(
       return '';
     }
 
-    logger.silly(`app/api/chat/controllers/GoogleVertexLlamaController.ts - Generated response: ${response}`);
+    // logger.silly(`app/api/chat/controllers/GoogleVertexLlamaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {
