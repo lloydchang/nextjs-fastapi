@@ -89,9 +89,16 @@ export async function POST(request: NextRequest) {
       prompt += `\n\nUser: ${userPrompt}`;
       logger.debug(`Updated prompt for clientId: ${clientId}: ${prompt}`);
 
-      // Ensure ollamaGemmaEndpoint and ollamaGemmaTextModel are strings
+      // Check if ollamaGemmaEndpoint is defined
       const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint || "defaultEndpoint"; 
+
+      // Provide a default value for ollamaGemmaTextModel or throw an error if undefined
       const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel"; 
+
+      if (ollamaGemmaTextModel === "defaultModel") {
+        logger.error(`Ollama Gemma text model is not defined for clientId: ${clientId}`);
+        return NextResponse.json({ error: 'Ollama Gemma text model is not configured.' }, { status: 500 });
+      }
 
       prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel) || "defaultPrompt";
       logger.debug(`Managed prompt for clientId: ${clientId}: ${prompt}`);
@@ -99,6 +106,7 @@ export async function POST(request: NextRequest) {
       clientPrompts.set(clientId, prompt);
 
       try {
+        // Existing logic (ollamaGemmaTextModel is now guaranteed to be a string)
         const response = await handleTextWithOllamaGemmaTextModel(ollamaGemmaTextModel, clientId);
         if (response) {
           return NextResponse.json(response, { status: 200 });
