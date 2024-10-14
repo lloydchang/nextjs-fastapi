@@ -4,9 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-// ... other imports
-
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
@@ -67,9 +64,6 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  // Log incoming request
-  // logger.silly(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
-
   // Implement Server-Side Rate Limiting
   const now = Date.now();
   const rateInfo = rateLimitMap.get(clientId);
@@ -127,11 +121,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Retrieve the existing context or initialize it
+      // Retrieve the existing context or initialize it with system prompt
       let context = clientContexts.get(clientId) || [];
+      if (context.length === 0) {
+        // Initialize with system prompt
+        context = [{ role: 'system', content: config.systemPrompt }];
+      }
 
-      // Append new messages to the context
-      context = [...context, ...messages.map(msg => ({ ...msg, role: 'user' }))];
+      // Append new user messages to the context
+      const userMessages = messages.map(msg => ({ role: 'user', content: msg.content }));
+      context = [...context, ...userMessages];
 
       // Ensure the context doesn't exceed the maximum allowed messages
       context = context.slice(-maxTotalContextMessages);
@@ -139,110 +138,53 @@ export async function POST(request: NextRequest) {
       // Update the context in the map
       clientContexts.set(clientId, context);
 
-      // Log context size
-      // logger.debug(`app/api/chat/route.ts - Context size for clientId ${clientId}: ${context.length}`);
-
       const stream = new ReadableStream({
         async start(controller) {
-          interface BotFunction {
-            persona: string;
-            generate: (currentContext: any[]) => Promise<string>;
-          }
+          // Prepare structured messages with explicit roles
+          const structuredMessages = [
+            { role: 'system', content: config.systemPrompt }, // Ensure system prompt is always first
+            ...context.filter(msg => msg.role !== 'system'), // Exclude additional system prompts
+          ];
 
-          const botFunctions: BotFunction[] = [];
+          const textModel = config.ollamaGemmaTextModel;
 
-          // Add your bot functions here
-          if (
-            isValidConfig(config.ollamaGemmaTextModel) &&
-            validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])
-          ) {
-            botFunctions.push({
-              persona: 'Ollama ' + config.ollamaGemmaTextModel!,
-              generate: (currentContext: any[]) =>
-                handleTextWithOllamaGemmaTextModel(
-                  {
-                    userPrompt: extractValidMessages(currentContext),
-                    textModel: config.ollamaGemmaTextModel!,
-                  },
-                  config
-                ),
-            });
-          }
+          if (isValidConfig(textModel) && validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
+            const response = await handleTextWithOllamaGemmaTextModel({
+              messages: structuredMessages,
+              model: textModel,
+            }, config);
 
-          // Add other bot functions as needed...
+            if (response) {
+              const botPersona = 'Ollama ' + textModel;
+              controller.enqueue(
+                `data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`
+              );
 
-          // Process bots sequentially and stop after one response
-          async function processBots() {
-            let hasResponded = false;
+              // Update context with bot response
+              const botMessage = {
+                role: 'assistant', // Use 'assistant' to align with structured messaging
+                content: response,
+                persona: botPersona,
+              };
+              context.push(botMessage);
 
-            for (const bot of botFunctions) {
-              if (hasResponded) break;
-
-              // Create a new context considering only up to the latest user message
-              const lastUserMessageIndex = context.slice().reverse().findIndex(msg => msg.role === 'user');
-              if (lastUserMessageIndex === -1) {
-                // No user message found; skip processing
-                continue;
+              // Limit the number of assistant messages in the context
+              const assistantMessages = context.filter(msg => msg.role === 'assistant');
+              if (assistantMessages.length > maxBotResponsesInContext) {
+                const indexToRemove = context.findIndex(msg => msg.role === 'assistant');
+                if (indexToRemove !== -1) context.splice(indexToRemove, 1);
               }
 
-              // Calculate the index of the latest user message in the original context
-              const latestUserMessageIndex = context.length - 1 - lastUserMessageIndex;
+              // Ensure we don't exceed the total context size
+              context = context.slice(-maxTotalContextMessages);
 
-              // Build the context up to and including the latest user message
-              const botContext = context.slice(0, latestUserMessageIndex + 1);
-
-              const response = await bot.generate(botContext);
-
-              if (response && typeof response === 'string') {
-                const botPersona = bot.persona;
-
-                logger.debug(
-                  `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
-                );
-
-                controller.enqueue(
-                  `data: ${JSON.stringify({
-                    persona: botPersona,
-                    message: response,
-                  })}\n\n`
-                );
-
-                const botMessage = {
-                  role: 'bot',
-                  content: response,
-                  persona: botPersona,
-                };
-
-                context.push(botMessage);
-
-                // Limit the number of bot messages in the context
-                const botMessages = context.filter(msg => msg.role === 'bot');
-                if (botMessages.length > maxBotResponsesInContext) {
-                  const indexToRemove = context.findIndex(msg => msg.role === 'bot');
-                  context.splice(indexToRemove, 1);
-                }
-
-                // Ensure we don't exceed the total context size
-                context = context.slice(-maxTotalContextMessages);
-
-                hasResponded = true;
-                break; // Stop processing other bots
-              }
+              // Update context in the map
+              clientContexts.set(clientId, context);
             }
-
-            clientContexts.set(clientId, context);
-
-            // if (!hasResponded) {
-            //   logger.silly(
-            //     `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
-            //   );
-            // }
-
-            controller.enqueue('data: [DONE]\n\n');
-            controller.close();
           }
 
-          await processBots();
+          controller.enqueue('data: [DONE]\n\n');
+          controller.close();
         },
       });
 
@@ -255,7 +197,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       logger.error(
-        `app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
+        `route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
       );
 
       return NextResponse.json(
