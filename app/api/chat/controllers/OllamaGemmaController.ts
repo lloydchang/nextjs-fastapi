@@ -12,9 +12,7 @@ import { validateEnvVars } from 'app/api/chat/utils/validate';
  * @returns {Promise<string>} - Generated response text.
  */
 export async function handleTextWithOllamaGemmaTextModel(
-  params: { userPrompt: string; textModel: string; },
-  config: any
-): Promise<string> {
+userPrompt: string, userPrompt: string, params: { userPrompt: string; textModel: string; }, config: any): Promise<string> {
   const { userPrompt, textModel } = params;
   const { ollamaGemmaEndpoint } = getConfig();
 
