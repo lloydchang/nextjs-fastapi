@@ -105,33 +105,25 @@ export async function POST(request: NextRequest) {
 
       clientPrompts.set(clientId, prompt);
 
-      const response = await handleTextWithOllamaGemmaTextModel({ userPrompt: prompt, textModel: ollamaGemmaTextModel }, config);
+      try {
+        const ollamaGemmaTextModel = config.ollamaGemmaTextModel;
+        
+        if (!ollamaGemmaTextModel) {
+          logger.error(`Ollama Gemma text model is not defined for clientId: ${clientId}`);
+          return NextResponse.json({ error: 'Ollama Gemma text model is not configured.' }, { status: 500 });
+        }
 
-      if (response) {
-        const botPersona = 'Ollama ' + ollamaGemmaTextModel;
-        const stream = new ReadableStream({
-          async start(controller) {
-            controller.enqueue(`data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`);
-            logger.info(`Generated response for clientId: ${clientId}: ${response}`);
-
-            prompt += `\n\nAssistant: ${response}`;
-            clientPrompts.set(clientId, prompt);
-
-            controller.enqueue('data: [DONE]\n\n');
-            controller.close();
-          },
-        });
-
-        return new NextResponse(stream, {
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-          },
-        });
-      } else {
-        logger.error(`handleTextWithOllamaGemmaTextModel returned null for clientId: ${clientId}.`);
-        return NextResponse.json({ error: 'Failed to generate text from Ollama Gemma.' }, { status: 500 });
+        // Existing logic
+        const response = await handleTextWithOllamaGemmaTextModel(ollamaGemmaTextModel, clientId);
+        if (response) {
+          return NextResponse.json(response, { status: 200 });
+        } else {
+          logger.error(`handleTextWithOllamaGemmaTextModel returned null for clientId: ${clientId}.`);
+          return NextResponse.json({ error: 'Failed to generate text from Ollama Gemma.' }, { status: 500 });
+        }
+      } catch (error) {
+        logger.error(`route.ts [${requestId}] - Error in streaming bot interaction: ${error}`);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
       }
     } catch (error) {
       logger.error(`route.ts [${requestId}] - Error in streaming bot interaction: ${error}`);
