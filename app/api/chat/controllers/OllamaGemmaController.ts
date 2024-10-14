@@ -1,9 +1,9 @@
 // File: app/api/chat/controllers/OllamaGemmaController.ts
 
-import { logger } from 'app/api/chat/utils/logger';
-import { generateFromOllamaGemma } from 'app/api/chat/clients/OllamaGemmaClient';
-import { getConfig } from 'app/api/chat/utils/config';
-import { validateEnvVars } from 'app/api/chat/utils/validate';
+import { logger } from '../utils/logger';
+import { generateFromOllamaGemma } from '../clients/OllamaGemmaClient';
+import { getConfig } from '../utils/config';
+import { validateEnvVars } from '../utils/validate';
 
 /**
  * Handles text generation using the Ollama Gemma model.

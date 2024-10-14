@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/streamParser.ts
 
-import { logger } from 'app/api/chat/utils/logger';
+import { logger } from './logger';
 
 /**
  * Parses a readable stream and returns the accumulated result.

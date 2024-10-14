@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/promptTruncator.ts
 
-import { logger } from 'app/api/chat/utils/logger';
+import { logger } from './logger';
 
 /**
  * Truncates the prompt to the maximum allowed length.
