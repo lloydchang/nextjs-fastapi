@@ -50,10 +50,10 @@ export interface AppConfig {
   googleVertexLlamaEndpoint?: string;
   googleVertexLlamaLocation?: string;
 
-  // Ollama Gemma
-  ollamaGemmaTextModel?: string;
+  // Ollama Gemma (Required)
+  ollamaGemmaTextModel: string;
   ollamaGemmaEmbeddingModel?: string;
-  ollamaGemmaEndpoint?: string;
+  ollamaGemmaEndpoint: string;
 
   // Ollama Llama
   ollamaLlamaTextModel?: string;
@@ -67,7 +67,7 @@ export interface AppConfig {
   openAIO1ApiKey?: string;
 
   // General Configurations
-  systemPrompt?: string;
+  systemPrompt: string;
   stream?: boolean;
   temperature?: number;
   winstonLoggerLevel: string;
@@ -75,8 +75,32 @@ export interface AppConfig {
 
 /**
  * Returns the configuration object with all necessary environment variables.
+ * Throws an error if critical variables are missing.
  */
 export function getConfig(): AppConfig {
+  const {
+    OLLAMA_GEMMA_TEXT_MODEL,
+    OLLAMA_GEMMA_ENDPOINT,
+    SYSTEM_PROMPT,
+    STREAM,
+    TEMPERATURE,
+    WINSTON_LOGGER_LEVEL,
+    // ... destructure other needed variables
+  } = process.env;
+
+  if (!OLLAMA_GEMMA_TEXT_MODEL) {
+    throw new Error('Missing required environment variable: OLLAMA_GEMMA_TEXT_MODEL');
+  }
+  if (!OLLAMA_GEMMA_ENDPOINT) {
+    throw new Error('Missing required environment variable: OLLAMA_GEMMA_ENDPOINT');
+  }
+  if (!SYSTEM_PROMPT) {
+    throw new Error('Missing required environment variable: SYSTEM_PROMPT');
+  }
+  if (!WINSTON_LOGGER_LEVEL) {
+    throw new Error('Missing required environment variable: WINSTON_LOGGER_LEVEL');
+  }
+
   return {
     // Amazon Bedrock
     amazonBedrockTitanTextModel: process.env.AMAZON_BEDROCK_TITAN_TEXT_MODEL,
@@ -122,9 +146,9 @@ export function getConfig(): AppConfig {
     googleVertexLlamaLocation: process.env.GOOGLE_VERTEX_LLAMA_LOCATION,
 
     // Ollama Gemma
-    ollamaGemmaTextModel: process.env.OLLAMA_GEMMA_TEXT_MODEL,
+    ollamaGemmaTextModel: OLLAMA_GEMMA_TEXT_MODEL,
     ollamaGemmaEmbeddingModel: process.env.OLLAMA_GEMMA_EMBEDDING_MODEL,
-    ollamaGemmaEndpoint: process.env.OLLAMA_GEMMA_ENDPOINT,
+    ollamaGemmaEndpoint: OLLAMA_GEMMA_ENDPOINT,
 
     // Ollama Llama
     ollamaLlamaTextModel: process.env.OLLAMA_LLAMA_TEXT_MODEL,
@@ -138,9 +162,9 @@ export function getConfig(): AppConfig {
     openAIO1ApiKey: process.env.OPENAI_O1_API_KEY,
 
     // General Configurations
-    systemPrompt: process.env.SYSTEM_PROMPT || 'Default system prompt',
-    stream: process.env.STREAM === 'true',
-    temperature: parseFloat(process.env.TEMPERATURE || '0.0'),
-    winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'silly',
+    systemPrompt: SYSTEM_PROMPT,
+    stream: STREAM === 'true',
+    temperature: parseFloat(TEMPERATURE || '0.0'),
+    winstonLoggerLevel: WINSTON_LOGGER_LEVEL,
   };
 }
