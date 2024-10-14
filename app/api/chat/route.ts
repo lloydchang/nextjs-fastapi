@@ -16,11 +16,11 @@ const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout to reset context after 
 const maxContextMessages = 20; // Keep only the last 20 bot messages in the running context
 
 let lastInteractionTime = Date.now(); // Track the last interaction time for session reset
-const processingLocks = new Map(); // Store ongoing processing request IDs
+const processingLocks = new Map<string, boolean>(); // Store ongoing processing request IDs as locks
 
 export async function POST(request: NextRequest) {
   try {
-    const requestId = Date.now();  // Unique request identifier for logging
+    const requestId = Date.now().toString();  // Unique request identifier for logging
     const { messages } = await request.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
           controller.close(); // Close the controller if already processing
           return;
         }
+
         processingLocks.set(requestId, true); // Lock this request ID
         logger.silly(`app/api/chat/route.ts [${requestId}] - Lock acquired.`);
 
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
-            botFunctions.map((bot, index) => {
+            botFunctions.map((bot) => {
               logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`);
               return bot.generate(context);
             })
