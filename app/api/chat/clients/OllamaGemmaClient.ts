@@ -13,11 +13,11 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `User Prompt: ${prompt}\n\nSystem Prompt:${systemPrompt}`;
 
-  logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Request body: ${requestBody}`);
+    // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -37,7 +37,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
     }
 
     const finalResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
-    logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Received final response from Ollama Gemma: ${finalResponse}`);
+    // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Received final response from Ollama Gemma: ${finalResponse}`);
 
     return finalResponse;
   } catch (error) {

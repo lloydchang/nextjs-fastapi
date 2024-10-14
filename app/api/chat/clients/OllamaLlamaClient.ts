@@ -13,11 +13,11 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
   const { endpoint, prompt, model } = params;
   const combinedPrompt = `User Prompt: ${prompt}\n\nSystem Prompt:${systemPrompt}`;
 
-  logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
+  // logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Request body: ${requestBody}`);
+    // logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -37,7 +37,7 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     }
 
     const finalResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
-    logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
+    // logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
 
     return finalResponse;
   } catch (error) {

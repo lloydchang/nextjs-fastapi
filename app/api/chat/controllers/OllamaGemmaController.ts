@@ -19,14 +19,14 @@ export async function handleTextWithOllamaGemmaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
-    logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Missing required endpoint environment variable');
+    // logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Missing required endpoint environment variable');
     return '';
   }
 
   const endpoint = ollamaGemmaEndpoint as string;
 
-  logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - User prompt: ${userPrompt}`);
+  // logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Generating text for model: ${textModel}`);
+  // logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaGemma({
@@ -40,7 +40,7 @@ export async function handleTextWithOllamaGemmaTextModel(
       return '';
     }
 
-    logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Generated response: ${response}`);
+    // logger.silly(`app/api/chat/controllers/OllamaGemmaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {

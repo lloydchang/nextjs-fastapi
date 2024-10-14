@@ -19,14 +19,14 @@ export async function handleTextWithOllamaLlamaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['OLLAMA_LLAMA_ENDPOINT'])) {
-    logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Missing required endpoint environment variable');
+    // logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Missing required endpoint environment variable');
     return '';
   }
 
   const endpoint = ollamaLlamaEndpoint as string;
 
-  logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generating text for model: ${textModel}`);
-  logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - User prompt: ${userPrompt}`);
+  // logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generating text for model: ${textModel}`);
+  // logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - User prompt: ${userPrompt}`);
 
   try {
     const response = await generateFromOllamaLlama({
@@ -40,7 +40,7 @@ export async function handleTextWithOllamaLlamaTextModel(
       return '';
     }
 
-    logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generated response: ${response}`);
+    // logger.silly(`app/api/chat/controllers/OllamaLlamaController.ts - Generated response: ${response}`);
     return response;
 
   } catch (error) {
