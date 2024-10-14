@@ -6,10 +6,10 @@ import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store } from '../store/store';
-import { persistStore } from 'redux-persist';
+import { persistStore, Persistor } from 'redux-persist';
 
 const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [persistor, setPersistor] = useState(null);
+  const [persistor, setPersistor] = useState<Persistor | null>(null);
 
   useEffect(() => {
     // This runs only on the client side
