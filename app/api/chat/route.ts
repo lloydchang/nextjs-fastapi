@@ -17,7 +17,8 @@ import pQueue from 'p-queue';
 const config = getConfig();
 
 const sessionTimeout = 60 * 60 * 1000;
-const maxBotsSharedContextMessages = 1;
+const maxTotalContextMessages = 10; // Adjust as needed
+const maxBotResponsesInContext = 1;
 
 const clientContexts = new Map<string, any[]>();
 const clientQueues = new Map<string, pQueue>();
@@ -52,8 +53,8 @@ export async function POST(request: NextRequest) {
       }
 
       let context = clientContexts.get(clientId) || [];
-      context = [...context, ...messages];
-      context = context.slice(-maxBotsSharedContextMessages);
+      context = [...context, ...messages.map(msg => ({ ...msg, role: 'user' }))];
+      context = context.slice(-maxTotalContextMessages);
       clientContexts.set(clientId, context);
 
       const stream = new ReadableStream({
@@ -128,17 +129,28 @@ export async function POST(request: NextRequest) {
                   })}\n\n`
                 );
 
-                context.push({
+                const botMessage = {
                   role: 'bot',
                   content: response,
                   persona: botPersona,
-                });
+                };
+
+                context.push(botMessage);
+
+                // Limit the number of bot messages in the context
+                const botMessages = context.filter(msg => msg.role === 'bot');
+                if (botMessages.length > maxBotResponsesInContext) {
+                  const indexToRemove = context.findIndex(msg => msg.role === 'bot');
+                  context.splice(indexToRemove, 1);
+                }
+
+                // Ensure we don't exceed the total context size
+                context = context.slice(-maxTotalContextMessages);
 
                 hasResponse = true;
               }
             }
 
-            context = context.slice(-maxBotsSharedContextMessages);
             clientContexts.set(clientId, context);
 
             if (!hasResponse) {
