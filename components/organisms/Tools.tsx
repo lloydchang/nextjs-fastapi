@@ -168,22 +168,22 @@ const Tools: React.FC = () => {
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
-              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
+              'https://www.un.org/sustainabledevelopment/takeaction/'
             )
           }
         >
-          Water
+          Lazy
         </button>
 
         <button
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
-              'https://www.un.org/sustainabledevelopment/takeaction/'
+              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
             )
           }
         >
-          Lazy
+          Water
         </button>
 
       </div>
