@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, createPersistedStore } from 'store/store';
+import { store, createPersistedStore } from '../store/store';
 import type { Store } from '@reduxjs/toolkit';
 import type { Persistor } from 'redux-persist';
 
