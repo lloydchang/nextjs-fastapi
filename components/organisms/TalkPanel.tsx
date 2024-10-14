@@ -21,27 +21,24 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk, error, loading } = useSelector((state: RootState) => state.talk);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const [hasFetched, setHasFetched] = useState(false); // Track if data has been fetched
-  const [hasSentMessage, setHasSentMessage] = useState<Set<string>>(new Set()); // Track sent messages to avoid re-sending
-  const [lastDispatchedTalkId, setLastDispatchedTalkId] = useState<string | null>(null); // Track the last dispatched talk ID
-
   const isSearchInProgress = useRef(false); // Track if search is in progress
-  const isMounted = useRef(false); // Track if component is mounted
+  const initialRender = useRef(true); // Track initial render
+  const hasFetched = useRef(false); // Track if data has been fetched
+  const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
+  const lastDispatchedTalkId = useRef<string | null>(null); // Track the last dispatched talk ID
 
-  // Enhanced logic to prevent multiple fetches in Strict Mode
+  // Enhanced logic to prevent multiple fetches and message sends in Strict Mode
   useEffect(() => {
-    if (isMounted.current && !hasFetched) {
-      console.log('TalkPanel - Performing initial search:', searchQuery);
+    if (initialRender.current && !hasFetched.current) {
+      console.log('TalkPanel - Initial render, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
-      setHasFetched(true); // Ensure only one fetch occurs
-    } else if (!isMounted.current) {
-      console.log('TalkPanel - Initial mount detected, skipping search.');
-      isMounted.current = true;
+      hasFetched.current = true; // Ensure only one fetch occurs
+    } else {
+      console.log('TalkPanel - Not the initial render, skipping search:', searchQuery);
     }
 
-    return () => {
-      isMounted.current = false;
-    };
+    // After initial render, set this to false to avoid re-fetching
+    initialRender.current = false;
   }, [searchQuery]);
 
   // Handle search results
@@ -109,10 +106,10 @@ const TalkPanel: React.FC = () => {
   // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
     console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
-    console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId);
-    console.log('HasSentMessage set:', [...hasSentMessage]);
+    console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
+    console.log('HasSentMessage set:', [...hasSentMessage.current]);
 
-    if (lastDispatchedTalkId === talk.title || hasSentMessage.has(talk.title)) {
+    if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
       console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
       return;
     }
@@ -125,10 +122,10 @@ const TalkPanel: React.FC = () => {
       const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
       console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
       dispatch(setSelectedTalk(talk));
-      setLastDispatchedTalkId(talk.title); // Update the last dispatched talk ID
-      setHasSentMessage((prev) => new Set(prev).add(talk.title)); // Mark message as sent
-      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId);
-      console.log('Updated HasSentMessage set:', [...hasSentMessage]);
+      lastDispatchedTalkId.current = talk.title; // Update the last dispatched talk ID
+      hasSentMessage.current.add(talk.title); // Mark message as sent
+      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
+      console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
     } catch (dispatchError) {
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
