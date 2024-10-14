@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-      const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint; // This is now guaranteed to be a string
+      const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint || "defaultEndpoint"; // This is now guaranteed to be a string
 
       // Provide a default value for ollamaGemmaTextModel or throw an error if undefined
       const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel"; // Provide a sensible default
