@@ -16,16 +16,18 @@ const persistConfig = {
   whitelist: ['chat', 'notification'], // Specify which reducers you want to persist
 };
 
-// Create a root reducer object
-const rootReducer = {
-  chat: chatReducer,
-  api: apiReducer,
-  notification: notificationReducer,
-  talk: talkReducer,
-};
-
 // Create a persisted reducer
-const persistedReducer = persistReducer(persistConfig, combineReducers(rootReducer));
+const persistedReducer = persistReducer(persistConfig, configureRootReducer());
+
+// Function to configure root reducer
+function configureRootReducer() {
+  return {
+    chat: chatReducer,
+    api: apiReducer,
+    notification: notificationReducer,
+    talk: talkReducer,
+  };
+}
 
 // Configure the store with the persisted reducer
 const store = configureStore({
@@ -33,7 +35,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        // Ignore redux-persist actions
+        // Ignore these action types for redux-persist
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
