@@ -10,7 +10,7 @@ import { managePrompt } from 'app/api/chat/utils/promptManager';
 
 const config = getConfig();
 
-const MAX_PROMPT_LENGTH = 4000; // Adjust based on Ollama Gemma's token limit
+const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's token limit
 
 // Rate Limiting Configuration
 const RATE_LIMIT = 5; // Max requests
@@ -89,10 +89,11 @@ export async function POST(request: NextRequest) {
       prompt += `\n\nUser: ${userPrompt}`;
       logger.debug(`Updated prompt for clientId: ${clientId}: ${prompt}`);
 
-      // Ensure ollamaGemmaEndpoint and ollamaGemmaTextModel are strings
-      const ollamaGemmaEndpoint = config.ollamaGemmaEndpoint || "defaultEndpoint"; 
-      const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel"; 
+      // Ensure ollamaGemmaEndpoint and ollamaGemmaTextModel are always strings
+      const ollamaGemmaEndpoint: string = config.ollamaGemmaEndpoint ?? "defaultEndpoint"; 
+      const ollamaGemmaTextModel: string = config.ollamaGemmaTextModel ?? "defaultModel"; 
 
+      // Pass only valid strings to managePrompt
       prompt = await managePrompt(prompt, MAX_PROMPT_LENGTH, ollamaGemmaEndpoint, ollamaGemmaTextModel) || "defaultPrompt";
       logger.debug(`Managed prompt for clientId: ${clientId}: ${prompt}`);
 
