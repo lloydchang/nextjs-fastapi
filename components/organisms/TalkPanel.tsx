@@ -24,12 +24,16 @@ const TalkPanel: React.FC = () => {
   const [lastDispatchedTalkId, setLastDispatchedTalkId] = useState<string | null>(null);
   const [isSearchInProgress, setIsSearchInProgress] = useState(false); // Track if search is in progress
   const initialRender = useRef(true);
+  const initialRender = useRef(true); // Track initial render
+  const hasFetched = useRef(false); // Track if data has been fetched
+  const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
 
   useEffect(() => {
-    if (initialRender.current) {
+    if (initialRender.current && !hasFetched.current) {
       console.log('TalkPanel - Initial render, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
       initialRender.current = false;
+      hasFetched.current = true; // Prevent multiple fetches due to strict mode
     }
   }, [searchQuery]);
 
@@ -97,8 +101,9 @@ const TalkPanel: React.FC = () => {
 
   // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
-    if (talk.title === lastDispatchedTalkId) {
-      console.log(`TalkPanel - Skipping already dispatched talk: ${talk.title}`);
+  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
+    if (talk.title === lastDispatchedTalkId || hasSentMessage.current.has(talk.title)) {
+      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`)
       return;
     }
 
@@ -111,6 +116,7 @@ const TalkPanel: React.FC = () => {
       console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
       dispatch(setSelectedTalk(talk));
       setLastDispatchedTalkId(talk.title);
+      hasSentMessage.current.add(talk.title); // Mark message as sent
     } catch (dispatchError) {
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
@@ -145,6 +151,7 @@ const TalkPanel: React.FC = () => {
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
 
+  // Handle new talk selection
   useEffect(() => {
     if (selectedTalk) {
       console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
