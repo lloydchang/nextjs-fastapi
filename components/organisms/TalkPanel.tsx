@@ -165,11 +165,19 @@ const TalkPanel: React.FC = () => {
 
   // Handle search query change
   useEffect(() => {
-    if (selectedTalk && searchQuery) {
+    if (searchQuery && selectedTalk) {
       console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
       debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [searchQuery]); // Only run this effect when searchQuery changes
+
+  // Handle new talk selection
+  useEffect(() => {
+    if (selectedTalk) {
+      console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+    }
+  }, [selectedTalk]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
