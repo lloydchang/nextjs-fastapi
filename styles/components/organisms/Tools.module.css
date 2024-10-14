@@ -72,8 +72,8 @@
 
 /* Responsive styles for various device sizes */
 
-/* Mobile devices */
-@media (max-width: 767px) {
+/* Tablets and Mobile devices */
+@media (max-width: 1023px) {
 
   .tools-container {
     position: relative;       /* Use absolute positioning */
@@ -94,8 +94,8 @@
   .right-edge-button {
     padding: 4px 4px;         /* Adjust padding for better spacing */
     margin-left: 6px;        /* Add spacing between buttons in a row */
-    font-size: 8px;          /* Smaller font size */
-    width: 40px;             /* Smaller fixed width */
+    font-size: 6px;          /* Smaller font size */
+    width: 30px;             /* Smaller fixed width */
   }
 
   .right-edge-button:hover {
