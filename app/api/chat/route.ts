@@ -16,25 +16,34 @@ const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout to reset context after 
 const maxContextMessages = 20; // Keep only the last 20 bot messages in the running context
 
 let lastInteractionTime = Date.now(); // Track the last interaction time for session reset
-const processingLocks = new Map<string, boolean>(); // Store ongoing processing request IDs as locks
 
 export async function POST(request: NextRequest) {
   try {
-    const requestId = Date.now().toString();  // Unique request identifier for logging
+    const requestId = Date.now().toString(); // Unique request identifier for logging
     const { messages } = await request.json();
     if (!Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request format or no messages provided.' },
+        { status: 400 }
+      );
     }
 
     let context = messages.slice(-7); // Start with the last 7 user messages for a new context
 
+    // Move processingLocks inside the POST function to prevent multiple initializations
+    const processingLocks = new Map<string, boolean>(); // Store ongoing processing request IDs as locks
+
     const stream = new ReadableStream({
       async start(controller) {
-        logger.silly(`app/api/chat/route.ts [${requestId}] - Started streaming responses to the client.`);
+        logger.silly(
+          `app/api/chat/route.ts [${requestId}] - Started streaming responses to the client.`
+        );
 
         // Prevent concurrent processing for the same request ID
         if (processingLocks.has(requestId)) {
-          logger.silly(`app/api/chat/route.ts [${requestId}] - Already processing, skipping.`);
+          logger.silly(
+            `app/api/chat/route.ts [${requestId}] - Already processing, skipping.`
+          );
           controller.close(); // Close the controller if already processing
           return;
         }
@@ -47,7 +56,10 @@ export async function POST(request: NextRequest) {
             persona: 'Ollama ' + config.ollamaGemmaTextModel,
             generate: (currentContext: any[]) =>
               handleTextWithOllamaGemmaTextModel(
-                { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaGemmaTextModel },
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.ollamaGemmaTextModel,
+                },
                 config
               ),
             isValid: !!config.ollamaGemmaTextModel,
@@ -56,7 +68,10 @@ export async function POST(request: NextRequest) {
             persona: 'Cloudflare ' + config.cloudflareGemmaTextModel,
             generate: (currentContext: any[]) =>
               handleTextWithCloudflareGemmaTextModel(
-                { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareGemmaTextModel },
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.cloudflareGemmaTextModel,
+                },
                 config
               ),
             isValid: !!config.cloudflareGemmaTextModel,
@@ -65,7 +80,10 @@ export async function POST(request: NextRequest) {
             persona: 'Google Vertex ' + config.googleVertexGemmaTextModel,
             generate: (currentContext: any[]) =>
               handleTextWithGoogleVertexGemmaTextModel(
-                { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexGemmaTextModel },
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.googleVertexGemmaTextModel,
+                },
                 config
               ),
             isValid: !!config.googleVertexGemmaTextModel,
@@ -74,7 +92,10 @@ export async function POST(request: NextRequest) {
             persona: 'Ollama ' + config.ollamaLlamaTextModel,
             generate: (currentContext: any[]) =>
               handleTextWithOllamaLlamaTextModel(
-                { userPrompt: extractValidMessages(currentContext), textModel: config.ollamaLlamaTextModel },
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.ollamaLlamaTextModel,
+                },
                 config
               ),
             isValid: !!config.ollamaLlamaTextModel,
@@ -83,7 +104,10 @@ export async function POST(request: NextRequest) {
             persona: 'Cloudflare ' + config.cloudflareLlamaTextModel,
             generate: (currentContext: any[]) =>
               handleTextWithCloudflareLlamaTextModel(
-                { userPrompt: extractValidMessages(currentContext), textModel: config.cloudflareLlamaTextModel },
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.cloudflareLlamaTextModel,
+                },
                 config
               ),
             isValid: !!config.cloudflareLlamaTextModel,
@@ -92,20 +116,27 @@ export async function POST(request: NextRequest) {
             persona: 'Google Vertex ' + config.googleVertexLlamaTextModel,
             generate: (currentContext: any[]) =>
               handleTextWithGoogleVertexLlamaTextModel(
-                { userPrompt: extractValidMessages(currentContext), textModel: config.googleVertexLlamaTextModel },
+                {
+                  userPrompt: extractValidMessages(currentContext),
+                  textModel: config.googleVertexLlamaTextModel,
+                },
                 config
               ),
             isValid: !!config.googleVertexLlamaTextModel,
           },
-        ].filter(bot => bot.isValid); // Only keep valid bot configurations
+        ].filter((bot) => bot.isValid); // Only keep valid bot configurations
 
         async function processBots() {
-          logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing`);
+          logger.silly(
+            `app/api/chat/route.ts [${requestId}] - Starting parallel bot processing`
+          );
 
           // Fetch all bot responses in parallel
           const responses = await Promise.all(
             botFunctions.map((bot) => {
-              logger.silly(`app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`);
+              logger.silly(
+                `app/api/chat/route.ts [${requestId}] - Starting parallel bot processing for ${bot.persona}`
+              );
               return bot.generate(context);
             })
           );
@@ -118,15 +149,23 @@ export async function POST(request: NextRequest) {
             if (response && typeof response === 'string') {
               const botPersona = botFunctions[index].persona;
 
-              logger.debug(`app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`);
+              logger.debug(
+                `app/api/chat/route.ts [${requestId}] - Response from ${botPersona}: ${response}`
+              );
 
-              context.push({ role: 'bot', content: response, persona: botPersona });
+              context.push({
+                role: 'bot',
+                content: response,
+                persona: botPersona,
+              });
 
               // Send the bot response to the client immediately
-              controller.enqueue(`data: ${JSON.stringify({
-                persona: botPersona,
-                message: response,
-              })}\n\n`);
+              controller.enqueue(
+                `data: ${JSON.stringify({
+                  persona: botPersona,
+                  message: response,
+                })}\n\n`
+              );
 
               hasResponse = true;
             }
@@ -138,11 +177,15 @@ export async function POST(request: NextRequest) {
           if (Date.now() - lastInteractionTime > sessionTimeout) {
             context = [];
             lastInteractionTime = Date.now();
-            logger.silly(`app/api/chat/route.ts [${requestId}] - Session timed out. Context reset.`);
+            logger.silly(
+              `app/api/chat/route.ts [${requestId}] - Session timed out. Context reset.`
+            );
           }
 
           if (!hasResponse) {
-            logger.silly(`app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`);
+            logger.silly(
+              `app/api/chat/route.ts [${requestId}] - No bot responded. Ending interaction.`
+            );
           }
 
           controller.enqueue('data: [DONE]\n\n');
@@ -152,10 +195,14 @@ export async function POST(request: NextRequest) {
         }
 
         processBots().catch((error) => {
-          logger.error(`app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`);
+          logger.error(
+            `app/api/chat/route.ts [${requestId}] - Error in streaming bot interaction: ${error}`
+          );
           controller.error(error);
           processingLocks.delete(requestId); // Ensure the lock is released on error
-          logger.silly(`app/api/chat/route.ts [${requestId}] - Lock released after error.`);
+          logger.silly(
+            `app/api/chat/route.ts [${requestId}] - Lock released after error.`
+          );
         });
       },
     });
@@ -164,14 +211,22 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
       },
     });
   } catch (error) {
-    logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
+    logger.error(
+      `app/api/chat/route.ts - Error in streaming bot interaction: ${error}`
+    );
 
     return error instanceof Error
-      ? NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
-      : NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
+      ? NextResponse.json(
+          { error: error.message || 'Internal Server Error' },
+          { status: 500 }
+        )
+      : NextResponse.json(
+          { error: 'An unexpected error occurred' },
+          { status: 500 }
+        );
   }
 }
