@@ -17,7 +17,7 @@ import { managePrompt } from 'app/api/chat/utils/promptManager';
 
 const config = getConfig();
 
-const MAX_PROMPT_LENGTH = 4000; // Adjust based on Ollama Gemma's token limit
+const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's token limit
 const RATE_LIMIT = 5; // Max requests
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
