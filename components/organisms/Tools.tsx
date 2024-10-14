@@ -113,17 +113,6 @@ const Tools: React.FC = () => {
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
-              'https://news.google.com/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YTI1c1poSUNaVzRvQUFQAQ'
-            )
-          }
-        >
-          News
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
               'https://go-goals.org/'
             )
           }
@@ -140,6 +129,17 @@ const Tools: React.FC = () => {
           }
         >
           App
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
+            )
+          }
+        >
+          Water
         </button>
 
         <button
@@ -179,11 +179,11 @@ const Tools: React.FC = () => {
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
-              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
+              'https://news.google.com/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YTI1c1poSUNaVzRvQUFQAQ'
             )
           }
         >
-          Water
+          News
         </button>
 
       </div>
