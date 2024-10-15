@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
         async start(controller) {
           logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
 
+          const botFunctions: BotFunction[] = []; // Initialize botFunctions here
+
           // Ollama Gemma
           if (isValidConfig(config.ollamaGemmaTextModel) && validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])) {
             const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel";
@@ -108,7 +110,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -144,7 +146,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -180,7 +182,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -216,7 +218,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -252,7 +254,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -288,7 +290,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -313,18 +315,17 @@ export async function POST(request: NextRequest) {
             let hasResponse = false;
 
             for (let index = 0; index < responses.length; index++) {
-              const response = responses[index];
+              const botResponse = responses[index]; // Renamed from 'response' to 'botResponse'
               const botPersona = botFunctions[index].persona; // Define botPersona here
-              const response = responses[index];
-              if (response && typeof response === 'string') {
 
-                logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${response}`);
+              if (botResponse && typeof botResponse === 'string') {
+                logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
                 controller.enqueue(
-                  `data: ${JSON.stringify({ persona: botPersona, message: response })}\n\n`
+                  `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
                 );
 
-                context.push({ role: 'bot', content: response, persona: botPersona });
+                context.push({ role: 'bot', content: botResponse, persona: botPersona });
                 hasResponse = true;
               }
             }
