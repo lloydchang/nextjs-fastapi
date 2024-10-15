@@ -11,19 +11,19 @@ interface SpeechTestProps {
 }
 
 const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInterimUpdate }) => {
-  const [interimTranscript, setInterimTranscript] = useState<string>('');
-  const [finalTranscript, setFinalTranscript] = useState<string>('');
+  const [interimResult, setInterimResult] = useState<string>('');
+  const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
-    setFinalTranscript(prev => prev + ' ' + text);
+    setFinalResult(prev => prev + ' ' + text);
     onSpeechResult(text); // Pass the result to the parent
   }, [onSpeechResult]);
 
   const handleInterim = useCallback((text: string) => {
     console.log('Interim Speech:', text);
-    setInterimTranscript(text);
+    setInterimResult(text);
     onInterimUpdate(text); // Pass the interim result to the parent
   }, [onInterimUpdate]);
 
@@ -55,17 +55,17 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
         {isListening ? 'Stop Listening 🙉' : 'Start Listening 👂'}
       </button>
       <textarea
-        value={interimTranscript}
+        value={interimResult}
         readOnly
-        placeholder="Interim Speech..."
-        rows={3}
+        placeholder="Interim Result..."
+        rows={1}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
       <textarea
-        value={finalTranscript}
+        value={finalResult}
         readOnly
-        placeholder="Final Speech..."
-        rows={5}
+        placeholder="Final Result..."
+        rows={1}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
       <button onClick={() => setIsDarkMode(!isDarkMode)} className={styles.modeToggle}>
