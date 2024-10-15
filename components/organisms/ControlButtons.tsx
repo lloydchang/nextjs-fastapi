@@ -17,7 +17,7 @@ interface ControlButtonsProps {
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
-  hasVisibleMessages: boolean; // New prop to indicate if there are visible messages
+  hasVisibleMessages: boolean; // Rename this prop to match ChatInput.tsx
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -33,7 +33,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   eraseMemory,
   isFullScreenOn,
   toggleFullScreen,
-  hasMessages, // New prop
+  hasVisibleMessages, // Use the correct prop name here
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -69,7 +69,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         onClick={openModal}
         className={`${styles.button} ${styles.eraseButton}`}
         aria-label={eraseButtonText}
-        disabled={!hasMessages} // Disable button if there are no messages
+        disabled={!hasVisibleMessages} // Use the correct prop name here
       >
         {eraseButtonText}
       </button>
