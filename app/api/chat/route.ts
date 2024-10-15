@@ -146,12 +146,12 @@ export async function POST(request: NextRequest) {
                   if (currentContext.length > 0) {
                     prompt += `${extractValidMessages(currentContext)}`;
                   }
-
+                
                   if (prompt.trim().length === 0) {
                     logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty.`);
                     return null;
                   }
-
+                
                   // Get the response from the handler function
                   const botResponse = await handlerFunction({ userPrompt: prompt, textModel }, config);
                   
@@ -159,13 +159,13 @@ export async function POST(request: NextRequest) {
                     controller.enqueue(
                       `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: botResponse })}\n\n`
                     );
-
+                
                     context.push({ role: 'bot', content: botResponse, persona: `${personaPrefix} ${textModel}` });
-                    return true;
+                    return botResponse; // Return the actual response (string)
                   }
-
-                  return false;
-                },
+                
+                  return null; // If no response or empty response, return null
+                },               
               });
             }
           };
