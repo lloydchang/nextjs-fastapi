@@ -47,7 +47,7 @@ const config: AppConfig = getConfig();
 
 const MAX_PROMPT_LENGTH = 128000; // Adjust based on token size limit
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
-const maxContextMessages = 20; // Keep only the last 20 messages
+const maxContextMessages = 0; // Keep only the last 0 messages
 
 // Maps to track client-specific data
 const clientPrompts = new Map<string, string>();
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
-  logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
+  // logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
 
   // Handle rate limiting
   const { limited, retryAfter } = checkRateLimit(clientId);
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
 
       const stream = new ReadableStream({
         async start(controller) {
-          logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
+          // logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
 
           const botFunctions: BotFunction[] = [];
 
@@ -173,11 +173,11 @@ export async function POST(request: NextRequest) {
                     clientId,
                     textModel
                   )) {
-                    logger.debug(
-                      `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`
-                    );
+                    // logger.debug(
+                    //   `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Prompt: ${updatedPrompt}`
+                    // );
                     if (updatedPrompt.trim().length === 0) {
-                      logger.warn(`app/api/chat/route.ts - Updated prompt for clientId: ${clientId} is empty after management.`);
+                      logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty after management.`);
                       continue; // Skip enqueueing empty prompts
                     }
                     try {
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest) {
            * Updated to run bot.generate concurrently and prevent duplicate enqueues.
            */
           async function processBots() {
-            logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
+            // logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
 
             // Process all bots concurrently
             const botPromises = botFunctions.map(async (bot) => {
