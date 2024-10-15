@@ -1,6 +1,6 @@
 // File: components/organisms/ChatInput.tsx
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import styles from 'styles/components/organisms/ChatInput.module.css';
 import ControlButtons from 'components/organisms/ControlButtons';
 
@@ -41,7 +41,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
-  isListening,
+  isListening, // New prop
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -57,14 +57,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
       handleChat();
     }
   };
-
-  // Optional: Automatically send message when speech recognition finalizes
-  useEffect(() => {
-    if (chatInput.trim() && !isListening) {
-      handleChat();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatInput, isListening]);
 
   return (
     <div className={styles.inputContainer}>
@@ -86,7 +78,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          disabled={!chatInput.trim()}
         >
           Send
         </button>
@@ -104,7 +95,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             eraseMemory={eraseMemory}
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
-            hasVisibleMessages={hasVisibleMessages}
+            hasVisibleMessages={hasVisibleMessages} // Pass the prop to ControlButtons
             isListening={isListening} // Pass isListening to ControlButtons
           />
         </div>
