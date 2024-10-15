@@ -14,7 +14,7 @@ import { useMedia } from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
-import useSpeechRecognition from 'components/hooks/useSpeechRecognition'; // Update the path accordingly
+import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition'; // Update the path accordingly
 
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
