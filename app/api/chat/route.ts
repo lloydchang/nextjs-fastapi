@@ -146,6 +146,16 @@ export async function POST(request: NextRequest) {
                     return null;
                   }
 
+                  // Enqueue response only if it's not empty
+                  if (botResponse.trim().length > 0) {
+                    controller.enqueue(
+                      `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                    );
+
+                    context.push({ role: 'bot', content: botResponse, persona: botPersona });
+                    return true;
+                  }
+
                   return handlerFunction({ userPrompt: prompt, textModel }, config);
                 },
               });
@@ -207,6 +217,16 @@ export async function POST(request: NextRequest) {
 
                 if (botResponse && typeof botResponse === 'string') {
                   logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
+
+                  // Enqueue response only if it's not empty
+                  if (botResponse.trim().length > 0) {
+                    controller.enqueue(
+                      `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                    );
+
+                    context.push({ role: 'bot', content: botResponse, persona: botPersona });
+                    return true;
+                  }
                 }
                 return false;
               } catch (error) {
