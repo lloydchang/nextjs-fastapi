@@ -1,6 +1,6 @@
 // File: components/state/hooks/useMedia.ts
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 interface MediaState {
   isCamOn: boolean;
@@ -74,8 +74,12 @@ export const useMedia = (): UseMediaReturn => {
     if (videoRef.current) {
       if (!mediaState.isCamOn) await startCam();
       if (!mediaState.isPipOn) {
-        await videoRef.current.requestPictureInPicture();
-        setMediaState((prev) => ({ ...prev, isPipOn: true }));
+        try {
+          await videoRef.current.requestPictureInPicture();
+          setMediaState((prev) => ({ ...prev, isPipOn: true }));
+        } catch (error) {
+          console.error('Failed to enable Picture-in-Picture:', error);
+        }
       } else {
         await document.exitPictureInPicture();
         setMediaState((prev) => ({ ...prev, isPipOn: false }));
