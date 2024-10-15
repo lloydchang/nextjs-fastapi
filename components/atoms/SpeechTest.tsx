@@ -68,7 +68,11 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
 
   return (
     <div className={`${styles.speechTest} ${isDarkMode ? styles.dark : styles.light}`}>
-      <button onClick={toggleListening} className={styles.toggleButton}>
+      {/* Start/Stop Button with dynamic background color */}
+      <button
+        onClick={toggleListening}
+        className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
+      >
         {isListening ? 'Stop Listening 🙉' : 'Start Listening 👂'}
       </button>
       

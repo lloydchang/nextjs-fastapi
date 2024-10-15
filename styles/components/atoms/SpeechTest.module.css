@@ -10,6 +10,22 @@
   padding: 10px;
   font-size: 16px;
   cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+/* Green background for Start Listening */
+.startButton {
+  background-color: rgba(0, 235, 40, 0.25);
+  color: white;
+}
+
+/* Red background for Stop Listening */
+.stopButton {
+  background-color: rgba(235, 0, 40, 0.25);
+  color: white;
 }
 
 .textarea {
