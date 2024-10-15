@@ -13,9 +13,10 @@ const useSpeechRecognition = ({
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const startListening = useCallback(() => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && !isListening) {
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -24,15 +25,15 @@ const useSpeechRecognition = ({
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, []);
+  }, [isListening]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
       console.log('Speech recognition stopped.');
     }
-  }, []);
+  }, [isListening]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -71,13 +72,30 @@ const useSpeechRecognition = ({
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
+
+        // Restart recognition after error if mic is still on
+        if (isMicOn) {
+          if (restartTimeoutRef.current) {
+            clearTimeout(restartTimeoutRef.current);
+          }
+          restartTimeoutRef.current = setTimeout(() => {
+            startListening();
+          }, 1000); // 1-second delay before restarting
+        }
       };
 
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         setIsListening(false);
+
+        // Restart recognition after it ends, if the mic is still on
         if (isMicOn) {
-          recognition.start(); // Restart if mic is on
+          if (restartTimeoutRef.current) {
+            clearTimeout(restartTimeoutRef.current);
+          }
+          restartTimeoutRef.current = setTimeout(() => {
+            startListening();
+          }, 1000); // 1-second delay before restarting
         }
       };
 
@@ -88,20 +106,32 @@ const useSpeechRecognition = ({
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.abort();
         recognitionRef.current = null;
       }
       setIsListening(false);
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
 
   useEffect(() => {
-    if (isMicOn) {
+    if (isMicOn && !isListening) {
       startListening();
-    } else {
+    } else if (!isMicOn && isListening) {
       stopListening();
     }
-  }, [isMicOn, startListening, stopListening]);
+
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+    };
+  }, [isMicOn, startListening, stopListening, isListening]);
 
   return { isListening };
 };
