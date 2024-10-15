@@ -6,10 +6,10 @@ import { getConfig, AppConfig } from 'app/api/chat/utils/config';
 import { handleRateLimit } from 'app/api/chat/utils/rateLimiter'; // Updated import
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaTextModel';
 import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
+import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaTextModel';
+import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaTextModel';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
     try {
       const { messages } = await request.json();
 
-      // If the previous request was aborted, return early
-      if (controller.signal.aborted) {
+      // Safely check if the previous request was aborted
+      if (controller && controller.signal.aborted) {
         logger.info(`app/api/chat/route.ts - Aborted previous request for clientId: ${clientId}`);
         return NextResponse.json({ message: 'Previous request aborted. Processing new request.' });
       }
