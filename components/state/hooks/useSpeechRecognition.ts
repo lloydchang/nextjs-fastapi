@@ -15,13 +15,15 @@ const useSpeechRecognition = ({
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isRecognitionActive = useRef<boolean>(false); // New state to track active status
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening) {
+    if (recognitionRef.current && !isListening && !isRecognitionActive.current) {
       try {
         recognitionRef.current.start();
         setIsListening(true);
+        isRecognitionActive.current = true;
         console.log('Speech recognition started.');
       } catch (err) {
         console.error('Error starting speech recognition:', err);
@@ -30,9 +32,10 @@ const useSpeechRecognition = ({
   }, [isListening]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
+    if (recognitionRef.current && isListening && isRecognitionActive.current) {
       recognitionRef.current.stop();
       setIsListening(false);
+      isRecognitionActive.current = false;
       console.log('Speech recognition stopped.');
     }
   }, [isListening]);
@@ -74,6 +77,8 @@ const useSpeechRecognition = ({
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
+        isRecognitionActive.current = false; // Ensure recognition is marked as stopped
+
         if (isMicOn) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
@@ -87,6 +92,8 @@ const useSpeechRecognition = ({
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         setIsListening(false);
+        isRecognitionActive.current = false; // Ensure recognition is marked as stopped
+
         if (isMicOn) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
@@ -119,9 +126,9 @@ const useSpeechRecognition = ({
 
   // Ensure consistent start/stop logic
   useEffect(() => {
-    if (isMicOn && !isListening) {
+    if (isMicOn && !isListening && !isRecognitionActive.current) {
       startListening();
-    } else if (!isMicOn && isListening) {
+    } else if (!isMicOn && isListening && isRecognitionActive.current) {
       stopListening();
     }
 
