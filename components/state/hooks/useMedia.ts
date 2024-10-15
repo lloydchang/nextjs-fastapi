@@ -1,4 +1,4 @@
-// hooks/useMedia.ts
+// File: hooks/useMedia.ts
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 
@@ -24,7 +24,7 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: true,
+    isMicOn: false, // Initialize microphone as off by default
     isPipOn: false,
     isMemOn: true,
   });
@@ -70,38 +70,35 @@ export const useMedia = (): UseMediaReturn => {
     setMediaState((prev) => ({ ...prev, isCamOn: false }));
   }, []);
 
-  const toggleMic = useCallback(() => {
+  const toggleMic = useCallback(async () => {
     console.log('Toggling Mic. Current State:', mediaState.isMicOn);
-    mediaState.isMicOn ? stopMic() : startMic();
-  }, [mediaState.isMicOn]);
-
-  const startMic = useCallback(async () => {
-    if (isMicOnRef.current) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (audioRef.current) {
-        audioRef.current.srcObject = stream;
-        audioStreamRef.current = stream;
-        setMediaState((prev) => ({ ...prev, isMicOn: true }));
-        isMicOnRef.current = true;
+    if (!mediaState.isMicOn) {
+      // Attempt to start microphone
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (audioRef.current) {
+          audioRef.current.srcObject = stream;
+          audioStreamRef.current = stream;
+          setMediaState((prev) => ({ ...prev, isMicOn: true }));
+          isMicOnRef.current = true;
+        }
+      } catch (err) {
+        console.error('Unable to access microphone.', err);
+        alert('Microphone access is required for speech recognition.');
       }
-    } catch (err) {
-      console.error('Unable to access microphone.', err);
-      alert('Unable to access microphone.');
+    } else {
+      // Stop microphone
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach((track) => track.stop());
+        audioStreamRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.srcObject = null;
+      }
+      setMediaState((prev) => ({ ...prev, isMicOn: false }));
+      isMicOnRef.current = false;
     }
-  }, []);
-
-  const stopMic = useCallback(() => {
-    if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach((track) => track.stop());
-      audioStreamRef.current = null;
-    }
-    if (audioRef.current) {
-      audioRef.current.srcObject = null;
-    }
-    setMediaState((prev) => ({ ...prev, isMicOn: false }));
-    isMicOnRef.current = false;
-  }, []);
+  }, [mediaState.isMicOn]);
 
   const togglePip = useCallback(async () => {
     if (videoRef.current) {
@@ -138,7 +135,20 @@ export const useMedia = (): UseMediaReturn => {
         });
       }
     };
-  }, [stopCam, stopMic]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const stopMic = useCallback(() => {
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.srcObject = null;
+    }
+    setMediaState((prev) => ({ ...prev, isMicOn: false }));
+    isMicOnRef.current = false;
+  }, []);
 
   return {
     mediaState,
@@ -151,3 +161,5 @@ export const useMedia = (): UseMediaReturn => {
     toggleMem,
   };
 };
+
+export default useMedia;

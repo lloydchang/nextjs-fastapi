@@ -14,6 +14,7 @@ import { useMedia } from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
+import useSpeechRecognition from 'components/hooks/useSpeechRecognition'; // Update the path accordingly
 
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
@@ -22,7 +23,14 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-  const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
+  const {
+    mediaState,
+    toggleMic,
+    startCam,
+    stopCam,
+    togglePip,
+    toggleMem,
+  } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null); // Ref to handle scrolling
@@ -66,6 +74,24 @@ const ChatPanel: React.FC = () => {
     }
     setIsFullScreen(!isFullScreen);
   };
+
+  // Callback to handle final speech results
+  const handleSpeechResult = useCallback((finalResult: string) => {
+    setChatInput((prevInput) => prevInput + ' ' + finalResult);
+  }, []);
+
+  // Callback to handle interim speech updates (optional)
+  const handleInterimUpdate = useCallback((interimResult: string) => {
+    console.log('Interim Result:', interimResult);
+    // Optionally, implement live transcription display
+  }, []);
+
+  // Initialize the Speech Recognition Hook
+  useSpeechRecognition({
+    isMicOn: mediaState.isMicOn,
+    onSpeechResult: handleSpeechResult,
+    onInterimUpdate: handleInterimUpdate,
+  });
 
   return (
     <div
