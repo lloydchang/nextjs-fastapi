@@ -91,248 +91,151 @@ export async function POST(request: NextRequest) {
 
           const botFunctions: BotFunction[] = []; // Initialize botFunctions here
 
-          // Ollama Gemma
-          if (isValidConfig(config.ollamaGemmaTextModel) && validateEnvVars(['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'])) {
-            const ollamaGemmaTextModel = config.ollamaGemmaTextModel || "defaultModel";
+          // Function to add botFunction to the array
+          const addBotFunction = (
+            personaPrefix: string,
+            textModelConfigKey: string,
+            endpointEnvVars: string[],
+            handlerFunction: Function,
+            summarizeFunction: Function
+          ) => {
+            if (isValidConfig(config[textModelConfigKey]) && validateEnvVars(endpointEnvVars)) {
+              const textModel = config[textModelConfigKey] || "defaultModel";
 
-            const summarizeWithOllamaGemma = async (text: string): Promise<string | null> => {
-              logger.debug(`app/api/chat/route.ts - Using Ollama Gemma model (${ollamaGemmaTextModel}) for clientId: ${clientId}`);
-              return handleTextWithOllamaGemmaTextModel({ userPrompt: text, textModel: ollamaGemmaTextModel }, config);
-            };
+              botFunctions.push({
+                persona: `${personaPrefix} ${textModel}`,
+                valid: isValidConfig(config[textModelConfigKey]),
+                generate: async (currentContext: any[]) => {
+                  // Create separate prompt and context for each bot
+                  let prompt = config.systemPrompt || '';
+                  if (currentContext.length > 0) {
+                    prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                  }
 
-            botFunctions.push({
-              persona: 'Ollama ' + ollamaGemmaTextModel,
-              valid: isValidConfig(config.ollamaGemmaTextModel),
-              generate: async (currentContext: any[]) => {
-                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-                
-                let finalPrompt = prompt;
-                // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Using Ollama Gemma model (${ollamaGemmaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaGemmaTextModel, message: updatedPrompt })}\n\n`);
-                  finalPrompt = updatedPrompt;
-                }
+                  let finalPrompt = prompt;
+                  // Use AsyncGenerator to send intermediate prompt results
+                  for await (const updatedPrompt of managePrompt(
+                    prompt,
+                    MAX_PROMPT_LENGTH,
+                    summarizeFunction,
+                    clientId,
+                    textModel
+                  )) {
+                    logger.debug(
+                      `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`
+                    );
+                    controller.enqueue(
+                      `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: updatedPrompt })}\n\n`
+                    );
+                    finalPrompt = updatedPrompt;
+                  }
 
-                // Update the last message in the context with the summarized version, if it's new
-                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
-                }
-                clientContexts.set(clientId, context);
+                  // Update the last message in the context with the summarized version, if it's new
+                  if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
+                    context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                  }
+                  clientContexts.set(clientId, context);
 
-                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithOllamaGemmaTextModel({ userPrompt: prompt ?? '', textModel: ollamaGemmaTextModel }, config);
-              },
-            });
-          }
+                  // No need to set clientPrompts globally; keep it per bot
+                  return handlerFunction({ userPrompt: prompt, textModel }, config);
+                },
+              });
+            }
+          };
 
-          // Ollama Llama
-          if (isValidConfig(config.ollamaLlamaTextModel) && validateEnvVars(['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'])) {
-            const ollamaLlamaTextModel = config.ollamaLlamaTextModel || "defaultModel";
+          // Add all bot functions using the helper
+          addBotFunction(
+            'Ollama',
+            'ollamaGemmaTextModel',
+            ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
+            handleTextWithOllamaGemmaTextModel,
+            async (text: string) => {
+              return handleTextWithOllamaGemmaTextModel({ userPrompt: text, textModel: config.ollamaGemmaTextModel }, config);
+            }
+          );
 
-            const summarizeWithOllamaLlama = async (text: string): Promise<string | null> => {
-              logger.debug(`app/api/chat/route.ts - Using Ollama Llama model (${ollamaLlamaTextModel}) for clientId: ${clientId}`);
-              return handleTextWithOllamaLlamaTextModel({ userPrompt: text, textModel: ollamaLlamaTextModel }, config);
-            };
+          addBotFunction(
+            'Ollama',
+            'ollamaLlamaTextModel',
+            ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
+            handleTextWithOllamaLlamaTextModel,
+            async (text: string) => {
+              return handleTextWithOllamaLlamaTextModel({ userPrompt: text, textModel: config.ollamaLlamaTextModel }, config);
+            }
+          );
 
-            botFunctions.push({
-              persona: 'Ollama ' + ollamaLlamaTextModel,
-              valid: isValidConfig(config.ollamaLlamaTextModel),
-              generate: async (currentContext: any[]) => {
-                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+          addBotFunction(
+            'Cloudflare',
+            'cloudflareGemmaTextModel',
+            ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
+            handleTextWithCloudflareGemmaTextModel,
+            async (text: string) => {
+              return handleTextWithCloudflareGemmaTextModel({ userPrompt: text, textModel: config.cloudflareGemmaTextModel }, config);
+            }
+          );
 
-                let finalPrompt = prompt;
-                // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Using Ollama Llama model (${ollamaLlamaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaLlamaTextModel, message: updatedPrompt })}\n\n`);
-                  finalPrompt = updatedPrompt;
-                }
+          addBotFunction(
+            'Cloudflare',
+            'cloudflareLlamaTextModel',
+            ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
+            handleTextWithCloudflareLlamaTextModel,
+            async (text: string) => {
+              return handleTextWithCloudflareLlamaTextModel({ userPrompt: text, textModel: config.cloudflareLlamaTextModel }, config);
+            }
+          );
 
-                // Update the last message in the context with the summarized version, if it's new
-                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
-                }
-                clientContexts.set(clientId, context);
+          addBotFunction(
+            'Google Vertex',
+            'googleVertexGemmaTextModel',
+            ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
+            handleTextWithGoogleVertexGemmaTextModel,
+            async (text: string) => {
+              return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: text, textModel: config.googleVertexGemmaTextModel }, config);
+            }
+          );
 
-                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithOllamaLlamaTextModel({ userPrompt: prompt ?? '', textModel: ollamaLlamaTextModel }, config);
-              },
-            });
-          }
-
-          // Cloudflare Gemma
-          if (isValidConfig(config.cloudflareGemmaTextModel) && validateEnvVars(['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'])) {
-            const cloudflareGemmaTextModel = config.cloudflareGemmaTextModel!;
-
-            const summarizeWithCloudflareGemma = async (text: string): Promise<string | null> => {
-              logger.debug(`app/api/chat/route.ts - Using Cloudflare Gemma model (${cloudflareGemmaTextModel}) for clientId: ${clientId}`);
-              return handleTextWithCloudflareGemmaTextModel({ userPrompt: text, textModel: cloudflareGemmaTextModel }, config);
-            };
-
-            botFunctions.push({
-              persona: 'Cloudflare ' + cloudflareGemmaTextModel,
-              valid: isValidConfig(config.cloudflareGemmaTextModel),
-              generate: async (currentContext: any[]) => {
-                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-
-                let finalPrompt = prompt;
-                // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Using Cloudflare Gemma model (${cloudflareGemmaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareGemmaTextModel, message: updatedPrompt })}\n\n`);
-                  finalPrompt = updatedPrompt;
-                }
-
-                // Update the last message in the context with the summarized version, if it's new
-                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
-                }
-                clientContexts.set(clientId, context);
-
-                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithCloudflareGemmaTextModel({ userPrompt: prompt ?? '', textModel: cloudflareGemmaTextModel }, config);
-              },
-            });
-          }
-
-          // Cloudflare Llama
-          if (isValidConfig(config.cloudflareLlamaTextModel) && validateEnvVars(['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'])) {
-            const cloudflareLlamaTextModel = config.cloudflareLlamaTextModel!;
-
-            const summarizeWithCloudflareLlama = async (text: string): Promise<string | null> => {
-              logger.debug(`app/api/chat/route.ts - Using Cloudflare Llama model (${cloudflareLlamaTextModel}) for clientId: ${clientId}`);
-              return handleTextWithCloudflareLlamaTextModel({ userPrompt: text, textModel: cloudflareLlamaTextModel }, config);
-            };
-
-            botFunctions.push({
-              persona: 'Cloudflare ' + cloudflareLlamaTextModel,
-              valid: isValidConfig(config.cloudflareLlamaTextModel),
-              generate: async (currentContext: any[]) => {
-                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-
-                let finalPrompt = prompt;
-                // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Using Cloudlare Llama model (${cloudflareLlamaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareLlamaTextModel, message: updatedPrompt })}\n\n`);
-                  finalPrompt = updatedPrompt;
-                }
-
-                // Update the last message in the context with the summarized version, if it's new
-                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
-                }
-                clientContexts.set(clientId, context);
-
-                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithCloudflareLlamaTextModel({ userPrompt: prompt ?? '', textModel: cloudflareLlamaTextModel }, config);
-              },
-            });
-          }
-
-          // Google Vertex Gemma
-          if (isValidConfig(config.googleVertexGemmaTextModel) && validateEnvVars(['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'])) {
-            const googleVertexGemmaTextModel = config.googleVertexGemmaTextModel!;
-
-            const summarizeWithGoogleVertexGemma = async (text: string): Promise<string | null> => {
-              logger.debug(`app/api/chat/route.ts - Using Google Vertex Gemma model (${googleVertexGemmaTextModel}) for clientId: ${clientId}`);
-              return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: text, textModel: googleVertexGemmaTextModel }, config);
-            };
-
-            botFunctions.push({
-              persona: 'Google Vertex ' + googleVertexGemmaTextModel,
-              valid: isValidConfig(config.googleVertexGemmaTextModel),
-              generate: async (currentContext: any[]) => {
-                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-
-                let finalPrompt = prompt;
-                // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Using Google Vertex Gemma model (${googleVertexGemmaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexGemmaTextModel, message: updatedPrompt })}\n\n`);
-                  finalPrompt = updatedPrompt;
-                }
-
-                // Update the last message in the context with the summarized version, if it's new
-                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
-                }
-                clientContexts.set(clientId, context);
-
-                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: prompt ?? '', textModel: googleVertexGemmaTextModel }, config);
-              },
-            });
-          }
-
-          // Google Vertex Llama
-          if (isValidConfig(config.googleVertexLlamaTextModel) && validateEnvVars(['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'])) {
-            const googleVertexLlamaTextModel = config.googleVertexLlamaTextModel!;
-
-            const summarizeWithGoogleVertexLlama = async (text: string): Promise<string | null> => {
-              logger.debug(`app/api/chat/route.ts - Using Google Vertex Llama model (${googleVertexLlamaTextModel}) for clientId: ${clientId}`);
-              return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: text, textModel: googleVertexLlamaTextModel }, config);
-            };
-
-            botFunctions.push({
-              persona: 'Google Vertex ' + googleVertexLlamaTextModel,
-              valid: isValidConfig(config.googleVertexLlamaTextModel),
-              generate: async (currentContext: any[]) => {
-                let prompt = clientPrompts.get(clientId) || config.systemPrompt;
-                prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
-
-                let finalPrompt = prompt;
-                // Use AsyncGenerator to send intermediate prompt results
-                for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Using Google Vertex Llama model (${googleVertexLlamaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
-                  controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexLlamaTextModel, message: updatedPrompt })}\n\n`);
-                  finalPrompt = updatedPrompt;
-                }
-
-                // Update the last message in the context with the summarized version, if it's new
-                if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                  context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
-                }
-                clientContexts.set(clientId, context);
-
-                clientPrompts.set(clientId, prompt ?? config.systemPrompt ?? '');
-                return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: prompt ?? '', textModel: googleVertexLlamaTextModel }, config);
-              },
-            });
-          }
+          addBotFunction(
+            'Google Vertex',
+            'googleVertexLlamaTextModel',
+            ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
+            handleTextWithGoogleVertexLlamaTextModel,
+            async (text: string) => {
+              return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: text, textModel: config.googleVertexLlamaTextModel }, config);
+            }
+          );
 
           async function processBots() {
             logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
 
-            const responses = await Promise.all(botFunctions.map((bot) => bot.generate(context)));
-
             let hasResponse = false;
 
-            for (let index = 0; index < responses.length; index++) {
-              const botResponse = responses[index]; // Renamed from 'response' to 'botResponse'
-              const botPersona = botFunctions[index].persona; // Define botPersona here
+            // Process each bot function sequentially
+            for (const bot of botFunctions) {
+              try {
+                const botResponse = await bot.generate(context);
+                const botPersona = bot.persona;
 
-              if (botResponse && typeof botResponse === 'string') {
-                logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
+                if (botResponse && typeof botResponse === 'string') {
+                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
-                controller.enqueue(
-                  `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
-                );
+                  controller.enqueue(
+                    `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                  );
 
-                context.push({ role: 'bot', content: botResponse, persona: botPersona });
-                hasResponse = true;
+                  // Update context with bot response
+                  context.push({ role: 'bot', content: botResponse, persona: botPersona });
+                  hasResponse = true;
+                }
+              } catch (error) {
+                logger.error(`app/api/chat/route.ts - Error in bot ${bot.persona} processing: ${error}`);
               }
             }
 
-            context = context.slice(-maxContextMessages); // Keep context within limits
+            // Trim context to maintain limits
+            context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
 
+            // Handle session timeout
             if (Date.now() - lastInteractionTimes.get(clientId)! > sessionTimeout) {
               clientContexts.delete(clientId);
               lastInteractionTimes.delete(clientId);
