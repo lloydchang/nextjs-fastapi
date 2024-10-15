@@ -29,6 +29,20 @@ const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
 /**
+ * Helper function to check if a configuration value is valid.
+ * @param value - The configuration value to validate.
+ * @returns True if valid, else false.
+ */
+function isValidConfig(value: any): boolean {
+  return (
+    typeof value === 'string' &&
+    value.trim() !== '' &&
+    value.trim().toLowerCase() !== 'undefined' &&
+    value.trim().toLowerCase() !== 'null'
+  );
+}
+
+/**
  * Handles POST requests to the chat API.
  * @param request - The incoming NextRequest.
  * @returns A NextResponse containing the streamed bot responses or an error.
