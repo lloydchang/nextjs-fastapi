@@ -19,7 +19,7 @@ export async function handleTextWithOllamaLlamaTextModel(
 
   // Validate required environment variables
   if (!validateEnvVars(['OLLAMA_LLAMA_ENDPOINT'])) {
-    // logger.silly('app/api/chat/controllers/OllamaLlamaController.ts - Missing required endpoint environment variable');
+    logger.warn('app/api/chat/controllers/OllamaLlamaController.ts - Missing required endpoint environment variable: OLLAMA_LLAMA_ENDPOINT');
     return '';
   }
 

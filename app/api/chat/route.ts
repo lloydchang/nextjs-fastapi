@@ -176,6 +176,10 @@ export async function POST(request: NextRequest) {
                     logger.debug(
                       `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`
                     );
+                    if (updatedPrompt.trim().length === 0) {
+                      logger.warn(`app/api/chat/route.ts - Updated prompt for clientId: ${clientId} is empty after management.`);
+                      continue; // Skip enqueueing empty prompts
+                    }
                     try {
                       controller.enqueue(
                         `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: updatedPrompt })}\n\n`
@@ -248,13 +252,13 @@ export async function POST(request: NextRequest) {
 
           /**
            * Processes all bot functions and streams their responses.
+           * Updated to run bot.generate concurrently and prevent duplicate enqueues.
            */
           async function processBots() {
             logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
 
-            let hasResponse = false;
-
-            for (const bot of botFunctions) {
+            // Process all bots concurrently
+            const botPromises = botFunctions.map(async (bot) => {
               try {
                 const botResponse = await bot.generate(context);
                 const botPersona = bot.persona;
@@ -262,27 +266,33 @@ export async function POST(request: NextRequest) {
                 if (botResponse && typeof botResponse === 'string') {
                   logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
-                  try {
+                  // Enqueue response only if it's not empty
+                  if (botResponse.trim().length > 0) {
                     controller.enqueue(
                       `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
                     );
-                  } catch (enqueueError) {
-                    logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
-                  }
 
-                  context.push({ role: 'bot', content: botResponse, persona: botPersona });
-                  hasResponse = true;
+                    context.push({ role: 'bot', content: botResponse, persona: botPersona });
+                    return true;
+                  }
                 }
+                return false;
               } catch (error) {
                 logger.error(`app/api/chat/route.ts - Error in bot ${bot.persona} processing: ${error}`);
+                return false;
               }
-            }
+            });
+
+            // Await all bot responses
+            const responses = await Promise.all(botPromises);
+            const hasResponse = responses.includes(true);
 
             context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
 
             // Handle session timeout
-            if (Date.now() - lastInteractionTimes.get(clientId)! > sessionTimeout) {
+            const lastInteraction = lastInteractionTimes.get(clientId) || 0;
+            if (Date.now() - lastInteraction > sessionTimeout) {
               clientContexts.delete(clientId);
               lastInteractionTimes.delete(clientId);
               logger.silly(`app/api/chat/route.ts - Session timed out for clientId: ${clientId}. Context reset.`);

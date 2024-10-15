@@ -17,9 +17,9 @@ export async function handleTextWithOllamaGemmaTextModel(
 ): Promise<string> {
   const { ollamaGemmaEndpoint } = getConfig();
 
-  // Validate required environment variables
-  if (!validateEnvVars(['OLLAMA_LLAMA_ENDPOINT'])) {
-    // logger.silly('app/api/chat/controllers/OllamaGemmaController.ts - Missing required endpoint environment variable');
+  // Corrected validation: ensure 'OLLAMA_GEMMA_ENDPOINT' is validated instead of 'OLLAMA_LLAMA_ENDPOINT'
+  if (!validateEnvVars(['OLLAMA_GEMMA_ENDPOINT'])) {
+    logger.warn('app/api/chat/controllers/OllamaGemmaController.ts - Missing required endpoint environment variable: OLLAMA_GEMMA_ENDPOINT');
     return '';
   }
 

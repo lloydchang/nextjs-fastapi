@@ -22,8 +22,10 @@ export async function* managePrompt(
 ): AsyncGenerator<string> {
   let currentPrompt = prompt;
   let lastYieldedPrompt = ''; // Track the last yielded prompt
+  let iteration = 0;
+  const MAX_ITERATIONS = 5; // Prevent excessive iterations
 
-  while (currentPrompt.length > maxLength) {
+  while (currentPrompt.length > maxLength && iteration < MAX_ITERATIONS) {
     // Calculate the excess length beyond maxLength
     const excessLength = currentPrompt.length - maxLength;
     const partToSummarize = currentPrompt.substring(0, excessLength);
@@ -34,10 +36,10 @@ export async function* managePrompt(
 
     if (summary && summary.length < partToSummarize.length) {
       // Replace only the summarized part without concatenating the remaining prompt
-      currentPrompt = summary;
+      currentPrompt = summary + currentPrompt.substring(excessLength);
 
       // Yield partial result to the caller only if it's different from the last yielded prompt
-      if (currentPrompt !== lastYieldedPrompt) {
+      if (currentPrompt !== lastYieldedPrompt && currentPrompt.trim().length > 0) {
         yield currentPrompt;
         lastYieldedPrompt = currentPrompt; // Update the last yielded prompt
       }
@@ -46,17 +48,22 @@ export async function* managePrompt(
       currentPrompt = truncatePrompt(currentPrompt, maxLength);
       logger.debug(`app/api/chat/utils/promptManager.ts - Prompt truncated for clientId: ${clientId}`);
 
-      // Yield truncated prompt only if it's different from the last yielded prompt
-      if (currentPrompt !== lastYieldedPrompt) {
+      // Yield truncated prompt only if it's different from the last yielded prompt and not empty
+      if (currentPrompt !== lastYieldedPrompt && currentPrompt.trim().length > 0) {
         yield currentPrompt; // Send the truncated prompt
         lastYieldedPrompt = currentPrompt; // Update the last yielded prompt
       }
       break;
     }
+
+    iteration += 1;
   }
 
-  // Yield the final prompt after all iterations are complete
-  if (currentPrompt !== lastYieldedPrompt) {
+  // Yield the final prompt after all iterations are complete, if not already yielded
+  if (currentPrompt !== lastYieldedPrompt && currentPrompt.trim().length > 0) {
     yield currentPrompt;
+  } else if (currentPrompt.trim().length === 0 && currentPrompt !== lastYieldedPrompt) {
+    logger.warn(`app/api/chat/utils/promptManager.ts - Final prompt for clientId: ${clientId} is empty.`);
+    yield ''; // Optionally yield an empty prompt or handle as needed
   }
 }

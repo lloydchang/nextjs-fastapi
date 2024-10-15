@@ -37,6 +37,12 @@ export async function generateFromOllamaLlama(params: { endpoint: string; prompt
     }
 
     const finalResponse = await parseStream(reader, { isSSE: false, doneSignal: 'done' });
+
+    if (finalResponse.trim().length === 0) {
+      logger.warn('app/api/chat/clients/OllamaLlamaClient.ts - Received empty response from Ollama Llama.');
+      return null;
+    }
+
     // logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Received final response from Ollama Llama: ${finalResponse}`);
 
     return finalResponse;
