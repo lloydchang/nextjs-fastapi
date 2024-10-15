@@ -45,7 +45,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     closeModal();
   };
 
-  const micButtonText = '🎤';
+  const micButtonText = isMicOn ? '🎤 On' : '🎤 Off'; // Updated button text based on state
   const eraseButtonText = '🗑️';
   const fullScreenButtonText = '⛶';
 
@@ -55,7 +55,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       <button
         type="button"
         onClick={toggleMic}
-        className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
+        className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`} // Fix: Applying styles based on isMicOn state
         aria-pressed={isMicOn}
         aria-label="Toggle Microphone"
       >

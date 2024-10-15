@@ -34,14 +34,8 @@ export const useMedia = (): UseMediaReturn => {
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-    console.log('Media State Updated:', mediaState);
-  }, [mediaState]);
-
   const startCam = useCallback(async () => {
-    if (mediaState.isCamOn) {
-      return;
-    }
+    if (mediaState.isCamOn) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
@@ -52,7 +46,6 @@ export const useMedia = (): UseMediaReturn => {
       }
     } catch (err) {
       console.error('Unable to access camera.', err);
-      alert('Unable to access camera.');
     }
   }, [mediaState.isCamOn]);
 
@@ -68,54 +61,35 @@ export const useMedia = (): UseMediaReturn => {
   }, []);
 
   const toggleMic = useCallback(async () => {
-    console.log('Toggling Mic. Current State:', mediaState.isMicOn);
     if (!mediaState.isMicOn) {
-      // Attempt to start microphone
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         if (audioRef.current) {
           audioRef.current.srcObject = stream;
           audioStreamRef.current = stream;
-          setMediaState((prev) => {
-            localStorage.setItem('isMicOn', 'true');
-            return { ...prev, isMicOn: true };
-          });
+          setMediaState((prev) => ({ ...prev, isMicOn: true }));
         }
       } catch (err) {
         console.error('Unable to access microphone.', err);
-        alert('Microphone access is required for speech recognition.');
       }
     } else {
-      // Stop microphone
       if (audioStreamRef.current) {
         audioStreamRef.current.getTracks().forEach((track) => track.stop());
         audioStreamRef.current = null;
       }
-      if (audioRef.current) {
-        audioRef.current.srcObject = null;
-      }
-      setMediaState((prev) => {
-        localStorage.setItem('isMicOn', 'false');
-        return { ...prev, isMicOn: false };
-      });
+      setMediaState((prev) => ({ ...prev, isMicOn: false }));
     }
   }, [mediaState.isMicOn]);
 
   const togglePip = useCallback(async () => {
     if (videoRef.current) {
-      try {
-        if (!mediaState.isCamOn) {
-          await startCam();
-        }
-        if (!mediaState.isPipOn) {
-          await videoRef.current.requestPictureInPicture();
-          setMediaState((prev) => ({ ...prev, isPipOn: true }));
-        } else {
-          await document.exitPictureInPicture();
-          setMediaState((prev) => ({ ...prev, isPipOn: false }));
-        }
-      } catch (err) {
-        console.error('Unable to toggle PiP mode.', err);
+      if (!mediaState.isCamOn) await startCam();
+      if (!mediaState.isPipOn) {
+        await videoRef.current.requestPictureInPicture();
+        setMediaState((prev) => ({ ...prev, isPipOn: true }));
+      } else {
+        await document.exitPictureInPicture();
+        setMediaState((prev) => ({ ...prev, isPipOn: false }));
       }
     }
   }, [mediaState.isCamOn, mediaState.isPipOn, startCam]);
@@ -123,37 +97,6 @@ export const useMedia = (): UseMediaReturn => {
   const toggleMem = useCallback(() => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
   }, []);
-
-  const stopMic = useCallback(() => {
-    if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach((track) => track.stop());
-      audioStreamRef.current = null;
-    }
-    if (audioRef.current) {
-      audioRef.current.srcObject = null;
-    }
-    setMediaState((prev) => ({ ...prev, isMicOn: false }));
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      stopCam();
-      stopMic();
-      if (mediaState.isPipOn) {
-        document.exitPictureInPicture().catch((err) => {
-          console.error('Error exiting PiP on cleanup.', err);
-        });
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const storedMicState = localStorage.getItem('isMicOn');
-    if (storedMicState === 'true') {
-      toggleMic(); // Initialize microphone based on stored state
-    }
-  }, [toggleMic]);
 
   return {
     mediaState,

@@ -102,6 +102,14 @@ const useSpeechRecognition = ({
     };
   }, [onSpeechResult, onInterimUpdate, startListening, stopListening, isMicOn]);
 
+  useEffect(() => {
+    if (isMicOn && !isListening) {
+      startListening();
+    } else if (!isMicOn && isListening) {
+      stopListening();
+    }
+  }, [isMicOn, isListening, startListening, stopListening]);
+
   return { isListening, startListening, stopListening };
 };
 
