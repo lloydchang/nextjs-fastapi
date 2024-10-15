@@ -14,6 +14,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
   const resultsCacheRef = useRef<SpeechRecognitionResult[]>([]);  // Cache for results
   const isRecognitionActiveRef = useRef<boolean>(false);  // Track if recognition is active
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // Timeout for restart delay
+  const retryCountRef = useRef<number>(0); // Track retry attempts for exponential backoff
 
   useEffect(() => {
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
@@ -25,11 +26,14 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
       // Handle recognition start
       recognitionRef.current.onstart = () => {
         isRecognitionActiveRef.current = true;
+        retryCountRef.current = 0; // Reset retry count on successful start
+        console.log('Speech recognition started.');
       };
 
       // Handle recognition end and potentially restart
       recognitionRef.current.onend = () => {
         isRecognitionActiveRef.current = false;
+        console.log('Speech recognition ended.');
         if (isMicOn) {
           restartRecognitionWithDelay();
         }
@@ -41,9 +45,12 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
         updateTranscript();
       };
 
-      // Handle errors
+      // Handle errors and attempt to restart with exponential backoff
       recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error', event.error);
+        console.error('Speech recognition error:', event.error);
+        if (isMicOn) {
+          restartRecognitionWithDelay(); // Restart on error
+        }
       };
     }
 
@@ -57,16 +64,22 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
     };
   }, [isMicOn, onSpeechResult]);
 
-  // Function to restart recognition safely with a delay
+  // Function to restart recognition safely with exponential backoff
   const restartRecognitionWithDelay = () => {
     if (restartTimeoutRef.current) {
       clearTimeout(restartTimeoutRef.current);
     }
+
+    // Exponential backoff logic
+    const delay = Math.min(1000 * 2 ** retryCountRef.current, 10000);  // Max delay of 10 seconds
+    retryCountRef.current += 1;
+
     restartTimeoutRef.current = setTimeout(() => {
       if (!isRecognitionActiveRef.current && recognitionRef.current) {
         recognitionRef.current.start();
+        retryCountRef.current = 0;  // Reset retry count on success
       }
-    }, 100);  // 100ms delay to prevent transient state errors
+    }, delay);
   };
 
   // Function to update the transcript with final and interim results
