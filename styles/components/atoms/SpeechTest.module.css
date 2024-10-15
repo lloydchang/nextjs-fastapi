@@ -1,0 +1,53 @@
+/* File: styles/components/atoms/SpeechTest.module.css */
+
+/* Base styles for the SpeechTest component */
+.speechTest {
+    padding: 20px;
+  }
+  
+  .speechTest.light {
+    background-color: white;
+    color: black;
+  }
+  
+  .speechTest.dark {
+    background-color: black;
+    color: white;
+  }
+  
+  .textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+  }
+  
+  .textarea.light {
+    background-color: white;
+    color: black;
+  }
+  
+  .textarea.dark {
+    background-color: white;
+    color: black;
+  }
+  
+  /* Define a class for the button instead of using the global button selector */
+  .toggleButton {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .toggleButton.light {
+    background-color: black;
+    color: white;
+  }
+  
+  .toggleButton.dark {
+    background-color: white;
+    color: black;
+  }
+  
