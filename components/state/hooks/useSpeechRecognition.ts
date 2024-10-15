@@ -15,22 +15,29 @@ const useSpeechRecognition = ({
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [isRecognitionActive, setIsRecognitionActive] = useState(false); // Add a flag to track recognition start
 
   const startListening = useCallback(() => {
-    if (!recognition || isListening) return; // Check if already listening to avoid re-starting
+    if (!recognition || isRecognitionActive) return; // Check if recognition is already active
 
-    recognition.start();
-    setIsListening(true);
-    console.log('Speech recognition started.');
-  }, [recognition, isListening]);
+    try {
+      recognition.start();
+      setIsListening(true);
+      setIsRecognitionActive(true); // Mark recognition as active
+      console.log('Speech recognition started.');
+    } catch (error) {
+      console.error('Failed to start recognition:', error);
+    }
+  }, [recognition, isRecognitionActive]);
 
   const stopListening = useCallback(() => {
-    if (!recognition || !isListening) return; // Only stop if currently listening
+    if (!recognition || !isRecognitionActive) return; // Only stop if recognition is active
 
     recognition.stop();
     setIsListening(false);
+    setIsRecognitionActive(false); // Mark recognition as inactive
     console.log('Speech recognition stopped.');
-  }, [recognition, isListening]);
+  }, [recognition, isRecognitionActive]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -70,6 +77,12 @@ const useSpeechRecognition = ({
     newRecognition.onend = () => {
       console.log('Speech recognition ended.');
       setIsListening(false);
+      setIsRecognitionActive(false); // Mark recognition as inactive
+    };
+
+    newRecognition.onstart = () => {
+      console.log('Speech recognition started.');
+      setIsRecognitionActive(true); // Mark recognition as active
     };
 
     setRecognition(newRecognition);
