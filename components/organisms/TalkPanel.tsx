@@ -142,7 +142,7 @@ const TalkPanel: React.FC = () => {
     }
 
     console.log(`TalkPanel - Sending transcript for talk: ${talk.title}`);
-    const sendTranscript = talk.transcript || 'Transcript not available';
+    const sendTranscript = talk.transcript || '';
     const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
 
     try {
@@ -166,17 +166,12 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  const throttledSendTranscriptForTalk = throttle((query: string, talk: Talk) => {
-    console.log(`TalkPanel - Throttled send for talk: ${talk.title}`);
-    sendTranscriptForTalk(query, talk);
-  }, 3000); // Throttle sending messages to once every 3 seconds
-
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - Sending first available transcript for query:', query);
     for (let i = 0; i < talks.length; i++) {
       try {
         console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
-        await throttledSendTranscriptForTalk(query, talks[i]);
+        await sendTranscriptForTalk(query, talks[i]);
         return;
       } catch (error) {
         console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
@@ -184,14 +179,6 @@ const TalkPanel: React.FC = () => {
     }
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
-
-  // Immediately send the first transcript
-  useEffect(() => {
-    if (searchQuery && selectedTalk) {
-      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title} immediately`);
-      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
-    }
-  }, [searchQuery, selectedTalk]);
 
   useEffect(() => {
     if (selectedTalk) {
@@ -206,7 +193,7 @@ const TalkPanel: React.FC = () => {
         scrollableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
+      sendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [selectedTalk]);
 
