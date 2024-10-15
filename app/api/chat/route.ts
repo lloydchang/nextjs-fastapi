@@ -17,6 +17,18 @@ import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types';
 
+// Define the specific type for summarizeFunction
+type SummarizeFunction = (text: string) => Promise<string | null>;
+
+// Define union type for textModelConfigKey
+type TextModelConfigKey =
+  | 'ollamaGemmaTextModel'
+  | 'ollamaLlamaTextModel'
+  | 'cloudflareGemmaTextModel'
+  | 'cloudflareLlamaTextModel'
+  | 'googleVertexGemmaTextModel'
+  | 'googleVertexLlamaTextModel';
+
 const config: AppConfig = getConfig();
 
 const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's default token limit of 2000
@@ -39,14 +51,12 @@ function isValidConfig(value: any): boolean {
   );
 }
 
-// Define union type for textModelConfigKey
-type TextModelConfigKey =
-  | 'ollamaGemmaTextModel'
-  | 'ollamaLlamaTextModel'
-  | 'cloudflareGemmaTextModel'
-  | 'cloudflareLlamaTextModel'
-  | 'googleVertexGemmaTextModel'
-  | 'googleVertexLlamaTextModel';
+// Define the BotFunction interface if not already defined
+export interface BotFunction {
+  persona: string;
+  valid: boolean;
+  generate: (currentContext: any[]) => Promise<string | null>;
+}
 
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
@@ -115,8 +125,8 @@ export async function POST(request: NextRequest) {
             personaPrefix: string,
             textModelConfigKey: TextModelConfigKey, // Use union type
             endpointEnvVars: string[],
-            handlerFunction: Function,
-            summarizeFunction: Function
+            handlerFunction: (input: { userPrompt: string; textModel: string }, config: AppConfig) => Promise<string | null>,
+            summarizeFunction: SummarizeFunction // Use specific type
           ) => {
             if (isValidConfig(config[textModelConfigKey]) && validateEnvVars(endpointEnvVars)) {
               const textModel = config[textModelConfigKey] || "defaultModel";
@@ -169,7 +179,7 @@ export async function POST(request: NextRequest) {
             'ollamaGemmaTextModel',
             ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
             handleTextWithOllamaGemmaTextModel,
-            async (text: string) => {
+            async (text: string): Promise<string | null> => {
               return handleTextWithOllamaGemmaTextModel(
                 { userPrompt: text, textModel: config.ollamaGemmaTextModel },
                 config
@@ -182,7 +192,7 @@ export async function POST(request: NextRequest) {
             'ollamaLlamaTextModel',
             ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
             handleTextWithOllamaLlamaTextModel,
-            async (text: string) => {
+            async (text: string): Promise<string | null> => {
               return handleTextWithOllamaLlamaTextModel(
                 { userPrompt: text, textModel: config.ollamaLlamaTextModel },
                 config
@@ -195,7 +205,7 @@ export async function POST(request: NextRequest) {
             'cloudflareGemmaTextModel',
             ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
             handleTextWithCloudflareGemmaTextModel,
-            async (text: string) => {
+            async (text: string): Promise<string | null> => {
               return handleTextWithCloudflareGemmaTextModel(
                 { userPrompt: text, textModel: config.cloudflareGemmaTextModel },
                 config
@@ -208,7 +218,7 @@ export async function POST(request: NextRequest) {
             'cloudflareLlamaTextModel',
             ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
             handleTextWithCloudflareLlamaTextModel,
-            async (text: string) => {
+            async (text: string): Promise<string | null> => {
               return handleTextWithCloudflareLlamaTextModel(
                 { userPrompt: text, textModel: config.cloudflareLlamaTextModel },
                 config
@@ -221,7 +231,7 @@ export async function POST(request: NextRequest) {
             'googleVertexGemmaTextModel',
             ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
             handleTextWithGoogleVertexGemmaTextModel,
-            async (text: string) => {
+            async (text: string): Promise<string | null> => {
               return handleTextWithGoogleVertexGemmaTextModel(
                 { userPrompt: text, textModel: config.googleVertexGemmaTextModel },
                 config
@@ -234,7 +244,7 @@ export async function POST(request: NextRequest) {
             'googleVertexLlamaTextModel',
             ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
             handleTextWithGoogleVertexLlamaTextModel,
-            async (text: string) => {
+            async (text: string): Promise<string | null> => {
               return handleTextWithGoogleVertexLlamaTextModel(
                 { userPrompt: text, textModel: config.googleVertexLlamaTextModel },
                 config
