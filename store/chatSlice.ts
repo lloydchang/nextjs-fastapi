@@ -202,6 +202,11 @@ export const sendMessage = (
 
 export function parseIncomingMessage(jsonString: string) {
   try {
+    // Ignore the "[DONE]" message
+    if (jsonString === '[DONE]') {
+      return null; // Returning null or similar to signal the end of the stream
+    }
+
     const sanitizedString = he.decode(jsonString);
     const parsedData = JSON.parse(sanitizedString);
 
