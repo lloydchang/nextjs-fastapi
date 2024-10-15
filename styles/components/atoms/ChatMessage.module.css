@@ -1,97 +1,90 @@
 /* File: styles/components/atoms/ChatMessage.module.css */
 
-/* Container for individual messages */
+/* --- Message Container --- */
 .messageContainer {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
-  position: relative; /* Ensure the container can control the absolute positioning of children */
+  position: relative; /* Controls absolute positioning of children */
 }
 
-/* Persona Label Styling */
+/* --- Persona Label Styling --- */
 .personaLabel {
   font-size: 0.85rem;
-  margin-bottom: 0px;
-  align-self: flex-start; /* Align persona label to the left */
-  border-radius: 8px 8px 0px 0px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
-  padding: 0px 4px; /* Optional: Adds some spacing inside the label */
+  margin-bottom: 0;
+  align-self: flex-start; /* Aligns persona label to the left */
+  border-radius: 8px 8px 0 0; /* Rounded corners for top */
+  padding: 0 4px; /* Adds some spacing inside the label */
 }
 
-/* New Hovered Persona Label Styling */
+/* Hovered Persona Label Styling */
 .personaLabelHovered {
   position: absolute;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   z-index: 10;
-  padding: 0px 4px;
-  background-color: #FFFFFF; /* Optional: background color */
-  color: #0000000; /* Optional: foreground color */
-  border-radius: 8px 8px 0px 0px;
+  padding: 0 4px;
+  background-color: #fff;
+  color: #000;
+  border-radius: 8px 8px 0 0;
   font-size: 0.85rem;
   display: block;
-  margin-bottom: 0px; /* Adds space below the persona label */
+  margin-bottom: 0;
 }
 
-/* User message styling */
+/* --- Message Alignment --- */
 .userMessage {
   align-items: flex-end;
 }
 
-/* Bot message styling */
 .botMessage {
   align-items: flex-start;
 }
 
-/* Interim message styling (e.g., typing indicators) */
+/* Interim message styling */
 .interim {
   opacity: 0.6;
   font-style: italic;
 }
 
-/* Message bubble styling */
+/* --- Message Bubble Styling --- */
 .text {
   padding: 8px 12px;
   border-radius: 8px;
   max-width: 100%;
   word-wrap: break-word;
-  color: #000000; /* Black text for readability */
+  color: #000; /* Black text */
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Add new hover style for message without moving other content */
+/* Hovered Text Styling */
 .textHovered {
   position: absolute;
-  top: calc(100% + 17px); /* Start below the persona label */
+  top: calc(100% + 17px);
   right: 0;
   z-index: 9;
-  background-color: #FFFFFF;
-  color: #000000;
-  padding: 12px 12px;
-  border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
+  background-color: #fff;
+  color: #000;
+  padding: 12px;
+  border-radius: 0 8px 8px 8px;
   max-width: 100%;
   word-wrap: break-word;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Adds a shadow for emphasis */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Shortened text styling */
-.text {
-  /* Existing styles remain unchanged */
-}
-
-/* Specific styles for user messages */
+/* --- Message-specific Styles --- */
 .userMessage .text {
-  background-color: #DCF8C6; /* Light green for user messages */
-  color: #000000; /* Black text */
+  background-color: #dcf8c6; /* Light green for user messages */
+  color: #000;
 }
 
-/* Specific styles for bot messages */
 .botMessage .text {
-  background-color: #000000;
-  color: #000000;
-  border-radius: 0px 8px 8px 8px; /* Adds rounded corners | top-left | top-right | bottom-right | bottom-left */
+  background-color: #000;
+  color: #000;
+  border-radius: 0 8px 8px 8px;
 }
 
-/* Markdown Element Styles */
+/* --- Markdown Elements Styling --- */
 
 /* Bold text */
 .text strong {
@@ -105,11 +98,11 @@
 
 /* Links */
 .text a {
-  color: #34B7F1; /* Blue for links */
+  color: #34b7f1; /* Blue for links */
 }
 
 .text a:hover {
-  color: #34B7F1; /* Blue for links */
+  color: #34b7f1;
 }
 
 /* Headers */
@@ -121,7 +114,7 @@
 .text h6 {
   margin: 0.5em 0;
   font-weight: bold;
-  color: #FFFFFF;
+  color: #fff;
 }
 
 /* Lists */
@@ -129,7 +122,7 @@
 .text ol {
   padding-left: 20px;
   margin: 0.5em 0;
-  color: #FFFFFF;
+  color: #fff;
 }
 
 /* Code blocks */
@@ -152,9 +145,9 @@
 
 /* Blockquotes */
 .text blockquote {
-  border-left: 4px solid #25D366; /* Green left border */
+  border-left: 4px solid #25d366; /* Green left border */
   padding-left: 10px;
-  color: #555555; /* Dark gray text */
+  color: #555; /* Dark gray text */
   margin: 0.5em 0;
 }
 
@@ -175,18 +168,18 @@
 
 .text th,
 .text td {
-  border: 1px solid #cccccc; /* Light border for tables */
+  border: 1px solid #ccc; /* Light border for tables */
   padding: 8px;
 }
 
 .text th {
-  background-color: #25D366; /* Green header background */
-  color: #ffffff; /* White text */
+  background-color: #25d366; /* Green header background */
+  color: #fff; /* White text */
   text-align: left;
 }
 
 .text td {
-  color: #FFFFFF; /* Black text for table cells */
+  color: #fff; /* White text for table cells */
 }
 
 /* Task Lists */
@@ -204,59 +197,57 @@
   margin-right: 8px;
 }
 
-/* Adjustments for dark mode compatibility */
+/* --- Dark Mode Adjustments --- */
 @media (prefers-color-scheme: dark) {
   .text {
-    color: #FFFFFF; /* Light gray text for dark mode */
+    color: #fff; /* Light text for dark mode */
   }
 
   .userMessage .text {
-    background-color: #005C4B; /* Dark green for user messages in dark mode */
-    color: #FFFFFF; /* Light gray text */
+    background-color: #005c4b; /* Dark green for user messages */
+    color: #fff;
   }
 
   .botMessage .text {
-    background-color: #000000; /* Black for bot messages in dark mode */
-    color: #FFFFFF; /* Light gray text */
+    background-color: #000; /* Black for bot messages */
+    color: #fff;
   }
 
   .personaLabel {
-    color: #8696A0; /* Adjusted gray color for persona labels in dark mode */
-    background-color: #000000;
+    color: #8696a0; /* Adjusted gray for persona labels */
+    background-color: #000;
   }
 
   .text a {
-    color: #53BDEB; /* Lighter blue for links in dark mode */
+    color: #53bdeb; /* Lighter blue for links */
   }
 
   .text a:hover {
-    color: #53BDEB; /* Lighter blue for links in dark mode */
+    color: #53bdeb;
   }
 
   .text pre,
   .text code {
-    background-color: #2A3942; /* Darker background for code in dark mode */
-    color: #FFFFFF; /* Light gray text */
+    background-color: #2a3942; /* Darker background for code */
+    color: #fff;
   }
 
   .text blockquote {
-    border-left-color: #00A884; /* Adjusted green for blockquotes in dark mode */
-    color: #8696A0; /* Grayish text for blockquotes in dark mode */
+    border-left-color: #00a884; /* Adjusted green for blockquotes */
+    color: #8696a0; /* Grayish text */
   }
 
   .text th {
-    background-color: #00A884; /* Adjusted green for table headers in dark mode */
-    color: #FFFFFF; /* Light gray text */
+    background-color: #00a884; /* Green for table headers */
+    color: #fff;
   }
 
   .text td {
-    color: #FFFFFF; /* Light gray text for table cells in dark mode */
+    color: #fff; /* Light text for table cells */
   }
 }
 
-/* --- New Full-Screen Modal Additions --- */
-
-/* Backdrop styling */
+/* --- Full-Screen Modal Styles --- */
 .modalBackdrop {
   position: fixed;
   top: 0;
@@ -264,124 +255,102 @@
   width: 110vw;
   height: 112vh;
   background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-  z-index: 999; /* High z-index to ensure it's above other elements */
+  z-index: 999;
   display: flex;
   justify-content: left;
   align-items: top;
 }
 
-/* Close button styling */
-.closeButton {
-  display: block;
-  margin: 20px auto 0;
-  padding: 10px 20px;
-  background: #0000000;
-  color: #fffffff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* Full-screen message modal */
 .fullScreenMessage {
-  background-color: #000000;
+  background-color: #000;
   border-radius: 8px;
   max-width: 100vw;
   max-height: 100vh;
-  overflow: auto; /* Enable scrolling if the message is long */
+  overflow: auto; /* Enable scrolling if necessary */
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1000; /* Ensure the modal is above the backdrop */
+  z-index: 1000;
 }
 
-/* Modal Header Styling */
 .modalHeader {
   display: flex;
   align-items: center;
   position: sticky;
   top: 0;
-  left: 0;
   width: 100%;
   background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
   z-index: 1001;
   padding: 8px;
 }
 
-/* Persona Label Styling inside the Modal */
 .modalPersonaLabel {
-  margin-right: 10px; /* Separate the label from the close button */
+  margin-right: 10px;
   padding: 4px 8px;
   border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.7); /* Transparent background to blend with the modal */
+  background-color: rgba(0, 0, 0, 0.7); /* Transparent background */
 }
 
-/* Close Button Styling */
 .modalCloseButton {
   padding: 4px 8px;
-  margin: 0;
-  background-color: #333; /* Darker button background */
-  color: #ffffff; /* White text */
+  background-color: #333;
+  color: #fff;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: 8px; /* Spacing between persona label and close button */
+  margin-left: 8px;
 }
 
 .modalCloseButton:hover {
-  background-color: #555; /* Lighter background on hover */
+  background-color: #555;
 }
 
-/* --- New: Full Screen Mode Styles --- */
+/* Full Screen Mode Styles */
 .fullScreenMode .text {
-  max-width: none; /* Remove width limit in Full Screen mode */
+  max-width: none; /* Remove width limit */
 }
 
-/* Add new hover style for message with inverted colors */
+/* Hovered Text with Inverted Colors */
 .textHovered {
   position: relative;
   top: 20px;
   right: 0;
   z-index: 9;
-  background-color: #000000; /* Inverted to black */
-  color: #FFFFFF; /* Inverted to white */
-  padding: 12px 12px;
-  border-radius: 0px 8px 8px 8px;
+  background-color: #000;
+  color: #fff;
+  padding: 12px;
+  border-radius: 0 8px 8px 8px;
   max-width: 100%;
   word-wrap: break-word;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Adds a shadow for emphasis */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Bold text */
+/* Inverted Hover Styles */
 .textHovered strong {
   font-weight: bold;
 }
 
-/* Italic text */
 .textHovered em {
   font-style: italic;
 }
 
-/* Links with inverted colors */
 .textHovered a {
-  color: #53BDEB; /* Lighter blue for links in inverted mode */
+  color: #53bdeb;
 }
 
 .textHovered a:hover {
-  text-decoration: underline; /* Ensure links are underlined */
+  text-decoration: underline;
 }
 
-/* Lists with inverted colors */
 .textHovered ul,
 .textHovered ol {
-  padding-left: 20px; /* Ensure proper list indentation */
+  padding-left: 20px;
   margin: 0.5em 0;
-  color: #000000; /* Ensure list items are white in the inverted background */
+  color: #000;
 }
 
-/* Code blocks with inverted colors */
 .textHovered pre {
-  background-color: #333333; /* Darker background for code blocks in inverted mode */
-  color: #000000; /* White text for code blocks */
+  background-color: #333;
+  color: #000;
   padding: 10px;
   border-radius: 5px;
   overflow-x: auto;
@@ -389,24 +358,21 @@
   margin: 0.5em 0;
 }
 
-/* Inline code with inverted colors */
 .textHovered code {
-  background-color: #AAAAAA; /* Darker background for inline code in inverted mode */
-  color: #000000; /* Black text for inline code */
+  background-color: #aaa;
+  color: #000;
   padding: 2px 4px;
   border-radius: 3px;
   font-family: 'Courier New', Courier, monospace;
 }
 
-/* Blockquotes with inverted colors */
 .textHovered blockquote {
-  border-left: 4px solid #25D366; /* Green left border */
+  border-left: 4px solid #25d366;
   padding-left: 10px;
-  color: #AAAAAA; /* Lighter gray for blockquote text in inverted mode */
+  color: #aaa;
   margin: 0.5em 0;
 }
 
-/* Responsive Images */
 .textHovered img {
   max-width: 100%;
   height: auto;
@@ -414,7 +380,6 @@
   margin: 10px 0;
 }
 
-/* Tables with inverted colors */
 .textHovered table {
   border-collapse: collapse;
   width: 100%;
@@ -423,21 +388,19 @@
 
 .textHovered th,
 .textHovered td {
-  border: 1px solid #666666; /* Light gray border for tables */
+  border: 1px solid #666;
   padding: 8px;
 }
 
 .textHovered th {
-  background-color: #25D366; /* Green header background */
-  color: #000000; /* Black text for header in inverted mode */
-  text-align: left;
+  background-color: #25d366;
+  color: #000;
 }
 
 .textHovered td {
-  color: #FFFFFF; /* White text for table cells */
+  color: #fff;
 }
 
-/* Task Lists with inverted colors */
 .textHovered ul.task-list {
   list-style: none;
   padding-left: 0;
@@ -455,35 +418,35 @@
 /* Dark mode compatibility for hover text */
 @media (prefers-color-scheme: dark) {
   .textHovered {
-    color: #000000; /* Inverse of the light text */
-    background-color: #FFFFFF; /* Inverted light background for dark mode */
+    color: #000;
+    background-color: #fff;
   }
 
   .textHovered a {
-    color: #34B7F1; /* Lighter blue for links in dark mode */
+    color: #34b7f1;
   }
 
   .textHovered a:hover {
-    color: #34B7F1;
+    color: #34b7f1;
   }
 
   .textHovered pre,
   .textHovered code {
-    background-color: #FFFFFF; /* Light background for code blocks and inline code */
-    color: #000000; /* Black text in code blocks */
+    background-color: #fff;
+    color: #000;
   }
 
   .textHovered blockquote {
-    border-left-color: #00A884; /* Green for blockquotes */
-    color: #000000; /* Dark text for blockquotes */
+    border-left-color: #00a884;
+    color: #000;
   }
 
   .textHovered th {
-    background-color: #00A884; /* Green header background */
-    color: #000000; /* Dark text */
+    background-color: #00a884;
+    color: #000;
   }
 
   .textHovered td {
-    color: #000000; /* Dark text for table cells */
+    color: #000;
   }
 }
