@@ -54,8 +54,16 @@ const TalkPanel: React.FC = () => {
     const uniqueTalks = processedData.filter(talk => !talks.some(existingTalk => existingTalk.title === talk.title));
 
     if (uniqueTalks.length > 0) {
+      // Update talks with unique entries
       dispatch(setTalks([...talks, ...uniqueTalks]));
-      dispatch(setSelectedTalk(uniqueTalks[0] || null));
+
+      // Ensure a selected talk is set if none is currently selected
+      if (!selectedTalk) {
+        dispatch(setSelectedTalk(uniqueTalks[0]));
+        console.log('TalkPanel - New selected talk:', uniqueTalks[0].title);
+      }
+
+      // Send the transcript for the first unique talk
       await sendFirstAvailableTranscript(query, uniqueTalks);
     } else {
       console.log('TalkPanel - No new unique talks found.');
