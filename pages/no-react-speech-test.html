@@ -43,8 +43,11 @@
         }
 
         // Update the DOM with final and interim results
-        finalResultsSpan.textContent = finalTranscript.trim();
-        interimResultsSpan.textContent = interimTranscript.trim();
+        finalResultsSpan.textContent += finalTranscript.trim();
+        interimResultsSpan.textContent = interimTranscript.trim(); // Keep updating interim
+
+        console.log('Interim:', interimTranscript);
+        console.log('Final:', finalTranscript);
       };
 
       recognition.onerror = (event) => {
@@ -60,6 +63,8 @@
         if (!isListening) {
           recognition.start();
           isListening = true;
+          interimResultsSpan.textContent = ''; // Clear interim results on new start
+          finalResultsSpan.textContent = ''; // Optional: Clear final results
           console.log('Speech recognition started.');
         }
       });
