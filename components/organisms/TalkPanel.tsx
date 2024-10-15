@@ -23,7 +23,6 @@ const TalkPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
   const isSearchInProgress = useRef(false);
   const initialRender = useRef(true);
-  const hasFetched = useRef(false);
   const hasSentMessage = useRef(new Set<string>());
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
@@ -37,7 +36,6 @@ const TalkPanel: React.FC = () => {
     if (initialRender.current) {
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
-      hasFetched.current = true;
       initialRender.current = false;
     } else {
       console.log('TalkPanel - Subsequent render detected, skipping search.');
@@ -54,10 +52,10 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - Shuffling talks for the first search query.');
     }
 
-    // Just dispatch all fetched talks without filtering for uniqueness
+    // Dispatch all fetched talks
     dispatch(setTalks([...talks, ...processedData]));
 
-    // Ensure a selected talk is set if none is currently selected
+    // Immediately set the first talk as selected if none is currently selected
     if (!selectedTalk && processedData.length > 0) {
       dispatch(setSelectedTalk(processedData[0])); // Select the first talk
       console.log('TalkPanel - New selected talk:', processedData[0].title);
@@ -187,15 +185,11 @@ const TalkPanel: React.FC = () => {
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
 
-  // Introduce delay before sending the first transcript
+  // Immediately send the first transcript
   useEffect(() => {
     if (searchQuery && selectedTalk) {
-      const timer = setTimeout(() => {
-        console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title} after 3 seconds delay`);
-        throttledSendTranscriptForTalk(searchQuery, selectedTalk);
-      }, 3000); // Wait 3 seconds before sending
-
-      return () => clearTimeout(timer); // Cleanup the timer if the component unmounts or dependencies change
+      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title} immediately`);
+      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [searchQuery, selectedTalk]);
 
