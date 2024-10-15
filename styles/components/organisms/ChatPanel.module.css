@@ -112,19 +112,6 @@
   overflow: hidden;
 }
 
-  /* Listening Indicator */
-  .listeningIndicator {
-    position: fixed; /* Change to fixed to keep it always in the same position on screen */
-    top: 50px; /* Adjust this value to control how high it appears */
-    left: 0px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 0px 00px;
-    border-radius: 0px;
-    z-index: 1000; /* High z-index to keep it above other elements */
-    font-size: 14px;
-  }
-
 .pulse {
   width: 10px;
   height: 10px;
@@ -190,18 +177,5 @@
     height: 50vh;
     padding: 0;
     max-height: none;
-  }
-
-  /* Listening Indicator */
-  .listeningIndicator {
-    position: fixed; /* Change to fixed to keep it always in the same position on screen */
-    top: 50px; /* Adjust this value to control how high it appears */
-    left: 0px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 0px 00px;
-    border-radius: 0px;
-    z-index: 1000; /* High z-index to keep it above other elements */
-    font-size: 14px;
   }
 }
