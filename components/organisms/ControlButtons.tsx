@@ -7,17 +7,18 @@ import Modal from 'components/atoms/Modal';
 interface ControlButtonsProps {
   isCamOn: boolean;
   isMicOn: boolean;
-  toggleMic: () => void;
-  startCam: () => void;
+  toggleMic: () => Promise<void>;
+  startCam: () => Promise<void>;
   stopCam: () => void;
   isPipOn: boolean;
-  togglePip: () => void;
+  togglePip: () => Promise<void>;
   isMemOn: boolean;
   toggleMem: () => void;
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean; // Rename this prop to match ChatInput.tsx
+  isListening: boolean; // New prop for listening state
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -33,7 +34,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   eraseMemory,
   isFullScreenOn,
   toggleFullScreen,
-  hasVisibleMessages, // Use the correct prop name here
+  hasVisibleMessages,
+  isListening, // New prop
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -45,8 +47,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     closeModal();
   };
 
-  // Simplified micButtonText
-  const micButtonText = '🎤';
+  // Mic button text with listening indicator
+  const micButtonText = isListening ? '🎤 Listening...' : '🎤';
   const eraseButtonText = '🗑️';
   const fullScreenButtonText = '⛶';
 
@@ -58,7 +60,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         onClick={toggleMic}
         className={`${styles.button} ${!isMicOn ? styles.startButton : styles.stopButton}`}
         aria-pressed={isMicOn}
-        aria-label={micButtonText}
+        aria-label="Toggle Microphone"
       >
         {micButtonText}
       </button>
@@ -68,8 +70,8 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         type="button"
         onClick={openModal}
         className={`${styles.button} ${styles.eraseButton}`}
-        aria-label={eraseButtonText}
-        disabled={!hasVisibleMessages} // Use the correct prop name here
+        aria-label="Erase Chat"
+        disabled={!hasVisibleMessages}
       >
         {eraseButtonText}
       </button>

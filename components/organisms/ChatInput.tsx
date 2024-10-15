@@ -10,17 +10,18 @@ interface ChatInputProps {
   handleChat: () => void;
   isCamOn: boolean;
   isMicOn: boolean;
-  toggleMic: () => void;
-  startCam: () => void;
+  toggleMic: () => Promise<void>;
+  startCam: () => Promise<void>;
   stopCam: () => void;
   isPipOn: boolean;
-  togglePip: () => void;
+  togglePip: () => Promise<void>;
   isMemOn: boolean;
   toggleMem: () => void;
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
-  hasVisibleMessages: boolean;  // New prop to track if there are visible messages
+  hasVisibleMessages: boolean; // New prop to track if there are visible messages
+  isListening: boolean; // New prop for listening state
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -39,7 +40,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   eraseMemory,
   isFullScreenOn,
   toggleFullScreen,
-  hasVisibleMessages,  // New prop
+  hasVisibleMessages,
+  isListening, // New prop
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -93,7 +95,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
             eraseMemory={eraseMemory}
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
-            hasVisibleMessages={hasVisibleMessages}  // Pass the prop to ControlButtons
+            hasVisibleMessages={hasVisibleMessages} // Pass the prop to ControlButtons
+            isListening={isListening} // Pass isListening to ControlButtons
           />
         </div>
       </div>

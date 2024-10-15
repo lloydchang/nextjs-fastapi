@@ -15,12 +15,11 @@ interface UseMediaReturn {
   audioRef: React.RefObject<HTMLAudioElement>;
   startCam: () => Promise<void>;
   stopCam: () => void;
-  toggleMic: () => void;
+  toggleMic: () => Promise<void>;
   togglePip: () => Promise<void>;
   toggleMem: () => void;
 }
 
-// Default media state
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
@@ -125,6 +124,18 @@ export const useMedia = (): UseMediaReturn => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
   }, []);
 
+  const stopMic = useCallback(() => {
+    if (audioStreamRef.current) {
+      audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.srcObject = null;
+    }
+    setMediaState((prev) => ({ ...prev, isMicOn: false }));
+    isMicOnRef.current = false;
+  }, []);
+
   useEffect(() => {
     return () => {
       stopCam();
@@ -136,18 +147,6 @@ export const useMedia = (): UseMediaReturn => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const stopMic = useCallback(() => {
-    if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach((track) => track.stop());
-      audioStreamRef.current = null;
-    }
-    if (audioRef.current) {
-      audioRef.current.srcObject = null;
-    }
-    setMediaState((prev) => ({ ...prev, isMicOn: false }));
-    isMicOnRef.current = false;
   }, []);
 
   return {

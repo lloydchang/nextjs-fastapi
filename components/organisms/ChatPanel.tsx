@@ -10,11 +10,11 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import BackgroundImage from 'public/images/TEDxSDG.webp';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
-import { useMedia } from 'components/state/hooks/useMedia';
+import useMedia from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
-import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition'; // Update the path accordingly
+import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition'; // Ensure correct path
 
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
@@ -87,7 +87,7 @@ const ChatPanel: React.FC = () => {
   }, []);
 
   // Initialize the Speech Recognition Hook
-  useSpeechRecognition({
+  const { isListening } = useSpeechRecognition({
     isMicOn: mediaState.isMicOn,
     onSpeechResult: handleSpeechResult,
     onInterimUpdate: handleInterimUpdate,
@@ -133,6 +133,7 @@ const ChatPanel: React.FC = () => {
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreen}
             hasVisibleMessages={hasVisibleMessages} // Pass down visible messages state
+            isListening={isListening} // Pass isListening to ChatInput
           />
         </div>
       </div>
