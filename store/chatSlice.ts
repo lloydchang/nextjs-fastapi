@@ -48,7 +48,7 @@ const chatSlice = createSlice({
 
 const { addMessage, setError, clearError } = chatSlice.actions;
 
-const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const debouncedApiCall = debounce(
   async (
@@ -132,8 +132,6 @@ const debouncedApiCall = debounce(
           await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
         }
-        // Uncomment the next line to dispatch error messages to the UI
-        // dispatch(setError('Max retries reached. Please try again later.'));
         return;
       }
     }
