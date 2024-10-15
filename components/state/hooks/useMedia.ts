@@ -1,4 +1,4 @@
-// File: hooks/useMedia.ts
+// File: components/state/hooks/useMedia.ts
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 
