@@ -197,6 +197,7 @@ const TalkPanel: React.FC = () => {
   return (
     <div className={styles.TalkPanel}>
       
+      {/* Iframe for the selected talk, now placed first */}
       {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
@@ -209,6 +210,7 @@ const TalkPanel: React.FC = () => {
         </div>
       )}
       
+      {/* Search bar section */}
       <div className={styles.searchContainer}>
         <div className={styles.searchInputWrapper}>
           <input
@@ -237,12 +239,14 @@ const TalkPanel: React.FC = () => {
         )}
       </div>
 
+      {/* Error message, if any */}
       {error && (
         <div className={styles.errorContainer}>
           <p className={styles.errorText}>{error}</p>
         </div>
       )}
 
+      {/* List of talks */}
       {talks.length > 0 && (
         <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
           <div className={styles.resultsContainer}>
