@@ -17,20 +17,20 @@ const useSpeechRecognition = ({
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   const startListening = useCallback(() => {
-    if (!recognition) return;
+    if (!recognition || isListening) return; // Check if already listening to avoid re-starting
 
     recognition.start();
     setIsListening(true);
     console.log('Speech recognition started.');
-  }, [recognition]);
+  }, [recognition, isListening]);
 
   const stopListening = useCallback(() => {
-    if (!recognition) return;
+    if (!recognition || !isListening) return; // Only stop if currently listening
 
     recognition.stop();
     setIsListening(false);
     console.log('Speech recognition stopped.');
-  }, [recognition]);
+  }, [recognition, isListening]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -75,7 +75,7 @@ const useSpeechRecognition = ({
     setRecognition(newRecognition);
 
     return () => {
-      newRecognition.abort();
+      newRecognition.abort(); // Clean up
     };
   }, [onSpeechResult, onInterimUpdate, stopListening]);
 
