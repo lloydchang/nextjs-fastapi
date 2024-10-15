@@ -1,7 +1,7 @@
 // File: components/atoms/SpeechTest.tsx
 
 import React, { useState, useCallback } from 'react';
-import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
+import TestSpeechRecognition from 'components/TestSpeechRecognition'; // Import TestSpeechRecognition component
 
 const SpeechTest: React.FC = () => {
   const [interim, setInterim] = useState<string>('');
@@ -17,16 +17,14 @@ const SpeechTest: React.FC = () => {
     setInterim(text);
   }, []);
 
-  const { isListening } = useSpeechRecognition({
-    isMicOn: true, // Automatically turn on mic for testing
-    onSpeechResult: handleFinal,
-    onInterimUpdate: handleInterim,
-  });
-
   return (
     <div>
       <h3>Speech Test</h3>
-      <p>Listening: {isListening ? 'Yes' : 'No'}</p>
+      <TestSpeechRecognition
+        isMicOn={true} // Automatically turn on mic for testing
+        onSpeechResult={handleFinal}
+        onInterimUpdate={handleInterim}
+      />
       <textarea
         value={interim}
         readOnly
