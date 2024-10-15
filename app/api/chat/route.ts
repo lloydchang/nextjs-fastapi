@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaGemma, clientId, ollamaGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
+                  logger.debug(`app/api/chat/route.ts - Using Ollama Gemma model (${ollamaGemmaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithOllamaLlama, clientId, ollamaLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
+                  logger.debug(`app/api/chat/route.ts - Using Ollama Llama model (${ollamaLlamaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Ollama ' + ollamaLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareGemma, clientId, cloudflareGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
+                  logger.debug(`app/api/chat/route.ts - Using Cloudflare Gemma model (${cloudflareGemmaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithCloudflareLlama, clientId, cloudflareLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
+                  logger.debug(`app/api/chat/route.ts - Using Cloudlare Llama model (${cloudflareLlamaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Cloudflare ' + cloudflareLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexGemma, clientId, googleVertexGemmaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
+                  logger.debug(`app/api/chat/route.ts - Using Google Vertex Gemma model (${googleVertexGemmaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexGemmaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
                 let finalPrompt = prompt;
                 // Use AsyncGenerator to send intermediate prompt results
                 for await (const updatedPrompt of managePrompt(prompt || '', MAX_PROMPT_LENGTH, summarizeWithGoogleVertexLlama, clientId, googleVertexLlamaTextModel)) {
-                  logger.debug(`app/api/chat/route.ts - Updated prompt: ${updatedPrompt}`);
+                  logger.debug(`app/api/chat/route.ts - Using Google Vertex Llama model (${googleVertexLlamaTextModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`);
                   controller.enqueue(`data: ${JSON.stringify({ persona: 'Google Vertex ' + googleVertexLlamaTextModel, message: updatedPrompt })}\n\n`);
                   finalPrompt = updatedPrompt;
                 }
