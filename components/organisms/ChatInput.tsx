@@ -22,7 +22,6 @@ interface ChatInputProps {
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean; // New prop to track if there are visible messages
   isListening: boolean; // New prop for listening state
-  interimSpeech: string; // New prop for interim speech
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -43,7 +42,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   toggleFullScreen,
   hasVisibleMessages,
   isListening,
-  interimSpeech,
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -74,13 +72,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           disabled={isListening} // Disable input while listening
         />
       </div>
-
-      {/* Display Interim Speech */}
-      {isListening && interimSpeech && (
-        <div className={styles.interimSpeech}>
-          <em>{interimSpeech}</em>
-        </div>
-      )}
 
       {/* Row with send button and control buttons */}
       <div className={styles.buttonRow}>

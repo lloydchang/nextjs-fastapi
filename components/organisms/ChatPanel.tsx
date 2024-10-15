@@ -12,6 +12,7 @@ import BackgroundImage from 'public/images/TEDxSDG.webp';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
 import useMedia from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
+import InterimSpeechInput from 'components/atoms/InterimSpeechInput'; // New Component
 import Tools from 'components/organisms/Tools';
 import { Message } from 'types';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition'; // Ensure correct path
@@ -82,7 +83,7 @@ const ChatPanel: React.FC = () => {
     (finalResult: string) => {
       console.log('ChatPanel - Speech recognized:', finalResult);
       if (finalResult.trim()) {
-        dispatch(sendMessage(finalResult.trim()));
+        dispatch(sendMessage({ text: finalResult.trim(), hidden: false }));
         console.log('ChatPanel - Final speech sent as message:', finalResult.trim());
       }
       setInterimSpeech(''); // Clear interim speech
@@ -125,8 +126,12 @@ const ChatPanel: React.FC = () => {
           <Tools />
         </div>
 
-        <div ref={scrollRef} className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
+        <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
+
+          {/* Interim Speech Input */}
+          <InterimSpeechInput interimSpeech={interimSpeech} />
+
           <ChatInput
             chatInput={chatInput}
             setChatInput={setChatInput}
@@ -145,7 +150,6 @@ const ChatPanel: React.FC = () => {
             toggleFullScreen={toggleFullScreenMode}
             hasVisibleMessages={hasVisibleMessages} // Pass down visible messages state
             isListening={isListening} // Pass isListening to ChatInput
-            interimSpeech={interimSpeech} // Pass interim speech to ChatInput
           />
         </div>
       </div>

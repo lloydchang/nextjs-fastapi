@@ -1,0 +1,17 @@
+/* File: styles/components/atoms/InterimSpeechInput.module.css */
+
+.interimContainer {
+    margin: 10px 0;
+  }
+  
+  .interimTextarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px dashed #888;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    resize: none;
+    font-style: italic;
+    color: #555;
+  }
+  
