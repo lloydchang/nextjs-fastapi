@@ -8,7 +8,7 @@ const rateLimitMap = new Map<string, { count: number; firstRequestTime: number }
 const abortControllerMap = new Map<string, AbortController>();
 
 // Function to check if a client is rate-limited or abort a previous request
-export function checkeRateLimit(clientId: string): { limited: boolean; retryAfter?: number; controller?: AbortController } {
+export function checkRateLimit(clientId: string): { limited: boolean; retryAfter?: number; controller?: AbortController } {
   const now = Date.now();
   const rateInfo = rateLimitMap.get(clientId);
 
