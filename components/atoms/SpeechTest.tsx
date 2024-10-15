@@ -6,11 +6,12 @@ import styles from 'styles/components/atoms/SpeechTest.module.css';
 
 interface SpeechTestProps {
   isMicOn: boolean;
+  toggleMic: () => Promise<void>; // Add toggleMic to control the microphone state
   onSpeechResult: (finalResult: string) => void;
   onInterimUpdate: (interimResult: string) => void;
 }
 
-const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInterimUpdate }) => {
+const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechResult, onInterimUpdate }) => {
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -62,7 +63,12 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
     }
   }, [finalResult]);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
+    if (!isMicOn) {
+      console.log('Microphone is off, turning it on.');
+      await toggleMic(); // Turn the mic on if it's off
+    }
+
     if (isListening) {
       stopListening();
     } else {
