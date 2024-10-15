@@ -27,6 +27,7 @@ const TalkPanel: React.FC = () => {
   const hasSentMessage = useRef(new Set<string>()); // Track sent messages to avoid re-sending
   const lastDispatchedTalkId = useRef<string | null>(null); // Track the last dispatched talk ID
   const isMounted = useRef(false); // Track if component is mounted
+  const isFirstSearch = useRef(true); // **New Ref to track the first search**
 
   useEffect(() => {
     // This block ensures that nothing happens on the very first render
@@ -52,9 +53,18 @@ const TalkPanel: React.FC = () => {
   // Handle search results
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
-    dispatch(setTalks(data));
-    dispatch(setSelectedTalk(data[0] || null));
-    await sendFirstAvailableTranscript(query, data);
+
+    let processedData = data;
+
+    if (isFirstSearch.current) {
+      processedData = shuffleArray(data);
+      isFirstSearch.current = false;
+      console.log('TalkPanel - Shuffling talks for the first search query.');
+    }
+
+    dispatch(setTalks(processedData));
+    dispatch(setSelectedTalk(processedData[0] || null));
+    await sendFirstAvailableTranscript(query, processedData);
   };
 
   // Utility function to wait
