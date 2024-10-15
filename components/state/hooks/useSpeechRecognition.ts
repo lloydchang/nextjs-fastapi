@@ -16,9 +16,10 @@ const useSpeechRecognition = ({
   const [isListening, setIsListening] = useState<boolean>(false); // Tracks whether the mic is currently listening
   const recognitionRef = useRef<SpeechRecognition | null>(null); // Ref to hold the SpeechRecognition instance
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to manage restart timeouts
+  const isManuallyStoppedRef = useRef<boolean>(false); // Tracks if recognition was stopped manually to prevent auto-restart
 
   const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening) {
+    if (recognitionRef.current && !isListening && !isManuallyStoppedRef.current) {
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -31,6 +32,7 @@ const useSpeechRecognition = ({
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
+      isManuallyStoppedRef.current = true; // Mark as manually stopped
       recognitionRef.current.stop();
       setIsListening(false);
       console.log('Speech recognition stopped.');
@@ -84,8 +86,9 @@ const useSpeechRecognition = ({
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
+            isManuallyStoppedRef.current = false; // Allow auto-restart again
             startListening();
-          }, 1000); // Restart after a 1-second delay
+          }, 3000); // Increased the restart delay to 3 seconds for smoother transition
         }
       };
 
@@ -93,14 +96,14 @@ const useSpeechRecognition = ({
         console.log('Speech recognition ended.');
         setIsListening(false);
 
-        // Automatically restart recognition when it ends, if the mic is still on
-        if (isMicOn) {
+        // Automatically restart recognition when it ends, if the mic is still on and it wasn't manually stopped
+        if (isMicOn && !isManuallyStoppedRef.current) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // Restart after a 1-second delay
+          }, 3000); // Increased the restart delay to 3 seconds for smoother transition
         }
       };
 
