@@ -270,7 +270,7 @@
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   z-index: 1000;
-  justify-content: left;
+  justify-content: right;
 }
 
 .modalHeader {
@@ -282,7 +282,7 @@
   background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
   z-index: 1001;
   padding: 8px;
-  justify-content: left;
+  justify-content: right;
 }
 
 .modalPersonaLabel {
@@ -290,7 +290,7 @@
   padding: 4px 8px;
   border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.7); /* Transparent background */
-  justify-content: left;
+  justify-content: right;
 }
 
 .modalCloseButton {
@@ -301,18 +301,18 @@
   border-radius: 4px;
   cursor: pointer;
   margin-left: 8px;
-  justify-content: left;
+  justify-content: right;
 }
 
 .modalCloseButton:hover {
   background-color: #555;
-  justify-content: left;
+  justify-content: right;
 }
 
 /* Full Screen Mode Styles */
 .fullScreenMode .text {
   max-width: none; /* Remove width limit */
-  justify-content: left;
+  justify-content: right;
 }
 
 /* Hovered Text with Inverted Colors */
@@ -470,7 +470,7 @@
     background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
     z-index: 999;
     display: flex;
-    justify-content: left;
+    justify-content: right;
     align-items: top;
   }
 
@@ -483,7 +483,7 @@
     padding: 20px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    justify-content: left;
+    justify-content: right;
   }
 
   .modalHeader {
@@ -496,7 +496,7 @@
     background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
     z-index: 1001;
     padding: 8px;
-    justify-content: left;
+    justify-content: right;
   }
 
   .modalPersonaLabel {
@@ -505,7 +505,7 @@
     padding: 4px 8px;
     border-radius: 8px;
     background-color: rgba(0, 0, 0, 0.7); /* Transparent background */
-    justify-content: left;
+    justify-content: right;
   }
 
   .modalCloseButton {
@@ -517,18 +517,18 @@
     border-radius: 4px;
     cursor: pointer;
     margin-left: 8px;
-    justify-content: left;
+    justify-content: right;
   }
 
   .modalCloseButton:hover {
     max-width: 50vw;
     background-color: #555;
-    justify-content: left;
+    justify-content: right;
   }
 
   /* Full Screen Mode Styles */
   .fullScreenMode .text {
     max-width: 50vw;
-    justify-content: left;
+    justify-content: right;
   }
 }
