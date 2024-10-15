@@ -54,7 +54,15 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - Shuffling talks for the first search query.');
     }
 
-    const uniqueTalks = processedData.filter(talk => !talks.some(existingTalk => existingTalk.title === talk.title));
+    const uniqueTalks = processedData.filter(talk => {
+      const isUnique = !talks.some(existingTalk => existingTalk.title === talk.title);
+      if (!isUnique) {
+        console.log(`TalkPanel - Talk already exists: ${talk.title}`);
+      }
+      return isUnique;
+    });
+
+    console.log('TalkPanel - Unique talks found:', uniqueTalks);
 
     if (uniqueTalks.length > 0) {
       // Update talks with unique entries
@@ -62,7 +70,7 @@ const TalkPanel: React.FC = () => {
 
       // Ensure a selected talk is set if none is currently selected
       if (!selectedTalk) {
-        dispatch(setSelectedTalk(uniqueTalks[0]));
+        dispatch(setSelectedTalk(uniqueTalks[0])); // Select the first unique talk
         console.log('TalkPanel - New selected talk:', uniqueTalks[0].title);
       }
 
