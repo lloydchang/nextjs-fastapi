@@ -28,53 +28,18 @@ const TalkPanel: React.FC = () => {
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
 
-  // Cache handling
-  const isCacheLoaded = useRef(false);
-
   useEffect(() => {
     if (initialRender.current) {
-      // Skip actions on initial render (due to React strict mode)
-      console.log('TalkPanel - Skipping actions during initial render.');
-      initialRender.current = false;
-      return;
-    }
-
-    // Check if cached talks are available and load them
-    if (!isCacheLoaded.current && cachedTalkAvailable()) {
-      console.log('TalkPanel - Using cached talks.');
-      loadCachedTalk();
-      isCacheLoaded.current = true;
-      return;
-    }
-
-    // Perform search if no cache is available
-    if (!isCacheLoaded.current) {
-      console.log('TalkPanel - Performing search:', searchQuery);
+      // Perform the search on the first render
+      console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
-      hasFetched.current = true;
-    }
-  }, []);
-
-  const cachedTalkAvailable = (): boolean => {
-    const cachedTalk = getCachedTalk();
-    return !!cachedTalk;
-  };
-
-  const loadCachedTalk = () => {
-    const cachedData = getCachedTalk();
-    if (cachedData && cachedData.selectedTalk) {  // Ensure selectedTalk is not null
-      dispatch(setTalks([cachedData.selectedTalk]));
-      dispatch(setSelectedTalk(cachedData.selectedTalk));
-      console.log('TalkPanel - Cached talk loaded:', cachedData.selectedTalk);
+      hasFetched.current = true; // Set fetched flag to true after the first search is made
+      initialRender.current = false; // Set to false after the first search is done
     } else {
-      console.log('TalkPanel - No valid cached talk found.');
+      // Skip actions for subsequent renders
+      console.log('TalkPanel - Subsequent render detected, skipping search.');
     }
-  }; 
-
-  const getCachedTalk = (): { talks: Talk[]; selectedTalk: Talk | null } | null => {
-    const cachedData = localStorage.getItem('cachedTalk');
-    return cachedData ? JSON.parse(cachedData) : null;
-  };
+  }, []); // No dependencies, runs only on mount  
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
@@ -96,6 +61,8 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - No new unique talks found.');
     }
   };
+
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const performSearchWithExponentialBackoff = async (query: string) => {
     if (isSearchInProgress.current) {
@@ -137,7 +104,7 @@ const TalkPanel: React.FC = () => {
         if (retryCount < maxRetries) {
           const delay = Math.pow(2, retryCount) * 1000;
           console.log(`TalkPanel - Retrying in ${delay / 1000} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await wait(delay);
         } else {
           dispatch(setError('Failed to fetch talks after multiple attempts.'));
           dispatch(setLoading(false));
@@ -147,65 +114,41 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  return (
-    <div className={styles.TalkPanel}>
-      <div className={styles.searchContainer}>
-        <div className={styles.searchInputWrapper}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') performSearchWithExponentialBackoff(searchQuery); }}
-            className={styles.searchInput}
-          />
-          {loading && <LoadingSpinner />}
-        </div>
-        <button
-          onClick={() => performSearchWithExponentialBackoff(searchQuery)}
-          className={`${styles.button} ${styles.searchButton}`}
-          disabled={loading}
-        >
-          Search
-        </button>
-        <button onClick={() => shuffleTalks()} className={`${styles.button} ${styles.shuffleButton}`}>
-          Shuffle
-        </button>
-        {selectedTalk && (
-          <button onClick={() => window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank')} className={`${styles.button} ${styles.tedButton}`}>
-            Transcript
-          </button>
-        )}
-      </div>
+  // Handle input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
-      {error && (
-        <div className={styles.errorContainer}>
-          <p className={styles.errorText}>{error}</p>
-        </div>
-      )}
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      performSearchWithExponentialBackoff(searchQuery);
+    }
+  };
 
-      {selectedTalk && (
-        <div className={styles.nowPlaying}>
-          <iframe
-            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            className={styles.videoFrame}
-          />
-        </div>
-      )}
+  // Send transcript for a selected talk
+  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
+    console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
+    console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
+    console.log('HasSentMessage set:', [...hasSentMessage.current]);
 
-      {talks.length > 0 && (
-        <div className={styles.scrollableContainer}>
-          <div className={styles.resultsContainer}>
-            {talks.map((talk, index) => (
-              <TalkItem key={index} talk={talk} />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+    if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
+      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
+      return;
+    }
 
-export default React.memo(TalkPanel);
+    console.log(`TalkPanel - Sending transcript for talk: ${talk.title}`);
+    const sendTranscript = talk.transcript || 'Transcript not available';
+    const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+
+    try {
+      const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+      console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
+      dispatch(setSelectedTalk(talk));
+      lastDispatchedTalkId.current = talk.title; 
+      hasSentMessage.current.add(talk.title); 
+      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
+      console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
+    } catch (dispatchError) {
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000;
+        console.error(`TalkPanel - Error 
