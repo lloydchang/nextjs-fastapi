@@ -1,6 +1,6 @@
 // File: components/state/hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
@@ -14,37 +14,23 @@ const useSpeechRecognition = ({
   isMicOn = false,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const restartTimeoutRef = useRef<number | null>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
-  const startListening = useCallback(async () => {
-    if (restartTimeoutRef.current) {
-      clearTimeout(restartTimeoutRef.current);
-      restartTimeoutRef.current = null;
-    }
+  const startListening = useCallback(() => {
+    if (!recognition) return;
 
-    try {
-      if (isMicOn) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-
-      if (recognitionRef.current && !isListening) {
-        recognitionRef.current.start();
-        setIsListening(true);
-        console.log('Speech recognition started.');
-      }
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-    }
-  }, [isListening, isMicOn]);
+    recognition.start();
+    setIsListening(true);
+    console.log('Speech recognition started.');
+  }, [recognition]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-      console.log('Speech recognition stopped.');
-    }
-  }, [isListening]);
+    if (!recognition) return;
+
+    recognition.stop();
+    setIsListening(false);
+    console.log('Speech recognition stopped.');
+  }, [recognition]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -78,29 +64,20 @@ const useSpeechRecognition = ({
       console.error('Speech recognition error:', event.error);
       if (event.error !== 'no-speech') {
         stopListening();
-        restartTimeoutRef.current = window.setTimeout(startListening, 1000);
       }
     };
 
     newRecognition.onend = () => {
       console.log('Speech recognition ended.');
       setIsListening(false);
-      restartTimeoutRef.current = window.setTimeout(startListening, 1000);
     };
 
-    recognitionRef.current = newRecognition;
-
-    if (isMicOn) {
-      startListening();
-    }
+    setRecognition(newRecognition);
 
     return () => {
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-      }
-      stopListening();
+      newRecognition.abort();
     };
-  }, [onSpeechResult, onInterimUpdate, startListening, stopListening, isMicOn]);
+  }, [onSpeechResult, onInterimUpdate, stopListening]);
 
   useEffect(() => {
     if (isMicOn && !isListening) {

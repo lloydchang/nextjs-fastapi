@@ -17,14 +17,14 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
 
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
-    setFinalResult(prev => prev + ' ' + text);
-    onSpeechResult(text); // Pass the result to the parent
+    setFinalResult((prev) => prev + ' ' + text);
+    onSpeechResult(text); // Pass the result to the parent component
   }, [onSpeechResult]);
 
   const handleInterim = useCallback((text: string) => {
     console.log('Interim Speech:', text);
     setInterimResult(text);
-    onInterimUpdate(text); // Pass the interim result to the parent
+    onInterimUpdate(text); // Pass the interim result to the parent component
   }, [onInterimUpdate]);
 
   const { isListening, startListening, stopListening } = useSpeechRecognition({
@@ -34,6 +34,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
   });
 
   useEffect(() => {
+    // Automatically start or stop listening based on the microphone state
     if (isMicOn && !isListening) {
       startListening();
     } else if (!isMicOn && isListening) {

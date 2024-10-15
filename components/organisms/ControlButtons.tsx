@@ -7,7 +7,7 @@ import Modal from 'components/atoms/Modal';
 interface ControlButtonsProps {
   isCamOn: boolean;
   isMicOn: boolean;
-  toggleMic: () => Promise<void>; // Updated to return Promise<void>
+  toggleMic: () => Promise<void>;
   startCam: () => Promise<void>;
   stopCam: () => void;
   isPipOn: boolean;
@@ -18,6 +18,7 @@ interface ControlButtonsProps {
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean;
+  isListening: boolean; // New prop to indicate if speech recognition is listening
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -34,6 +35,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
+  isListening,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -45,7 +47,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     closeModal();
   };
 
-  const micButtonText = isMicOn ? '🎤 On' : '🎤 Off'; // Updated button text based on state
+  const micButtonText = '🎤'; // Use only the emoji for mic button text
   const eraseButtonText = '🗑️';
   const fullScreenButtonText = '⛶';
 
@@ -55,9 +57,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       <button
         type="button"
         onClick={toggleMic}
-        className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`} // Fix: Applying styles based on isMicOn state
+        className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`} // Apply styles based on isMicOn state
         aria-pressed={isMicOn}
         aria-label="Toggle Microphone"
+        disabled={isListening} // Disable button while speech recognition is listening
       >
         {micButtonText}
       </button>
