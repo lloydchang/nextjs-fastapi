@@ -1,5 +1,3 @@
-// File: components/state/hooks/useSpeechRecognition.ts
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UseSpeechRecognitionProps {
@@ -15,30 +13,26 @@ const useSpeechRecognition = ({
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const isRecognitionActive = useRef<boolean>(false); // New state to track active status
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening && !isRecognitionActive.current) {
+    if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
         setIsListening(true);
-        isRecognitionActive.current = true;
         console.log('Speech recognition started.');
       } catch (err) {
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, [isListening]);
+  }, []);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening && isRecognitionActive.current) {
+    if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
-      isRecognitionActive.current = false;
       console.log('Speech recognition stopped.');
     }
-  }, [isListening]);
+  }, []);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -64,12 +58,12 @@ const useSpeechRecognition = ({
         }
 
         if (finalTranscript) {
-          console.log('SpeechRecognition - Final Transcript:', finalTranscript);
+          console.log('Final Transcript:', finalTranscript);
           onSpeechResult(finalTranscript.trim());
         }
 
         if (interimTranscript) {
-          console.log('SpeechRecognition - Interim Transcript:', interimTranscript);
+          console.log('Interim Transcript:', interimTranscript);
           onInterimUpdate(interimTranscript.trim());
         }
       };
@@ -77,30 +71,13 @@ const useSpeechRecognition = ({
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-        isRecognitionActive.current = false; // Ensure recognition is marked as stopped
-
-        if (isMicOn) {
-          if (restartTimeoutRef.current) {
-            clearTimeout(restartTimeoutRef.current);
-          }
-          restartTimeoutRef.current = setTimeout(() => {
-            startListening();
-          }, 1000);
-        }
       };
 
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         setIsListening(false);
-        isRecognitionActive.current = false; // Ensure recognition is marked as stopped
-
         if (isMicOn) {
-          if (restartTimeoutRef.current) {
-            clearTimeout(restartTimeoutRef.current);
-          }
-          restartTimeoutRef.current = setTimeout(() => {
-            startListening();
-          }, 1000);
+          recognition.start(); // Restart if mic is on
         }
       };
 
@@ -111,33 +88,20 @@ const useSpeechRecognition = ({
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.onend = null;
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.abort();
+        recognitionRef.current.stop();
         recognitionRef.current = null;
       }
       setIsListening(false);
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-      }
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate]);
 
-  // Ensure consistent start/stop logic
   useEffect(() => {
-    if (isMicOn && !isListening && !isRecognitionActive.current) {
+    if (isMicOn) {
       startListening();
-    } else if (!isMicOn && isListening && isRecognitionActive.current) {
+    } else {
       stopListening();
     }
-
-    return () => {
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-      }
-    };
-  }, [isMicOn, startListening, stopListening, isListening]);
+  }, [isMicOn, startListening, stopListening]);
 
   return { isListening };
 };
