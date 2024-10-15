@@ -18,7 +18,6 @@ interface ControlButtonsProps {
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean;
-  isListening: boolean; // New prop for listening state
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -35,7 +34,6 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
-  isListening, // New prop
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -47,8 +45,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     closeModal();
   };
 
-  // Mic button text with listening indicator
-  const micButtonText = isListening ? '🎤 Listening...' : '🎤';
+  const micButtonText = '🎤';
   const eraseButtonText = '🗑️';
   const fullScreenButtonText = '⛶';
 
