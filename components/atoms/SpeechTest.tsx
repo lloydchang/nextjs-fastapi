@@ -14,7 +14,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  
+
   const interimRef = useRef<HTMLTextAreaElement>(null); // Ref to track interim textarea
   const finalRef = useRef<HTMLTextAreaElement>(null); // Ref to track final textarea
 
@@ -34,6 +34,10 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
     isMicOn,
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
+    onEnd: () => {
+      console.log('Clearing final result on recognition end.');
+      setFinalResult(''); // Clear final result when recognition ends
+    },
   });
 
   useEffect(() => {

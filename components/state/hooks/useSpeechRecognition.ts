@@ -6,12 +6,14 @@ interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
   isMicOn?: boolean;
+  onEnd?: () => void; // Add onEnd callback to the props
 }
 
 const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
   isMicOn = false,
+  onEnd, // Handle onEnd callback
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
@@ -78,6 +80,7 @@ const useSpeechRecognition = ({
       console.log('Speech recognition ended.');
       setIsListening(false);
       setIsRecognitionActive(false); // Mark recognition as inactive
+      if (onEnd) onEnd(); // Trigger the onEnd callback if provided
     };
 
     newRecognition.onstart = () => {
@@ -90,7 +93,7 @@ const useSpeechRecognition = ({
     return () => {
       newRecognition.abort(); // Clean up
     };
-  }, [onSpeechResult, onInterimUpdate, stopListening]);
+  }, [onSpeechResult, onInterimUpdate, stopListening, onEnd]);
 
   useEffect(() => {
     if (isMicOn && !isListening) {
