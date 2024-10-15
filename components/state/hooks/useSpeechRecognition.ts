@@ -13,9 +13,9 @@ const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
 }: UseSpeechRecognitionProps) => {
-  const [isListening, setIsListening] = useState<boolean>(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isListening, setIsListening] = useState<boolean>(false); // Tracks whether the mic is currently listening
+  const recognitionRef = useRef<SpeechRecognition | null>(null); // Ref to hold the SpeechRecognition instance
+  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to manage restart timeouts
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
@@ -51,6 +51,7 @@ const useSpeechRecognition = ({
         let interimTranscript = '';
         let finalTranscript = '';
 
+        // Collect the interim and final results from the event
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           const transcript = event.results[i][0].transcript.trim();
           if (event.results[i].isFinal) {
@@ -60,11 +61,13 @@ const useSpeechRecognition = ({
           }
         }
 
+        // Pass final results to the provided callback
         if (finalTranscript) {
           console.log('Final Transcript:', finalTranscript);
           onSpeechResult(finalTranscript.trim());
         }
 
+        // Pass interim results to the provided callback
         if (interimTranscript) {
           console.log('Interim Transcript:', interimTranscript);
           onInterimUpdate(interimTranscript.trim());
@@ -75,14 +78,14 @@ const useSpeechRecognition = ({
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
 
-        // Restart recognition after error if mic is still on
+        // Automatically restart recognition after error if mic is still on
         if (isMicOn) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // 1-second delay before restarting
+          }, 1000); // Restart after a 1-second delay
         }
       };
 
@@ -90,22 +93,24 @@ const useSpeechRecognition = ({
         console.log('Speech recognition ended.');
         setIsListening(false);
 
-        // Restart recognition after it ends, if the mic is still on
+        // Automatically restart recognition when it ends, if the mic is still on
         if (isMicOn) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // 1-second delay before restarting
+          }, 1000); // Restart after a 1-second delay
         }
       };
 
+      // Store the recognition instance in the ref
       recognitionRef.current = recognition;
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
 
+    // Cleanup function to stop recognition and clear timeouts
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.onend = null;
@@ -122,6 +127,7 @@ const useSpeechRecognition = ({
   }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
 
   useEffect(() => {
+    // Start or stop listening based on the mic's state
     if (isMicOn && !isListening) {
       startListening();
     } else if (!isMicOn && isListening) {
@@ -135,6 +141,7 @@ const useSpeechRecognition = ({
     };
   }, [isMicOn, startListening, stopListening, isListening]);
 
+  // Return whether the system is currently listening
   return { isListening };
 };
 
