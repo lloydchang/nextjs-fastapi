@@ -1,5 +1,3 @@
-// File: components/organisms/ChatPanel.tsx
-
 'use client'; // Mark as Client Component
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -13,7 +11,8 @@ import styles from 'styles/components/organisms/ChatPanel.module.css';
 import useMedia from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
-import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition'; // Import TestSpeechRecognition
+import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition';
+import { Message } from 'types';
 
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
@@ -24,9 +23,9 @@ const ChatPanel: React.FC = () => {
   const messages = useSelector((state: RootState) => state.chat.messages);
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
-  const [interimSpeech, setInterimSpeech] = useState<string>(''); // New state for interim speech
+  const [interimSpeech, setInterimSpeech] = useState<string>('');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const scrollRef = useRef<HTMLDivElement>(null); // Ref to handle scrolling
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
@@ -35,13 +34,12 @@ const ChatPanel: React.FC = () => {
     }
   }, [messages, isFullScreen]);
 
-  // Determine if there are any visible messages
   const hasVisibleMessages = messages.some((message) => !message.hidden);
 
   const handleChat = useCallback(() => {
     if (chatInput.trim()) {
       const messageToSend = chatInput.trim();
-      setChatInput(''); // Clear the typed input
+      setChatInput('');
       dispatch(sendMessage(messageToSend));
       console.log('ChatPanel - Message sent:', messageToSend);
     }
@@ -69,7 +67,6 @@ const ChatPanel: React.FC = () => {
     setIsFullScreen(!isFullScreen);
   };
 
-  // Handle final speech results from TestSpeechRecognition
   const handleSpeechResult = useCallback(
     (finalResult: string) => {
       console.log('ChatPanel - Speech recognized (Final):', finalResult);
@@ -77,11 +74,15 @@ const ChatPanel: React.FC = () => {
         dispatch(sendMessage({ text: finalResult.trim(), hidden: false }));
         console.log('ChatPanel - Final speech sent as message:', finalResult.trim());
       }
-      setInterimSpeech(''); // Clear interim speech
-      setChatInput(''); // Clear typed input if any
+      setInterimSpeech('');
+      setChatInput('');
     },
     [dispatch]
   );
+
+  const handleInterimUpdate = useCallback((interimResult: string) => {
+    setInterimSpeech(interimResult);
+  }, []);
 
   return (
     <div
@@ -89,7 +90,6 @@ const ChatPanel: React.FC = () => {
         isFullScreen ? styles.fullScreenMode : styles['Chat-panel']
       }`}
     >
-
       <Image
         src={BackgroundImage}
         alt=""
@@ -108,8 +108,11 @@ const ChatPanel: React.FC = () => {
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
 
-          {/* Use TestSpeechRecognition */}
-          <TestSpeechRecognition isMicOn={mediaState.isMicOn} onSpeechResult={handleSpeechResult} />
+          <TestSpeechRecognition 
+            isMicOn={mediaState.isMicOn} 
+            onSpeechResult={handleSpeechResult} 
+            onInterimUpdate={handleInterimUpdate}
+          />
 
           <ChatInput
             chatInput={chatInput}
