@@ -45,6 +45,7 @@
 /* Interim message styling (e.g., typing indicators) */
 .interim {
   opacity: 0.6;
+  font-style: italic;
 }
 
 /* Message bubble styling */

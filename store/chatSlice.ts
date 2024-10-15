@@ -47,7 +47,7 @@ const chatSlice = createSlice({
       }>
     ) => {
       const newMessage: Message = {
-        id: `${Date.now()}`,
+        id: uuidv4(),
         sender: action.payload.sender || 'bot',
         text: action.payload.text,
         role: action.payload.sender === 'user' ? 'user' : 'bot',
@@ -129,7 +129,7 @@ const debouncedApiCall = debounce(
                   const parsedData = parseIncomingMessage(jsonString);
                   if (parsedData?.message && parsedData?.persona) {
                     const botMessage: Message = {
-                      id: `${Date.now()}`,
+                      id: uuidv4(),
                       sender: 'bot',
                       text: parsedData.message,
                       role: 'bot',
@@ -152,6 +152,7 @@ const debouncedApiCall = debounce(
           await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
         }
+        // Uncomment the next line to dispatch error messages to the UI
         // dispatch(setError('Max retries reached. Please try again later.'));
         return;
       }

@@ -71,7 +71,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Chat here…"
           className={styles.input}
           rows={1}
-          disabled={isListening} // Optionally disable typing while listening
+          disabled={isListening} // Disable input while listening
         />
       </div>
 
@@ -88,7 +88,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          disabled={isListening} // Optionally disable sending while listening
+          disabled={isListening} // Disable sending while listening
         >
           Send
         </button>
