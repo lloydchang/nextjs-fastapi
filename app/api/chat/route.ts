@@ -17,10 +17,14 @@ import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
 
-// Define the specific type for summarizeFunction
+/**
+ * Type definition for the summarize function.
+ */
 type SummarizeFunction = (text: string) => Promise<string | null>;
 
-// Define union type for textModelConfigKey
+/**
+ * Union type for text model configuration keys.
+ */
 type TextModelConfigKey =
   | 'ollamaGemmaTextModel'
   | 'ollamaLlamaTextModel'
@@ -28,6 +32,16 @@ type TextModelConfigKey =
   | 'cloudflareLlamaTextModel'
   | 'googleVertexGemmaTextModel'
   | 'googleVertexLlamaTextModel';
+
+/**
+ * Function to summarize text. Currently a placeholder that returns null.
+ * Implement your summarization logic here as needed.
+ */
+const summarizeFunction: SummarizeFunction = async (text: string): Promise<string | null> => {
+  // Implement your summarization logic here
+  // For demonstration, returning null (no summarization)
+  return null;
+};
 
 const config: AppConfig = getConfig();
 
@@ -41,7 +55,11 @@ const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
-// Helper function to check if a configuration value is valid
+/**
+ * Helper function to check if a configuration value is valid.
+ * @param value - The configuration value to validate.
+ * @returns True if valid, else false.
+ */
 function isValidConfig(value: any): boolean {
   return (
     typeof value === 'string' &&
@@ -51,6 +69,11 @@ function isValidConfig(value: any): boolean {
   );
 }
 
+/**
+ * Handles POST requests to the chat API.
+ * @param request - The incoming NextRequest.
+ * @returns A NextResponse containing the streamed bot responses or an error.
+ */
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
@@ -114,6 +137,14 @@ export async function POST(request: NextRequest) {
 
           const botFunctions: BotFunction[] = [];
 
+          /**
+           * Adds a bot function to the botFunctions array if its configuration is valid.
+           * @param personaPrefix - The persona prefix for the bot.
+           * @param textModelConfigKey - The key in AppConfig for the text model.
+           * @param endpointEnvVars - The environment variables required for the endpoint.
+           * @param handlerFunction - The function to handle text processing.
+           * @param summarizeFunction - The function to summarize prompts.
+           */
           const addBotFunction = (
             personaPrefix: string,
             textModelConfigKey: TextModelConfigKey, // Use union type
@@ -172,12 +203,7 @@ export async function POST(request: NextRequest) {
             'ollamaGemmaTextModel',
             ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
             handleTextWithOllamaGemmaTextModel,
-            async (text: string): Promise<string | null> => {
-              return handleTextWithOllamaGemmaTextModel(
-                { userPrompt: text, textModel: config.ollamaGemmaTextModel },
-                config
-              );
-            }
+            summarizeFunction
           );
 
           addBotFunction(
@@ -185,12 +211,7 @@ export async function POST(request: NextRequest) {
             'ollamaLlamaTextModel',
             ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
             handleTextWithOllamaLlamaTextModel,
-            async (text: string): Promise<string | null> => {
-              return handleTextWithOllamaLlamaTextModel(
-                { userPrompt: text, textModel: config.ollamaLlamaTextModel },
-                config
-              );
-            }
+            summarizeFunction
           );
 
           addBotFunction(
@@ -198,12 +219,7 @@ export async function POST(request: NextRequest) {
             'cloudflareGemmaTextModel',
             ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
             handleTextWithCloudflareGemmaTextModel,
-            async (text: string): Promise<string | null> => {
-              return handleTextWithCloudflareGemmaTextModel(
-                { userPrompt: text, textModel: config.cloudflareGemmaTextModel },
-                config
-              );
-            }
+            summarizeFunction
           );
 
           addBotFunction(
@@ -211,12 +227,7 @@ export async function POST(request: NextRequest) {
             'cloudflareLlamaTextModel',
             ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
             handleTextWithCloudflareLlamaTextModel,
-            async (text: string): Promise<string | null> => {
-              return handleTextWithCloudflareLlamaTextModel(
-                { userPrompt: text, textModel: config.cloudflareLlamaTextModel },
-                config
-              );
-            }
+            summarizeFunction
           );
 
           addBotFunction(
@@ -224,12 +235,7 @@ export async function POST(request: NextRequest) {
             'googleVertexGemmaTextModel',
             ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
             handleTextWithGoogleVertexGemmaTextModel,
-            async (text: string): Promise<string | null> => {
-              return handleTextWithGoogleVertexGemmaTextModel(
-                { userPrompt: text, textModel: config.googleVertexGemmaTextModel },
-                config
-              );
-            }
+            summarizeFunction
           );
 
           addBotFunction(
@@ -237,14 +243,12 @@ export async function POST(request: NextRequest) {
             'googleVertexLlamaTextModel',
             ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
             handleTextWithGoogleVertexLlamaTextModel,
-            async (text: string): Promise<string | null> => {
-              return handleTextWithGoogleVertexLlamaTextModel(
-                { userPrompt: text, textModel: config.googleVertexLlamaTextModel },
-                config
-              );
-            }
+            summarizeFunction
           );
 
+          /**
+           * Processes all bot functions and streams their responses.
+           */
           async function processBots() {
             logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
 
