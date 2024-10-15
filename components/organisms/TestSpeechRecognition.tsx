@@ -10,6 +10,23 @@ interface TestSpeechRecognitionProps {
   onInterimUpdate: (interimResult: string) => void; // Callback for interim results
 }
 
+// Debounce function to reduce rapid state updates
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   isMicOn,
   onSpeechResult,
@@ -47,8 +64,10 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
     }
   }, [speechRecognitionListening, isListening]);
 
-  // Debounced memoization of the textareas to reduce frequent updates
-  const interimContent = useMemo(() => interimResults, [interimResults]);
+  // Debounce the interim results to prevent frequent updates causing flickering
+  const debouncedInterimResults = useDebounce(interimResults, 200);
+
+  // Memoized final result to prevent unnecessary renders
   const finalContent = useMemo(() => results, [results]);
 
   return (
@@ -56,7 +75,7 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
       <div className={styles.transcriptContainer}>
         <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
         <textarea
-          value={interimContent}
+          value={debouncedInterimResults}
           readOnly
           placeholder="Interim Speech..."
           rows={2}
