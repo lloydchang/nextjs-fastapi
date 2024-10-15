@@ -19,7 +19,7 @@ const initialState: TalkState = {
   loading: false,
 };
 
-// Utility function to save talks and selectedTalk to localStorage
+// Utility functions for localStorage
 const saveToLocalStorage = (talks: Talk[], selectedTalk: Talk | null) => {
   try {
     localStorage.setItem('cachedTalk', JSON.stringify({ talks, selectedTalk }));
@@ -28,7 +28,6 @@ const saveToLocalStorage = (talks: Talk[], selectedTalk: Talk | null) => {
   }
 };
 
-// Utility function to load talks from localStorage
 const loadFromLocalStorage = (): { talks: Talk[]; selectedTalk: Talk | null } | null => {
   try {
     const cachedData = localStorage.getItem('cachedTalk');

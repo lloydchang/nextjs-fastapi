@@ -9,7 +9,7 @@ import styles from 'styles/components/organisms/TalkItem.module.css';
 
 interface TalkItemProps {
   talk: Talk;
-  selected: boolean;  // New prop to indicate if this talk is selected
+  selected: boolean;
 }
 
 const TalkItem: React.FC<TalkItemProps> = ({ talk, selected }) => {
@@ -23,7 +23,9 @@ const TalkItem: React.FC<TalkItemProps> = ({ talk, selected }) => {
     <div className={`${styles.resultItem} ${selected ? styles.selected : ''}`} onClick={handleClick}>
       <h3>
         <a href="#" className={styles.resultLink}>{talk.title}</a>
-        <p className={styles.sdgTags}>{talk.sdg_tags.map(tag => sdgTitleMap[tag]).join(', ')}</p>
+        <p className={styles.sdgTags}>
+          {talk.sdg_tags.map(tag => sdgTitleMap[tag]).join(', ')}
+        </p>
       </h3>
     </div>
   );
