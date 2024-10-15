@@ -11,7 +11,7 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
  */
 export async function generateFromOllamaGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
-  const combinedPrompt = `User Prompt: ${prompt}\n\nSystem Prompt:${systemPrompt}`;
+  const combinedPrompt = `User Prompt: ${prompt}`;
 
   // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
