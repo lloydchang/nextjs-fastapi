@@ -55,12 +55,6 @@ const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
-// Map to track ongoing requests per clientId
-const ongoingRequests = new Map<string, AbortController>();
-
-// Map to track message IDs for idempotency
-const clientMessageIdsMap = new Map<string, Set<string>>();
-
 /**
  * Helper function to check if a configuration value is valid.
  * @param value - The configuration value to validate.
@@ -90,16 +84,6 @@ export async function POST(request: NextRequest) {
   const { limited, retryAfter } = checkRateLimit(clientId);
   if (limited) {
     logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
-
-    // Cancel any ongoing request for this client
-    const controller = ongoingRequests.get(clientId);
-    if (controller) {
-      controller.abort();
-      ongoingRequests.delete(clientId);
-      logger.warn(`app/api/chat/route.ts - Ongoing request for clientId ${clientId} has been canceled.`);
-    }
-
-    // Respond with 429 status
     return NextResponse.json(
       {
         error: 'Too Many Requests',
@@ -113,10 +97,6 @@ export async function POST(request: NextRequest) {
       }
     );
   }
-
-  // Create a new AbortController for the new request
-  const newController = new AbortController();
-  ongoingRequests.set(clientId, newController);
 
   let mutex = clientMutexes.get(clientId);
   if (!mutex) {
@@ -145,30 +125,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Deduplicate messages based on message IDs
-      const clientMessageIds = clientMessageIdsMap.get(clientId) || new Set<string>();
-      const newMessages = validMessages.filter(msg => !clientMessageIds.has(msg.id));
-
-      if (newMessages.length === 0) {
-        logger.warn(`app/api/chat/route.ts - No new messages to process for clientId: ${clientId}`);
-        return NextResponse.json(
-          { error: 'No new messages to process.' },
-          { status: 200 }
-        );
-      }
-
-      // Update message IDs
-      newMessages.forEach(msg => clientMessageIds.add(msg.id));
-      clientMessageIdsMap.set(clientId, clientMessageIds);
-
-      // Limit the size of the message ID set to prevent memory leaks
-      if (clientMessageIds.size > 1000) {
-        clientMessageIdsMap.set(clientId, new Set(Array.from(clientMessageIds).slice(-500)));
-      }
-
       // Get or initialize the context for this client
       let context = clientContexts.get(clientId) || [];
-      context = [...context, ...newMessages]; // Append new valid messages to the context
+      context = [...context, ...validMessages]; // Append new valid messages to the context
       context = context.slice(-maxContextMessages); // Keep context within limits
       clientContexts.set(clientId, context);
 
@@ -371,9 +330,6 @@ export async function POST(request: NextRequest) {
         { error: error instanceof Error ? error.message : 'Internal Server Error' },
         { status: 500 }
       );
-    } finally {
-      // Clean up the AbortController
-      ongoingRequests.delete(clientId);
     }
   });
 }

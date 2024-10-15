@@ -63,12 +63,5 @@ const talkSlice = createSlice({
   },
 });
 
-// Optionally, load initial state from localStorage
-const persistedState = loadFromLocalStorage();
-if (persistedState) {
-  initialState.talks = persistedState.talks;
-  initialState.selectedTalk = persistedState.selectedTalk;
-}
-
 export const { setTalks, setSelectedTalk, addSearchHistory, setError, setLoading } = talkSlice.actions;
 export default talkSlice.reducer;

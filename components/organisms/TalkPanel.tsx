@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store';
@@ -14,7 +14,6 @@ import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPane
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
 import debounce from 'lodash/debounce';
-import throttle from 'lodash/throttle';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
 const TalkPanel: React.FC = () => {
@@ -25,23 +24,9 @@ const TalkPanel: React.FC = () => {
   const isSearchInProgress = useRef(false);
   const initialRender = useRef(true);
   const hasFetched = useRef(false);
+  const hasSentMessage = useRef(new Set<string>());
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
-
-  // Persist sentMessages using useState and localStorage
-  const [sentMessages, setSentMessages] = useState<Set<string>>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('sentMessages');
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    }
-    return new Set();
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('sentMessages', JSON.stringify(Array.from(sentMessages)));
-    }
-  }, [sentMessages]);
 
   useEffect(() => {
     if (initialRender.current) {
@@ -79,58 +64,55 @@ const TalkPanel: React.FC = () => {
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const performSearchWithExponentialBackoff = useCallback(
-    async (query: string) => {
-      if (isSearchInProgress.current) {
-        console.log('TalkPanel - Search is already in progress, skipping new search.');
+  const performSearchWithExponentialBackoff = async (query: string) => {
+    if (isSearchInProgress.current) {
+      console.log('TalkPanel - Search is already in progress, skipping new search.');
+      return;
+    }
+
+    isSearchInProgress.current = true;
+    dispatch(setError(null));
+    dispatch(setLoading(true));
+
+    const maxRetries = 3;
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`TalkPanel - Performing search with query: ${query}`);
+        const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
+
+        if (response.status !== 200) {
+          throw new Error(`Error: ${response.status} - ${response.statusText}`);
+        }
+
+        const data: Talk[] = response.data.results.map((result: any) => ({
+          title: result.document.slug.replace(/_/g, ' '),
+          url: `https://www.ted.com/talks/${result.document.slug}`,
+          sdg_tags: result.document.sdg_tags || [],
+          transcript: result.document.transcript || 'Transcript not available',
+        }));
+
+        console.log('TalkPanel - Successfully fetched talks:', data);
+        await handleSearchResults(query, data);
+        dispatch(setLoading(false));
+        isSearchInProgress.current = false;
         return;
-      }
-
-      isSearchInProgress.current = true;
-      dispatch(setError(null));
-      dispatch(setLoading(true));
-
-      const maxRetries = 3;
-      let retryCount = 0;
-
-      while (retryCount < maxRetries) {
-        try {
-          console.log(`TalkPanel - Performing search with query: ${query}`);
-          const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
-
-          if (response.status !== 200) {
-            throw new Error(`Error: ${response.status} - ${response.statusText}`);
-          }
-
-          const data: Talk[] = response.data.results.map((result: any) => ({
-            title: result.document.slug.replace(/_/g, ' '),
-            url: `https://www.ted.com/talks/${result.document.slug}`,
-            sdg_tags: result.document.sdg_tags || [],
-            transcript: result.document.transcript || 'Transcript not available',
-          }));
-
-          console.log('TalkPanel - Successfully fetched talks:', data);
-          await handleSearchResults(query, data);
+      } catch (error) {
+        console.error('TalkPanel - Error during performSearch:', error);
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000;
+          console.log(`TalkPanel - Retrying in ${delay / 1000} seconds...`);
+          await wait(delay);
+        } else {
+          dispatch(setError('Failed to fetch talks after multiple attempts.'));
           dispatch(setLoading(false));
           isSearchInProgress.current = false;
-          return;
-        } catch (error: any) {
-          console.error('TalkPanel - Error during performSearch:', error);
-          retryCount++;
-          if (retryCount < maxRetries) {
-            const delay = Math.pow(2, retryCount) * 1000;
-            console.log(`TalkPanel - Retrying in ${delay / 1000} seconds...`);
-            await wait(delay);
-          } else {
-            dispatch(setError('Failed to fetch talks after multiple attempts.'));
-            dispatch(setLoading(false));
-            isSearchInProgress.current = false;
-          }
         }
       }
-    },
-    [dispatch]
-  );
+    }
+  };
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,96 +126,75 @@ const TalkPanel: React.FC = () => {
   };
 
   // Send transcript for a selected talk
-  const sendTranscriptForTalk = useCallback(
-    async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
-      console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
-      console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
-      console.log('SentMessages set:', [...sentMessages]);
+  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
+    console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
+    console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
+    console.log('HasSentMessage set:', [...hasSentMessage.current]);
 
-      if (lastDispatchedTalkId.current === talk.title || sentMessages.has(talk.title)) {
-        console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
-        return;
+    if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
+      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
+      return;
+    }
+
+    console.log(`TalkPanel - Sending transcript for talk: ${talk.title}`);
+    const sendTranscript = talk.transcript || 'Transcript not available';
+    const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+
+    try {
+      const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+      console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
+      dispatch(setSelectedTalk(talk));
+      lastDispatchedTalkId.current = talk.title; 
+      hasSentMessage.current.add(talk.title); 
+      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
+      console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
+    } catch (dispatchError) {
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000;
+        console.error(`TalkPanel - Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
+        await wait(delay);
+        await sendTranscriptForTalk(query, talk, retryCount + 1);
+      } else {
+        console.error(`TalkPanel - Failed to send transcript for ${talk.title} after multiple attempts.`);
+        dispatch(setError(`Failed to send transcript for ${talk.title}.`));
       }
+    }
+  };
 
-      console.log(`TalkPanel - Sending transcript for talk: ${talk.title}`);
-      const sendTranscript = talk.transcript || 'Transcript not available';
-      const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+  const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
+    console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
+    sendTranscriptForTalk(query, talk);
+  }, 1000); 
 
+  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
+    console.log('TalkPanel - Sending first available transcript for query:', query);
+    for (let i = 0; i < talks.length; i++) {
       try {
-        const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
-        console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
-        dispatch(setSelectedTalk(talk));
-        lastDispatchedTalkId.current = talk.title; 
-        setSentMessages(prev => new Set(prev).add(talk.title)); 
-        console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
-        console.log('Updated sentMessages set:', [...sentMessages]);
-      } catch (dispatchError: any) {
-        if (dispatchError.name === 'AbortError') {
-          console.warn(`TalkPanel - Request aborted for talk: ${talk.title}`);
-          // Optionally, notify the user or trigger a retry
-        } else if (retryCount < 3) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          console.error(`TalkPanel - Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
-          await wait(delay);
-          await sendTranscriptForTalk(query, talk, retryCount + 1);
-        } else {
-          console.error(`TalkPanel - Failed to send transcript for ${talk.title} after multiple attempts.`);
-          dispatch(setError(`Failed to send transcript for ${talk.title}.`));
-        }
+        console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
+        await debouncedSendTranscriptForTalk(query, talks[i]);
+        return;
+      } catch (error) {
+        console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
       }
-    },
-    [dispatch, sentMessages]
-  );
-
-  // Debounced and Throttled sendTranscriptForTalk
-  const debouncedSendTranscriptForTalk = useCallback(
-    debounce((query: string, talk: Talk) => {
-      console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
-      sendTranscriptForTalk(query, talk);
-    }, 1000),
-    [sendTranscriptForTalk]
-  );
-
-  const throttledSendTranscriptForTalk = useCallback(
-    throttle((query: string, talk: Talk) => {
-      console.log(`TalkPanel - Throttled send for talk: ${talk.title}`);
-      sendTranscriptForTalk(query, talk);
-    }, 2000),
-    [sendTranscriptForTalk]
-  );
-
-  const sendFirstAvailableTranscript = useCallback(
-    async (query: string, talks: Talk[]): Promise<void> => {
-      console.log('TalkPanel - Sending first available transcript for query:', query);
-      for (let i = 0; i < talks.length; i++) {
-        try {
-          console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
-          await debouncedSendTranscriptForTalk(query, talks[i]);
-          return;
-        } catch (error) {
-          console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
-        }
-      }
-      dispatch(setError('Failed to send transcripts for all talks.'));
-    },
-    [debouncedSendTranscriptForTalk, dispatch]
-  );
+    }
+    dispatch(setError('Failed to send transcripts for all talks.'));
+  };
 
   // Handle search query change
   useEffect(() => {
     if (searchQuery && selectedTalk) {
       console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
-      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
-  }, [searchQuery, selectedTalk, throttledSendTranscriptForTalk]);
+  }, [searchQuery]);
 
   // Handle new talk selection
   useEffect(() => {
     if (selectedTalk) {
       console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
-      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
     }
-  }, [selectedTalk, searchQuery, throttledSendTranscriptForTalk]);
+  }, [selectedTalk]);
 
   const shuffleTalks = async () => {
     if (talks.length > 0) {
@@ -261,7 +222,6 @@ const TalkPanel: React.FC = () => {
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
             className={styles.searchInput}
-            placeholder="Search for TED Talks..."
           />
           {loading && <LoadingSpinner />}
         </div>
@@ -285,7 +245,6 @@ const TalkPanel: React.FC = () => {
       {error && (
         <div className={styles.errorContainer}>
           <p className={styles.errorText}>{error}</p>
-          {error.includes('rate limit') && <p>Please wait a moment before trying again.</p>}
         </div>
       )}
 
