@@ -15,7 +15,7 @@ import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
-import { BotFunction } from 'types';
+import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
 
 // Define the specific type for summarizeFunction
 type SummarizeFunction = (text: string) => Promise<string | null>;
@@ -49,13 +49,6 @@ function isValidConfig(value: any): boolean {
     value.trim().toLowerCase() !== 'undefined' &&
     value.trim().toLowerCase() !== 'null'
   );
-}
-
-// Define the BotFunction interface if not already defined
-export interface BotFunction {
-  persona: string;
-  valid: boolean;
-  generate: (currentContext: any[]) => Promise<string | null>;
 }
 
 export async function POST(request: NextRequest) {
