@@ -61,10 +61,25 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || `anon-${uuidv4()}`; // Generate unique ID for anonymous clients
 
+  // Log the incoming request at the "silly" log level
+  logger.silly(`app/api/chat/route.ts - Received request [${requestId}] from clientId: ${clientId}`);
+  logger.silly(`app/api/chat/route.ts - Request headers: ${JSON.stringify([...request.headers])}`);
+  
+  try {
+    const requestBody = await request.json();
+    logger.silly(`app/api/chat/route.ts - Request body: ${JSON.stringify(requestBody)}`);
+  } catch (error) {
+    logger.error(`app/api/chat/route.ts - Error parsing request body: ${error}`);
+    return NextResponse.json(
+      { error: 'Invalid request body' },
+      { status: 400 }
+    );
+  }
+
   // Handle rate limiting
   const { limited, retryAfter } = checkRateLimit(clientId);
   if (limited) {
-    logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
+    // logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
     return NextResponse.json(
       {
         error: 'Too Many Requests',
