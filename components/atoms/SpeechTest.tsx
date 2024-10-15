@@ -43,14 +43,14 @@ const SpeechTest: React.FC = () => {
         value={interimTranscript} // Display interim transcript
         readOnly
         placeholder="Interim Speech..."
-        rows={2}
+        rows={1}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
       <textarea
         value={finalTranscript} // Display final transcript
         readOnly
         placeholder="Final Speech..."
-        rows={2}
+        rows={1}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
     </div>
