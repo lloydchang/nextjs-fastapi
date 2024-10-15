@@ -1,11 +1,12 @@
 // File: pages/speech-test.tsx
 
-import React, { useState } from 'react';
+import React from 'react';
 import SpeechTest from 'components/atoms/SpeechTest'; // Import SpeechTest component
 import useMedia from 'components/state/hooks/useMedia'; // Use useMedia for mic control
 
 const SpeechTestPage: React.FC = () => {
   const { mediaState, toggleMic } = useMedia(); // Use media hook to manage mic
+
   const handleSpeechResult = (finalResult: string) => {
     console.log('Final speech result:', finalResult);
   };
