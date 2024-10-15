@@ -31,9 +31,6 @@ const TalkPanel: React.FC = () => {
   const scrollableContainerRef = useRef<HTMLDivElement>(null); // Ref for scrollable container
 
   useEffect(() => {
-    // Unselect existing talk before anything else
-    dispatch(setSelectedTalk(null));
-
     if (initialRender.current) {
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearch(searchQuery);
