@@ -32,10 +32,10 @@
   
   /* Define a class for the button instead of using the global button selector */
   .toggleButton {
-    margin-bottom: 15px;
-    padding: 10px;
+    margin-bottom: 0px;
+    padding: 0px;
     border: none;
-    border-radius: 5px;
+    border-radius: 0px;
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.7); /* Make background semi-transparent */
     color: white;

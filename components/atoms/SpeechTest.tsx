@@ -68,9 +68,6 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
         rows={1}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
-      <button onClick={() => setIsDarkMode(!isDarkMode)} className={styles.modeToggle}>
-        Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
-      </button>
     </div>
   );
 };
