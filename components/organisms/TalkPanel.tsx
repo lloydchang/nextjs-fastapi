@@ -28,18 +28,51 @@ const TalkPanel: React.FC = () => {
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
 
+  // Cache handling
+  const isCacheLoaded = useRef(false);
+
   useEffect(() => {
     if (initialRender.current) {
-      // Perform the search on the first render
-      console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
-      performSearchWithExponentialBackoff(searchQuery);
-      hasFetched.current = true; // Set fetched flag to true after the first search is made
-      initialRender.current = false; // Set to false after the first search is done
-    } else {
-      // Skip actions for subsequent renders
-      console.log('TalkPanel - Subsequent render detected, skipping search.');
+      // Skip actions on initial render (due to React strict mode)
+      console.log('TalkPanel - Skipping actions during initial render.');
+      initialRender.current = false;
+      return;
     }
-  }, []); // No dependencies, runs only on mount  
+
+    // Check if cached talks are available and load them
+    if (!isCacheLoaded.current && cachedTalkAvailable()) {
+      console.log('TalkPanel - Using cached talks.');
+      loadCachedTalk();
+      isCacheLoaded.current = true;
+      return;
+    }
+
+    // Perform search if no cache is available
+    if (!isCacheLoaded.current) {
+      console.log('TalkPanel - Performing search:', searchQuery);
+      performSearchWithExponentialBackoff(searchQuery);
+      hasFetched.current = true;
+    }
+  }, []);
+
+  const cachedTalkAvailable = (): boolean => {
+    const cachedTalk = getCachedTalk();
+    return !!cachedTalk;
+  };
+
+  const loadCachedTalk = () => {
+    const cachedData = getCachedTalk();
+    if (cachedData) {
+      dispatch(setTalks([cachedData.selectedTalk]));
+      dispatch(setSelectedTalk(cachedData.selectedTalk));
+      console.log('TalkPanel - Cached talk loaded:', cachedData.selectedTalk);
+    }
+  };
+
+  const getCachedTalk = (): { talks: Talk[]; selectedTalk: Talk | null } | null => {
+    const cachedData = localStorage.getItem('cachedTalk');
+    return cachedData ? JSON.parse(cachedData) : null;
+  };
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
@@ -61,8 +94,6 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - No new unique talks found.');
     }
   };
-
-  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const performSearchWithExponentialBackoff = async (query: string) => {
     if (isSearchInProgress.current) {
@@ -104,111 +135,13 @@ const TalkPanel: React.FC = () => {
         if (retryCount < maxRetries) {
           const delay = Math.pow(2, retryCount) * 1000;
           console.log(`TalkPanel - Retrying in ${delay / 1000} seconds...`);
-          await wait(delay);
+          await new Promise(resolve => setTimeout(resolve, delay));
         } else {
           dispatch(setError('Failed to fetch talks after multiple attempts.'));
           dispatch(setLoading(false));
           isSearchInProgress.current = false;
         }
       }
-    }
-  };
-
-  // Handle input change
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      performSearchWithExponentialBackoff(searchQuery);
-    }
-  };
-
-  // Send transcript for a selected talk
-  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
-    console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
-    console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
-    console.log('HasSentMessage set:', [...hasSentMessage.current]);
-
-    if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
-      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
-      return;
-    }
-
-    console.log(`TalkPanel - Sending transcript for talk: ${talk.title}`);
-    const sendTranscript = talk.transcript || 'Transcript not available';
-    const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
-
-    try {
-      const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
-      console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
-      dispatch(setSelectedTalk(talk));
-      lastDispatchedTalkId.current = talk.title; 
-      hasSentMessage.current.add(talk.title); 
-      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
-      console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
-    } catch (dispatchError) {
-      if (retryCount < 3) {
-        const delay = Math.pow(2, retryCount) * 1000;
-        console.error(`TalkPanel - Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
-        await wait(delay);
-        await sendTranscriptForTalk(query, talk, retryCount + 1);
-      } else {
-        console.error(`TalkPanel - Failed to send transcript for ${talk.title} after multiple attempts.`);
-        dispatch(setError(`Failed to send transcript for ${talk.title}.`));
-      }
-    }
-  };
-
-  const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
-    console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
-    sendTranscriptForTalk(query, talk);
-  }, 1000); 
-
-  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
-    console.log('TalkPanel - Sending first available transcript for query:', query);
-    for (let i = 0; i < talks.length; i++) {
-      try {
-        console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
-        await debouncedSendTranscriptForTalk(query, talks[i]);
-        return;
-      } catch (error) {
-        console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
-      }
-    }
-    dispatch(setError('Failed to send transcripts for all talks.'));
-  };
-
-  // Handle search query change
-  useEffect(() => {
-    if (searchQuery && selectedTalk) {
-      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
-      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
-    }
-  }, [searchQuery]);
-
-  // Handle new talk selection
-  useEffect(() => {
-    if (selectedTalk) {
-      console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
-      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
-    }
-  }, [selectedTalk]);
-
-  const shuffleTalks = async () => {
-    if (talks.length > 0) {
-      const shuffledTalks = shuffleArray([...talks]);
-      dispatch(setTalks(shuffledTalks));
-      dispatch(setSelectedTalk(shuffledTalks[0] || null));
-      await handleSearchResults(searchQuery, shuffledTalks);
-    }
-  };
-
-  const openTranscriptInNewTab = () => {
-    if (selectedTalk) {
-      const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
-      window.open(transcriptUrl, '_blank');
     }
   };
 
@@ -219,8 +152,8 @@ const TalkPanel: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
+            onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') performSearchWithExponentialBackoff(searchQuery); }}
             className={styles.searchInput}
           />
           {loading && <LoadingSpinner />}
@@ -232,11 +165,11 @@ const TalkPanel: React.FC = () => {
         >
           Search
         </button>
-        <button onClick={shuffleTalks} className={`${styles.button} ${styles.shuffleButton}`}>
+        <button onClick={() => shuffleTalks()} className={`${styles.button} ${styles.shuffleButton}`}>
           Shuffle
         </button>
         {selectedTalk && (
-          <button onClick={openTranscriptInNewTab} className={`${styles.button} ${styles.tedButton}`}>
+          <button onClick={() => window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank')} className={`${styles.button} ${styles.tedButton}`}>
             Transcript
           </button>
         )}
