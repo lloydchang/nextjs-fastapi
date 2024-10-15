@@ -11,7 +11,7 @@ import styles from 'styles/components/organisms/ChatPanel.module.css';
 import useMedia from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
 import Tools from 'components/organisms/Tools';
-import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition';
+import SpeechTest from 'components/atoms/SpeechTest';
 import { Message } from 'types';
 
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
@@ -108,7 +108,7 @@ const ChatPanel: React.FC = () => {
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
 
-          <TestSpeechRecognition 
+          <SpeechTest 
             isMicOn={mediaState.isMicOn} 
             onSpeechResult={handleSpeechResult} 
             onInterimUpdate={handleInterimUpdate}

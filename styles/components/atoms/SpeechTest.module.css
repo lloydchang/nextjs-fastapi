@@ -1,17 +1,15 @@
-/* File: styles/components/atoms/SpeechTest.module.css */
-
 /* Base styles for the SpeechTest component */
 .speechTest {
     padding: 20px;
   }
   
   .speechTest.light {
-    background-color: white;
+    background-color: transparent; /* Make background transparent */
     color: black;
   }
   
   .speechTest.dark {
-    background-color: black;
+    background-color: transparent; /* Make background transparent */
     color: white;
   }
   
@@ -23,13 +21,13 @@
   }
   
   .textarea.light {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.7); /* Make background semi-transparent */
     color: black;
   }
   
   .textarea.dark {
-    background-color: white;
-    color: black;
+    background-color: rgba(0, 0, 0, 0.7); /* Make background semi-transparent */
+    color: white;
   }
   
   /* Define a class for the button instead of using the global button selector */
@@ -42,12 +40,12 @@
   }
   
   .toggleButton.light {
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
     color: white;
   }
   
   .toggleButton.dark {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent background */
     color: black;
   }
   
