@@ -179,6 +179,17 @@ const Tools: React.FC = () => {
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
+              'https://drive.google.com/file/d/1iMdE6DLLuCqwq3K9U-DaTUWB6KyMa8QG/view'
+            )
+          }
+        >
+          News
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
               'https://news.google.com/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YTI1c1poSUNaVzRvQUFQAQ'
             )
           }
