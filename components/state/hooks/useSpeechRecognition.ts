@@ -1,3 +1,5 @@
+// File: components/state/hooks/useSpeechRecognition.ts
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface UseSpeechRecognitionProps {
@@ -73,14 +75,13 @@ const useSpeechRecognition = ({
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
 
-        // Restart recognition after error if mic is still on
         if (isMicOn) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // 1-second delay before restarting
+          }, 1000);
         }
       };
 
@@ -88,14 +89,13 @@ const useSpeechRecognition = ({
         console.log('Speech recognition ended.');
         setIsListening(false);
 
-        // Restart recognition after it ends, if the mic is still on
         if (isMicOn) {
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // 1-second delay before restarting
+          }, 1000);
         }
       };
 

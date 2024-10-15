@@ -1,7 +1,7 @@
 // File: components/organisms/TestSpeechRecognition.tsx
 
 import React, { useEffect, useRef, useState } from 'react';
-import '../../types/speech-recognition'; // Import the custom type declarations
+import 'speech-recognition.d.ts'; // Import the custom type declarations
 
 interface TestSpeechRecognitionProps {
   isMicOn: boolean;
@@ -9,11 +9,11 @@ interface TestSpeechRecognitionProps {
 }
 
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, onSpeechResult }) => {
-  const [transcript, setTranscript] = useState<string>('');
+  const [transcript, setTranscript] = useState<string>('');  // Store interim results
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const resultsCacheRef = useRef<SpeechRecognitionResult[]>([]);
-  const isRecognitionActiveRef = useRef<boolean>(false);  // Flag to track recognition state
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // Ref to manage debounce for restart
+  const resultsCacheRef = useRef<SpeechRecognitionResult[]>([]);  // Cache for results
+  const isRecognitionActiveRef = useRef<boolean>(false);  // Track if recognition is active
+  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // Timeout for restart delay
 
   useEffect(() => {
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
@@ -22,22 +22,26 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
+      // Handle recognition start
       recognitionRef.current.onstart = () => {
-        isRecognitionActiveRef.current = true;  // Set flag to true when recognition starts
+        isRecognitionActiveRef.current = true;
       };
 
+      // Handle recognition end and potentially restart
       recognitionRef.current.onend = () => {
-        isRecognitionActiveRef.current = false;  // Set flag to false when recognition ends
+        isRecognitionActiveRef.current = false;
         if (isMicOn) {
-          restartRecognitionWithDelay();  // Restart with delay to prevent transient states
+          restartRecognitionWithDelay();
         }
       };
 
+      // Handle results and update transcript
       recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
         resultsCacheRef.current = Array.from(event.results);
         updateTranscript();
       };
 
+      // Handle errors
       recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error', event.error);
       };
@@ -48,22 +52,24 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
         recognitionRef.current.stop();
       }
       if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);  // Clean up timeout if component unmounts
+        clearTimeout(restartTimeoutRef.current);
       }
     };
   }, [isMicOn, onSpeechResult]);
 
+  // Function to restart recognition safely with a delay
   const restartRecognitionWithDelay = () => {
     if (restartTimeoutRef.current) {
-      clearTimeout(restartTimeoutRef.current);  // Clear previous timeout if exists
+      clearTimeout(restartTimeoutRef.current);
     }
     restartTimeoutRef.current = setTimeout(() => {
       if (!isRecognitionActiveRef.current && recognitionRef.current) {
-        recognitionRef.current.start();  // Restart safely with delay
+        recognitionRef.current.start();
       }
-    }, 100);  // Add a slight delay (100ms) to avoid transient state errors
+    }, 100);  // 100ms delay to prevent transient state errors
   };
 
+  // Function to update the transcript with final and interim results
   const updateTranscript = () => {
     let interimTranscript = '';
     let finalTranscript = '';
@@ -80,23 +86,24 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, 
 
     if (finalTranscript) {
       onSpeechResult(finalTranscript);
-      resultsCacheRef.current = resultsCacheRef.current.filter(result => !result.isFinal);
-      updateTranscript();
+      resultsCacheRef.current = resultsCacheRef.current.filter(result => !result.isFinal);  // Clear final results from cache
+      updateTranscript();  // Recursively update transcript if more results
     }
   };
 
+  // Effect to start or stop recognition based on isMicOn state
   useEffect(() => {
     if (isMicOn && recognitionRef.current && !isRecognitionActiveRef.current) {
-      recognitionRef.current.start();  // Start recognition only if not active
+      recognitionRef.current.start();  // Start recognition if not already active
     } else if (!isMicOn && recognitionRef.current && isRecognitionActiveRef.current) {
-      recognitionRef.current.stop();  // Stop only if active
+      recognitionRef.current.stop();  // Stop recognition if active
     }
   }, [isMicOn]);
 
   return (
     <div>
-      <p><strong>{isMicOn ? 'Listening 👂' : 'Not Listening 🙉 '}</strong>
-      <strong>Interim Results:</strong> {transcript}</p>
+      <p><strong>{isMicOn ? 'Listening 👂' : 'Not Listening 🙉 '}</strong></p>
+      <p><strong>Interim Results:</strong> {transcript}</p>
     </div>
   );
 };

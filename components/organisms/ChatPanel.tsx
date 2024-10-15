@@ -12,10 +12,8 @@ import BackgroundImage from 'public/images/TEDxSDG.webp';
 import styles from 'styles/components/organisms/ChatPanel.module.css';
 import useMedia from 'components/state/hooks/useMedia';
 import ChatInput from 'components/organisms/ChatInput';
-import InterimSpeechInput from 'components/atoms/InterimSpeechInput'; // New Component
 import Tools from 'components/organisms/Tools';
-import { Message } from 'types';
-import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition'; // Ensure correct path
+import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition'; // Import TestSpeechRecognition
 
 const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessages'), {
   ssr: false,
@@ -24,14 +22,7 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-  const {
-    mediaState,
-    toggleMic,
-    startCam,
-    stopCam,
-    togglePip,
-    toggleMem,
-  } = useMedia();
+  const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
   const [interimSpeech, setInterimSpeech] = useState<string>(''); // New state for interim speech
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
@@ -78,7 +69,7 @@ const ChatPanel: React.FC = () => {
     setIsFullScreen(!isFullScreen);
   };
 
-  // Handle final speech results
+  // Handle final speech results from TestSpeechRecognition
   const handleSpeechResult = useCallback(
     (finalResult: string) => {
       console.log('ChatPanel - Speech recognized (Final):', finalResult);
@@ -92,39 +83,12 @@ const ChatPanel: React.FC = () => {
     [dispatch]
   );
 
-  // Handle interim speech updates
-  const handleInterimUpdate = useCallback((interimResult: string) => {
-    console.log('ChatPanel - Interim Result:', interimResult);
-    setInterimSpeech(interimResult);
-  }, []);
-
-  // Initialize the Speech Recognition Hook
-  const { isListening } = useSpeechRecognition({
-    isMicOn: mediaState.isMicOn,
-    onSpeechResult: handleSpeechResult,
-    onInterimUpdate: handleInterimUpdate,
-  });
-
-{isListening && (
-  <div className={styles.listeningIndicator}>
-    <span>🎤 Listening...</span>
-    <div className={styles.pulse}></div>
-  </div>
-)}
-
   return (
     <div
       className={`${styles.container} ${
         isFullScreen ? styles.fullScreenMode : styles['Chat-panel']
       }`}
     >
-
-      {isListening && (
-        <div className={styles.listeningIndicator}>
-          <span>🎤 Listening...</span>
-          <div className={styles.pulse}></div>
-        </div>
-      )}
 
       <Image
         src={BackgroundImage}
@@ -144,8 +108,8 @@ const ChatPanel: React.FC = () => {
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
 
-          {/* Interim Speech Input */}
-          <InterimSpeechInput interimSpeech={interimSpeech} />
+          {/* Use TestSpeechRecognition */}
+          <TestSpeechRecognition isMicOn={mediaState.isMicOn} onSpeechResult={handleSpeechResult} />
 
           <ChatInput
             chatInput={chatInput}
@@ -163,8 +127,7 @@ const ChatPanel: React.FC = () => {
             eraseMemory={handleClearChat}
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreenMode}
-            hasVisibleMessages={hasVisibleMessages} // Pass down visible messages state
-            isListening={isListening} // Pass isListening to ChatInput
+            hasVisibleMessages={hasVisibleMessages}
           />
         </div>
       </div>
