@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig } from 'app/api/chat/utils/config';
-import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
+import { checkRateLimit } from 'app/api/chat/utils/rateLimiter';
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
@@ -19,17 +19,15 @@ import { BotFunction } from 'types';
 
 const config = getConfig();
 
-const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's default token limit of 2000
+const MAX_PROMPT_LENGTH = 2000;
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
-const maxContextMessages = 20; // Keep only the last 20 messages
+const maxContextMessages = 20;
 
-// Maps to track client-specific data
 const clientPrompts = new Map<string, string>();
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
-// Helper function to check if a configuration value is valid
 function isValidConfig(value: any): boolean {
   return (
     typeof value === 'string' &&
@@ -74,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const { messages } = await request.json();
-      
+
       // Filter out invalid messages (e.g., empty content)
       const validMessages = messages.filter(
         (msg: any) => msg.content && typeof msg.content === 'string' && msg.content.trim() !== ''
@@ -95,9 +93,8 @@ export async function POST(request: NextRequest) {
         async start(controller) {
           logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
 
-          const botFunctions: BotFunction[] = []; // Initialize botFunctions here
+          const botFunctions: BotFunction[] = [];
 
-          // Helper function to add botFunction to the array
           const addBotFunction = (
             personaPrefix: string,
             textModelConfigKey: string,
@@ -112,14 +109,12 @@ export async function POST(request: NextRequest) {
                 persona: `${personaPrefix} ${textModel}`,
                 valid: isValidConfig(config[textModelConfigKey]),
                 generate: async (currentContext: any[]) => {
-                  // Create separate prompt and context for each bot
                   let prompt = config.systemPrompt || '';
                   if (currentContext.length > 0) {
                     prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
                   }
 
                   let finalPrompt = prompt;
-                  // Use AsyncGenerator to send intermediate prompt results
                   for await (const updatedPrompt of managePrompt(
                     prompt,
                     MAX_PROMPT_LENGTH,
@@ -130,26 +125,28 @@ export async function POST(request: NextRequest) {
                     logger.debug(
                       `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Updated prompt: ${updatedPrompt}`
                     );
-                    controller.enqueue(
-                      `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: updatedPrompt })}\n\n`
-                    );
+                    try {
+                      controller.enqueue(
+                        `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: updatedPrompt })}\n\n`
+                      );
+                    } catch (enqueueError) {
+                      logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
+                    }
                     finalPrompt = updatedPrompt;
                   }
 
-                  // Update the last message in the context with the summarized version, if it's new
                   if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
                     context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
                   }
                   clientContexts.set(clientId, context);
 
-                  // No need to set clientPrompts globally; keep it per bot
                   return handlerFunction({ userPrompt: prompt, textModel }, config);
                 },
               });
             }
           };
 
-          // Add all bot functions using the helper
+          // Add all bot functions
           addBotFunction(
             'Ollama',
             'ollamaGemmaTextModel',
@@ -215,7 +212,6 @@ export async function POST(request: NextRequest) {
 
             let hasResponse = false;
 
-            // Process each bot function sequentially
             for (const bot of botFunctions) {
               try {
                 const botResponse = await bot.generate(context);
@@ -224,11 +220,14 @@ export async function POST(request: NextRequest) {
                 if (botResponse && typeof botResponse === 'string') {
                   logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
-                  controller.enqueue(
-                    `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
-                  );
+                  try {
+                    controller.enqueue(
+                      `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                    );
+                  } catch (enqueueError) {
+                    logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
+                  }
 
-                  // Update context with bot response
                   context.push({ role: 'bot', content: botResponse, persona: botPersona });
                   hasResponse = true;
                 }
@@ -237,7 +236,6 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            // Trim context to maintain limits
             context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
 
@@ -252,8 +250,12 @@ export async function POST(request: NextRequest) {
               logger.silly(`app/api/chat/route.ts - No bot responded. Ending interaction.`);
             }
 
-            controller.enqueue('data: [DONE]\n\n');
-            controller.close();
+            try {
+              controller.enqueue('data: [DONE]\n\n');
+              controller.close();
+            } catch (enqueueError) {
+              logger.error(`app/api/chat/route.ts - Error finalizing stream: ${enqueueError}`);
+            }
           }
 
           processBots().catch((error) => {
