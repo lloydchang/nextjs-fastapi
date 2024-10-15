@@ -183,7 +183,7 @@ const Tools: React.FC = () => {
             )
           }
         >
-          News
+          Daily
         </button>
 
         <button
