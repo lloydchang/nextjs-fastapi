@@ -17,6 +17,9 @@ import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
 
+// Add this declaration to manage client-specific Mutexes
+const clientMutexes = new Map<string, Mutex>(); // Initialize the map to track client Mutexes
+
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
