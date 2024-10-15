@@ -110,6 +110,7 @@ const ChatPanel: React.FC = () => {
 
           <SpeechTest 
             isMicOn={mediaState.isMicOn} 
+            toggleMic={toggleMic} // Pass toggleMic function to SpeechTest
             onSpeechResult={handleSpeechResult} 
             onInterimUpdate={handleInterimUpdate}
           />

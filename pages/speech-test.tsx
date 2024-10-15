@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import SpeechTest from 'components/atoms/SpeechTest'; // Import SpeechTest component
+import useMedia from 'components/state/hooks/useMedia'; // Use useMedia for mic control
 
 const SpeechTestPage: React.FC = () => {
-  const [isMicOn, setIsMicOn] = useState<boolean>(false);
-
+  const { mediaState, toggleMic } = useMedia(); // Use media hook to manage mic
   const handleSpeechResult = (finalResult: string) => {
     console.log('Final speech result:', finalResult);
   };
@@ -17,12 +17,13 @@ const SpeechTestPage: React.FC = () => {
   return (
     <div style={{ backgroundColor: 'black', minHeight: '100vh' }}> {/* Black background */}
       <SpeechTest 
-        isMicOn={isMicOn} 
+        isMicOn={mediaState.isMicOn} // Use mediaState to track mic state
+        toggleMic={toggleMic} // Pass toggleMic to control mic
         onSpeechResult={handleSpeechResult} 
         onInterimUpdate={handleInterimUpdate} 
       />
-      <button onClick={() => setIsMicOn(!isMicOn)}>
-        {isMicOn ? 'Turn Mic Off' : 'Turn Mic On'}
+      <button onClick={toggleMic}>
+        {mediaState.isMicOn ? 'Turn Mic Off' : 'Turn Mic On'}
       </button>
     </div>
   );
