@@ -4,7 +4,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
 import styles from 'styles/components/atoms/SpeechTest.module.css';
 
-const SpeechTest: React.FC = () => {
+interface SpeechTestProps {
+  isMicOn: boolean;
+  onSpeechResult: (finalResult: string) => void;
+  onInterimUpdate: (interimResult: string) => void;
+}
+
+const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInterimUpdate }) => {
   const [interimTranscript, setInterimTranscript] = useState<string>('');
   const [finalTranscript, setFinalTranscript] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -12,18 +18,28 @@ const SpeechTest: React.FC = () => {
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
     setFinalTranscript(prev => prev + ' ' + text);
-  }, []);
+    onSpeechResult(text); // Pass the result to the parent
+  }, [onSpeechResult]);
 
   const handleInterim = useCallback((text: string) => {
     console.log('Interim Speech:', text);
     setInterimTranscript(text);
-  }, []);
+    onInterimUpdate(text); // Pass the interim result to the parent
+  }, [onInterimUpdate]);
 
   const { isListening, startListening, stopListening } = useSpeechRecognition({
-    isMicOn: true,
+    isMicOn,
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
   });
+
+  useEffect(() => {
+    if (isMicOn && !isListening) {
+      startListening();
+    } else if (!isMicOn && isListening) {
+      stopListening();
+    }
+  }, [isMicOn, isListening, startListening, stopListening]);
 
   const toggleListening = () => {
     if (isListening) {
