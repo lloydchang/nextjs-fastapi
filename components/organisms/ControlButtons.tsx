@@ -7,7 +7,7 @@ import Modal from 'components/atoms/Modal';
 interface ControlButtonsProps {
   isCamOn: boolean;
   isMicOn: boolean;
-  toggleMic: () => Promise<void>;
+  toggleMic: () => Promise<void>; // Updated to return Promise<void>
   startCam: () => Promise<void>;
   stopCam: () => void;
   isPipOn: boolean;
@@ -17,7 +17,7 @@ interface ControlButtonsProps {
   eraseMemory: () => void;
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
-  hasVisibleMessages: boolean; // Rename this prop to match ChatInput.tsx
+  hasVisibleMessages: boolean;
   isListening: boolean; // New prop for listening state
 }
 

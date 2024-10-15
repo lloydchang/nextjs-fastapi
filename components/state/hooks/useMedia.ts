@@ -20,6 +20,7 @@ interface UseMediaReturn {
   toggleMem: () => void;
 }
 
+// Default media state
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
@@ -32,9 +33,6 @@ export const useMedia = (): UseMediaReturn => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
-
-  const isMicOnRef = useRef(mediaState.isMicOn);
-  const isPipOnRef = useRef(mediaState.isPipOn);
 
   useEffect(() => {
     console.log('Media State Updated:', mediaState);
@@ -79,7 +77,6 @@ export const useMedia = (): UseMediaReturn => {
           audioRef.current.srcObject = stream;
           audioStreamRef.current = stream;
           setMediaState((prev) => ({ ...prev, isMicOn: true }));
-          isMicOnRef.current = true;
         }
       } catch (err) {
         console.error('Unable to access microphone.', err);
@@ -95,7 +92,6 @@ export const useMedia = (): UseMediaReturn => {
         audioRef.current.srcObject = null;
       }
       setMediaState((prev) => ({ ...prev, isMicOn: false }));
-      isMicOnRef.current = false;
     }
   }, [mediaState.isMicOn]);
 
@@ -105,20 +101,18 @@ export const useMedia = (): UseMediaReturn => {
         if (!mediaState.isCamOn) {
           await startCam();
         }
-        if (!isPipOnRef.current) {
+        if (!mediaState.isPipOn) {
           await videoRef.current.requestPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: true }));
-          isPipOnRef.current = true;
         } else {
           await document.exitPictureInPicture();
           setMediaState((prev) => ({ ...prev, isPipOn: false }));
-          isPipOnRef.current = false;
         }
       } catch (err) {
         console.error('Unable to toggle PiP mode.', err);
       }
     }
-  }, [mediaState.isCamOn, startCam]);
+  }, [mediaState.isCamOn, mediaState.isPipOn, startCam]);
 
   const toggleMem = useCallback(() => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
@@ -133,14 +127,13 @@ export const useMedia = (): UseMediaReturn => {
       audioRef.current.srcObject = null;
     }
     setMediaState((prev) => ({ ...prev, isMicOn: false }));
-    isMicOnRef.current = false;
   }, []);
 
   useEffect(() => {
     return () => {
       stopCam();
       stopMic();
-      if (isPipOnRef.current) {
+      if (mediaState.isPipOn) {
         document.exitPictureInPicture().catch((err) => {
           console.error('Error exiting PiP on cleanup.', err);
         });

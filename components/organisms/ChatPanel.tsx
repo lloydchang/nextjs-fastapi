@@ -50,6 +50,7 @@ const ChatPanel: React.FC = () => {
       const messageToSend = chatInput;
       setChatInput(''); // Clear the input immediately
       dispatch(sendMessage(messageToSend));
+      console.log('ChatPanel - Message sent:', messageToSend);
     }
   }, [dispatch, chatInput]);
 
@@ -58,7 +59,7 @@ const ChatPanel: React.FC = () => {
     console.log('ChatPanel - Chat history cleared.');
   };
 
-  const toggleFullScreen = () => {
+  const toggleFullScreenMode = () => {
     const elem = document.documentElement;
 
     if (!isFullScreen) {
@@ -77,12 +78,13 @@ const ChatPanel: React.FC = () => {
 
   // Callback to handle final speech results
   const handleSpeechResult = useCallback((finalResult: string) => {
+    console.log('ChatPanel - Speech recognized:', finalResult);
     setChatInput((prevInput) => prevInput + ' ' + finalResult);
   }, []);
 
   // Callback to handle interim speech updates (optional)
   const handleInterimUpdate = useCallback((interimResult: string) => {
-    console.log('Interim Result:', interimResult);
+    console.log('ChatPanel - Interim Result:', interimResult);
     // Optionally, implement live transcription display
   }, []);
 
@@ -131,7 +133,7 @@ const ChatPanel: React.FC = () => {
             toggleMem={toggleMem}
             eraseMemory={handleClearChat}
             isFullScreenOn={isFullScreen}
-            toggleFullScreen={toggleFullScreen}
+            toggleFullScreen={toggleFullScreenMode}
             hasVisibleMessages={hasVisibleMessages} // Pass down visible messages state
             isListening={isListening} // Pass isListening to ChatInput
           />
