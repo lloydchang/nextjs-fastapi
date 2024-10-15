@@ -31,6 +31,9 @@ const TalkPanel: React.FC = () => {
   const scrollableContainerRef = useRef<HTMLDivElement>(null);  // Ref for scrollable container
 
   useEffect(() => {
+    // Unselect existing talk before anything else
+    dispatch(setSelectedTalk(null));
+
     if (initialRender.current) {
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
@@ -39,7 +42,7 @@ const TalkPanel: React.FC = () => {
     } else {
       console.log('TalkPanel - Subsequent render detected, skipping search.');
     }
-  }, []);
+  }, []); // Empty dependency array to run only on mount
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
