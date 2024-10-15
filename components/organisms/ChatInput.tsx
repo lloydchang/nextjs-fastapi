@@ -80,6 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onClick={handleButtonClick}
           className={styles.sendButton}
           disabled={isListening} // Disable sending while listening
+          aria-label="Send Message"
         >
           Send
         </button>

@@ -142,12 +142,12 @@ export const useMedia = (): UseMediaReturn => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-useEffect(() => {
-  const storedMicState = localStorage.getItem('isMicOn');
-  if (storedMicState === 'true') {
-    toggleMic(); // Initialize microphone based on stored state
-  }
-}, [toggleMic]);
+  useEffect(() => {
+    const storedMicState = localStorage.getItem('isMicOn');
+    if (storedMicState === 'true') {
+      toggleMic(); // Initialize microphone based on stored state
+    }
+  }, [toggleMic]);
 
   return {
     mediaState,

@@ -105,11 +105,12 @@ const ChatPanel: React.FC = () => {
     onInterimUpdate: handleInterimUpdate,
   });
 
-  {isListening && (
-    <div className={styles.listeningIndicator}>
-      <span>🎤 Listening...</span>
-    </div>
-  )}
+{isListening && (
+  <div className={styles.listeningIndicator}>
+    <span>🎤 Listening...</span>
+    <div className={styles.pulse}></div>
+  </div>
+)}
 
   return (
     <div
@@ -117,6 +118,14 @@ const ChatPanel: React.FC = () => {
         isFullScreen ? styles.fullScreenMode : styles['Chat-panel']
       }`}
     >
+
+      {isListening && (
+        <div className={styles.listeningIndicator}>
+          <span>🎤 Listening...</span>
+          <div className={styles.pulse}></div>
+        </div>
+      )}
+
       <Image
         src={BackgroundImage}
         alt=""
