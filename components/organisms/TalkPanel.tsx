@@ -199,6 +199,19 @@ const TalkPanel: React.FC = () => {
 
   return (
     <div className={styles.TalkPanel}>
+      
+      {selectedTalk && (
+        <div className={styles.nowPlaying}>
+          <iframe
+            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
+            width="100%"
+            height="400px"
+            allow="autoplay; fullscreen; encrypted-media"
+            className={styles.videoFrame}
+          />
+        </div>
+      )}
+      
       <div className={styles.searchContainer}>
         <div className={styles.searchInputWrapper}>
           <input
@@ -230,18 +243,6 @@ const TalkPanel: React.FC = () => {
       {error && (
         <div className={styles.errorContainer}>
           <p className={styles.errorText}>{error}</p>
-        </div>
-      )}
-
-      {selectedTalk && (
-        <div className={styles.nowPlaying}>
-          <iframe
-            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            className={styles.videoFrame}
-          />
         </div>
       )}
 
