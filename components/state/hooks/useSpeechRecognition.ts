@@ -3,13 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
-  isMicOn: boolean;
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
 }
 
 const useSpeechRecognition = ({
-  isMicOn,
   onSpeechResult,
   onInterimUpdate,
 }: UseSpeechRecognitionProps) => {
@@ -28,7 +26,7 @@ const useSpeechRecognition = ({
       }
     }
 
-    if (recognitionRef.current && !isListening && isMicOn) {
+    if (recognitionRef.current && !isListening) {
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -36,7 +34,7 @@ const useSpeechRecognition = ({
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, [isListening, isMicOn]);
+  }, [isListening]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
@@ -79,9 +77,12 @@ const useSpeechRecognition = ({
     };
 
     recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => isMicOn && setTimeout(startListening, 3000);
+    recognition.onend = () => setTimeout(startListening, 3000);  // Always restart after recognition ends
 
     recognitionRef.current = recognition;
+
+    // Force start listening as soon as the component mounts
+    startListening();
 
     return () => {
       if (recognitionRef.current) {
@@ -91,12 +92,14 @@ const useSpeechRecognition = ({
       if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
       if (audioStreamRef.current) audioStreamRef.current.getTracks().forEach((track) => track.stop());
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
+  }, [onSpeechResult, onInterimUpdate, startListening]);
 
+  // Automatically restart listening when necessary
   useEffect(() => {
-    if (isMicOn && !isListening) startListening();
-    else if (!isMicOn && isListening) stopListening();
-  }, [isMicOn, isListening, startListening, stopListening]);
+    if (!isListening) {
+      startListening();
+    }
+  }, [isListening, startListening]);
 
   return { isListening };
 };
