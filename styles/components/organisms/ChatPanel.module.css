@@ -176,7 +176,7 @@
   .toolsLayer {
     width: 100%;
     max-width: none;
-    z-index: 101; /* Ensure it's above toolsLayer */
+    z-index: 101; /* Ensure it's above chatLayer */
   }
 
   .fullScreenMode {
