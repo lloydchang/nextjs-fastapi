@@ -62,12 +62,14 @@ const TalkPanel: React.FC = () => {
 
   const loadCachedTalk = () => {
     const cachedData = getCachedTalk();
-    if (cachedData) {
+    if (cachedData && cachedData.selectedTalk) {  // Ensure selectedTalk is not null
       dispatch(setTalks([cachedData.selectedTalk]));
       dispatch(setSelectedTalk(cachedData.selectedTalk));
       console.log('TalkPanel - Cached talk loaded:', cachedData.selectedTalk);
+    } else {
+      console.log('TalkPanel - No valid cached talk found.');
     }
-  };
+  }; 
 
   const getCachedTalk = (): { talks: Talk[]; selectedTalk: Talk | null } | null => {
     const cachedData = localStorage.getItem('cachedTalk');
