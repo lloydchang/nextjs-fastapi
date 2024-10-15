@@ -29,6 +29,14 @@
       recognition.interimResults = true; // Get interim results
       recognition.lang = 'en-US'; // Language
 
+      recognition.onstart = () => {
+        console.log('Speech recognition has started listening.');
+      };
+
+      recognition.onspeechend = () => {
+        console.log('Speech has ended. Waiting for new speech...');
+      };
+
       recognition.onresult = (event) => {
         let interimTranscript = '';
         let finalTranscript = '';
@@ -57,8 +65,11 @@
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         isListening = false;
+        // Don't automatically restart, require explicit user action
+      };
 
-        // Do not automatically restart unless explicitly clicked again
+      recognition.onnomatch = () => {
+        console.log('No speech match detected.');
       };
 
       startBtn.addEventListener('click', () => {
