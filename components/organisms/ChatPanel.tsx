@@ -76,11 +76,12 @@ const ChatPanel: React.FC = () => {
     setIsFullScreen(!isFullScreen);
   };
 
-  // Callback to handle final speech results
+  // Update handleSpeechResult in ChatPanel.tsx to include auto-send
   const handleSpeechResult = useCallback((finalResult: string) => {
     console.log('ChatPanel - Speech recognized:', finalResult);
     setChatInput((prevInput) => prevInput + ' ' + finalResult);
-  }, []);
+    handleChat(); // Automatically send the message
+  }, [handleChat]);
 
   // Callback to handle interim speech updates (optional)
   const handleInterimUpdate = useCallback((interimResult: string) => {

@@ -6,6 +6,7 @@ interface UseSpeechRecognitionProps {
   isMicOn: boolean;
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
+  onAutoSend?: () => void; // Optional callback for auto-send
 }
 
 const useSpeechRecognition = ({
