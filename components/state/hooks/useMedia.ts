@@ -1,6 +1,6 @@
 // File: components/state/hooks/useMedia.ts
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface MediaState {
   isCamOn: boolean;
@@ -22,12 +22,27 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: false, // Initialize microphone as off by default
+    isMicOn: true, // Initialize microphone as ON by default
     isPipOn: false,
     isMemOn: true,
   });
   const [micStream, setMicStream] = useState<MediaStream | null>(null); // Handle mic stream with state
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Automatically start the microphone when the component mounts
+  useEffect(() => {
+    const initializeMic = async () => {
+      if (mediaState.isMicOn && !micStream) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          setMicStream(stream); // Store the mic stream
+        } catch (err) {
+          console.error('Unable to access microphone:', err);
+        }
+      }
+    };
+    initializeMic();
+  }, [mediaState.isMicOn, micStream]);
 
   const startCam = useCallback(async () => {
     if (mediaState.isCamOn) return;
