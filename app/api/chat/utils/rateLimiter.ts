@@ -27,6 +27,7 @@ export function checkRateLimit(clientId: string): { limited: boolean; retryAfter
         return {
           limited: true,
           retryAfter: Math.ceil((RATE_LIMIT_WINDOW - (now - rateInfo.firstRequestTime)) / 1000),
+          controller: abortController, // Return controller as part of the response
         };
       } else {
         rateInfo.count += 1;
@@ -34,11 +35,18 @@ export function checkRateLimit(clientId: string): { limited: boolean; retryAfter
         return { limited: false, controller: abortController };
       }
     } else {
+      // Reset rate limit after window has passed
       rateLimitMap.set(clientId, { count: 1, firstRequestTime: now });
       return { limited: false, controller: abortController };
     }
   } else {
+    // Initialize rate limit tracking for a new client
     rateLimitMap.set(clientId, { count: 1, firstRequestTime: now });
     return { limited: false, controller: abortController };
   }
+}
+
+// Optional function to clear aborted controllers to avoid memory leaks
+export function clearAbortController(clientId: string) {
+  abortControllerMap.delete(clientId);
 }

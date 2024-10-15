@@ -27,6 +27,7 @@ const TalkPanel: React.FC = () => {
   const hasSentMessage = useRef(new Set<string>());
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null); // Ref for scrollable container
 
@@ -74,13 +75,20 @@ const TalkPanel: React.FC = () => {
       return;
     }
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
     isSearchInProgress.current = true;
     dispatch(setError(null));
     dispatch(setLoading(true));
 
     try {
       console.log(`TalkPanel - Performing search with query: ${query}`);
-      const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
+      const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`, {
+        signal: abortControllerRef.current.signal,
+      });
 
       if (response.status !== 200) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
@@ -95,12 +103,13 @@ const TalkPanel: React.FC = () => {
 
       console.log('TalkPanel - Successfully fetched talks:', data);
       await handleSearchResults(query, data);
-      dispatch(setLoading(false));
-      isSearchInProgress.current = false;
-      return;
     } catch (error) {
-      console.error('TalkPanel - Error during performSearch:', error);
-      dispatch(setError('Error fetching talks. Please try again.'));
+      if (axios.isCancel(error)) {
+        console.log('TalkPanel - Request aborted:', error.message);
+      } else {
+        console.error('TalkPanel - Error during performSearch:', error);
+        dispatch(setError('Error fetching talks. Please try again.'));
+      }
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
