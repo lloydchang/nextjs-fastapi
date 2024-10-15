@@ -32,6 +32,7 @@ const ChatPanel: React.FC = () => {
     toggleMem,
   } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
+  const [interimSpeech, setInterimSpeech] = useState<string>(''); // New state for interim speech
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null); // Ref to handle scrolling
 
@@ -47,8 +48,8 @@ const ChatPanel: React.FC = () => {
 
   const handleChat = useCallback(() => {
     if (chatInput.trim()) {
-      const messageToSend = chatInput;
-      setChatInput(''); // Clear the input immediately
+      const messageToSend = chatInput.trim();
+      setChatInput(''); // Clear the typed input
       dispatch(sendMessage(messageToSend));
       console.log('ChatPanel - Message sent:', messageToSend);
     }
@@ -76,17 +77,24 @@ const ChatPanel: React.FC = () => {
     setIsFullScreen(!isFullScreen);
   };
 
-  // Update handleSpeechResult in ChatPanel.tsx to include auto-send
-  const handleSpeechResult = useCallback((finalResult: string) => {
-    console.log('ChatPanel - Speech recognized:', finalResult);
-    setChatInput((prevInput) => prevInput + ' ' + finalResult);
-    handleChat(); // Automatically send the message
-  }, [handleChat]);
+  // Handle final speech results
+  const handleSpeechResult = useCallback(
+    (finalResult: string) => {
+      console.log('ChatPanel - Speech recognized:', finalResult);
+      if (finalResult.trim()) {
+        dispatch(sendMessage(finalResult.trim()));
+        console.log('ChatPanel - Final speech sent as message:', finalResult.trim());
+      }
+      setInterimSpeech(''); // Clear interim speech
+      setChatInput(''); // Clear typed input if any
+    },
+    [dispatch]
+  );
 
-  // Callback to handle interim speech updates (optional)
+  // Handle interim speech updates
   const handleInterimUpdate = useCallback((interimResult: string) => {
     console.log('ChatPanel - Interim Result:', interimResult);
-    // Optionally, implement live transcription display
+    setInterimSpeech(interimResult);
   }, []);
 
   // Initialize the Speech Recognition Hook
@@ -137,6 +145,7 @@ const ChatPanel: React.FC = () => {
             toggleFullScreen={toggleFullScreenMode}
             hasVisibleMessages={hasVisibleMessages} // Pass down visible messages state
             isListening={isListening} // Pass isListening to ChatInput
+            interimSpeech={interimSpeech} // Pass interim speech to ChatInput
           />
         </div>
       </div>

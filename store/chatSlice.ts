@@ -178,14 +178,14 @@ export const sendMessage = (
   const userMessage: Message =
     typeof input === 'string'
       ? {
-          id: `${Date.now()}`,
+          id: uuidv4(), // Use UUID for unique IDs
           sender: 'user',
           text: input,
           role: 'user',
           content: input,
         }
       : {
-          id: `${Date.now()}`,
+          id: uuidv4(),
           sender: input.sender || 'user',
           text: input.text,
           role: 'user',
