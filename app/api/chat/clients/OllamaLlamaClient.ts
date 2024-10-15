@@ -11,7 +11,7 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
  */
 export async function generateFromOllamaLlama(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
-  const combinedPrompt = `User Prompt: ${prompt}`;
+  const combinedPrompt = `${prompt}`;
 
   // logger.silly(`app/api/chat/clients/OllamaLlamaClient.ts - Sending request to Ollama Llama. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 

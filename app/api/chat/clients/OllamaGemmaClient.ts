@@ -17,7 +17,7 @@ export async function generateFromOllamaGemma(params: { endpoint: string; prompt
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Request body: ${requestBody}`);
+    // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',

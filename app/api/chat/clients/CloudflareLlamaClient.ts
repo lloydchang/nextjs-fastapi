@@ -19,7 +19,7 @@ export async function generateFromCloudflareLlama(params: {
   xAuthKey: string;
 }): Promise<string | null> {
   const { endpoint, prompt, model, token, xAuthEmail, xAuthKey } = params;
-  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
+  const combinedPrompt = `${prompt}`;
 
   // Log the initiation of the request
   logger.silly(`app/api/chat/clients/CloudflareLlamaClient.ts - Initiating request to Cloudflare Llama API at ${endpoint} with model ${model}`);

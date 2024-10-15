@@ -6,7 +6,7 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
 
 export async function generateFromGoogleVertexGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
-  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
+  const combinedPrompt = `${prompt}`;
 
   logger.silly(`generateFromGoogleVertexGemma - Sending request to GoogleVertex Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 

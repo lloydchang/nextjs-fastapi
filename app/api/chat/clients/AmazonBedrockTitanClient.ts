@@ -24,7 +24,7 @@ export async function generateFromAmazonBedrockTitan(endpoint: string, prompt: s
     return null;
   }
 
-  const combinedPrompt = `${systemPrompt}\nUser Prompt: ${prompt}`;
+  const combinedPrompt = `${prompt}`;
   logger.info(`app/api/chat/clients/AmazonBedrockClient.ts - Sending request to Amazon Bedrock Titan. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
