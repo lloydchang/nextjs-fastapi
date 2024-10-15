@@ -6,7 +6,6 @@ interface UseSpeechRecognitionProps {
   isMicOn: boolean;
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
-  onAutoSend?: () => void; // Optional callback for auto-send
 }
 
 const useSpeechRecognition = ({
@@ -62,10 +61,12 @@ const useSpeechRecognition = ({
         }
 
         if (finalTranscript) {
+          console.log('SpeechRecognition - Final Transcript:', finalTranscript);
           onSpeechResult(finalTranscript.trim());
         }
 
         if (interimTranscript) {
+          console.log('SpeechRecognition - Interim Transcript:', interimTranscript);
           onInterimUpdate(interimTranscript.trim());
         }
       };

@@ -81,7 +81,7 @@ const ChatPanel: React.FC = () => {
   // Handle final speech results
   const handleSpeechResult = useCallback(
     (finalResult: string) => {
-      console.log('ChatPanel - Speech recognized:', finalResult);
+      console.log('ChatPanel - Speech recognized (Final):', finalResult);
       if (finalResult.trim()) {
         dispatch(sendMessage({ text: finalResult.trim(), hidden: false }));
         console.log('ChatPanel - Final speech sent as message:', finalResult.trim());
@@ -104,6 +104,12 @@ const ChatPanel: React.FC = () => {
     onSpeechResult: handleSpeechResult,
     onInterimUpdate: handleInterimUpdate,
   });
+
+  {isListening && (
+    <div className={styles.listeningIndicator}>
+      <span>🎤 Listening...</span>
+    </div>
+  )}
 
   return (
     <div
