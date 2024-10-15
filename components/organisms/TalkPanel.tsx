@@ -30,16 +30,16 @@ const TalkPanel: React.FC = () => {
 
   useEffect(() => {
     if (initialRender.current) {
-      // Skip any actions on the first render
-      initialRender.current = false; // Set to false for subsequent renders
-      return; // Exit early to prevent any search or side effects
+      // Perform the search on the first render
+      console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
+      performSearchWithExponentialBackoff(searchQuery);
+      hasFetched.current = true; // Set fetched flag to true after the first search is made
+      initialRender.current = false; // Set to false after the first search is done
+    } else {
+      // Skip actions for subsequent renders
+      console.log('TalkPanel - Subsequent render detected, skipping search.');
     }
-
-    // Proceed with search or other actions only after the initial render
-    console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
-    performSearchWithExponentialBackoff(searchQuery);
-    hasFetched.current = true; // Set fetched flag to true after the first search is made
-  }, [searchQuery]); // Monitor changes to searchQuery for subsequent renders
+  }, []); // No dependencies, runs only on mount  
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
