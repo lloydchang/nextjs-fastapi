@@ -39,6 +39,9 @@ const TalkPanel: React.FC = () => {
     }
   }, []);  
 
+  // Close all functions and effects correctly here
+  // Ensure every block is properly closed before the return statement
+
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
     let processedData = data;
@@ -210,6 +213,7 @@ const TalkPanel: React.FC = () => {
     }
   };
 
+  // Ensure return statement is correct and follows the JSX rules
   return (
     <div className={styles.TalkPanel}>
       <div className={styles.searchContainer}>
