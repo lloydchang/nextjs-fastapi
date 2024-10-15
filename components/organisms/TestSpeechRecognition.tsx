@@ -1,6 +1,6 @@
 // File: components/organisms/TestSpeechRecognition.tsx
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import styles from 'styles/components/organisms/TestSpeechRecognition.module.css';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
 
@@ -15,25 +15,22 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   onSpeechResult,
   onInterimUpdate,
 }) => {
+  const [interimTranscript, setInterimTranscript] = useState<string>(''); // Track interim results in state
+  const [finalTranscript, setFinalTranscript] = useState<string>(''); // Track final results in state
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
-  const interimRef = useRef<string>(''); // Use ref to store interim results without causing re-renders
-  const finalRef = useRef<string>(''); // Use ref to store final results without causing re-renders
-  const [forceUpdate, setForceUpdate] = useState(0); // State to trigger a forced re-render when needed
 
   // Memoized final result handler
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
-    finalRef.current = text; // Update final result ref
+    setFinalTranscript(text); // Update final result in state
     onSpeechResult(text); // Propagate the result to the parent component
-    setForceUpdate((prev) => prev + 1); // Trigger a re-render to display final results
   }, [onSpeechResult]);
 
   // Memoized interim result handler
   const handleInterim = useCallback((text: string) => {
     console.log('Interim Speech:', text);
-    interimRef.current = text; // Update interim result ref
+    setInterimTranscript(text); // Update interim result in state
     onInterimUpdate(text); // Propagate interim update to the parent component
-    setForceUpdate((prev) => prev + 1); // Trigger a re-render to display interim results
   }, [onInterimUpdate]);
 
   // Use the custom hook for speech recognition
@@ -55,13 +52,13 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
       <div className={styles.transcriptContainer}>
         <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
         <textarea
-          value={interimRef.current} // Use ref value directly to avoid re-renders
+          value={interimTranscript} // Use state value directly
           readOnly
           placeholder="Interim Speech..."
           rows={2}
         />
         <textarea
-          value={finalRef.current} // Use ref value directly to avoid re-renders
+          value={finalTranscript} // Use state value directly
           readOnly
           placeholder="Final Speech..."
           rows={2}

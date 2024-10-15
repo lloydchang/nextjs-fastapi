@@ -1,5 +1,3 @@
-// File: components/state/hooks/useSpeechRecognition.ts
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
@@ -18,10 +16,28 @@ const useSpeechRecognition = ({
   const [finalTranscript, setFinalTranscript] = useState<string>(''); // Track final speech results
   const recognitionRef = useRef<SpeechRecognition | null>(null); // Store recognition instance in ref to avoid re-initialization
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Use ref to track restart timeout
+  const audioStreamRef = useRef<MediaStream | null>(null); // Store microphone stream reference
 
   // Start listening logic
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     const recognition = recognitionRef.current;
+
+    if (!audioStreamRef.current) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,    // Enable echo cancellation
+            noiseSuppression: true,    // Enable noise suppression
+            autoGainControl: true,     // Automatically control microphone gain
+          },
+        });
+        audioStreamRef.current = stream; // Save the audio stream reference
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        return;
+      }
+    }
+
     if (recognition && !isListening && isMicOn) {
       try {
         recognition.start();
@@ -36,10 +52,18 @@ const useSpeechRecognition = ({
   // Stop listening logic
   const stopListening = useCallback(() => {
     const recognition = recognitionRef.current;
+    const stream = audioStreamRef.current;
+
     if (recognition && isListening) {
       recognition.stop();
       setIsListening(false);
       console.log('Speech recognition stopped.');
+    }
+
+    // Stop audio tracks when stopping recognition
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
     }
   }, [isListening]);
 
@@ -118,6 +142,7 @@ const useSpeechRecognition = ({
     return () => {
       // Cleanup on unmount
       const recognition = recognitionRef.current;
+      const stream = audioStreamRef.current;
       if (recognition) {
         recognition.onend = null;
         recognition.onresult = null;
@@ -127,6 +152,10 @@ const useSpeechRecognition = ({
       }
       if (restartTimeoutRef.current) {
         clearTimeout(restartTimeoutRef.current);
+      }
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        audioStreamRef.current = null;
       }
     };
   }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
