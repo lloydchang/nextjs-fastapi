@@ -31,7 +31,7 @@ const config: AppConfig = getConfig();
 
 const MAX_PROMPT_LENGTH = 128000; // Adjust based on token size limit
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
-const maxContextMessages = 0; // Keep only the last 0 messages
+const maxContextMessages = 100; // Keep only the last 100 messages (adjust based on needs)
 
 // Maps to track client-specific data
 const clientMutexes = new Map<string, Mutex>();
@@ -59,7 +59,7 @@ function isValidConfig(value: any): boolean {
  */
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
-  const clientId = request.headers.get('x-client-id') || 'unknown-client';
+  const clientId = request.headers.get('x-client-id') || `anon-${uuidv4()}`; // Generate unique ID for anonymous clients
 
   // Handle rate limiting
   const { limited, retryAfter } = checkRateLimit(clientId);
@@ -89,14 +89,20 @@ export async function POST(request: NextRequest) {
     lastInteractionTimes.set(clientId, Date.now());
 
     try {
-      const { messages } = await request.json();
+      const body = await request.json();
+      const { messages } = body;
+
+      // Ensure messages is an array
+      if (!Array.isArray(messages)) {
+        return NextResponse.json({ error: 'Invalid request format: messages must be an array' }, { status: 400 });
+      }
 
       // Filter out invalid messages (e.g., empty content)
       const validMessages = messages.filter(
         (msg: any) => msg.content && typeof msg.content === 'string' && msg.content.trim() !== ''
       );
 
-      if (!Array.isArray(validMessages) || validMessages.length === 0) {
+      if (validMessages.length === 0) {
         logger.warn(
           `app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`
         );
@@ -146,17 +152,19 @@ export async function POST(request: NextRequest) {
                     return null;
                   }
 
-                  // Enqueue response only if it's not empty
-                  if (botResponse.trim().length > 0) {
+                  // Get the response from the handler function
+                  const botResponse = await handlerFunction({ userPrompt: prompt, textModel }, config);
+                  
+                  if (botResponse && botResponse.trim().length > 0) {
                     controller.enqueue(
-                      `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                      `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: botResponse })}\n\n`
                     );
 
-                    context.push({ role: 'bot', content: botResponse, persona: botPersona });
+                    context.push({ role: 'bot', content: botResponse, persona: `${personaPrefix} ${textModel}` });
                     return true;
                   }
 
-                  return handlerFunction({ userPrompt: prompt, textModel }, config);
+                  return false;
                 },
               });
             }
@@ -218,15 +226,7 @@ export async function POST(request: NextRequest) {
                 if (botResponse && typeof botResponse === 'string') {
                   logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
-                  // Enqueue response only if it's not empty
-                  if (botResponse.trim().length > 0) {
-                    controller.enqueue(
-                      `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
-                    );
-
-                    context.push({ role: 'bot', content: botResponse, persona: botPersona });
-                    return true;
-                  }
+                  return true;
                 }
                 return false;
               } catch (error) {
@@ -248,6 +248,7 @@ export async function POST(request: NextRequest) {
               clientContexts.delete(clientId);
               lastInteractionTimes.delete(clientId);
               logger.silly(`app/api/chat/route.ts - Session timed out for clientId: ${clientId}. Context reset.`);
+              context = []; // Reset context after timeout
             }
 
             if (!hasResponse) {
