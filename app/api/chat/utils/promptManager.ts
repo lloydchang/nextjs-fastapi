@@ -1,7 +1,7 @@
 // File: app/api/chat/utils/promptManager.ts
 
-import { logger } from 'app/api/chat/utils/logger';
-import { truncatePrompt } from 'app/api/chat/utils/promptTruncator';
+import logger from 'app/api/chat/utils/logger';
+import truncatePrompt from 'app/api/chat/utils/promptTruncator';
 
 export async function* managePrompt(
   prompt: string,
