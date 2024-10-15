@@ -4,18 +4,12 @@ import React, { useState, useCallback } from 'react';
 import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition'; // Import TestSpeechRecognition component
 
 const SpeechTest: React.FC = () => {
-  const [interim, setInterim] = useState<string>('');
-  const [final, setFinal] = useState<string>('');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false); // Track dark mode state
+  const [final, setFinal] = useState<string>(''); // Only track final results in this component
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Start in dark mode by default
 
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
     setFinal(text);
-  }, []);
-
-  const handleInterim = useCallback((text: string) => {
-    console.log('Interim Speech:', text);
-    setInterim(text);
   }, []);
 
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
@@ -34,18 +28,7 @@ const SpeechTest: React.FC = () => {
       </button>
       <TestSpeechRecognition
         isMicOn={true} // Automatically turn on mic for testing
-        onSpeechResult={handleFinal}
-        onInterimUpdate={handleInterim}
-      />
-      <textarea
-        value={interim}
-        readOnly
-        placeholder="Interim Speech..."
-        rows={2}
-        style={{
-          backgroundColor: isDarkMode ? 'grey' : 'lightgrey',
-          color: isDarkMode ? 'white' : 'black',
-        }}
+        onSpeechResult={handleFinal} // Only handle the final speech result
       />
       <textarea
         value={final}
