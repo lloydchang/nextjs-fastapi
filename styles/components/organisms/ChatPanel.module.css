@@ -115,7 +115,7 @@
 /* Listening Indicator */
 .listeningIndicator {
   position: absolute;
-  top: 10px;
+  top: 50px; /* Increase the top margin to move the indicator higher */
   left: 10px;
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
