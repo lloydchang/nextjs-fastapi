@@ -76,7 +76,10 @@ export const useMedia = (): UseMediaReturn => {
         if (audioRef.current) {
           audioRef.current.srcObject = stream;
           audioStreamRef.current = stream;
-          setMediaState((prev) => ({ ...prev, isMicOn: true }));
+          setMediaState((prev) => {
+            localStorage.setItem('isMicOn', 'true');
+            return { ...prev, isMicOn: true };
+          });
         }
       } catch (err) {
         console.error('Unable to access microphone.', err);
@@ -91,7 +94,10 @@ export const useMedia = (): UseMediaReturn => {
       if (audioRef.current) {
         audioRef.current.srcObject = null;
       }
-      setMediaState((prev) => ({ ...prev, isMicOn: false }));
+      setMediaState((prev) => {
+        localStorage.setItem('isMicOn', 'false');
+        return { ...prev, isMicOn: false };
+      });
     }
   }, [mediaState.isMicOn]);
 

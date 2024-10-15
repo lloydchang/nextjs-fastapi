@@ -2,12 +2,11 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from 'store/store'; // Ensure this path is correct
-import ChatMessage from 'components/atoms/ChatMessage'; // Ensure this path is correct
-import styles from 'styles/components/molecules/ChatMessages.module.css'; // Ensure this path is correct
-import { Message } from 'types'; // Import the Message type to ensure prop compatibility
+import { RootState } from 'store/store';
+import ChatMessage from 'components/atoms/ChatMessage';
+import styles from 'styles/components/molecules/ChatMessages.module.css';
+import { Message } from 'types';
 
-// Add isFullScreen prop to handle Full Screen mode
 interface ChatMessagesProps {
   isFullScreen: boolean;
 }

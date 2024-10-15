@@ -37,26 +37,6 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
-    saveMessage: (
-      state,
-      action: PayloadAction<{
-        text: string;
-        sender?: 'user' | 'bot';
-        hidden?: boolean;
-        persona?: string;
-      }>
-    ) => {
-      const newMessage: Message = {
-        id: uuidv4(),
-        sender: action.payload.sender || 'bot',
-        text: action.payload.text,
-        role: action.payload.sender === 'user' ? 'user' : 'bot',
-        content: action.payload.text,
-        persona: action.payload.persona,
-        hidden: action.payload.hidden || false,
-      };
-      state.messages.push(newMessage);
-    },
     setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
     },
@@ -221,5 +201,5 @@ export function parseIncomingMessage(jsonString: string) {
   }
 }
 
-export const { clearMessages, saveMessage } = chatSlice.actions;
+export const { clearMessages, setError, clearError } = chatSlice.actions;
 export default chatSlice.reducer;
