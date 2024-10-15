@@ -75,13 +75,12 @@ const useSpeechRecognition = ({
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
         if (isMicOn) {
-          // Delay restarting to prevent rapid retries
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // 1-second delay
+          }, 1000);
         }
       };
 
@@ -89,13 +88,12 @@ const useSpeechRecognition = ({
         console.log('Speech recognition ended.');
         setIsListening(false);
         if (isMicOn) {
-          // Delay restarting to prevent rapid retries
           if (restartTimeoutRef.current) {
             clearTimeout(restartTimeoutRef.current);
           }
           restartTimeoutRef.current = setTimeout(() => {
             startListening();
-          }, 1000); // 1-second delay
+          }, 1000);
         }
       };
 
@@ -119,10 +117,11 @@ const useSpeechRecognition = ({
     };
   }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
 
+  // Ensure consistent start/stop logic
   useEffect(() => {
-    if (isMicOn) {
+    if (isMicOn && !isListening) {
       startListening();
-    } else {
+    } else if (!isMicOn && isListening) {
       stopListening();
     }
 
@@ -131,7 +130,7 @@ const useSpeechRecognition = ({
         clearTimeout(restartTimeoutRef.current);
       }
     };
-  }, [isMicOn, startListening, stopListening]);
+  }, [isMicOn, startListening, stopListening, isListening]);
 
   return { isListening };
 };
