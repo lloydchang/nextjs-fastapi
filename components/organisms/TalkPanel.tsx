@@ -162,17 +162,17 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
-    console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
+  const throttledSendTranscriptForTalk = throttle((query: string, talk: Talk) => {
+    console.log(`TalkPanel - Throttled send for talk: ${talk.title}`);
     sendTranscriptForTalk(query, talk);
-  }, 1000); 
+  }, 3000);  // Throttle sending messages to once every 3 seconds
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - Sending first available transcript for query:', query);
     for (let i = 0; i < talks.length; i++) {
       try {
         console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
-        await debouncedSendTranscriptForTalk(query, talks[i]);
+        await throttledSendTranscriptForTalk(query, talks[i]);
         return;
       } catch (error) {
         console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
@@ -184,14 +184,14 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (searchQuery && selectedTalk) {
       console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
-      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [searchQuery]);
 
   useEffect(() => {
     if (selectedTalk) {
       console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
-      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [selectedTalk]);
 
