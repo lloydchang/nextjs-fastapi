@@ -33,8 +33,28 @@
         console.log('Speech recognition has started listening.');
       };
 
+      recognition.onspeechstart = () => {
+        console.log('Speech detected.');
+      };
+
+      recognition.onaudiostart = () => {
+        console.log('Audio capturing started.');
+      };
+
+      recognition.onaudioend = () => {
+        console.log('Audio capturing ended.');
+      };
+
+      recognition.onsoundstart = () => {
+        console.log('Sound detected.');
+      };
+
+      recognition.onsoundend = () => {
+        console.log('Sound ended.');
+      };
+
       recognition.onspeechend = () => {
-        console.log('Speech has ended. Waiting for new speech...');
+        console.log('Speech has ended.');
       };
 
       recognition.onresult = (event) => {
@@ -65,7 +85,6 @@
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         isListening = false;
-        // Don't automatically restart, require explicit user action
       };
 
       recognition.onnomatch = () => {
