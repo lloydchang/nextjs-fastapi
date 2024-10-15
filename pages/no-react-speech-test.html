@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speech Recognition Test</title>
+</head>
+<body>
+  <h1>Speech Recognition Test</h1>
+  <button id="start-btn">Start Recognition</button>
+  <button id="stop-btn">Stop Recognition</button>
+
+  <p><strong>Interim Results:</strong> <span id="interim-results"></span></p>
+  <p><strong>Final Results:</strong> <span id="final-results"></span></p>
+
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const finalResultsSpan = document.getElementById('final-results');
+    const interimResultsSpan = document.getElementById('interim-results');
+
+    let recognition;
+    let isListening = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognitionConstructor();
+      recognition.continuous = true; // Listen continuously
+      recognition.interimResults = true; // Get interim results
+      recognition.lang = 'en-US'; // Language
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript.trim();
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript + ' ';
+          }
+        }
+
+        // Update the DOM with final and interim results
+        finalResultsSpan.textContent = finalTranscript.trim();
+        interimResultsSpan.textContent = interimTranscript.trim();
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+      };
+
+      recognition.onend = () => {
+        console.log('Speech recognition ended.');
+        isListening = false;
+      };
+
+      startBtn.addEventListener('click', () => {
+        if (!isListening) {
+          recognition.start();
+          isListening = true;
+          console.log('Speech recognition started.');
+        }
+      });
+
+      stopBtn.addEventListener('click', () => {
+        if (isListening) {
+          recognition.stop();
+          isListening = false;
+          console.log('Speech recognition stopped.');
+        }
+      });
+    } else {
+      alert('Your browser does not support Speech Recognition.');
+    }
+  </script>
+</body>
+</html>
