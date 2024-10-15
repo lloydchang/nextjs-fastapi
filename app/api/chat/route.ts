@@ -6,15 +6,14 @@ import { getConfig, AppConfig } from 'app/api/chat/utils/config';
 import { checkRateLimit, clearAbortController } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter and clear function
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
+import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaTextModel';
 import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
 import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
+import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaTextModel';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
-import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
 
 const config: AppConfig = getConfig();
@@ -97,8 +96,7 @@ export async function POST(request: NextRequest) {
             personaPrefix: string,
             textModelConfigKey: keyof AppConfig,
             endpointEnvVars: string[],
-            handlerFunction: (input: { userPrompt: string; textModel: string }, config: AppConfig) => Promise<string | null>,
-            summarizeFunction: (text: string) => Promise<string | null>
+            handlerFunction: (input: { userPrompt: string; textModel: string }, config: AppConfig) => Promise<string | null>
           ) => {
             if (isValidConfig(config[textModelConfigKey]) && validateEnvVars(endpointEnvVars)) {
               const textModel = config[textModelConfigKey] || "defaultModel";
@@ -112,31 +110,16 @@ export async function POST(request: NextRequest) {
                     prompt += `${extractValidMessages(currentContext)}`;
                   }
 
-                  let finalPrompt = prompt;
-                  // Use AsyncGenerator to send intermediate prompt results
-                  for await (const updatedPrompt of managePrompt(
-                    prompt,
-                    MAX_PROMPT_LENGTH,
-                    summarizeFunction,
-                    clientId,
-                    textModel
-                  )) {
-                    if (updatedPrompt.trim().length === 0) {
-                      logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty after management.`);
-                      continue;
-                    }
-                    try {
-                      controller.enqueue(
-                        `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: updatedPrompt })}\n\n`
-                      );
-                    } catch (enqueueError) {
-                      logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
-                    }
-                    finalPrompt = updatedPrompt;
+                  try {
+                    controller.enqueue(
+                      `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: prompt })}\n\n`
+                    );
+                  } catch (enqueueError) {
+                    logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
                   }
 
-                  if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                    context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                  if (context.length > 0 && context[context.length - 1].content !== prompt) {
+                    context[context.length - 1] = { ...context[context.length - 1], content: prompt };
                   }
                   clientContexts.set(clientId, context);
 
@@ -151,16 +134,14 @@ export async function POST(request: NextRequest) {
             'Ollama',
             'ollamaGemmaTextModel',
             ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
-            handleTextWithOllamaGemmaTextModel,
-            summarizeFunction
+            handleTextWithOllamaGemmaTextModel
           );
 
           addBotFunction(
             'Cloudflare',
             'cloudflareGemmaTextModel',
             ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
-            handleTextWithCloudflareGemmaTextModel,
-            summarizeFunction
+            handleTextWithCloudflareGemmaTextModel
           );
 
           // Add more bot functions as needed...
