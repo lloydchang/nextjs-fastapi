@@ -15,10 +15,9 @@ const useSpeechRecognition = ({
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening) {
+    if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -27,15 +26,15 @@ const useSpeechRecognition = ({
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, [isListening]);
+  }, []);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
+    if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
       console.log('Speech recognition stopped.');
     }
-  }, [isListening]);
+  }, []);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -74,28 +73,13 @@ const useSpeechRecognition = ({
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-
-        if (isMicOn) {
-          if (restartTimeoutRef.current) {
-            clearTimeout(restartTimeoutRef.current);
-          }
-          restartTimeoutRef.current = setTimeout(() => {
-            startListening();
-          }, 1000);
-        }
       };
 
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         setIsListening(false);
-
         if (isMicOn) {
-          if (restartTimeoutRef.current) {
-            clearTimeout(restartTimeoutRef.current);
-          }
-          restartTimeoutRef.current = setTimeout(() => {
-            startListening();
-          }, 1000);
+          recognition.start(); // Restart if mic is on
         }
       };
 
@@ -106,32 +90,20 @@ const useSpeechRecognition = ({
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.onend = null;
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.abort();
+        recognitionRef.current.stop();
         recognitionRef.current = null;
       }
       setIsListening(false);
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-      }
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate]);
 
   useEffect(() => {
-    if (isMicOn && !isListening) {
+    if (isMicOn) {
       startListening();
-    } else if (!isMicOn && isListening) {
+    } else {
       stopListening();
     }
-
-    return () => {
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-      }
-    };
-  }, [isMicOn, startListening, stopListening, isListening]);
+  }, [isMicOn, startListening, stopListening]);
 
   return { isListening };
 };
