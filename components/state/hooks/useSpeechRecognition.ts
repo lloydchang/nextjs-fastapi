@@ -1,36 +1,50 @@
 // File: components/state/hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
+  isMicOn?: boolean;
 }
 
 const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
+  isMicOn = false,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const restartTimeoutRef = useRef<number | null>(null);
 
-  // Start speech recognition
   const startListening = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getAudioTracks().forEach(track => {
-        track.enabled = true;  // Ensure mic is on but not playing audio back
-      });
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = null;
+    }
 
-      if (recognition && !isListening) {
-        recognition.start();
+    try {
+      if (isMicOn) {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
+      if (recognitionRef.current && !isListening) {
+        recognitionRef.current.start();
         setIsListening(true);
         console.log('Speech recognition started.');
       }
     } catch (error) {
       console.error('Error accessing microphone:', error);
     }
-  }, [recognition, isListening]);
+  }, [isListening, isMicOn]);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      console.log('Speech recognition stopped.');
+    }
+  }, [isListening]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -41,7 +55,6 @@ const useSpeechRecognition = ({
       return;
     }
 
-    // Create a new instance of SpeechRecognition
     const newRecognition = new SpeechRecognitionConstructor();
     newRecognition.continuous = true;
     newRecognition.interimResults = true;
@@ -61,35 +74,35 @@ const useSpeechRecognition = ({
       if (interim) onInterimUpdate(interim.trim());
     };
 
-    newRecognition.onerror = () => {
-      setIsListening(false);
-      console.error('Speech recognition error, restarting...');
-      startListening();  // Force restart on error
+    newRecognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error !== 'no-speech') {
+        stopListening();
+        restartTimeoutRef.current = window.setTimeout(startListening, 1000);
+      }
     };
 
     newRecognition.onend = () => {
+      console.log('Speech recognition ended.');
       setIsListening(false);
-      console.log('Speech recognition ended, restarting...');
-      startListening();  // Force restart on end
+      restartTimeoutRef.current = window.setTimeout(startListening, 1000);
     };
 
-    setRecognition(newRecognition);
+    recognitionRef.current = newRecognition;
 
-    // Clean up when the component unmounts
-    return () => {
-      newRecognition.stop();
-      console.log('Speech recognition cleaned up.');
-    };
-  }, [onSpeechResult, onInterimUpdate, startListening]);
-
-  // Automatically start listening when recognition is ready
-  useEffect(() => {
-    if (recognition && !isListening) {
+    if (isMicOn) {
       startListening();
     }
-  }, [recognition, isListening, startListening]);
 
-  return { isListening };
+    return () => {
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+      }
+      stopListening();
+    };
+  }, [onSpeechResult, onInterimUpdate, startListening, stopListening, isMicOn]);
+
+  return { isListening, startListening, stopListening };
 };
 
 export default useSpeechRecognition;

@@ -2,57 +2,59 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
-import styles from 'styles/components/atoms/SpeechTest.module.css'; // Import the CSS module
+import styles from 'styles/components/atoms/SpeechTest.module.css';
 
 const SpeechTest: React.FC = () => {
-  const [interimTranscript, setInterimTranscript] = useState<string>(''); // Track interim results in state
-  const [finalTranscript, setFinalTranscript] = useState<string>(''); // Track final results in state
-  const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Start in dark mode by default
+  const [interimTranscript, setInterimTranscript] = useState<string>('');
+  const [finalTranscript, setFinalTranscript] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
-  // Memoized final result handler
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
-    setFinalTranscript(text); // Update final result in state
+    setFinalTranscript(prev => prev + ' ' + text);
   }, []);
 
-  // Memoized interim result handler
   const handleInterim = useCallback((text: string) => {
     console.log('Interim Speech:', text);
-    setInterimTranscript(text); // Update interim result in state
+    setInterimTranscript(text);
   }, []);
 
-  // Use the custom hook for speech recognition
-  const { isListening: speechRecognitionListening } = useSpeechRecognition({
-    isMicOn: true, // Automatically turn on mic for testing
+  const { isListening, startListening, stopListening } = useSpeechRecognition({
+    isMicOn: true,
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
   });
 
-  // Only update the `isListening` state when the value changes
-  useEffect(() => {
-    if (isListening !== speechRecognitionListening) {
-      setIsListening(speechRecognitionListening);
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
     }
-  }, [speechRecognitionListening, isListening]);
+  };
 
   return (
     <div className={`${styles.speechTest} ${isDarkMode ? styles.dark : styles.light}`}>
-      <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
+      <button onClick={toggleListening} className={styles.toggleButton}>
+        {isListening ? 'Stop Listening 🙉' : 'Start Listening 👂'}
+      </button>
       <textarea
-        value={interimTranscript} // Display interim transcript
+        value={interimTranscript}
         readOnly
         placeholder="Interim Speech..."
-        rows={1}
+        rows={3}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
       <textarea
-        value={finalTranscript} // Display final transcript
+        value={finalTranscript}
         readOnly
         placeholder="Final Speech..."
-        rows={1}
+        rows={5}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
       />
+      <button onClick={() => setIsDarkMode(!isDarkMode)} className={styles.modeToggle}>
+        Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
+      </button>
     </div>
   );
 };
