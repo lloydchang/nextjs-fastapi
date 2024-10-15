@@ -64,9 +64,11 @@ export async function POST(request: NextRequest) {
   // Log the incoming request at the "silly" log level
   logger.silly(`app/api/chat/route.ts - Received request [${requestId}] from clientId: ${clientId}`);
   logger.silly(`app/api/chat/route.ts - Request headers: ${JSON.stringify([...request.headers])}`);
-  
+
+  // Read the request body only once
+  let requestBody;
   try {
-    const requestBody = await request.json();
+    requestBody = await request.json();
     logger.silly(`app/api/chat/route.ts - Request body: ${JSON.stringify(requestBody)}`);
   } catch (error) {
     logger.error(`app/api/chat/route.ts - Error parsing request body: ${error}`);
