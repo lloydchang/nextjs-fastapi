@@ -29,16 +29,20 @@ const TalkPanel: React.FC = () => {
   const isMounted = useRef(false); // Track if component is mounted
 
   useEffect(() => {
-    if (isMounted.current && !hasFetched.current) {
-      console.log('TalkPanel - Initial render, do not search yet.');
-      return;
-    } else if (!isMounted.current) {
+    // This block ensures that nothing happens on the very first render
+    if (initialRender.current) {
+      initialRender.current = false; // Set to false after the first render
+      return; // Prevents any action on the initial render
+    }
+
+    // After the initial render, perform actions based on state changes
+    if (!isMounted.current) {
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
       hasFetched.current = true; // Ensure only one fetch occurs
       isMounted.current = true;
     }
-  
+
     return () => {
       isMounted.current = false;
       // Intentionally, no reset of hasFetched.current nor hasSentMessage.current
