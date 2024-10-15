@@ -1,5 +1,3 @@
-// File: components/state/hooks/useSpeechRecognition.ts
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
@@ -28,15 +26,16 @@ const useSpeechRecognition = ({
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
-            echoCancellation: true,    // Enable echo cancellation
-            noiseSuppression: true,    // Enable noise suppression
-            autoGainControl: true,     // Automatically control microphone gain
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
           },
         });
+        console.log("Microphone stream started:", stream);
         audioStreamRef.current = stream; // Save the audio stream reference
       } catch (error) {
         console.error('Error accessing microphone:', error);
-        return;
+        return; // Exit if microphone access fails
       }
     }
 
@@ -66,11 +65,11 @@ const useSpeechRecognition = ({
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
+      console.log('Microphone stream stopped.');
     }
   }, [isListening]);
 
   useEffect(() => {
-    // Initialize SpeechRecognition only once
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -120,21 +119,28 @@ const useSpeechRecognition = ({
           clearTimeout(restartTimeoutRef.current);
         }
         restartTimeoutRef.current = setTimeout(() => {
-          startListening(); // Restart after a delay only if mic is still on
+          if (recognitionRef.current) {
+            recognitionRef.current.start(); // Restart speech recognition if mic is still on
+            setIsListening(true);
+          }
         }, 3000);
       }
     };
 
     recognitionInstance.onend = () => {
-      setIsListening(false); // Set listening to false when recognition ends
+      console.log('Speech recognition ended.');
+      setIsListening(false);
 
-      // Only restart if the mic is on and we didn't manually stop
+      // Restart speech recognition only if the mic is still on and it's not stopped manually
       if (isMicOn) {
         if (restartTimeoutRef.current) {
           clearTimeout(restartTimeoutRef.current);
         }
         restartTimeoutRef.current = setTimeout(() => {
-          startListening(); // Restart after a delay only if mic is still on
+          if (recognitionRef.current) {
+            recognitionRef.current.start(); // Restart after a delay if mic is still on
+            setIsListening(true);
+          }
         }, 3000);
       }
     };
@@ -142,7 +148,6 @@ const useSpeechRecognition = ({
     recognitionRef.current = recognitionInstance;
 
     return () => {
-      // Cleanup on unmount
       const recognition = recognitionRef.current;
       const stream = audioStreamRef.current;
       if (recognition) {
@@ -160,10 +165,9 @@ const useSpeechRecognition = ({
         audioStreamRef.current = null;
       }
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate]);
 
   useEffect(() => {
-    // Control when to start/stop based on isMicOn state
     if (isMicOn && !isListening) {
       startListening();
     } else if (!isMicOn && isListening) {
