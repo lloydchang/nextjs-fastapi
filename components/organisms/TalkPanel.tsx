@@ -31,6 +31,7 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (isMounted.current && !hasFetched.current) {
       console.log('TalkPanel - Initial render, do not search yet.');
+      return;
     } else if (!isMounted.current) {
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
