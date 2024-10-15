@@ -1,6 +1,6 @@
 // File: components/atoms/SpeechTest.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
 import styles from 'styles/components/atoms/SpeechTest.module.css';
 
@@ -14,6 +14,9 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  
+  const interimRef = useRef<HTMLTextAreaElement>(null); // Ref to track interim textarea
+  const finalRef = useRef<HTMLTextAreaElement>(null); // Ref to track final textarea
 
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
@@ -41,6 +44,20 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
     }
   }, [isMicOn, isListening, startListening, stopListening]);
 
+  // Effect to scroll the interim textarea to the end when content updates
+  useEffect(() => {
+    if (interimRef.current) {
+      interimRef.current.scrollLeft = interimRef.current.scrollWidth; // Scroll to the right (end)
+    }
+  }, [interimResult]);
+
+  // Effect to scroll the final textarea to the end when content updates
+  useEffect(() => {
+    if (finalRef.current) {
+      finalRef.current.scrollLeft = finalRef.current.scrollWidth; // Scroll to the right (end)
+    }
+  }, [finalResult]);
+
   const toggleListening = () => {
     if (isListening) {
       stopListening();
@@ -61,6 +78,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
         readOnly
         placeholder="Interim Result..."
         rows={1} // Keep the textarea with 1 row, but allow scrolling
+        ref={interimRef} // Attach ref to track scroll position
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       />
@@ -71,6 +89,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, onSpeechResult, onInte
         readOnly
         placeholder="Final Result..."
         rows={1} // Keep the textarea with 1 row, but allow scrolling
+        ref={finalRef} // Attach ref to track scroll position
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       />
