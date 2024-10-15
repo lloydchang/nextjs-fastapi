@@ -21,6 +21,7 @@ export async function* managePrompt(
   model?: string     // Optional model name for logging
 ): AsyncGenerator<string> {
   let currentPrompt = prompt;
+  let lastYieldedPrompt = ''; // Track the last yielded prompt
 
   while (currentPrompt.length > maxLength) {
     // Calculate the excess length beyond maxLength
@@ -34,17 +35,28 @@ export async function* managePrompt(
     if (summary && summary.length < partToSummarize.length) {
       // Replace only the summarized part without concatenating the remaining prompt
       currentPrompt = summary;
-      // Yield partial result to the caller
-      yield currentPrompt;
+
+      // Yield partial result to the caller only if it's different from the last yielded prompt
+      if (currentPrompt !== lastYieldedPrompt) {
+        yield currentPrompt;
+        lastYieldedPrompt = currentPrompt; // Update the last yielded prompt
+      }
     } else {
       // If summarization fails or doesn't reduce the length enough, truncate instead
       currentPrompt = truncatePrompt(currentPrompt, maxLength);
       logger.debug(`app/api/chat/utils/promptManager.ts - Prompt truncated for clientId: ${clientId}`);
-      yield currentPrompt; // Send the truncated prompt
+
+      // Yield truncated prompt only if it's different from the last yielded prompt
+      if (currentPrompt !== lastYieldedPrompt) {
+        yield currentPrompt; // Send the truncated prompt
+        lastYieldedPrompt = currentPrompt; // Update the last yielded prompt
+      }
       break;
     }
   }
 
   // Yield the final prompt after all iterations are complete
-  yield currentPrompt;
+  if (currentPrompt !== lastYieldedPrompt) {
+    yield currentPrompt;
+  }
 }
