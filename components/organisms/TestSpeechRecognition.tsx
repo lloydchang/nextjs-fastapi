@@ -25,53 +25,56 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
 
     if (SpeechRecognitionConstructor) {
       recognitionRef.current = new SpeechRecognitionConstructor(); // Assign to ref
-      recognitionRef.current.continuous = true; // Continuous listening mode
-      recognitionRef.current.interimResults = true; // Capture interim results
-      recognitionRef.current.lang = 'en-US';
 
-      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = true; // Continuous listening mode
+        recognitionRef.current.interimResults = true; // Capture interim results
+        recognitionRef.current.lang = 'en-US';
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript.trim();
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript + ' ';
+        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const transcript = event.results[i][0].transcript.trim();
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' ';
+            } else {
+              interimTranscript += transcript + ' ';
+            }
           }
-        }
 
-        if (finalTranscript) {
-          setResults(finalTranscript.trim());
-          onSpeechResult(finalTranscript.trim());
-          setInterimResults(''); // Clear interim results once final result is received
-        }
+          if (finalTranscript) {
+            setResults(finalTranscript.trim());
+            onSpeechResult(finalTranscript.trim());
+            setInterimResults(''); // Clear interim results once final result is received
+          }
 
-        if (interimTranscript) {
-          setInterimResults(interimTranscript.trim());
-          onInterimUpdate(interimTranscript.trim());
-        }
-      };
+          if (interimTranscript) {
+            setInterimResults(interimTranscript.trim());
+            onInterimUpdate(interimTranscript.trim());
+          }
+        };
 
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error:', event);
-        setIsListening(false);
-        // Restart recognition on error
-        if (isMicOn && recognitionRef.current) {
-          recognitionRef.current.start(); // Use ref
-          setIsListening(true);
-        }
-      };
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event);
+          setIsListening(false);
+          // Restart recognition on error
+          if (isMicOn && recognitionRef.current) {
+            recognitionRef.current.start(); // Use ref
+            setIsListening(true);
+          }
+        };
 
-      recognitionRef.current.onend = () => {
-        console.log('Speech recognition ended. Restarting...');
-        setIsListening(false);
-        if (isMicOn && recognitionRef.current) {
-          recognitionRef.current.start(); // Restart using ref
-          setIsListening(true);
-        }
-      };
+        recognitionRef.current.onend = () => {
+          console.log('Speech recognition ended. Restarting...');
+          setIsListening(false);
+          if (isMicOn && recognitionRef.current) {
+            recognitionRef.current.start(); // Restart using ref
+            setIsListening(true);
+          }
+        };
+      }
     } else {
       console.warn('SpeechRecognition is not supported in this browser.');
     }
