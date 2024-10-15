@@ -11,13 +11,11 @@ import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
+import { localStorageUtil } from 'components/utils/localStorage'; // Import the localStorage utility
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
 import throttle from 'lodash/throttle';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
-import { createWebStorage } from 'components/utils/createWebStorage'; // Import createWebStorage utility
-
-const storage = createWebStorage('localStorage'); // Create localStorage instance with error handling
 
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -64,6 +62,9 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - New selected talk:', processedData[0].title);
     }
 
+    // Save fetched data to localStorage
+    localStorageUtil.setItem('lastSearchData', JSON.stringify(processedData));
+
     // Send the transcript for the first available talk
     await sendFirstAvailableTranscript(query, processedData);
   };
@@ -99,10 +100,6 @@ const TalkPanel: React.FC = () => {
       await handleSearchResults(query, data);
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
-
-      // Save fetched data to localStorage
-      storage.setItem('lastSearchData', JSON.stringify(data));
-
       return;
     } catch (error) {
       console.error('TalkPanel - Error during performSearch:', error);
