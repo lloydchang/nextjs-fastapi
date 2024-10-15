@@ -1,6 +1,6 @@
 // File: components/organisms/TestSpeechRecognition.tsx
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import styles from 'styles/components/organisms/TestSpeechRecognition.module.css';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
 
@@ -10,43 +10,26 @@ interface TestSpeechRecognitionProps {
   onInterimUpdate: (interimResult: string) => void; // Callback for interim results
 }
 
-// Debounce function to reduce rapid state updates
-function useDebounce(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
 const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
   isMicOn,
   onSpeechResult,
   onInterimUpdate,
 }) => {
-  const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
-  const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
   const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
+  const interimRef = useRef<string>(''); // Stores interim results using useRef to avoid re-rendering
+  const finalRef = useRef<string>(''); // Stores final results using useRef to avoid re-rendering
 
   // Memoized final result handler
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
-    setResults(text); // Update final result state
+    finalRef.current = text; // Store final result in ref
     onSpeechResult(text); // Propagate the result to the parent component
   }, [onSpeechResult]);
 
   // Memoized interim result handler
   const handleInterim = useCallback((text: string) => {
     console.log('Interim Speech:', text);
-    setInterimResults(text); // Update interim result state
+    interimRef.current = text; // Store interim result in ref
     onInterimUpdate(text); // Propagate interim update to the parent component
   }, [onInterimUpdate]);
 
@@ -64,24 +47,18 @@ const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
     }
   }, [speechRecognitionListening, isListening]);
 
-  // Debounce the interim results to prevent frequent updates causing flickering
-  const debouncedInterimResults = useDebounce(interimResults, 200);
-
-  // Memoized final result to prevent unnecessary renders
-  const finalContent = useMemo(() => results, [results]);
-
   return (
     <div className={styles.container}>
       <div className={styles.transcriptContainer}>
         <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
         <textarea
-          value={debouncedInterimResults}
+          value={interimRef.current}
           readOnly
           placeholder="Interim Speech..."
           rows={2}
         />
         <textarea
-          value={finalContent}
+          value={finalRef.current}
           readOnly
           placeholder="Final Speech..."
           rows={2}
