@@ -262,7 +262,7 @@ const TalkPanel: React.FC = () => {
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
             {talks.map((talk, index) => (
-              <TalkItem key={index} talk={talk} />
+              <TalkItem key={index} talk={talk} selected={selectedTalk?.title === talk.title} /> {/* Pass selected prop */}
             ))}
           </div>
         </div>

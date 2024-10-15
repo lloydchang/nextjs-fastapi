@@ -1,31 +1,36 @@
 /* File: styles/components/organisms/TalkItem.module.css */
 
 .resultItem {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #000000;
-    color: white;
-    transition: background-color 0.3s ease;
-    cursor: pointer; /* Indicates interactivity */
-  }
-  
-  .resultItem:hover {
-    background-color: #f1f1f1;
-  }
-  
-  .resultLink {
-    color: #2196f3;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
-  .resultLink:hover {
-    text-decoration: underline;
-  }
-  
-  .sdgTags {
-    color: #757575;
-    font-size: 0.9em;
-  }
-  
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #000000;
+  color: white;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.resultItem:hover {
+  background-color: #f1f1f1;
+}
+
+.resultLink {
+  color: #2196f3;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.resultLink:hover {
+  text-decoration: underline;
+}
+
+.sdgTags {
+  color: #757575;
+  font-size: 0.9em;
+}
+
+/* New style for the selected talk */
+.selected {
+  border: 2px solid #0070f3;
+  background-color: #e0f7ff;
+}

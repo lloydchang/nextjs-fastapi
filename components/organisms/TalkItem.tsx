@@ -9,9 +9,10 @@ import styles from 'styles/components/organisms/TalkItem.module.css';
 
 interface TalkItemProps {
   talk: Talk;
+  selected: boolean;  // New prop to indicate if this talk is selected
 }
 
-const TalkItem: React.FC<TalkItemProps> = ({ talk }) => {
+const TalkItem: React.FC<TalkItemProps> = ({ talk, selected }) => {
   const dispatch = useDispatch();
 
   const handleClick = () => {
@@ -19,7 +20,7 @@ const TalkItem: React.FC<TalkItemProps> = ({ talk }) => {
   };
 
   return (
-    <div className={styles.resultItem} onClick={handleClick}>
+    <div className={`${styles.resultItem} ${selected ? styles.selected : ''}`} onClick={handleClick}>
       <h3>
         <a href="#" className={styles.resultLink}>{talk.title}</a>
         <p className={styles.sdgTags}>{talk.sdg_tags.map(tag => sdgTitleMap[tag]).join(', ')}</p>
