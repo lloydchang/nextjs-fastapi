@@ -2,8 +2,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { getConfig } from 'app/api/chat/utils/config';
-import { checkRateLimit } from 'app/api/chat/utils/rateLimiter';
+import { getConfig, AppConfig } from 'app/api/chat/utils/config';
+import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
@@ -17,17 +17,19 @@ import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types';
 
-const config = getConfig();
+const config: AppConfig = getConfig();
 
-const MAX_PROMPT_LENGTH = 2000;
+const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's default token limit of 2000
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
-const maxContextMessages = 20;
+const maxContextMessages = 20; // Keep only the last 20 messages
 
+// Maps to track client-specific data
 const clientPrompts = new Map<string, string>();
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
+// Helper function to check if a configuration value is valid
 function isValidConfig(value: any): boolean {
   return (
     typeof value === 'string' &&
@@ -36,6 +38,15 @@ function isValidConfig(value: any): boolean {
     value.trim().toLowerCase() !== 'null'
   );
 }
+
+// Define union type for textModelConfigKey
+type TextModelConfigKey =
+  | 'ollamaGemmaTextModel'
+  | 'ollamaLlamaTextModel'
+  | 'cloudflareGemmaTextModel'
+  | 'cloudflareLlamaTextModel'
+  | 'googleVertexGemmaTextModel'
+  | 'googleVertexLlamaTextModel';
 
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
@@ -79,8 +90,13 @@ export async function POST(request: NextRequest) {
       );
 
       if (!Array.isArray(validMessages) || validMessages.length === 0) {
-        logger.warn(`app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`);
-        return NextResponse.json({ error: 'Invalid request format or no valid messages provided.' }, { status: 400 });
+        logger.warn(
+          `app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`
+        );
+        return NextResponse.json(
+          { error: 'Invalid request format or no valid messages provided.' },
+          { status: 400 }
+        );
       }
 
       // Get or initialize the context for this client
@@ -97,7 +113,7 @@ export async function POST(request: NextRequest) {
 
           const addBotFunction = (
             personaPrefix: string,
-            textModelConfigKey: string,
+            textModelConfigKey: TextModelConfigKey, // Use union type
             endpointEnvVars: string[],
             handlerFunction: Function,
             summarizeFunction: Function
@@ -115,6 +131,7 @@ export async function POST(request: NextRequest) {
                   }
 
                   let finalPrompt = prompt;
+                  // Use AsyncGenerator to send intermediate prompt results
                   for await (const updatedPrompt of managePrompt(
                     prompt,
                     MAX_PROMPT_LENGTH,
@@ -153,7 +170,10 @@ export async function POST(request: NextRequest) {
             ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
             handleTextWithOllamaGemmaTextModel,
             async (text: string) => {
-              return handleTextWithOllamaGemmaTextModel({ userPrompt: text, textModel: config.ollamaGemmaTextModel }, config);
+              return handleTextWithOllamaGemmaTextModel(
+                { userPrompt: text, textModel: config.ollamaGemmaTextModel },
+                config
+              );
             }
           );
 
@@ -163,7 +183,10 @@ export async function POST(request: NextRequest) {
             ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
             handleTextWithOllamaLlamaTextModel,
             async (text: string) => {
-              return handleTextWithOllamaLlamaTextModel({ userPrompt: text, textModel: config.ollamaLlamaTextModel }, config);
+              return handleTextWithOllamaLlamaTextModel(
+                { userPrompt: text, textModel: config.ollamaLlamaTextModel },
+                config
+              );
             }
           );
 
@@ -173,7 +196,10 @@ export async function POST(request: NextRequest) {
             ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
             handleTextWithCloudflareGemmaTextModel,
             async (text: string) => {
-              return handleTextWithCloudflareGemmaTextModel({ userPrompt: text, textModel: config.cloudflareGemmaTextModel }, config);
+              return handleTextWithCloudflareGemmaTextModel(
+                { userPrompt: text, textModel: config.cloudflareGemmaTextModel },
+                config
+              );
             }
           );
 
@@ -183,7 +209,10 @@ export async function POST(request: NextRequest) {
             ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
             handleTextWithCloudflareLlamaTextModel,
             async (text: string) => {
-              return handleTextWithCloudflareLlamaTextModel({ userPrompt: text, textModel: config.cloudflareLlamaTextModel }, config);
+              return handleTextWithCloudflareLlamaTextModel(
+                { userPrompt: text, textModel: config.cloudflareLlamaTextModel },
+                config
+              );
             }
           );
 
@@ -193,7 +222,10 @@ export async function POST(request: NextRequest) {
             ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
             handleTextWithGoogleVertexGemmaTextModel,
             async (text: string) => {
-              return handleTextWithGoogleVertexGemmaTextModel({ userPrompt: text, textModel: config.googleVertexGemmaTextModel }, config);
+              return handleTextWithGoogleVertexGemmaTextModel(
+                { userPrompt: text, textModel: config.googleVertexGemmaTextModel },
+                config
+              );
             }
           );
 
@@ -203,7 +235,10 @@ export async function POST(request: NextRequest) {
             ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
             handleTextWithGoogleVertexLlamaTextModel,
             async (text: string) => {
-              return handleTextWithGoogleVertexLlamaTextModel({ userPrompt: text, textModel: config.googleVertexLlamaTextModel }, config);
+              return handleTextWithGoogleVertexLlamaTextModel(
+                { userPrompt: text, textModel: config.googleVertexLlamaTextModel },
+                config
+              );
             }
           );
 
