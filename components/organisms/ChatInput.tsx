@@ -21,7 +21,6 @@ interface ChatInputProps {
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean; // New prop to track if there are visible messages
-  isListening: boolean; // New prop for listening state
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -41,7 +40,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
-  isListening,
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -69,7 +67,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           placeholder="Chat here…"
           className={styles.input}
           rows={1}
-          disabled={isListening} // Disable input while listening
         />
       </div>
 
@@ -79,7 +76,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="button"
           onClick={handleButtonClick}
           className={styles.sendButton}
-          disabled={isListening} // Disable sending while listening
           aria-label="Send Message"
         >
           Send
@@ -99,7 +95,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
             hasVisibleMessages={hasVisibleMessages} // Pass the prop to ControlButtons
-            isListening={isListening} // Pass isListening to ControlButtons
           />
         </div>
       </div>
