@@ -1,124 +1,110 @@
-// File: components/organisms/TestSpeechRecognition.tsx
+// File: components/TestSpeechRecognition.tsx
 
-import React, { useEffect, useRef, useState } from 'react';
-import 'speech-recognition.d.ts'; // Import the custom type declarations
+import React, { useEffect, useState, useRef } from 'react';
+import styles from 'styles/components/organisms/TestSpeechRecognition.module.css';
 
 interface TestSpeechRecognitionProps {
-  isMicOn: boolean;
-  onSpeechResult: (result: string) => void;
+  isMicOn: boolean; // Prop to control mic state
+  onSpeechResult: (finalResults: string) => void; // Callback for final results
+  onInterimUpdate: (interimResult: string) => void; // Callback for interim results
 }
 
-const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({ isMicOn, onSpeechResult }) => {
-  const [transcript, setTranscript] = useState<string>('');  // Store interim results
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const resultsCacheRef = useRef<SpeechRecognitionResult[]>([]);  // Cache for results
-  const isRecognitionActiveRef = useRef<boolean>(false);  // Track if recognition is active
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);  // Timeout for restart delay
-  const retryCountRef = useRef<number>(0); // Track retry attempts for exponential backoff
+const TestSpeechRecognition: React.FC<TestSpeechRecognitionProps> = ({
+  isMicOn,
+  onSpeechResult,
+  onInterimUpdate,
+}) => {
+  const [results, setResults] = useState<string>(''); // Stores the final speech recognition results
+  const [interimResults, setInterimResults] = useState<string>(''); // Stores the interim (in-progress) results
+  const [isListening, setIsListening] = useState<boolean>(false); // Track if speech recognition is active
+  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store the recognition instance
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-      const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
+    const SpeechRecognitionConstructor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-      // Handle recognition start
-      recognitionRef.current.onstart = () => {
-        isRecognitionActiveRef.current = true;
-        retryCountRef.current = 0; // Reset retry count on successful start
-        console.log('Speech recognition started.');
-      };
+    if (SpeechRecognitionConstructor) {
+      recognitionRef.current = new SpeechRecognitionConstructor(); // Assign to ref
+      recognitionRef.current.continuous = true; // Continuous listening mode
+      recognitionRef.current.interimResults = true; // Capture interim results
+      recognitionRef.current.lang = 'en-US';
 
-      // Handle recognition end and potentially restart
-      recognitionRef.current.onend = () => {
-        isRecognitionActiveRef.current = false;
-        console.log('Speech recognition ended.');
-        if (isMicOn) {
-          restartRecognitionWithDelay();
-        }
-      };
-
-      // Handle results and update transcript
       recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-        resultsCacheRef.current = Array.from(event.results);
-        updateTranscript();
-      };
+        let interimTranscript = '';
+        let finalTranscript = '';
 
-      // Handle errors and attempt to restart with exponential backoff
-      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
-        if (isMicOn) {
-          restartRecognitionWithDelay(); // Restart on error
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript.trim();
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript + ' ';
+          }
+        }
+
+        if (finalTranscript) {
+          setResults(finalTranscript.trim());
+          onSpeechResult(finalTranscript.trim());
+          setInterimResults(''); // Clear interim results once final result is received
+        }
+
+        if (interimTranscript) {
+          setInterimResults(interimTranscript.trim());
+          onInterimUpdate(interimTranscript.trim());
         }
       };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event);
+        setIsListening(false);
+        // Restart recognition on error
+        if (isMicOn && recognitionRef.current) {
+          recognitionRef.current.start(); // Use ref
+          setIsListening(true);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        console.log('Speech recognition ended. Restarting...');
+        setIsListening(false);
+        if (isMicOn && recognitionRef.current) {
+          recognitionRef.current.start(); // Restart using ref
+          setIsListening(true);
+        }
+      };
+    } else {
+      console.warn('SpeechRecognition is not supported in this browser.');
     }
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current = null; // Clean up the recognition instance
       }
     };
-  }, [isMicOn, onSpeechResult]);
+  }, [onSpeechResult, onInterimUpdate, isMicOn]);
 
-  // Function to restart recognition safely with exponential backoff
-  const restartRecognitionWithDelay = () => {
-    if (restartTimeoutRef.current) {
-      clearTimeout(restartTimeoutRef.current);
-    }
-
-    // Exponential backoff logic
-    const delay = Math.min(1000 * 2 ** retryCountRef.current, 10000);  // Max delay of 10 seconds
-    retryCountRef.current += 1;
-
-    restartTimeoutRef.current = setTimeout(() => {
-      if (!isRecognitionActiveRef.current && recognitionRef.current) {
-        recognitionRef.current.start();
-        retryCountRef.current = 0;  // Reset retry count on success
-      }
-    }, delay);
-  };
-
-  // Function to update the transcript with final and interim results
-  const updateTranscript = () => {
-    let interimTranscript = '';
-    let finalTranscript = '';
-
-    for (let i = 0; i < resultsCacheRef.current.length; ++i) {
-      if (resultsCacheRef.current[i].isFinal) {
-        finalTranscript += resultsCacheRef.current[i][0].transcript;
-      } else {
-        interimTranscript += resultsCacheRef.current[i][0].transcript;
-      }
-    }
-
-    setTranscript(interimTranscript);
-
-    if (finalTranscript) {
-      onSpeechResult(finalTranscript);
-      resultsCacheRef.current = resultsCacheRef.current.filter(result => !result.isFinal);  // Clear final results from cache
-      updateTranscript();  // Recursively update transcript if more results
-    }
-  };
-
-  // Effect to start or stop recognition based on isMicOn state
   useEffect(() => {
-    if (isMicOn && recognitionRef.current && !isRecognitionActiveRef.current) {
-      recognitionRef.current.start();  // Start recognition if not already active
-    } else if (!isMicOn && recognitionRef.current && isRecognitionActiveRef.current) {
-      recognitionRef.current.stop();  // Stop recognition if active
+    if (isMicOn && recognitionRef.current) {
+      recognitionRef.current.start(); // Use ref to start recognition
+      setIsListening(true);
+    } else if (recognitionRef.current) {
+      recognitionRef.current.stop(); // Use ref to stop recognition
+      setIsListening(false);
     }
   }, [isMicOn]);
 
   return (
-    <div>
-      <p><strong>{isMicOn ? 'Listening 👂' : 'Not Listening 🙉 '}</strong></p>
-      <p><strong>Interim Results:</strong> {transcript}</p>
+    <div className={styles.container}>
+      <div className={styles.transcriptContainer}>
+        <p><strong>{isListening ? 'Listening 👂' : 'Not Listening 🙉'}</strong></p>
+        <p><strong>Final Results:</strong> {results}</p>
+        <p><strong>Interim Results:</strong> {interimResults}</p>
+      </div>
     </div>
   );
 };
 
-export default TestSpeechRecognition;
+export default React.memo(TestSpeechRecognition);
