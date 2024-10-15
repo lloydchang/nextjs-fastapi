@@ -120,7 +120,7 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
+  const sendTranscriptForTalk = async (query: string, talk: Talk): Promise<void> => {
     console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
     console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
     console.log('HasSentMessage set:', [...hasSentMessage.current]);
@@ -145,15 +145,8 @@ const TalkPanel: React.FC = () => {
       const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
       console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
     } catch (dispatchError) {
-      if (retryCount < 3) {
-        const delay = Math.pow(2, retryCount) * 1000;
-        console.error(`TalkPanel - Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
-        await wait(delay);
-        await sendTranscriptForTalk(query, talk, retryCount + 1);
-      } else {
-        console.error(`TalkPanel - Failed to send transcript for ${talk.title} after multiple attempts.`);
-        dispatch(setError(`Failed to send transcript for ${talk.title}.`));
-      }
+      console.error(`TalkPanel - Failed to send transcript for ${talk.title}:`, dispatchError);
+      dispatch(setError(`Failed to send transcript for ${talk.title}.`));
     }
   };
 
