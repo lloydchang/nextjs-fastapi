@@ -1,6 +1,6 @@
 // File: components/state/hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
@@ -12,49 +12,25 @@ const useSpeechRecognition = ({
   onInterimUpdate,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const audioStreamRef = useRef<MediaStream | null>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
+  // Start speech recognition
   const startListening = useCallback(async () => {
-    if (!audioStreamRef.current) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // Prevent the microphone stream from playing back on the speakers
-        const audioTracks = stream.getAudioTracks();
-        audioTracks.forEach(track => {
-          track.enabled = true; // The track is active, but no audio playback will occur
-        });
-        
-        audioStreamRef.current = stream;
-      } catch (error) {
-        console.error('Error accessing microphone:', error);
-        return;
-      }
-    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getAudioTracks().forEach(track => {
+        track.enabled = true;  // Ensure mic is on but not playing audio back
+      });
 
-    if (recognitionRef.current && !isListening) {
-      try {
-        recognitionRef.current.start();
+      if (recognition && !isListening) {
+        recognition.start();
         setIsListening(true);
-      } catch (err) {
-        console.error('Error starting speech recognition:', err);
+        console.log('Speech recognition started.');
       }
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
     }
-  }, [isListening]);
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    }
-
-    if (audioStreamRef.current) {
-      audioStreamRef.current.getTracks().forEach((track) => track.stop());
-      audioStreamRef.current = null;
-    }
-  }, [isListening]);
+  }, [recognition, isListening]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -65,12 +41,13 @@ const useSpeechRecognition = ({
       return;
     }
 
-    const recognition = new SpeechRecognitionConstructor();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    // Create a new instance of SpeechRecognition
+    const newRecognition = new SpeechRecognitionConstructor();
+    newRecognition.continuous = true;
+    newRecognition.interimResults = true;
+    newRecognition.lang = 'en-US';
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    newRecognition.onresult = (event: SpeechRecognitionEvent) => {
       let final = '';
       let interim = '';
 
@@ -84,30 +61,33 @@ const useSpeechRecognition = ({
       if (interim) onInterimUpdate(interim.trim());
     };
 
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setTimeout(startListening, 3000);  // Always restart after recognition ends
+    newRecognition.onerror = () => {
+      setIsListening(false);
+      console.error('Speech recognition error, restarting...');
+      startListening();  // Force restart on error
+    };
 
-    recognitionRef.current = recognition;
+    newRecognition.onend = () => {
+      setIsListening(false);
+      console.log('Speech recognition ended, restarting...');
+      startListening();  // Force restart on end
+    };
 
-    // Force start listening as soon as the component mounts
-    startListening();
+    setRecognition(newRecognition);
 
+    // Clean up when the component unmounts
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-      if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
-      if (audioStreamRef.current) audioStreamRef.current.getTracks().forEach((track) => track.stop());
+      newRecognition.stop();
+      console.log('Speech recognition cleaned up.');
     };
   }, [onSpeechResult, onInterimUpdate, startListening]);
 
-  // Automatically restart listening when necessary
+  // Automatically start listening when recognition is ready
   useEffect(() => {
-    if (!isListening) {
+    if (recognition && !isListening) {
       startListening();
     }
-  }, [isListening, startListening]);
+  }, [recognition, isListening, startListening]);
 
   return { isListening };
 };
