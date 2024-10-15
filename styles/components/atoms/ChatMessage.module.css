@@ -282,7 +282,7 @@
   background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
   z-index: 1001;
   padding: 8px;
-  justify-content: left;
+  justify-content: center;
 }
 
 .modalPersonaLabel {
