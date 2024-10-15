@@ -14,13 +14,7 @@ import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
-import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
-
-/**
- * Type definition for the summarize function.
- */
-type SummarizeFunction = (text: string) => Promise<string | null>;
 
 /**
  * Union type for text model configuration keys.
@@ -33,16 +27,6 @@ type TextModelConfigKey =
   | 'googleVertexGemmaTextModel'
   | 'googleVertexLlamaTextModel';
 
-/**
- * Function to summarize text. Currently a placeholder that returns null.
- * Implement your summarization logic here as needed.
- */
-const summarizeFunction: SummarizeFunction = async (text: string): Promise<string | null> => {
-  // Implement your summarization logic here
-  // For demonstration, returning null (no summarization)
-  return null;
-};
-
 const config: AppConfig = getConfig();
 
 const MAX_PROMPT_LENGTH = 128000; // Adjust based on token size limit
@@ -50,7 +34,6 @@ const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 0; // Keep only the last 0 messages
 
 // Maps to track client-specific data
-const clientPrompts = new Map<string, string>();
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
@@ -77,8 +60,6 @@ function isValidConfig(value: any): boolean {
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
-
-  // logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
 
   // Handle rate limiting
   const { limited, retryAfter } = checkRateLimit(clientId);
@@ -133,8 +114,6 @@ export async function POST(request: NextRequest) {
 
       const stream = new ReadableStream({
         async start(controller) {
-          // logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
-
           const botFunctions: BotFunction[] = [];
 
           /**
@@ -143,14 +122,12 @@ export async function POST(request: NextRequest) {
            * @param textModelConfigKey - The key in AppConfig for the text model.
            * @param endpointEnvVars - The environment variables required for the endpoint.
            * @param handlerFunction - The function to handle text processing.
-           * @param summarizeFunction - The function to summarize prompts.
            */
           const addBotFunction = (
             personaPrefix: string,
             textModelConfigKey: TextModelConfigKey, // Use union type
             endpointEnvVars: string[],
             handlerFunction: (input: { userPrompt: string; textModel: string }, config: AppConfig) => Promise<string | null>,
-            summarizeFunction: SummarizeFunction // Use specific type
           ) => {
             if (isValidConfig(config[textModelConfigKey]) && validateEnvVars(endpointEnvVars)) {
               const textModel = config[textModelConfigKey] || "defaultModel";
@@ -164,36 +141,18 @@ export async function POST(request: NextRequest) {
                     prompt += `${extractValidMessages(currentContext)}`;
                   }
 
-                  let finalPrompt = prompt;
-                  // Use AsyncGenerator to send intermediate prompt results
-                  for await (const updatedPrompt of managePrompt(
-                    prompt,
-                    MAX_PROMPT_LENGTH,
-                    summarizeFunction,
-                    clientId,
-                    textModel
-                  )) {
-                    // logger.debug(
-                    //   `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Prompt: ${updatedPrompt}`
-                    // );
-                    if (updatedPrompt.trim().length === 0) {
-                      logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty after management.`);
-                      continue; // Skip enqueueing empty prompts
-                    }
-                    try {
-                      controller.enqueue(
-                        `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: updatedPrompt })}\n\n`
-                      );
-                    } catch (enqueueError) {
-                      logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
-                    }
-                    finalPrompt = updatedPrompt;
+                  if (prompt.trim().length === 0) {
+                    logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty.`);
+                    return null;
                   }
 
-                  if (context.length > 0 && context[context.length - 1].content !== finalPrompt) {
-                    context[context.length - 1] = { ...context[context.length - 1], content: finalPrompt };
+                  try {
+                    controller.enqueue(
+                      `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: prompt })}\n\n`
+                    );
+                  } catch (enqueueError) {
+                    logger.error(`app/api/chat/route.ts - Enqueue error: ${enqueueError}`);
                   }
-                  clientContexts.set(clientId, context);
 
                   return handlerFunction({ userPrompt: prompt, textModel }, config);
                 },
@@ -206,57 +165,48 @@ export async function POST(request: NextRequest) {
             'Ollama',
             'ollamaGemmaTextModel',
             ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
-            handleTextWithOllamaGemmaTextModel,
-            summarizeFunction
+            handleTextWithOllamaGemmaTextModel
           );
 
           addBotFunction(
             'Ollama',
             'ollamaLlamaTextModel',
             ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
-            handleTextWithOllamaLlamaTextModel,
-            summarizeFunction
+            handleTextWithOllamaLlamaTextModel
           );
 
           addBotFunction(
             'Cloudflare',
             'cloudflareGemmaTextModel',
             ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
-            handleTextWithCloudflareGemmaTextModel,
-            summarizeFunction
+            handleTextWithCloudflareGemmaTextModel
           );
 
           addBotFunction(
             'Cloudflare',
             'cloudflareLlamaTextModel',
             ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
-            handleTextWithCloudflareLlamaTextModel,
-            summarizeFunction
+            handleTextWithCloudflareLlamaTextModel
           );
 
           addBotFunction(
             'Google Vertex',
             'googleVertexGemmaTextModel',
             ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
-            handleTextWithGoogleVertexGemmaTextModel,
-            summarizeFunction
+            handleTextWithGoogleVertexGemmaTextModel
           );
 
           addBotFunction(
             'Google Vertex',
             'googleVertexLlamaTextModel',
             ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
-            handleTextWithGoogleVertexLlamaTextModel,
-            summarizeFunction
+            handleTextWithGoogleVertexLlamaTextModel
           );
 
           /**
            * Processes all bot functions and streams their responses.
-           * Updated to run bot.generate concurrently and prevent duplicate enqueues.
            */
           async function processBots() {
-            // logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
-
             // Process all bots concurrently
             const botPromises = botFunctions.map(async (bot) => {
               try {
