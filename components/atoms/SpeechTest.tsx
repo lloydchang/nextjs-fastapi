@@ -70,9 +70,13 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
     }
 
     if (isListening) {
-      stopListening();
+      stopListening(); // Stop listening
+      if (isMicOn) {
+        console.log('Microphone is on, turning it off.');
+        await toggleMic(); // Turn the mic off if it's on
+      }
     } else {
-      startListening();
+      startListening(); // Start listening
     }
   };
 
