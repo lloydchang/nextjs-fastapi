@@ -6,6 +6,7 @@ import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
+import { setLoading } from 'store/apiSlice';
 
 interface ChatState {
   messages: Message[];
@@ -15,7 +16,7 @@ interface ChatState {
 const initialState: ChatState = {
   messages: [],
   error: null,
-};
+}
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -47,7 +48,7 @@ const chatSlice = createSlice({
       }>
     ) => {
       const newMessage: Message = {
-        id: `${Date.now()}`,
+        id: uuidv4(), // Ensure unique ID using UUID
         sender: action.payload.sender || 'bot',
         text: action.payload.text,
         role: action.payload.sender === 'user' ? 'user' : 'bot',
@@ -81,6 +82,8 @@ const debouncedApiCall = debounce(
     if (state.api?.isLoading) {
       return;
     }
+
+    dispatch(setLoading(true));
 
     const maxRetries = 3;
     let retryCount = 0;
@@ -129,7 +132,7 @@ const debouncedApiCall = debounce(
                   const parsedData = parseIncomingMessage(jsonString);
                   if (parsedData?.message && parsedData?.persona) {
                     const botMessage: Message = {
-                      id: `${Date.now()}`,
+                      id: uuidv4(), // Ensure unique ID
                       sender: 'bot',
                       text: parsedData.message,
                       role: 'bot',
@@ -145,14 +148,17 @@ const debouncedApiCall = debounce(
             }
           }
         }
+        dispatch(setLoading(false));
         return;
-      } catch (error) {
+      } catch (error: any) {
         if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
           retryCount++;
           await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
         }
-        // dispatch(setError('Max retries reached. Please try again later.'));
+        // Optionally, dispatch an error message
+        dispatch(setError('Max retries reached. Please try again later.'));
+        dispatch(setLoading(false));
         return;
       }
     }
@@ -178,14 +184,14 @@ export const sendMessage = (
   const userMessage: Message =
     typeof input === 'string'
       ? {
-          id: `${Date.now()}`,
+          id: uuidv4(), // Ensure unique ID using UUID
           sender: 'user',
           text: input,
           role: 'user',
           content: input,
         }
       : {
-          id: `${Date.now()}`,
+          id: uuidv4(), // Ensure unique ID using UUID
           sender: input.sender || 'user',
           text: input.text,
           role: 'user',
