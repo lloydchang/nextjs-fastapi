@@ -35,7 +35,7 @@ const TalkPanel: React.FC = () => {
 
     if (initialRender.current) {
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
-      performSearchWithExponentialBackoff(searchQuery);
+      performSearch(searchQuery);
       initialRender.current = false;
     } else {
       console.log('TalkPanel - Subsequent render detected, skipping search.');
@@ -67,7 +67,7 @@ const TalkPanel: React.FC = () => {
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const performSearchWithExponentialBackoff = async (query: string) => {
+  const performSearch = async (query: string) => {
     if (isSearchInProgress.current) {
       console.log('TalkPanel - Search is already in progress, skipping new search.');
       return;
@@ -77,49 +77,30 @@ const TalkPanel: React.FC = () => {
     dispatch(setError(null));
     dispatch(setLoading(true));
 
-    const maxRetries = 3;
-    let retryCount = 0;
+    try {
+      console.log(`TalkPanel - Performing search with query: ${query}`);
+      const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
 
-    while (retryCount < maxRetries) {
-      try {
-        console.log(`TalkPanel - Performing search with query: ${query}`);
-        const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`);
-
-        if (response.status !== 200) {
-          throw new Error(`Error: ${response.status} - ${response.statusText}`);
-        }
-
-        const data: Talk[] = response.data.results.map((result: any) => ({
-          title: result.document.slug.replace(/_/g, ' '),
-          url: `https://www.ted.com/talks/${result.document.slug}`,
-          sdg_tags: result.document.sdg_tags || [],
-          transcript: result.document.transcript || 'Transcript not available',
-        }));
-
-        console.log('TalkPanel - Successfully fetched talks:', data);
-        await handleSearchResults(query, data);
-        dispatch(setLoading(false));
-        isSearchInProgress.current = false;
-        return;
-      } catch (error) {
-        console.error('TalkPanel - Error during performSearch:', error);
-        retryCount++;
-        if (retryCount < maxRetries) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          console.log(`TalkPanel - Retrying in ${delay / 1000} seconds...`);
-          await wait(delay);
-        } else {
-          dispatch(setError('Failed to fetch talks after multiple attempts.'));
-          dispatch(setLoading(false));
-          isSearchInProgress.current = false;
-        }
+      if (response.status !== 200) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
+
+      const data: Talk[] = response.data.results.map((result: any) => ({
+        title: result.document.slug.replace(/_/g, ' '),
+        url: `https://www.ted.com/talks/${result.document.slug}`,
+        sdg_tags: result.document.sdg_tags || [],
+        transcript: result.document.transcript || 'Transcript not available',
+      }));
+
+      console.log('TalkPanel - Successfully fetched talks:', data);
+      await handleSearchResults(query, data);
+      dispatch(setLoading(false));
+      isSearchInProgress.current = false;
+      return;
+    } catch (error) {
+      console.error('TalkPanel - Error during performSearch:', error);
     }
   };
-
-  const throttledPerformSearch = throttle((query: string) => {
-    performSearchWithExponentialBackoff(query);
-  }, 3000); // Throttle searches to every 3 seconds
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -127,7 +108,7 @@ const TalkPanel: React.FC = () => {
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      throttledPerformSearch(searchQuery);
+      performSearch(searchQuery);
     }
   };
 
@@ -227,7 +208,7 @@ const TalkPanel: React.FC = () => {
           {loading && <LoadingSpinner />}
         </div>
         <button
-          onClick={() => throttledPerformSearch(searchQuery)}
+          onClick={() => performSearch(searchQuery)}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={loading}
         >
