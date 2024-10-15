@@ -1,5 +1,3 @@
-// File: components/state/hooks/useSpeechRecognition.ts
-
 import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionProps {
@@ -13,10 +11,10 @@ const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
 }: UseSpeechRecognitionProps) => {
-  const [isListening, setIsListening] = useState<boolean>(false); // Tracks whether the mic is currently listening
-  const [isManuallyStopped, setIsManuallyStopped] = useState<boolean>(false); // Tracks if recognition was stopped manually
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null); // Holds the SpeechRecognition instance
-  const [restartTimeout, setRestartTimeout] = useState<NodeJS.Timeout | null>(null); // Tracks restart timeouts
+  const [isListening, setIsListening] = useState<boolean>(false);
+  const [isManuallyStopped, setIsManuallyStopped] = useState<boolean>(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [restartTimeout, setRestartTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const startListening = useCallback(() => {
     if (recognition && !isListening && !isManuallyStopped && isMicOn) {
@@ -32,7 +30,7 @@ const useSpeechRecognition = ({
 
   const stopListening = useCallback(() => {
     if (recognition && isListening) {
-      setIsManuallyStopped(true); // Mark as manually stopped
+      setIsManuallyStopped(true);
       recognition.stop();
       setIsListening(false);
       console.log('Speech recognition stopped.');
@@ -43,87 +41,81 @@ const useSpeechRecognition = ({
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    if (SpeechRecognitionConstructor) {
-      const recognitionInstance = new SpeechRecognitionConstructor();
-      recognitionInstance.continuous = true;
-      recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'en-US';
-
-      recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        // Collect the interim and final results from the event
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript.trim();
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript + ' ';
-          }
-        }
-
-        // Pass final results to the provided callback
-        if (finalTranscript) {
-          console.log('Final Transcript:', finalTranscript);
-          onSpeechResult(finalTranscript.trim());
-        }
-
-        // Pass interim results to the provided callback
-        if (interimTranscript) {
-          console.log('Interim Transcript:', interimTranscript);
-          onInterimUpdate(interimTranscript.trim());
-        }
-      };
-
-      recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-
-        // Automatically restart recognition after error if mic is still on
-        if (isMicOn && !isManuallyStopped) {
-          if (restartTimeout) {
-            clearTimeout(restartTimeout);
-          }
-          setRestartTimeout(
-            setTimeout(() => {
-              setIsManuallyStopped(false); // Allow auto-restart again
-              startListening();
-            }, 3000) // Increased the restart delay to 3 seconds for smoother transition
-          );
-        }
-      };
-
-      recognitionInstance.onend = () => {
-        console.log('Speech recognition ended.');
-        setIsListening(false);
-
-        // Automatically restart recognition when it ends, if the mic is still on and it wasn't manually stopped
-        if (isMicOn && !isManuallyStopped) {
-          if (restartTimeout) {
-            clearTimeout(restartTimeout);
-          }
-          setRestartTimeout(
-            setTimeout(() => {
-              startListening();
-            }, 3000) // Increased the restart delay to 3 seconds for smoother transition
-          );
-        }
-      };
-
-      // Store the recognition instance in state
-      setRecognition(recognitionInstance);
-    } else {
+    if (!SpeechRecognitionConstructor) {
       console.warn('SpeechRecognition is not supported in this browser.');
+      return;
     }
 
-    // Cleanup function to stop recognition and clear timeouts
+    const recognitionInstance = new SpeechRecognitionConstructor();
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
+    recognitionInstance.lang = 'en-US';
+
+    recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript.trim();
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript + ' ';
+        }
+      }
+
+      if (finalTranscript) {
+        console.log('Final Transcript:', finalTranscript);
+        onSpeechResult(finalTranscript.trim());
+      }
+
+      if (interimTranscript) {
+        console.log('Interim Transcript:', interimTranscript);
+        onInterimUpdate(interimTranscript.trim());
+      }
+    };
+
+    recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+
+      if (isMicOn && !isManuallyStopped) {
+        if (restartTimeout) {
+          clearTimeout(restartTimeout);
+        }
+        setRestartTimeout(
+          setTimeout(() => {
+            setIsManuallyStopped(false);
+            startListening();
+          }, 3000)
+        );
+      }
+    };
+
+    recognitionInstance.onend = () => {
+      console.log('Speech recognition ended.');
+      setIsListening(false);
+
+      if (isMicOn && !isManuallyStopped) {
+        if (restartTimeout) {
+          clearTimeout(restartTimeout);
+        }
+        setRestartTimeout(
+          setTimeout(() => {
+            startListening();
+          }, 3000)
+        );
+      }
+    };
+
+    setRecognition(recognitionInstance);
+
     return () => {
-      if (recognition) {
-        recognition.onend = null;
-        recognition.onresult = null;
-        recognition.onerror = null;
-        recognition.abort();
+      if (recognitionInstance) {
+        recognitionInstance.onend = null;
+        recognitionInstance.onresult = null;
+        recognitionInstance.onerror = null;
+        recognitionInstance.abort();
         setRecognition(null);
       }
       setIsListening(false);
@@ -131,10 +123,9 @@ const useSpeechRecognition = ({
         clearTimeout(restartTimeout);
       }
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate, recognition, restartTimeout, startListening]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate, restartTimeout, startListening]);
 
   useEffect(() => {
-    // Only start listening if the mic is on
     if (isMicOn && !isListening) {
       startListening();
     } else if (!isMicOn && isListening) {
@@ -146,9 +137,8 @@ const useSpeechRecognition = ({
         clearTimeout(restartTimeout);
       }
     };
-  }, [isMicOn, startListening, stopListening, isListening, restartTimeout]);
+  }, [isMicOn, isListening, startListening, stopListening, restartTimeout]);
 
-  // Return whether the system is currently listening
   return { isListening };
 };
 
