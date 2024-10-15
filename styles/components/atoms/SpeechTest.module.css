@@ -1,57 +1,45 @@
-/* Base styles for the SpeechTest component */
+/* File: styles/components/atoms/SpeechTest.module.css */
+
 .speechTest {
-    padding: 0px;
-  }
-  
-  .speechTest.light {
-    background-color: transparent; /* Make background transparent */
-    color: black;
-  }
-  
-  .speechTest.dark {
-    background-color: transparent; /* Make background transparent */
-    color: white;
-  }
-  
-  .textarea {
-    width: 100%;
-    padding: 0px;
-    margin-top: 0px;
-    border-radius: 0px;
-    resize: none;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    height: auto;
-  }
-  
-  .textarea.light {
-    background-color: rgba(255, 255, 255, 0.7); /* Make background semi-transparent */
-    color: black;
-  }
-  
-  .textarea.dark {
-    background-color: rgba(0, 0, 0, 0.7); /* Make background semi-transparent */
-    color: white;
-  }
-  
-  /* Define a class for the button instead of using the global button selector */
-  .toggleButton {
-    margin-bottom: 0px;
-    padding: 0px;
-    border: none;
-    border-radius: 0px;
-    cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.7); /* Make background semi-transparent */
-    color: white;
-  }
-  
-  .toggleButton.light {
-    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
-    color: white;
-  }
-  
-  .toggleButton.dark {
-    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent background */
-    color: black;
-  }
-  
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toggleButton {
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.textarea {
+  resize: none;
+  overflow-x: auto; /* Allow horizontal scrolling */
+  white-space: nowrap; /* Ensure text stays on one line */
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.textarea::-webkit-scrollbar {
+  height: 5px; /* Make the scrollbar smaller */
+}
+
+.textarea::-webkit-scrollbar-thumb {
+  background-color: #888;
+}
+
+.textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.dark {
+  background-color: #333;
+  color: white;
+}
+
+.light {
+  background-color: #fff;
+  color: black;
+}
