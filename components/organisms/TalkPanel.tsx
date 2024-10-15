@@ -130,18 +130,20 @@ const TalkPanel: React.FC = () => {
       return;
     }
 
-    console.log(`TalkPanel - Sending transcript for talk: ${talk.title}`);
-    const sendTranscript = talk.transcript || '';
-    const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+    // Move the selected talk logic and other side effects before dispatching the message
+    dispatch(setSelectedTalk(talk));
+    lastDispatchedTalkId.current = talk.title; 
+    hasSentMessage.current.add(talk.title); 
+    console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
+    console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
 
+    // Dispatch the message as the final step
     try {
+      const sendTranscript = talk.transcript || '';
+      const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
+
       const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
       console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
-      dispatch(setSelectedTalk(talk));
-      lastDispatchedTalkId.current = talk.title; 
-      hasSentMessage.current.add(talk.title); 
-      console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
-      console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
     } catch (dispatchError) {
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
