@@ -17,9 +17,10 @@ const useSpeechRecognition = ({
   const [isManuallyStopped, setIsManuallyStopped] = useState<boolean>(false); // Tracks if recognition was stopped manually
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null); // Holds the SpeechRecognition instance
   const [restartTimeout, setRestartTimeout] = useState<NodeJS.Timeout | null>(null); // Tracks restart timeouts
+  const [shouldRestart, setShouldRestart] = useState<boolean>(false); // Prevents continuous restarts
 
   const startListening = useCallback(() => {
-    if (recognition && !isListening && !isManuallyStopped) {
+    if (recognition && !isListening && !isManuallyStopped && isMicOn) {
       try {
         recognition.start();
         setIsListening(true);
@@ -28,7 +29,7 @@ const useSpeechRecognition = ({
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, [recognition, isListening, isManuallyStopped]);
+  }, [recognition, isListening, isManuallyStopped, isMicOn]);
 
   const stopListening = useCallback(() => {
     if (recognition && isListening) {
@@ -81,7 +82,7 @@ const useSpeechRecognition = ({
         setIsListening(false);
 
         // Automatically restart recognition after error if mic is still on
-        if (isMicOn) {
+        if (isMicOn && !isManuallyStopped) {
           if (restartTimeout) {
             clearTimeout(restartTimeout);
           }
@@ -105,6 +106,7 @@ const useSpeechRecognition = ({
           }
           setRestartTimeout(
             setTimeout(() => {
+              setShouldRestart(false);
               startListening();
             }, 3000) // Increased the restart delay to 3 seconds for smoother transition
           );
@@ -134,8 +136,9 @@ const useSpeechRecognition = ({
   }, [isMicOn, onSpeechResult, onInterimUpdate, recognition, restartTimeout, startListening]);
 
   useEffect(() => {
-    // Start or stop listening based on the mic's state
-    if (isMicOn && !isListening) {
+    // Prevent multiple starts/stops in a short period
+    if (isMicOn && !isListening && !shouldRestart) {
+      setShouldRestart(true);  // Block further restarts temporarily
       startListening();
     } else if (!isMicOn && isListening) {
       stopListening();
@@ -146,7 +149,7 @@ const useSpeechRecognition = ({
         clearTimeout(restartTimeout);
       }
     };
-  }, [isMicOn, startListening, stopListening, isListening, restartTimeout]);
+  }, [isMicOn, startListening, stopListening, isListening, restartTimeout, shouldRestart]);
 
   // Return whether the system is currently listening
   return { isListening };
