@@ -1,3 +1,5 @@
+// File: components/state/hooks/useSpeechRecognition.ts
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
