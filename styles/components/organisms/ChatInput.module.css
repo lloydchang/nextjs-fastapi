@@ -16,8 +16,8 @@
   padding: 8px 12px;
   color: white;
   background-color: #005C4B;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 0px solid #ccc;
+  border-radius: 0px;
   resize: none;
   overflow-wrap: break-word;
   word-wrap: break-word;

@@ -18,6 +18,10 @@
     padding: 0px;
     margin-top: 0px;
     border-radius: 0px;
+    resize: none;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    height: auto;
   }
   
   .textarea.light {
