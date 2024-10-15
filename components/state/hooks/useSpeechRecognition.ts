@@ -19,7 +19,15 @@ const useSpeechRecognition = ({
   const startListening = useCallback(async () => {
     if (!audioStreamRef.current) {
       try {
-        audioStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Prevent the microphone stream from playing back on the speakers
+        const audioTracks = stream.getAudioTracks();
+        audioTracks.forEach(track => {
+          track.enabled = true; // The track is active, but no audio playback will occur
+        });
+        
+        audioStreamRef.current = stream;
       } catch (error) {
         console.error('Error accessing microphone:', error);
         return;
