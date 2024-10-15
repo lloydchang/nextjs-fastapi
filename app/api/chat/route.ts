@@ -74,14 +74,20 @@ export async function POST(request: NextRequest) {
 
     try {
       const { messages } = await request.json();
-      if (!Array.isArray(messages) || messages.length === 0) {
-        logger.warn(`app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no messages.`);
-        return NextResponse.json({ error: 'Invalid request format or no messages provided.' }, { status: 400 });
+      
+      // Filter out invalid messages (e.g., empty content)
+      const validMessages = messages.filter(
+        (msg: any) => msg.content && typeof msg.content === 'string' && msg.content.trim() !== ''
+      );
+
+      if (!Array.isArray(validMessages) || validMessages.length === 0) {
+        logger.warn(`app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`);
+        return NextResponse.json({ error: 'Invalid request format or no valid messages provided.' }, { status: 400 });
       }
 
       // Get or initialize the context for this client
       let context = clientContexts.get(clientId) || [];
-      context = [...context, ...messages]; // Append new messages to the context
+      context = [...context, ...validMessages]; // Append new valid messages to the context
       context = context.slice(-maxContextMessages); // Keep context within limits
       clientContexts.set(clientId, context);
 
@@ -91,7 +97,7 @@ export async function POST(request: NextRequest) {
 
           const botFunctions: BotFunction[] = []; // Initialize botFunctions here
 
-          // Function to add botFunction to the array
+          // Helper function to add botFunction to the array
           const addBotFunction = (
             personaPrefix: string,
             textModelConfigKey: string,
