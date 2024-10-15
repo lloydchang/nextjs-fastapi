@@ -57,6 +57,8 @@
       recognition.onend = () => {
         console.log('Speech recognition ended.');
         isListening = false;
+
+        // Do not automatically restart unless explicitly clicked again
       };
 
       startBtn.addEventListener('click', () => {
