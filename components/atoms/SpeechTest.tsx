@@ -1,7 +1,7 @@
 // File: components/atoms/SpeechTest.tsx
 
 import React, { useState, useCallback } from 'react';
-import TestSpeechRecognition from 'components/TestSpeechRecognition'; // Import TestSpeechRecognition component
+import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition'; // Import TestSpeechRecognition component
 
 const SpeechTest: React.FC = () => {
   const [interim, setInterim] = useState<string>('');

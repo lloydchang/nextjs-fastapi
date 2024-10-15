@@ -1,4 +1,4 @@
-// File: components/TestSpeechRecognition.tsx
+// File: components/organisms/TestSpeechRecognition.tsx
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styles from 'styles/components/organisms/TestSpeechRecognition.module.css';
