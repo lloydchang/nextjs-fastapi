@@ -139,7 +139,7 @@ export function getConfig(): AppConfig {
     openAIO1ApiKey: process.env.OPENAI_O1_API_KEY || '',
 
     // General Configurations
-    systemPrompt: process.env.SYSTEM_PROMPT || 'Default system prompt',
+    systemPrompt: process.env.SYSTEM_PROMPT || '',
     stream: process.env.STREAM === 'true',
     temperature: parseFloat(process.env.TEMPERATURE || '0.0'),
     winstonLoggerLevel: process.env.WINSTON_LOGGER_LEVEL || 'silly',

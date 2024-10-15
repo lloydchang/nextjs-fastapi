@@ -11,13 +11,13 @@ import { systemPrompt } from 'app/api/chat/utils/systemPrompt';
  */
 export async function generateFromOllamaGemma(params: { endpoint: string; prompt: string; model: string; }): Promise<string | null> {
   const { endpoint, prompt, model } = params;
-  const combinedPrompt = `User Prompt: ${prompt}`;
+  const combinedPrompt = `${prompt}`;
 
   // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Sending request to Ollama Gemma. Endpoint: ${endpoint}, Model: ${model}, Prompt: ${combinedPrompt}`);
 
   try {
     const requestBody = JSON.stringify({ prompt: combinedPrompt, model });
-    // logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Request body: ${requestBody}`);
+    logger.silly(`app/api/chat/clients/OllamaGemmaClient.ts - Request body: ${requestBody}`);
 
     const response = await fetch(endpoint, {
       method: 'POST',

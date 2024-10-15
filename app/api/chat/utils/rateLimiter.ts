@@ -1,6 +1,6 @@
 // File: app/api/chat/utils/rateLimiter.ts
 
-const RATE_LIMIT = 1; // Max number of requests per client during the rate limit window
+const RATE_LIMIT = 10; // Max number of requests per client during the rate limit window
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
 
 // Map to track rate limits per client

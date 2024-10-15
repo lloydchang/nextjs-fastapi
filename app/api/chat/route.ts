@@ -45,7 +45,7 @@ const summarizeFunction: SummarizeFunction = async (text: string): Promise<strin
 
 const config: AppConfig = getConfig();
 
-const MAX_PROMPT_LENGTH = 2000; // Adjust based on Ollama Gemma's default token limit of 2000
+const MAX_PROMPT_LENGTH = 128000; // Adjust based on token size limit
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 20; // Keep only the last 20 messages
 
@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
                 generate: async (currentContext: any[]) => {
                   let prompt = config.systemPrompt || '';
                   if (currentContext.length > 0) {
-                    prompt += `\n\nUser: ${extractValidMessages(currentContext)}`;
+                    prompt += `${extractValidMessages(currentContext)}`;
                   }
 
                   let finalPrompt = prompt;
