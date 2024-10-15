@@ -17,7 +17,34 @@ import { Mutex } from 'async-mutex';
 import { managePrompt } from 'app/api/chat/utils/promptManager';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
 
+/**
+ * Type definition for the summarize function.
+ */
+type SummarizeFunction = (text: string) => Promise<string | null>;
+
+/**
+ * Union type for text model configuration keys.
+ */
+type TextModelConfigKey =
+  | 'ollamaGemmaTextModel'
+  | 'ollamaLlamaTextModel'
+  | 'cloudflareGemmaTextModel'
+  | 'cloudflareLlamaTextModel'
+  | 'googleVertexGemmaTextModel'
+  | 'googleVertexLlamaTextModel';
+
+/**
+ * Function to summarize text. Currently a placeholder that returns null.
+ * Implement your summarization logic here as needed.
+ */
+const summarizeFunction: SummarizeFunction = async (text: string): Promise<string | null> => {
+  // Implement your summarization logic here
+  // For demonstration, returning null (no summarization)
+  return null;
+};
+
 const config: AppConfig = getConfig();
+
 const MAX_PROMPT_LENGTH = 128000; // Adjust based on token size limit
 const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 0; // Keep only the last 0 messages
@@ -29,6 +56,20 @@ const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
 /**
+ * Helper function to check if a configuration value is valid.
+ * @param value - The configuration value to validate.
+ * @returns True if valid, else false.
+ */
+function isValidConfig(value: any): boolean {
+  return (
+    typeof value === 'string' &&
+    value.trim() !== '' &&
+    value.trim().toLowerCase() !== 'undefined' &&
+    value.trim().toLowerCase() !== 'null'
+  );
+}
+
+/**
  * Handles POST requests to the chat API.
  * @param request - The incoming NextRequest.
  * @returns A NextResponse containing the streamed bot responses or an error.
@@ -37,8 +78,10 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || 'unknown-client';
 
+  // logger.info(`app/api/chat/route.ts - Received POST request [${requestId}] from clientId: ${clientId}`);
+
   // Handle rate limiting
-  const { limited, retryAfter, controller } = checkRateLimit(clientId);
+  const { limited, retryAfter } = checkRateLimit(clientId);
   if (limited) {
     logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
     return NextResponse.json(
@@ -90,14 +133,24 @@ export async function POST(request: NextRequest) {
 
       const stream = new ReadableStream({
         async start(controller) {
+          // logger.silly(`app/api/chat/route.ts - Started streaming responses to the client for clientId: ${clientId}.`);
+
           const botFunctions: BotFunction[] = [];
 
+          /**
+           * Adds a bot function to the botFunctions array if its configuration is valid.
+           * @param personaPrefix - The persona prefix for the bot.
+           * @param textModelConfigKey - The key in AppConfig for the text model.
+           * @param endpointEnvVars - The environment variables required for the endpoint.
+           * @param handlerFunction - The function to handle text processing.
+           * @param summarizeFunction - The function to summarize prompts.
+           */
           const addBotFunction = (
             personaPrefix: string,
-            textModelConfigKey: keyof AppConfig, // Use keyof AppConfig for better type safety
+            textModelConfigKey: TextModelConfigKey, // Use union type
             endpointEnvVars: string[],
             handlerFunction: (input: { userPrompt: string; textModel: string }, config: AppConfig) => Promise<string | null>,
-            summarizeFunction: (text: string) => Promise<string | null>
+            summarizeFunction: SummarizeFunction // Use specific type
           ) => {
             if (isValidConfig(config[textModelConfigKey]) && validateEnvVars(endpointEnvVars)) {
               const textModel = config[textModelConfigKey] || "defaultModel";
@@ -120,9 +173,12 @@ export async function POST(request: NextRequest) {
                     clientId,
                     textModel
                   )) {
+                    // logger.debug(
+                    //   `app/api/chat/route.ts - Using ${personaPrefix} model (${textModel}) for clientId: ${clientId} - Prompt: ${updatedPrompt}`
+                    // );
                     if (updatedPrompt.trim().length === 0) {
                       logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty after management.`);
-                      continue;
+                      continue; // Skip enqueueing empty prompts
                     }
                     try {
                       controller.enqueue(
@@ -145,12 +201,20 @@ export async function POST(request: NextRequest) {
             }
           };
 
-          // Add bot functions
+          // Add all bot functions
           addBotFunction(
             'Ollama',
             'ollamaGemmaTextModel',
             ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
             handleTextWithOllamaGemmaTextModel,
+            summarizeFunction
+          );
+
+          addBotFunction(
+            'Ollama',
+            'ollamaLlamaTextModel',
+            ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
+            handleTextWithOllamaLlamaTextModel,
             summarizeFunction
           );
 
@@ -162,9 +226,38 @@ export async function POST(request: NextRequest) {
             summarizeFunction
           );
 
-          // Add more bot functions as needed...
+          addBotFunction(
+            'Cloudflare',
+            'cloudflareLlamaTextModel',
+            ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
+            handleTextWithCloudflareLlamaTextModel,
+            summarizeFunction
+          );
 
+          addBotFunction(
+            'Google Vertex',
+            'googleVertexGemmaTextModel',
+            ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
+            handleTextWithGoogleVertexGemmaTextModel,
+            summarizeFunction
+          );
+
+          addBotFunction(
+            'Google Vertex',
+            'googleVertexLlamaTextModel',
+            ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
+            handleTextWithGoogleVertexLlamaTextModel,
+            summarizeFunction
+          );
+
+          /**
+           * Processes all bot functions and streams their responses.
+           * Updated to run bot.generate concurrently and prevent duplicate enqueues.
+           */
           async function processBots() {
+            // logger.silly(`app/api/chat/route.ts - Starting bot processing for clientId: ${clientId}.`);
+
+            // Process all bots concurrently
             const botPromises = botFunctions.map(async (bot) => {
               try {
                 const botResponse = await bot.generate(context);
@@ -173,10 +266,12 @@ export async function POST(request: NextRequest) {
                 if (botResponse && typeof botResponse === 'string') {
                   logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
+                  // Enqueue response only if it's not empty
                   if (botResponse.trim().length > 0) {
                     controller.enqueue(
                       `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
                     );
+
                     context.push({ role: 'bot', content: botResponse, persona: botPersona });
                     return true;
                   }
@@ -188,11 +283,20 @@ export async function POST(request: NextRequest) {
               }
             });
 
+            // Await all bot responses
             const responses = await Promise.all(botPromises);
             const hasResponse = responses.includes(true);
 
             context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
+
+            // Handle session timeout
+            const lastInteraction = lastInteractionTimes.get(clientId) || 0;
+            if (Date.now() - lastInteraction > sessionTimeout) {
+              clientContexts.delete(clientId);
+              lastInteractionTimes.delete(clientId);
+              logger.silly(`app/api/chat/route.ts - Session timed out for clientId: ${clientId}. Context reset.`);
+            }
 
             if (!hasResponse) {
               logger.silly(`app/api/chat/route.ts - No bot responded. Ending interaction.`);
