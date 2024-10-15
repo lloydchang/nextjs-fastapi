@@ -6,6 +6,7 @@ import TestSpeechRecognition from 'components/organisms/TestSpeechRecognition'; 
 const SpeechTest: React.FC = () => {
   const [interim, setInterim] = useState<string>('');
   const [final, setFinal] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false); // Track dark mode state
 
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
@@ -17,9 +18,20 @@ const SpeechTest: React.FC = () => {
     setInterim(text);
   }, []);
 
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor: isDarkMode ? 'black' : 'white',
+        color: isDarkMode ? 'white' : 'black',
+        padding: '20px',
+      }}
+    >
       <h3>Speech Test</h3>
+      <button onClick={toggleDarkMode}>
+        Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
+      </button>
       <TestSpeechRecognition
         isMicOn={true} // Automatically turn on mic for testing
         onSpeechResult={handleFinal}
@@ -30,12 +42,20 @@ const SpeechTest: React.FC = () => {
         readOnly
         placeholder="Interim Speech..."
         rows={2}
+        style={{
+          backgroundColor: isDarkMode ? 'grey' : 'lightgrey',
+          color: isDarkMode ? 'white' : 'black',
+        }}
       />
       <textarea
         value={final}
         readOnly
         placeholder="Final Speech..."
         rows={2}
+        style={{
+          backgroundColor: isDarkMode ? 'grey' : 'lightgrey',
+          color: isDarkMode ? 'white' : 'black',
+        }}
       />
     </div>
   );

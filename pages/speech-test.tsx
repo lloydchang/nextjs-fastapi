@@ -1,12 +1,12 @@
 // File: pages/speech-test.tsx
 
 import React from 'react';
-import SpeechTest from 'components/atoms/SpeechTest';
+import SpeechTest from 'components/atoms/SpeechTest'; // Import SpeechTest component
 
 const SpeechTestPage: React.FC = () => {
   return (
     <div>
-      <SpeechTest />
+      <SpeechTest /> {/* Render the SpeechTest component */}
     </div>
   );
 };
