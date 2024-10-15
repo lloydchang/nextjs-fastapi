@@ -26,27 +26,20 @@ const TalkPanel: React.FC = () => {
   const hasFetched = useRef(false);
   const hasSentMessage = useRef(new Set<string>());
   const lastDispatchedTalkId = useRef<string | null>(null);
-  const isMounted = useRef(false);
   const isFirstSearch = useRef(true);
 
   useEffect(() => {
     if (initialRender.current) {
-      initialRender.current = false;
-      return;
+      // Skip any actions on the first render
+      initialRender.current = false; // Set to false for subsequent renders
+      return; // Exit early to prevent any search or side effects
     }
 
-    if (!isMounted.current) {
-      console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
-      performSearchWithExponentialBackoff(searchQuery);
-      hasFetched.current = true;
-      isMounted.current = true;
-    }
-
-    return () => {
-      isMounted.current = false;
-      // Reset any relevant state or refs here if necessary
-    };
-  }, [searchQuery]); // Removed `selectedTalk` from dependencies to control fetch
+    // Proceed with search or other actions only after the initial render
+    console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
+    performSearchWithExponentialBackoff(searchQuery);
+    hasFetched.current = true; // Set fetched flag to true after the first search is made
+  }, [searchQuery]); // Monitor changes to searchQuery for subsequent renders
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
