@@ -13,7 +13,6 @@ import { sdgTitleMap } from 'components/constants/sdgTitles';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
-import debounce from 'lodash/debounce';
 import throttle from 'lodash/throttle';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
