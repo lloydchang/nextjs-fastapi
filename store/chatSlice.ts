@@ -46,8 +46,6 @@ const chatSlice = createSlice({
   },
 });
 
-const { addMessage, setError, clearError } = chatSlice.actions;
-
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const debouncedApiCall = debounce(
@@ -199,5 +197,5 @@ export function parseIncomingMessage(jsonString: string) {
   }
 }
 
-export const { clearMessages, setError, clearError } = chatSlice.actions;
+export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
 export default chatSlice.reducer;
