@@ -27,8 +27,8 @@ const TalkPanel: React.FC = () => {
   const hasSentMessage = useRef(new Set<string>());
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
-  
-  const scrollableContainerRef = useRef<HTMLDivElement>(null);  // Ref for scrollable container
+
+  const scrollableContainerRef = useRef<HTMLDivElement>(null); // Ref for scrollable container
 
   useEffect(() => {
     // Unselect existing talk before anything else
@@ -54,31 +54,17 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - Shuffling talks for the first search query.');
     }
 
-    const uniqueTalks = processedData.filter(talk => {
-      const isUnique = !talks.some(existingTalk => existingTalk.title === talk.title);
-      if (!isUnique) {
-        console.log(`TalkPanel - Talk already exists: ${talk.title}`);
-      }
-      return isUnique;
-    });
+    // Just dispatch all fetched talks without filtering for uniqueness
+    dispatch(setTalks([...talks, ...processedData]));
 
-    console.log('TalkPanel - Unique talks found:', uniqueTalks);
-
-    if (uniqueTalks.length > 0) {
-      // Update talks with unique entries
-      dispatch(setTalks([...talks, ...uniqueTalks]));
-
-      // Ensure a selected talk is set if none is currently selected
-      if (!selectedTalk) {
-        dispatch(setSelectedTalk(uniqueTalks[0])); // Select the first unique talk
-        console.log('TalkPanel - New selected talk:', uniqueTalks[0].title);
-      }
-
-      // Send the transcript for the first unique talk
-      await sendFirstAvailableTranscript(query, uniqueTalks);
-    } else {
-      console.log('TalkPanel - No new unique talks found.');
+    // Ensure a selected talk is set if none is currently selected
+    if (!selectedTalk && processedData.length > 0) {
+      dispatch(setSelectedTalk(processedData[0])); // Select the first talk
+      console.log('TalkPanel - New selected talk:', processedData[0].title);
     }
+
+    // Send the transcript for the first available talk
+    await sendFirstAvailableTranscript(query, processedData);
   };
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -135,7 +121,7 @@ const TalkPanel: React.FC = () => {
 
   const throttledPerformSearch = throttle((query: string) => {
     performSearchWithExponentialBackoff(query);
-  }, 3000);  // Throttle searches to every 3 seconds
+  }, 3000); // Throttle searches to every 3 seconds
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -185,7 +171,7 @@ const TalkPanel: React.FC = () => {
   const throttledSendTranscriptForTalk = throttle((query: string, talk: Talk) => {
     console.log(`TalkPanel - Throttled send for talk: ${talk.title}`);
     sendTranscriptForTalk(query, talk);
-  }, 3000);  // Throttle sending messages to once every 3 seconds
+  }, 3000); // Throttle sending messages to once every 3 seconds
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
     console.log('TalkPanel - Sending first available transcript for query:', query);
@@ -207,9 +193,9 @@ const TalkPanel: React.FC = () => {
       const timer = setTimeout(() => {
         console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title} after 3 seconds delay`);
         throttledSendTranscriptForTalk(searchQuery, selectedTalk);
-      }, 3000);  // Wait 3 seconds before sending
+      }, 3000); // Wait 3 seconds before sending
 
-      return () => clearTimeout(timer);  // Cleanup the timer if the component unmounts or dependencies change
+      return () => clearTimeout(timer); // Cleanup the timer if the component unmounts or dependencies change
     }
   }, [searchQuery, selectedTalk]);
 
