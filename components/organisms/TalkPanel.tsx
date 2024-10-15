@@ -151,4 +151,126 @@ const TalkPanel: React.FC = () => {
     } catch (dispatchError) {
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000;
-        console.error(`TalkPanel - Error 
+        console.error(`TalkPanel - Error dispatching message for ${talk.title}. Retrying in ${delay / 1000} seconds...`);
+        await wait(delay);
+        await sendTranscriptForTalk(query, talk, retryCount + 1);
+      } else {
+        console.error(`TalkPanel - Failed to send transcript for ${talk.title} after multiple attempts.`);
+        dispatch(setError(`Failed to send transcript for ${talk.title}.`));
+      }
+    }
+  };
+
+  const debouncedSendTranscriptForTalk = debounce((query: string, talk: Talk) => {
+    console.log(`TalkPanel - Debounced send for talk: ${talk.title}`);
+    sendTranscriptForTalk(query, talk);
+  }, 1000); 
+
+  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
+    console.log('TalkPanel - Sending first available transcript for query:', query);
+    for (let i = 0; i < talks.length; i++) {
+      try {
+        console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
+        await debouncedSendTranscriptForTalk(query, talks[i]);
+        return;
+      } catch (error) {
+        console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
+      }
+    }
+    dispatch(setError('Failed to send transcripts for all talks.'));
+  };
+
+  // Handle search query change
+  useEffect(() => {
+    if (searchQuery && selectedTalk) {
+      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+    }
+  }, [searchQuery]);
+
+  // Handle new talk selection
+  useEffect(() => {
+    if (selectedTalk) {
+      console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
+      debouncedSendTranscriptForTalk(searchQuery, selectedTalk);
+    }
+  }, [selectedTalk]);
+
+  const shuffleTalks = async () => {
+    if (talks.length > 0) {
+      const shuffledTalks = shuffleArray([...talks]);
+      dispatch(setTalks(shuffledTalks));
+      dispatch(setSelectedTalk(shuffledTalks[0] || null));
+      await handleSearchResults(searchQuery, shuffledTalks);
+    }
+  };
+
+  const openTranscriptInNewTab = () => {
+    if (selectedTalk) {
+      const transcriptUrl = `${selectedTalk.url}/transcript?subtitle=en`;
+      window.open(transcriptUrl, '_blank');
+    }
+  };
+
+  return (
+    <div className={styles.TalkPanel}>
+      <div className={styles.searchContainer}>
+        <div className={styles.searchInputWrapper}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            className={styles.searchInput}
+          />
+          {loading && <LoadingSpinner />}
+        </div>
+        <button
+          onClick={() => performSearchWithExponentialBackoff(searchQuery)}
+          className={`${styles.button} ${styles.searchButton}`}
+          disabled={loading}
+        >
+          Search
+        </button>
+        <button onClick={shuffleTalks} className={`${styles.button} ${styles.shuffleButton}`}>
+          Shuffle
+        </button>
+        {selectedTalk && (
+          <button onClick={openTranscriptInNewTab} className={`${styles.button} ${styles.tedButton}`}>
+            Transcript
+          </button>
+        )}
+      </div>
+
+      {error && (
+        <div className={styles.errorContainer}>
+          <p className={styles.errorText}>{error}</p>
+        </div>
+      )}
+
+      {selectedTalk && (
+        <div className={styles.nowPlaying}>
+          <iframe
+            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
+            width="100%"
+            height="400px"
+            allow="autoplay; fullscreen; encrypted-media"
+            className={styles.videoFrame}
+          />
+        </div>
+      )}
+
+      {talks.length > 0 && (
+        <div className={styles.scrollableContainer}>
+          <div className={styles.resultsContainer}>
+            {talks.map((talk, index) => (
+              <TalkItem key={index} talk={talk} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default React.memo(TalkPanel);
