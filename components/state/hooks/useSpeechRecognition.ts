@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+// File: components/state/hooks/useSpeechRecognition.ts
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
   isMicOn: boolean;
@@ -11,13 +13,16 @@ const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
 }: UseSpeechRecognitionProps) => {
-  const [isListening, setIsListening] = useState<boolean>(false);
-  const [isManuallyStopped, setIsManuallyStopped] = useState<boolean>(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [restartTimeout, setRestartTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isListening, setIsListening] = useState<boolean>(false); // Track the actual listening state
+  const [interimTranscript, setInterimTranscript] = useState<string>(''); // Track interim speech results
+  const [finalTranscript, setFinalTranscript] = useState<string>(''); // Track final speech results
+  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store recognition instance in ref to avoid re-initialization
+  const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Use ref to track restart timeout
 
+  // Start listening logic
   const startListening = useCallback(() => {
-    if (recognition && !isListening && !isManuallyStopped && isMicOn) {
+    const recognition = recognitionRef.current;
+    if (recognition && !isListening && isMicOn) {
       try {
         recognition.start();
         setIsListening(true);
@@ -26,18 +31,20 @@ const useSpeechRecognition = ({
         console.error('Error starting speech recognition:', err);
       }
     }
-  }, [recognition, isListening, isManuallyStopped, isMicOn]);
+  }, [isListening, isMicOn]);
 
+  // Stop listening logic
   const stopListening = useCallback(() => {
+    const recognition = recognitionRef.current;
     if (recognition && isListening) {
-      setIsManuallyStopped(true);
       recognition.stop();
       setIsListening(false);
       console.log('Speech recognition stopped.');
     }
-  }, [recognition, isListening]);
+  }, [isListening]);
 
   useEffect(() => {
+    // Initialize SpeechRecognition only once
     const SpeechRecognitionConstructor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -52,80 +59,80 @@ const useSpeechRecognition = ({
     recognitionInstance.lang = 'en-US';
 
     recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
+      let interim = '';
+      let final = '';
 
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         const transcript = event.results[i][0].transcript.trim();
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
+          final += transcript + ' ';
         } else {
-          interimTranscript += transcript + ' ';
+          interim += transcript + ' ';
         }
       }
 
-      if (finalTranscript) {
-        console.log('Final Transcript:', finalTranscript);
-        onSpeechResult(finalTranscript.trim());
+      if (final) {
+        console.log('Final Transcript:', final);
+        setFinalTranscript(final.trim()); // Update final result in state
+        onSpeechResult(final.trim()); // Propagate the final result to the parent
       }
 
-      if (interimTranscript) {
-        console.log('Interim Transcript:', interimTranscript);
-        onInterimUpdate(interimTranscript.trim());
+      if (interim) {
+        console.log('Interim Transcript:', interim);
+        setInterimTranscript(interim.trim()); // Update interim result in state
+        onInterimUpdate(interim.trim()); // Propagate the interim result to the parent
       }
     };
 
     recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error:', event.error);
-      setIsListening(false);
+      setIsListening(false); // Stop listening if there's an error
 
-      if (isMicOn && !isManuallyStopped) {
-        if (restartTimeout) {
-          clearTimeout(restartTimeout);
+      // Only restart if the mic is on
+      if (isMicOn) {
+        if (restartTimeoutRef.current) {
+          clearTimeout(restartTimeoutRef.current);
         }
-        setRestartTimeout(
-          setTimeout(() => {
-            setIsManuallyStopped(false);
-            startListening();
-          }, 3000)
-        );
+        restartTimeoutRef.current = setTimeout(() => {
+          startListening(); // Restart after a delay only if mic is still on
+        }, 3000);
       }
     };
 
     recognitionInstance.onend = () => {
-      console.log('Speech recognition ended.');
-      setIsListening(false);
+      setIsListening(false); // Set listening to false when recognition ends
 
-      if (isMicOn && !isManuallyStopped) {
-        if (restartTimeout) {
-          clearTimeout(restartTimeout);
+      // Only restart if the mic is on and we didn't manually stop
+      if (isMicOn) {
+        if (restartTimeoutRef.current) {
+          clearTimeout(restartTimeoutRef.current);
         }
-        setRestartTimeout(
-          setTimeout(() => {
-            startListening();
-          }, 3000)
-        );
+        restartTimeoutRef.current = setTimeout(() => {
+          startListening(); // Restart after a delay only if mic is still on
+        }, 3000);
       }
     };
 
-    setRecognition(recognitionInstance);
+    recognitionRef.current = recognitionInstance;
 
     return () => {
-      if (recognitionInstance) {
-        recognitionInstance.onend = null;
-        recognitionInstance.onresult = null;
-        recognitionInstance.onerror = null;
-        recognitionInstance.abort();
-        setRecognition(null);
+      // Cleanup on unmount
+      const recognition = recognitionRef.current;
+      if (recognition) {
+        recognition.onend = null;
+        recognition.onresult = null;
+        recognition.onerror = null;
+        recognition.abort(); // Ensure we stop everything
+        recognitionRef.current = null;
       }
-      setIsListening(false);
-      if (restartTimeout) {
-        clearTimeout(restartTimeout);
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
       }
     };
-  }, [isMicOn, onSpeechResult, onInterimUpdate, restartTimeout, startListening]);
+  }, [isMicOn, onSpeechResult, onInterimUpdate, startListening]);
 
   useEffect(() => {
+    // Control when to start/stop based on isMicOn state
     if (isMicOn && !isListening) {
       startListening();
     } else if (!isMicOn && isListening) {
@@ -133,13 +140,17 @@ const useSpeechRecognition = ({
     }
 
     return () => {
-      if (restartTimeout) {
-        clearTimeout(restartTimeout);
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
       }
     };
-  }, [isMicOn, isListening, startListening, stopListening, restartTimeout]);
+  }, [isMicOn, isListening, startListening, stopListening]);
 
-  return { isListening };
+  return {
+    isListening,
+    interimTranscript, // Return interim transcript
+    finalTranscript,   // Return final transcript
+  };
 };
 
 export default useSpeechRecognition;
