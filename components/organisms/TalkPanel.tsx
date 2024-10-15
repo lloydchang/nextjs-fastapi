@@ -37,7 +37,7 @@ const TalkPanel: React.FC = () => {
     } else {
       console.log('TalkPanel - Subsequent render detected, skipping search.');
     }
-  }, []);
+  }, []);  
 
   // Close all functions and effects correctly here
   // Ensure every block is properly closed before the return statement
@@ -266,7 +266,7 @@ const TalkPanel: React.FC = () => {
         <div className={styles.scrollableContainer}>
           <div className={styles.resultsContainer}>
             {talks.map((talk, index) => (
-              <TalkItem key={index} talk={talk} selected={selectedTalk?.title === talk.title} />
+              <TalkItem key={index} talk={talk} selected={selectedTalk?.title === talk.title} /> {/* Pass selected prop */}
             ))}
           </div>
         </div>
