@@ -33,7 +33,7 @@ const useSpeechRecognition = ({
             autoGainControl: true,
           },
         });
-        console.log("Microphone stream started:", stream);
+        console.log('Microphone stream started:', stream);
         audioStreamRef.current = stream; // Save the audio stream reference
       } catch (error) {
         console.error('Error accessing microphone:', error);
@@ -49,6 +49,12 @@ const useSpeechRecognition = ({
       } catch (err) {
         console.error('Error starting speech recognition:', err);
       }
+    } else {
+      console.log('Speech recognition not started:', {
+        recognitionExists: !!recognition,
+        isListening,
+        isMicOn,
+      });
     }
   }, [isListening, isMicOn]);
 
@@ -124,6 +130,7 @@ const useSpeechRecognition = ({
           if (recognitionRef.current) {
             recognitionRef.current.start(); // Restart speech recognition if mic is still on
             setIsListening(true);
+            console.log('Speech recognition restarted after error.');
           }
         }, 3000);
       }
@@ -142,6 +149,7 @@ const useSpeechRecognition = ({
           if (recognitionRef.current) {
             recognitionRef.current.start(); // Restart after a delay if mic is still on
             setIsListening(true);
+            console.log('Speech recognition restarted after end.');
           }
         }, 3000);
       }
