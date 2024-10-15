@@ -14,6 +14,7 @@ import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPane
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
 import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
 const TalkPanel: React.FC = () => {
@@ -30,16 +31,14 @@ const TalkPanel: React.FC = () => {
 
   useEffect(() => {
     if (initialRender.current) {
-      // Perform the search on the first render
       console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
       performSearchWithExponentialBackoff(searchQuery);
-      hasFetched.current = true; // Set fetched flag to true after the first search is made
-      initialRender.current = false; // Set to false after the first search is done
+      hasFetched.current = true;
+      initialRender.current = false;
     } else {
-      // Skip actions for subsequent renders
       console.log('TalkPanel - Subsequent render detected, skipping search.');
     }
-  }, []); // No dependencies, runs only on mount  
+  }, []);  
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
@@ -114,18 +113,20 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  // Handle input change
+  const throttledPerformSearch = throttle((query: string) => {
+    performSearchWithExponentialBackoff(query);
+  }, 3000);  // Throttle searches to every 3 seconds
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      performSearchWithExponentialBackoff(searchQuery);
+      throttledPerformSearch(searchQuery);
     }
   };
 
-  // Send transcript for a selected talk
   const sendTranscriptForTalk = async (query: string, talk: Talk, retryCount = 0): Promise<void> => {
     console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
     console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
@@ -180,7 +181,6 @@ const TalkPanel: React.FC = () => {
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
 
-  // Handle search query change
   useEffect(() => {
     if (searchQuery && selectedTalk) {
       console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
@@ -188,7 +188,6 @@ const TalkPanel: React.FC = () => {
     }
   }, [searchQuery]);
 
-  // Handle new talk selection
   useEffect(() => {
     if (selectedTalk) {
       console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
@@ -226,7 +225,7 @@ const TalkPanel: React.FC = () => {
           {loading && <LoadingSpinner />}
         </div>
         <button
-          onClick={() => performSearchWithExponentialBackoff(searchQuery)}
+          onClick={() => throttledPerformSearch(searchQuery)}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={loading}
         >
