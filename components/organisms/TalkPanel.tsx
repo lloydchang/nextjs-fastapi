@@ -27,6 +27,8 @@ const TalkPanel: React.FC = () => {
   const hasSentMessage = useRef(new Set<string>());
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
+  
+  const scrollableContainerRef = useRef<HTMLDivElement>(null);  // Ref for scrollable container
 
   useEffect(() => {
     if (initialRender.current) {
@@ -38,9 +40,6 @@ const TalkPanel: React.FC = () => {
       console.log('TalkPanel - Subsequent render detected, skipping search.');
     }
   }, []);
-
-  // Close all functions and effects correctly here
-  // Ensure every block is properly closed before the return statement
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
     console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
@@ -193,6 +192,16 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (selectedTalk) {
       console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
+      
+      // Move selected talk to the top
+      const updatedTalks = talks.filter(talk => talk.title !== selectedTalk.title);
+      dispatch(setTalks([selectedTalk, ...updatedTalks]));
+      
+      // Scroll to the top
+      if (scrollableContainerRef.current) {
+        scrollableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
       throttledSendTranscriptForTalk(searchQuery, selectedTalk);
     }
   }, [selectedTalk]);
@@ -213,7 +222,6 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  // Ensure return statement is correct and follows the JSX rules
   return (
     <div className={styles.TalkPanel}>
       <div className={styles.searchContainer}>
@@ -263,7 +271,7 @@ const TalkPanel: React.FC = () => {
       )}
 
       {talks.length > 0 && (
-        <div className={styles.scrollableContainer}>
+        <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
           <div className={styles.resultsContainer}>
             {talks.map((talk, index) => (
               <TalkItem key={index} talk={talk} selected={selectedTalk?.title === talk.title} />
