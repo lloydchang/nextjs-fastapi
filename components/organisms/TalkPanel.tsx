@@ -182,12 +182,17 @@ const TalkPanel: React.FC = () => {
     dispatch(setError('Failed to send transcripts for all talks.'));
   };
 
+  // Introduce delay before sending the first transcript
   useEffect(() => {
     if (searchQuery && selectedTalk) {
-      console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title}`);
-      throttledSendTranscriptForTalk(searchQuery, selectedTalk);
+      const timer = setTimeout(() => {
+        console.log(`TalkPanel - Sending transcript for: ${selectedTalk.title} after 3 seconds delay`);
+        throttledSendTranscriptForTalk(searchQuery, selectedTalk);
+      }, 3000);  // Wait 3 seconds before sending
+
+      return () => clearTimeout(timer);  // Cleanup the timer if the component unmounts or dependencies change
     }
-  }, [searchQuery]);
+  }, [searchQuery, selectedTalk]);
 
   useEffect(() => {
     if (selectedTalk) {
