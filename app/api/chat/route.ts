@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
-import { handleRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
+import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
