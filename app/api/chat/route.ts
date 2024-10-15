@@ -19,6 +19,7 @@ import { BotFunction } from 'types'; // Ensure this is correctly exported in 'ty
 
 // Add this declaration to manage client-specific Mutexes
 const clientMutexes = new Map<string, Mutex>(); // Initialize the map to track client Mutexes
+const lastInteractionTimes = new Map<string, number>(); // Map to track the last interaction time per client
 
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
