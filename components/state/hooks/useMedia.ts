@@ -22,26 +22,34 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: true, // Initialize microphone as ON by default
+    isMicOn: true, // Microphone is initialized as ON by default
     isPipOn: false,
     isMemOn: true,
   });
-  const [micStream, setMicStream] = useState<MediaStream | null>(null); // Handle mic stream with state
+  const [micStream, setMicStream] = useState<MediaStream | null>(null); // Manage mic stream with state
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Automatically start the microphone when the component mounts
+  // Automatically start the microphone when the component mounts or isMicOn changes
   useEffect(() => {
     const initializeMic = async () => {
       if (mediaState.isMicOn && !micStream) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          setMicStream(stream); // Store the mic stream
+          setMicStream(stream); // Store the mic stream for later cleanup
         } catch (err) {
           console.error('Unable to access microphone:', err);
         }
       }
     };
+
     initializeMic();
+
+    return () => {
+      if (micStream) {
+        micStream.getTracks().forEach((track) => track.stop()); // Stop mic when component unmounts
+        setMicStream(null);
+      }
+    };
   }, [mediaState.isMicOn, micStream]);
 
   const startCam = useCallback(async () => {
