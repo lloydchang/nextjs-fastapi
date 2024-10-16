@@ -68,24 +68,6 @@
 
 /* Mobile-specific styles */
 @media (max-width: 767px) {
-  .modalOverlay {
-    width: 50%; /* Modal takes up 50% of the screen width */
-    max-width: 50%;
-    display: flex;
-    justify-content: left; /* Justify the content horizontally */
-    align-items: center; /* Align the content vertically */
-    margin-right: 50%; /* Add some space to the left to avoid sticking to the screen edge */
-  }
-
-  .modalContent {
-    width: 50%; /* Modal takes up 50% of the screen width */
-    max-width: 50%;
-    padding: 0px;
-    box-sizing: border-box;
-    margin-right: 50%; /* Add some space to the left to avoid sticking to the screen edge */
-    font-size: 0.5em;
-  }
-
   .buttons {
     flex-direction: column; /* Stack buttons vertically on mobile */
     width: 100%; /* Ensure buttons take full width within modal */
