@@ -1,6 +1,6 @@
 // File: components/state/hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
@@ -13,11 +13,11 @@ const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
   isMicOn = false,
-  onEnd, // Handle onEnd callback
+  onEnd,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [isRecognitionActive, setIsRecognitionActive] = useState(false); // Track recognition state
-  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store recognition instance
+  const [isRecognitionActive, setIsRecognitionActive] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
   const initializeRecognition = useCallback(() => {
     const SpeechRecognitionConstructor =
@@ -28,12 +28,12 @@ const useSpeechRecognition = ({
       return;
     }
 
-    const recognition = new SpeechRecognitionConstructor();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    const newRecognition = new SpeechRecognitionConstructor();
+    newRecognition.continuous = true;
+    newRecognition.interimResults = true;
+    newRecognition.lang = 'en-US';
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    newRecognition.onresult = (event: SpeechRecognitionEvent) => {
       let final = '';
       let interim = '';
 
@@ -47,56 +47,56 @@ const useSpeechRecognition = ({
       if (interim) onInterimUpdate(interim.trim());
     };
 
-    recognition.onerror = (event) => {
+    newRecognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       if (event.error !== 'no-speech') stopListening();
     };
 
-    recognition.onend = () => {
+    newRecognition.onend = () => {
       console.log('Speech recognition ended.');
       setIsListening(false);
-      setIsRecognitionActive(false); // Mark as inactive
-      if (onEnd) onEnd(); // Trigger optional onEnd callback
+      setIsRecognitionActive(false);
+      if (onEnd) onEnd();
     };
 
-    recognition.onstart = () => {
+    newRecognition.onstart = () => {
       console.log('Speech recognition started.');
-      setIsRecognitionActive(true); // Mark as active
+      setIsRecognitionActive(true);
     };
 
-    recognitionRef.current = recognition;
+    setRecognition(newRecognition);
   }, [onSpeechResult, onInterimUpdate, onEnd]);
 
   const startListening = useCallback(() => {
-    if (!recognitionRef.current || isRecognitionActive) return;
+    if (!recognition || isRecognitionActive) return;
 
     try {
-      recognitionRef.current.start();
+      recognition.start();
       setIsListening(true);
       console.log('Speech recognition started.');
     } catch (error) {
       console.error('Failed to start recognition:', error);
     }
-  }, [isRecognitionActive]);
+  }, [recognition, isRecognitionActive]);
 
   const stopListening = useCallback(() => {
-    if (!recognitionRef.current || !isRecognitionActive) return;
+    if (!recognition || !isRecognitionActive) return;
 
-    recognitionRef.current.stop();
+    recognition.stop();
     setIsListening(false);
     console.log('Speech recognition stopped.');
-  }, [isRecognitionActive]);
+  }, [recognition, isRecognitionActive]);
 
   useEffect(() => {
-    initializeRecognition(); // Initialize recognition on mount
+    initializeRecognition();
 
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort(); // Clean up on unmount
-        recognitionRef.current = null;
+      if (recognition) {
+        recognition.abort();
+        setRecognition(null);
       }
     };
-  }, [initializeRecognition]);
+  }, [initializeRecognition, recognition]);
 
   useEffect(() => {
     if (isMicOn && !isListening) {
