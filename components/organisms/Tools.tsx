@@ -275,6 +275,15 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
+            openInNewTab('https://ai4good.org/what-we-do/sdg-data-catalog/')
+          }
+        >
+          Catalog
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
             openInNewTab('https://www.local2030.org/discover-tools')
           }
         >
