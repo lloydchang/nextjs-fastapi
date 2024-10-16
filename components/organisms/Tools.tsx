@@ -11,6 +11,83 @@ const Tools: React.FC = () => {
   return (
     <div className={styles['tools-container']}>
       <div className={styles['button-group']}>
+      <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
+            )
+          }
+        >
+          Water
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/sustainabledevelopment/climate-action-superheroes/'
+            )
+          }
+        >
+          Heroes
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/en/actnow'
+            )
+          }
+        >
+          Act
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://www.un.org/sustainabledevelopment/takeaction/'
+            )
+          }
+        >
+          Lazy
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://drive.google.com/file/d/1iMdE6DLLuCqwq3K9U-DaTUWB6KyMa8QG/view'
+            )
+          }
+        >
+          Daily
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://actnow.aworld.org/'
+            )
+          }
+        >
+          App
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
+              'https://go-goals.org/'
+            )
+          }
+        >
+          Game
+        </button>
+
         <button
           className={styles['right-edge-button']}
           onClick={() => openInNewTab('https://www.unsdglearn.org/learning/')}
@@ -107,83 +184,6 @@ const Tools: React.FC = () => {
           onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
         >
           Tools
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://go-goals.org/'
-            )
-          }
-        >
-          Game
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://actnow.aworld.org/'
-            )
-          }
-        >
-          App
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
-            )
-          }
-        >
-          Water
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/climate-action-superheroes/'
-            )
-          }
-        >
-          Heroes
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/en/actnow'
-            )
-          }
-        >
-          Act
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/takeaction/'
-            )
-          }
-        >
-          Lazy
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://drive.google.com/file/d/1iMdE6DLLuCqwq3K9U-DaTUWB6KyMa8QG/view'
-            )
-          }
-        >
-          Daily
         </button>
 
         <button
