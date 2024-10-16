@@ -34,3 +34,24 @@
   height: 100vh; /* Full screen height */
   padding: 20px; /* Optional: Add padding for better spacing */
 }
+
+/* Tablets and Mobile Devices */
+@media (max-width: 1023px) {
+  .messagesContainer {
+    height: 40vh; /* Set container height to 50% of the viewport */
+    width: 100%; /* Ensure it stretches across the width of the container */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border-radius: 5px;
+    scroll-behavior: smooth; /* Smooth scrolling */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Ensure messages start at the top within this container */
+    align-items: stretch; /* Ensure the messages take up full width */
+    opacity: 1; /* Ensure visibility on initial render */
+    visibility: visible; /* Avoid hidden or collapsed state */
+    transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out; /* Smooth transitions */
+    z-index: 500; /* Ensure the messagesContainer is above the chatLayer */
+    margin: 0; /* Remove any margin */
+    padding: 0; /* Ensure no padding is affecting layout */
+  }  
+}

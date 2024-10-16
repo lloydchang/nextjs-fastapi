@@ -79,7 +79,7 @@
 
   .tools-container {
     position: relative;      /* Use relative or absolute depending on your layout needs */
-    bottom: -110px;           /* Adjusted: Move container further down */
+    bottom: -100px;           /* Adjusted: Move container further down */
     right: -2vw;              /* Align container 2% of the viewport width from the right */
   }
   
