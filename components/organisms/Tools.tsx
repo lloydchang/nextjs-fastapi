@@ -194,6 +194,24 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
+            openInNewTab('https://sdgs.un.org/gsdr')
+          }
+        >
+          Global
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab('https://sdgs.un.org/goals')
+          }
+        >
+          Annual
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
             openInNewTab('https://hdr.undp.org/data-center/country-insights#/ranks')
           }
         >
@@ -207,6 +225,15 @@ const Tools: React.FC = () => {
           }
         >
           Atlas
+        </button>
+
+        <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab('https://globalaffairs.ucdavis.edu/sdgs-grants')
+          }
+        >
+          Grants
         </button>
 
         <button
