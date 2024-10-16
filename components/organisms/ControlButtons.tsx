@@ -18,7 +18,7 @@ interface ControlButtonsProps {
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean;
-  isListening: boolean; // New prop to indicate if speech recognition is listening
+  isListening: boolean; // Updated to indicate if speech recognition is listening
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -47,7 +47,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
     closeModal();
   };
 
-  const micButtonText = '🎤'; // Use only the emoji for mic button text
+  const micButtonText = isListening ? 'Stop Listening' : 'Start Listening'; // Dynamically change button text
   const eraseButtonText = '🗑️';
   const fullScreenButtonText = '⛶';
 
@@ -57,10 +57,9 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       <button
         type="button"
         onClick={toggleMic}
-        className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`} // Apply styles based on isMicOn state
-        aria-pressed={isMicOn}
-        aria-label="Toggle Microphone"
-        disabled={isListening} // Disable button while speech recognition is listening
+        className={`${styles.button} ${isListening ? styles.stopButton : styles.startButton}`} // Apply styles based on isListening state
+        aria-pressed={isListening}
+        aria-label={micButtonText} // Update aria-label for accessibility
       >
         {micButtonText}
       </button>
