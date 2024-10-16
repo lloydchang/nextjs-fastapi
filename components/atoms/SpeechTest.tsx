@@ -105,12 +105,6 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
 
   return (
     <div className={`${styles.speechTest} ${isDarkMode ? styles.dark : styles.light}`}>
-      <button
-        onClick={toggleListening}
-        className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
-      >
-        {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
-      </button>
 
       {/* Conditionally render interim result based on showInterimResult and isListening */}
       {showInterimResult && isListening && (
@@ -144,6 +138,13 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
           {isListening ? 'Currently Listening...' : 'Not Listening'}
         </div>
       )} */}
+
+      <button
+        onClick={toggleListening}
+        className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
+      >
+        {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
+      </button>
     </div>
   );
 };
