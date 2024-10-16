@@ -28,8 +28,9 @@ export const useMedia = (): UseMediaReturn => {
   });
   const [micStream, setMicStream] = useState<MediaStream | null>(null); // Manage mic stream with state
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null); // Track camera stream for cleanup
 
-  // Automatically start the microphone when the component mounts or isMicOn changes
+  // Automatically start the microphone when the component mounts or if `isMicOn` changes
   useEffect(() => {
     const initializeMic = async () => {
       if (mediaState.isMicOn && !micStream) {
@@ -46,7 +47,7 @@ export const useMedia = (): UseMediaReturn => {
 
     return () => {
       if (micStream) {
-        micStream.getTracks().forEach((track) => track.stop()); // Stop mic when component unmounts
+        micStream.getTracks().forEach((track) => track.stop()); // Stop microphone on cleanup
         setMicStream(null);
       }
     };
@@ -54,24 +55,32 @@ export const useMedia = (): UseMediaReturn => {
 
   const startCam = useCallback(async () => {
     if (mediaState.isCamOn) return;
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      cameraStreamRef.current = stream; // Store the camera stream for later cleanup
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-        setMediaState((prev) => ({ ...prev, isCamOn: true }));
       }
+
+      setMediaState((prev) => ({ ...prev, isCamOn: true }));
     } catch (err) {
       console.error('Unable to access camera.', err);
     }
   }, [mediaState.isCamOn]);
 
   const stopCam = useCallback(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop()); // Stop the camera stream
+      cameraStreamRef.current = null;
+    }
+
+    if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
+
     setMediaState((prev) => ({ ...prev, isCamOn: false }));
   }, []);
 
@@ -95,7 +104,8 @@ export const useMedia = (): UseMediaReturn => {
 
   const togglePip = useCallback(async () => {
     if (videoRef.current) {
-      if (!mediaState.isCamOn) await startCam();
+      if (!mediaState.isCamOn) await startCam(); // Ensure the camera is on before enabling PiP
+
       if (!mediaState.isPipOn) {
         try {
           await videoRef.current.requestPictureInPicture();
@@ -112,6 +122,15 @@ export const useMedia = (): UseMediaReturn => {
 
   const toggleMem = useCallback(() => {
     setMediaState((prev) => ({ ...prev, isMemOn: !prev.isMemOn }));
+  }, []);
+
+  // Cleanup camera stream when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
   }, []);
 
   return {
