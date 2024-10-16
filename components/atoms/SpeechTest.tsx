@@ -99,7 +99,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
       <textarea
         value={interimResult}
         readOnly
-        placeholder="Interim Result..."
+        placeholder=""
         rows={1}
         ref={interimRef}
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
@@ -111,7 +111,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
         <textarea
           value={finalResult}
           readOnly
-          placeholder="Final Result..."
+          placeholder=""
           rows={1}
           ref={finalRef}
           className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
