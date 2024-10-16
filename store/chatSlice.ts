@@ -54,99 +54,163 @@ const chatSlice = createSlice({
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const timeoutPromise = (ms: number) =>
-  new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
+  new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
-const debouncedApiCall = debounce(async (dispatch: AppDispatch, getState: () => RootState, input: any, clientId: string) => {
-  const state = getState();
-  if (state.api.isLoading) return;
+export const parseIncomingMessage = (jsonString: string) => {
+  try {
+    // Ignore the "[DONE]" message
+    if (jsonString === '[DONE]') {
+      return null; // Returning null to signal the end of the stream
+    }
 
-  let retryCount = 0;
-  const maxRetries = 3;
+    const sanitizedString = he.decode(jsonString);
+    const parsedData = JSON.parse(sanitizedString);
 
-  while (retryCount < maxRetries) {
-    try {
-      const messagesArray = [{ role: 'user', content: input.text || input }];
-      const response = await Promise.race([
-        fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-client-id': clientId,
-          },
-          body: JSON.stringify({ messages: messagesArray }),
-        }),
-        timeoutPromise(10000), // Timeout after 10 seconds
-      ]);
+    if (!parsedData.persona || !parsedData.message) {
+      return null;
+    }
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-          await wait(retryAfter * 1000);
-          retryCount++;
-          continue;
+    return parsedData;
+  } catch (error) {
+    console.error('Error parsing message:', jsonString, error);
+    return null;
+  }
+};
+
+const debouncedApiCall = debounce(
+  async (
+    dispatch: AppDispatch,
+    getState: () => RootState,
+    input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string },
+    clientId: string
+  ): Promise<void> => {
+    const state = getState();
+    if (state.api?.isLoading) {
+      return;
+    }
+
+    const maxRetries = 3;
+    let retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        const messagesArray = [
+          { role: 'user', content: typeof input === 'string' ? input : input.text },
+        ];
+
+        const response = await Promise.race([
+          fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-client-id': clientId,
+            },
+            body: JSON.stringify({ messages: messagesArray }),
+          }),
+          timeoutPromise(10000), // Timeout after 10 seconds
+        ]);
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+            await wait(retryAfter * 1000);
+            retryCount++;
+            continue;
+          }
+          throw new ApiError(response.status, response.statusText);
         }
-        throw new ApiError(response.status, response.statusText);
-      }
 
-      const reader = response.body?.getReader();
-      if (reader) {
-        const decoder = new TextDecoder();
-        let textBuffer = '';
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          let textBuffer = '';
 
-        try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
+          try {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
 
-            textBuffer += decoder.decode(value, { stream: true });
-            const messages = textBuffer.split('\n\n');
-            textBuffer = messages.pop() || '';
+              textBuffer += decoder.decode(value, { stream: true });
 
-            for (const message of messages) {
-              if (message.startsWith('data: ')) {
-                const parsedData = parseIncomingMessage(message.substring(6).trim());
-                if (parsedData) {
-                  dispatch(addMessage({
-                    id: uuidv4(),
-                    sender: 'bot',
-                    text: parsedData.message,
-                    role: 'bot',
-                    content: parsedData.message,
-                    persona: parsedData.persona,
-                  }));
+              const messages = textBuffer.split('\n\n');
+              textBuffer = messages.pop() || '';
+
+              for (const message of messages) {
+                if (message.startsWith('data: ')) {
+                  const parsedData = parseIncomingMessage(message.substring(6).trim());
+                  if (parsedData) {
+                    const botMessage: Message = {
+                      id: uuidv4(),
+                      sender: 'bot',
+                      text: parsedData.message,
+                      role: 'bot',
+                      content: parsedData.message,
+                      persona: parsedData.persona,
+                    };
+                    dispatch(addMessage(botMessage));
+                  }
                 }
               }
             }
+          } finally {
+            reader.releaseLock(); // Ensure reader is released
           }
-        } finally {
-          reader.releaseLock(); // Ensure reader is released
         }
+        return;
+      } catch (error: any) {
+        if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
+          retryCount++;
+          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff: 2, 4, 8 seconds
+          continue;
+        } else if (error.message === 'Timeout' && retryCount < maxRetries - 1) {
+          retryCount++;
+          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
+          continue;
+        }
+        dispatch(setError(error.message || 'An unknown error occurred'));
+        return;
       }
-      return;
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
-        retryCount++;
-        await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
-        continue;
-      }
-      dispatch(setError(error.message));
-      return;
     }
-  }
-}, 1000);
+  },
+  1000 // Debounce time: 1 second
+);
 
-export const sendMessage = (input: string | { text: string }) => async (dispatch: AppDispatch, getState: () => RootState) => {
+export const sendMessage = (
+  input:
+    | string
+    | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
+) => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(clearError());
-  const clientId = localStorage.getItem('clientId') || uuidv4();
-  localStorage.setItem('clientId', clientId);
 
-  const userMessage: Message = {
-    id: uuidv4(),
-    sender: 'user',
-    text: typeof input === 'string' ? input : input.text,
-  };
+  let clientId: string;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    clientId = localStorage.getItem('clientId') || uuidv4();
+    localStorage.setItem('clientId', clientId);
+  } else {
+    clientId = uuidv4();
+  }
+
+  const userMessage: Message =
+    typeof input === 'string'
+      ? {
+          id: uuidv4(), // Use UUID for unique IDs
+          sender: 'user',
+          text: input,
+          role: 'user',
+          content: input,
+        }
+      : {
+          id: uuidv4(),
+          sender: input.sender || 'user',
+          text: input.text,
+          role: 'user',
+          content: input.text,
+          hidden: input.hidden || false,
+          persona: input.persona,
+        };
 
   dispatch(addMessage(userMessage));
+
   await debouncedApiCall(dispatch, getState, input, clientId);
 };
 
