@@ -95,6 +95,7 @@ const ChatPanel: React.FC = () => {
     >
       <Image
         src={BackgroundImage}
+        loading="lazy"
         alt=""
         fill
         className={styles.backgroundImage}
