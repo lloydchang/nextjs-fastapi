@@ -139,11 +139,11 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
       )}
 
       {/* Conditionally render the listening status */}
-      {showIsListening && (
+      {/* {showIsListening && (
         <div className={`${styles.listeningStatus} ${isListening ? styles.listening : styles.notListening}`}>
           {isListening ? 'Currently Listening...' : 'Not Listening'}
         </div>
-      )}
+      )} */}
     </div>
   );
 };
