@@ -23,7 +23,12 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
   const handleFinal = useCallback((text: string) => {
     console.log('Final Speech:', text);
     setFinalResult((prev) => prev + ' ' + text); // Append new final results
-    onSpeechResult(text); // Pass the result to the parent
+
+    // Send the result to parent (e.g., as a chat message)
+    onSpeechResult(text);
+
+    // Clear final result after it is sent
+    setFinalResult(''); // Clear the final result
   }, [onSpeechResult]);
 
   const handleInterim = useCallback((text: string) => {
