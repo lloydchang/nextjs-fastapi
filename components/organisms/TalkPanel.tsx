@@ -92,9 +92,19 @@ const TalkPanel: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      console.log(`components/organisms/TalkPanel.tsx - Performing search with query: ${query}`);
+      let finalQuery = query;
+
+      // If the user enters "sdg", randomly select one of the 17 SDGs
+      if (query.toLowerCase() === 'sdg') {
+        const sdgKeys = Object.keys(sdgTitleMap).filter(key => key.startsWith('sdg') && key !== 'sdg'); // Exclude 'sdg' key
+        const randomSdgKey = sdgKeys[Math.floor(Math.random() * sdgKeys.length)]; // Randomly select an SDG key
+        finalQuery = randomSdgKey; // Use the selected key as the query
+        console.log('Randomly selected SDG for search:', sdgTitleMap[randomSdgKey]); // Log the selected SDG
+      }
+
+      console.log(`components/organisms/TalkPanel.tsx - Performing search with query: ${finalQuery}`);
       const response = await axios.get(
-        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`,
+        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(finalQuery)}`,
         { signal: abortControllerRef.current.signal } // Use the new AbortController signal
       );
 
@@ -110,7 +120,7 @@ const TalkPanel: React.FC = () => {
       }));
 
       console.log('components/organisms/TalkPanel.tsx - Successfully fetched talks:', data);
-      await handleSearchResults(query, data);
+      await handleSearchResults(finalQuery, data);
     } catch (error) {
       if (axios.isCancel(error)) {
         console.log('components/organisms/TalkPanel.tsx - Request aborted:', error.message);
