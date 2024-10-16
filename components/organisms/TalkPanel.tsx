@@ -177,7 +177,7 @@ const TalkPanel: React.FC = () => {
         console.error(`components/organisms/TalkPanel.tsx - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
       }
     }
-    dispatch(setError('Try a different search.'));
+    dispatch(setError('Try searching for a different word.'));
   };
 
   useEffect(() => {
