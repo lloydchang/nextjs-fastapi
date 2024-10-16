@@ -95,9 +95,9 @@
   /* Button styles */
   .right-edge-button {
     padding: 0px 0px;         /* Adjust padding for better spacing */
-    margin-left: 6px;        /* Add spacing between buttons in a row */
+    margin-left: 10px;        /* Add spacing between buttons in a row */
     font-size: 14px;          /* Smaller font size */
-    width: 40px;             /* Smaller fixed width */
+    width: 60px;             /* Smaller fixed width */
   }
 
   .right-edge-button:hover {
