@@ -37,9 +37,17 @@
 
 /* Tablets and Mobile Devices */
 @media (max-width: 1023px) {
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Ensure the messages container stays pinned to the bottom */
+  }
+
   .messagesContainer {
-    height: 40vh; /* Set container height to 50% of the viewport */
+    height: 40vh; /* Set container height to 40% of the viewport */
+    max-height: 100vh; /* Ensure it doesn't go beyond the viewport height */
     width: 100%; /* Ensure it stretches across the width of the container */
+    flex-grow: 1; /* Allow the container to grow and fill available space */
     overflow-y: auto; /* Enable vertical scrolling */
     border-radius: 5px;
     scroll-behavior: smooth; /* Smooth scrolling */
@@ -53,5 +61,18 @@
     z-index: 500; /* Ensure the messagesContainer is above the chatLayer */
     margin: 0; /* Remove any margin */
     padding: 0; /* Ensure no padding is affecting layout */
-  }  
+  }
+}
+
+
+@media (min-height: 845px) {
+  .messagesContainer {
+    height: 60vh;
+  }
+}
+
+@media (min-height: 896px) and (max-height: 931px) {
+  .messagesContainer {
+    height: 60vh;
+  }
 }
