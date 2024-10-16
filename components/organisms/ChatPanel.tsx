@@ -1,4 +1,4 @@
-// File: ChatPanel.tsx
+// File: components/organisms/ChatPanel.tsx
 
 'use client';
 
@@ -24,15 +24,16 @@ const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
+
   const [chatInput, setChatInput] = useState<string>('');
   const [interimSpeech, setInterimSpeech] = useState<string>('');
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Automatically scroll to the bottom when new messages arrive
   useEffect(() => {
-    console.log('ChatPanel - Messages state updated in ChatPanel from Redux:', messages);
-    if (!isFullScreen && scrollRef.current) {
+    if (scrollRef.current && !isFullScreen) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isFullScreen]);
@@ -40,45 +41,43 @@ const ChatPanel: React.FC = () => {
   const hasVisibleMessages = messages.some((message) => !message.hidden);
 
   const handleChat = useCallback(() => {
-    if (chatInput.trim()) {
-      const messageToSend = chatInput.trim();
+    const trimmedMessage = chatInput.trim();
+    if (trimmedMessage) {
+      dispatch(sendMessage(trimmedMessage));
+      console.log('ChatPanel - Message sent:', trimmedMessage);
       setChatInput('');
-      dispatch(sendMessage(messageToSend));
-      console.log('ChatPanel - Message sent:', messageToSend);
     }
-  }, [dispatch, chatInput]);
+  }, [chatInput, dispatch]);
 
-  const handleClearChat = () => {
+  const handleClearChat = useCallback(() => {
     dispatch(clearMessages());
     console.log('ChatPanel - Chat history cleared.');
-  };
+  }, [dispatch]);
 
-  const toggleFullScreenMode = () => {
+  const toggleFullScreenMode = useCallback(() => {
     const elem = document.documentElement;
 
     if (!isFullScreen) {
-      elem.requestFullscreen().catch((err) => {
-        console.error(`Failed to enter fullscreen mode: ${err.message}`);
-      });
-    } else {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch((err) => {
-          console.error(`Failed to exit fullscreen mode: ${err.message}`);
-        });
-      }
+      elem.requestFullscreen().catch((err) =>
+        console.error(`Failed to enter fullscreen mode: ${err.message}`)
+      );
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen().catch((err) =>
+        console.error(`Failed to exit fullscreen mode: ${err.message}`)
+      );
     }
-    setIsFullScreen(!isFullScreen);
-  };
+    setIsFullScreen((prev) => !prev);
+  }, [isFullScreen]);
 
   const handleSpeechResult = useCallback(
     (finalResult: string) => {
-      console.log('ChatPanel - Speech recognized (Final):', finalResult);
-      if (finalResult.trim()) {
-        dispatch(sendMessage({ text: finalResult.trim(), hidden: false }));
-        console.log('ChatPanel - Final speech sent as message:', finalResult.trim());
+      const trimmedResult = finalResult.trim();
+      if (trimmedResult) {
+        dispatch(sendMessage({ text: trimmedResult, hidden: false }));
+        console.log('ChatPanel - Final speech sent as message:', trimmedResult);
+        setInterimSpeech('');
+        setChatInput('');
       }
-      setInterimSpeech('');
-      setChatInput('');
     },
     [dispatch]
   );
@@ -111,13 +110,13 @@ const ChatPanel: React.FC = () => {
         <div className={`${styles.chatLayer} ${isFullScreen ? styles.fullScreenChat : ''}`}>
           <HeavyChatMessages messages={messages} isFullScreen={isFullScreen} />
 
-          <SpeechTest 
-            isMicOn={mediaState.isMicOn} 
+          <SpeechTest
+            isMicOn={mediaState.isMicOn}
             toggleMic={toggleMic}
-            onSpeechResult={handleSpeechResult} 
+            onSpeechResult={handleSpeechResult}
             onInterimUpdate={handleInterimUpdate}
-            showIsListening={false} // Do not show listening UI in ChatPanel
-            showFinalResult={false} // Do not show final result in ChatPanel
+            showIsListening={false}
+            showFinalResult={false}
           />
 
           <ChatInput
