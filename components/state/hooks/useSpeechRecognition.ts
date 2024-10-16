@@ -1,12 +1,12 @@
 // File: components/state/hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
   isMicOn?: boolean;
-  onEnd?: () => void; // Add onEnd callback to the props
+  onEnd?: () => void; // Optional callback triggered when recognition ends
 }
 
 const useSpeechRecognition = ({
@@ -16,32 +16,10 @@ const useSpeechRecognition = ({
   onEnd, // Handle onEnd callback
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [isRecognitionActive, setIsRecognitionActive] = useState(false); // Add a flag to track recognition start
+  const [isRecognitionActive, setIsRecognitionActive] = useState(false); // Track recognition state
+  const recognitionRef = useRef<SpeechRecognition | null>(null); // Store recognition instance
 
-  const startListening = useCallback(() => {
-    if (!recognition || isRecognitionActive) return; // Check if recognition is already active
-
-    try {
-      recognition.start();
-      setIsListening(true);
-      setIsRecognitionActive(true); // Mark recognition as active
-      console.log('Speech recognition started.');
-    } catch (error) {
-      console.error('Failed to start recognition:', error);
-    }
-  }, [recognition, isRecognitionActive]);
-
-  const stopListening = useCallback(() => {
-    if (!recognition || !isRecognitionActive) return; // Only stop if recognition is active
-
-    recognition.stop();
-    setIsListening(false);
-    setIsRecognitionActive(false); // Mark recognition as inactive
-    console.log('Speech recognition stopped.');
-  }, [recognition, isRecognitionActive]);
-
-  useEffect(() => {
+  const initializeRecognition = useCallback(() => {
     const SpeechRecognitionConstructor =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -50,50 +28,75 @@ const useSpeechRecognition = ({
       return;
     }
 
-    const newRecognition = new SpeechRecognitionConstructor();
-    newRecognition.continuous = true;
-    newRecognition.interimResults = true;
-    newRecognition.lang = 'en-US';
+    const recognition = new SpeechRecognitionConstructor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-    newRecognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let final = '';
       let interim = '';
 
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         const transcript = event.results[i][0].transcript.trim();
-        if (event.results[i].isFinal) final += transcript + ' ';
-        else interim += transcript + ' ';
+        if (event.results[i].isFinal) final += `${transcript} `;
+        else interim += `${transcript} `;
       }
 
       if (final) onSpeechResult(final.trim());
       if (interim) onInterimUpdate(interim.trim());
     };
 
-    newRecognition.onerror = (event) => {
+    recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      if (event.error !== 'no-speech') {
-        stopListening();
-      }
+      if (event.error !== 'no-speech') stopListening();
     };
 
-    newRecognition.onend = () => {
+    recognition.onend = () => {
       console.log('Speech recognition ended.');
       setIsListening(false);
-      setIsRecognitionActive(false); // Mark recognition as inactive
-      if (onEnd) onEnd(); // Trigger the onEnd callback if provided
+      setIsRecognitionActive(false); // Mark as inactive
+      if (onEnd) onEnd(); // Trigger optional onEnd callback
     };
 
-    newRecognition.onstart = () => {
+    recognition.onstart = () => {
       console.log('Speech recognition started.');
-      setIsRecognitionActive(true); // Mark recognition as active
+      setIsRecognitionActive(true); // Mark as active
     };
 
-    setRecognition(newRecognition);
+    recognitionRef.current = recognition;
+  }, [onSpeechResult, onInterimUpdate, onEnd]);
+
+  const startListening = useCallback(() => {
+    if (!recognitionRef.current || isRecognitionActive) return;
+
+    try {
+      recognitionRef.current.start();
+      setIsListening(true);
+      console.log('Speech recognition started.');
+    } catch (error) {
+      console.error('Failed to start recognition:', error);
+    }
+  }, [isRecognitionActive]);
+
+  const stopListening = useCallback(() => {
+    if (!recognitionRef.current || !isRecognitionActive) return;
+
+    recognitionRef.current.stop();
+    setIsListening(false);
+    console.log('Speech recognition stopped.');
+  }, [isRecognitionActive]);
+
+  useEffect(() => {
+    initializeRecognition(); // Initialize recognition on mount
 
     return () => {
-      newRecognition.abort(); // Clean up
+      if (recognitionRef.current) {
+        recognitionRef.current.abort(); // Clean up on unmount
+        recognitionRef.current = null;
+      }
     };
-  }, [onSpeechResult, onInterimUpdate, stopListening, onEnd]);
+  }, [initializeRecognition]);
 
   useEffect(() => {
     if (isMicOn && !isListening) {
