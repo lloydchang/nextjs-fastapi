@@ -15,6 +15,17 @@ const Tools: React.FC = () => {
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
+              'https://www.un.org/sustainabledevelopment/takeaction/'
+            )
+          }
+        >
+          Lazy
+        </button>
+
+      <button
+          className={styles['right-edge-button']}
+          onClick={() =>
+            openInNewTab(
               'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
             )
           }
@@ -42,17 +53,6 @@ const Tools: React.FC = () => {
           }
         >
           Act
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/takeaction/'
-            )
-          }
-        >
-          Lazy
         </button>
 
         <button
