@@ -3,7 +3,7 @@
 .tools-container {
   padding: 0px 30px;
   position: absolute;       /* Use absolute positioning */
-  bottom: -670px;           /* Greater negative numbers move container further down */
+  bottom: -620px;           /* Greater negative numbers move container further down */
   right: -48px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
@@ -19,7 +19,7 @@
 
 /* Button styles */
 .right-edge-button {
-  padding: 2px 2px;         /* Adjust padding for better spacing */
+  padding: 0px 0spx;         /* Adjust padding for better spacing */
   margin-bottom: 6px;       /* Add spacing between buttons */
   background-color: rgb(0, 112, 243, 1); /* Default background color */
   color: white;             /* Text color */
@@ -27,7 +27,7 @@
   border-radius: 3px;       /* Small rounded corners */
   cursor: pointer;          /* Change cursor to pointer */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Light shadow */
-  font-size: 14px;          /* Much smaller font size */
+  font-size: 13px;          /* Much smaller font size */
   width: 60px;              /* Fixed width for tiny buttons */
   text-align: center;       /* Center text inside the button */
   transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
@@ -98,8 +98,8 @@
   .right-edge-button {
     padding: 0px 0px;         /* Adjust padding for better spacing */
     margin-left: 10px;        /* Add spacing between buttons in a row */
-    font-size: 14px;          /* Smaller font size */
-    width: 40px;             /* Smaller fixed width */
+    font-size: 9px;          /* Smaller font size */
+    width: 30px;             /* Smaller fixed width */
   }
 
   .right-edge-button:hover {

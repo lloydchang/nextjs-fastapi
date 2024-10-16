@@ -161,7 +161,7 @@ const Tools: React.FC = () => {
             openInNewTab('https://www.local2030.org/vlrs')
           }
         >
-          Reviews
+          Review
         </button>
 
         <button
@@ -233,7 +233,7 @@ const Tools: React.FC = () => {
             openInNewTab('https://globalaffairs.ucdavis.edu/sdgs-grants')
           }
         >
-          Grants
+          Grant
         </button>
 
         <button
@@ -278,7 +278,7 @@ const Tools: React.FC = () => {
             openInNewTab('https://www.local2030.org/discover-tools')
           }
         >
-          Tools
+          Tool
         </button>
 
         <button
