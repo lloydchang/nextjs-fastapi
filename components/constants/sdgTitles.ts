@@ -1,7 +1,6 @@
 // File: components/constants/sdgTitles.ts
 
 export const sdgTitleMap: Record<string, string> = {
-    sdg: 'SDG 1, SDG 2, SDG 3, SDG 4, SDG 5, SDG 6, SDG 7, SDG 8, SDG 9, SDG 10, SDG 11, SDG 12, SDG 13, SDG 14, SDG 15, SDG 16, SDG 17',
     sdg1: 'SDG 1: No Poverty: End poverty in all its forms everywhere',
     sdg2: 'SDG 2: Zero Hunger: End hunger, achieve food security and improved nutrition, and promote sustainable agriculture',
     sdg3: 'SDG 3: Good Health and Well-Being: Ensure healthy lives and promote well-being for all at all ages',
