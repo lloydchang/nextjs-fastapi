@@ -147,7 +147,7 @@ const TalkPanel: React.FC = () => {
         const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
 
         await dispatch(
-          sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true })
+          sendMessage({ text: `${sendTranscript} | ${sendSdgTag} | ${talk.title} | ${query}`, hidden: true })
         );
         console.log(`Sent message for talk: ${talk.title}`);
       } catch (error) {
