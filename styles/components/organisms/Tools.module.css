@@ -1,12 +1,14 @@
 /* File: styles/components/organisms/Tools.module.css */
 
 .tools-container {
+  padding: 0px 30px;
   position: absolute;       /* Use absolute positioning */
-  bottom: -680px;           /* Greater negative numbers move container further down */
-  right: -18px;             /* Align container slightly to the left for aesthetics */
+  bottom: -670px;           /* Greater negative numbers move container further down */
+  right: -48px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
   align-items: flex-end;    /* Align buttons to the right */
+  cursor: move; /* Indicates draggable area */
 }
 
 .button-group {
@@ -83,13 +85,13 @@
   
   .button-group {
     padding: 10px 0px;         /* Adjust padding for better spacing */
-    position: relative;       /* Use absolute positioning */
+    position: relative;       /* Use relative positioning */
     bottom: 120px;            /* Adjusted: Move container further down */
     right: -14px;             /* Align container slightly to the left for aesthetics */
-    display: flex-end;            /* Use flex-start to align buttons to the left */
+    align-items: flex-start;  /* Correct alignment for smaller devices */
     flex-wrap: wrap;          /* Allow buttons to wrap into multiple rows */
     flex-direction: row;      /* Arrange buttons horizontally */
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
   }
   
   /* Button styles */

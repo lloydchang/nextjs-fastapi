@@ -1,28 +1,74 @@
 // File: components/organisms/Tools.tsx
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react'; // Updated to include useState, useRef, useEffect
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
+  // State and refs for dragging functionality
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const dragItem = useRef<HTMLDivElement | null>(null);
+  const dragStartPosition = useRef({ x: 0, y: 0 });
+
+  // Open links in new tab
   const openInNewTab = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // Mouse down event to start dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragItem.current = e.currentTarget as HTMLDivElement;
+    dragStartPosition.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+  };
+
+  // Mouse move event to handle the drag movement
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setPosition({
+        x: e.clientX - dragStartPosition.current.x,
+        y: e.clientY - dragStartPosition.current.y,
+      });
+    }
+  };
+
+  // Mouse up event to stop dragging
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // useEffect to add and remove event listeners
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   return (
-    <div className={styles['tools-container']}>
+    <div
+      className={styles['tools-container']}
+      style={{ transform: `translate(${position.x}px, ${position.y}px)` }} // Positioning applied via inline styles
+      onMouseDown={handleMouseDown} // Attaching mouse down event to initiate drag
+    >
       <div className={styles['button-group']}>
-      <button
+        <button
           className={styles['right-edge-button']}
           onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/takeaction/'
-            )
+            openInNewTab('https://www.un.org/sustainabledevelopment/takeaction/')
           }
         >
           Lazy
         </button>
 
-      <button
+        <button
           className={styles['right-edge-button']}
           onClick={() =>
             openInNewTab(
@@ -47,9 +93,7 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
-            openInNewTab(
-              'https://www.un.org/en/actnow'
-            )
+            openInNewTab('https://www.un.org/en/actnow')
           }
         >
           Act
@@ -69,9 +113,7 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
-            openInNewTab(
-              'https://actnow.aworld.org/'
-            )
+            openInNewTab('https://actnow.aworld.org/')
           }
         >
           App
@@ -80,9 +122,7 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
-            openInNewTab(
-              'https://go-goals.org/'
-            )
+            openInNewTab('https://go-goals.org/')
           }
         >
           Game
@@ -97,91 +137,119 @@ const Tools: React.FC = () => {
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://sdgs.un.org/topics/voluntary-local-reviews')}
+          onClick={() =>
+            openInNewTab('https://sdgs.un.org/topics/voluntary-local-reviews')
+          }
         >
           Voluntary
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap')}
+          onClick={() =>
+            openInNewTab(
+              'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap'
+            )
+          }
         >
           Local
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://www.local2030.org/vlrs')}
+          onClick={() =>
+            openInNewTab('https://www.local2030.org/vlrs')
+          }
         >
           Reviews
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://www.iges.or.jp/en/projects/vlr')}
+          onClick={() =>
+            openInNewTab('https://www.iges.or.jp/en/projects/vlr')
+          }
         >
           Lab
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://open-sdg.org/community#cities-and-regions')}
+          onClick={() =>
+            openInNewTab('https://open-sdg.org/community#cities-and-regions')
+          }
         >
           City
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://unstats.un.org/sdgs/dataportal/countryprofiles')}
+          onClick={() =>
+            openInNewTab('https://unstats.un.org/sdgs/dataportal/countryprofiles')
+          }
         >
           Country
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://hdr.undp.org/data-center/country-insights#/ranks')}
+          onClick={() =>
+            openInNewTab('https://hdr.undp.org/data-center/country-insights#/ranks')
+          }
         >
           Rank
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://datatopics.worldbank.org/sdgatlas')}
+          onClick={() =>
+            openInNewTab('https://datatopics.worldbank.org/sdgatlas')
+          }
         >
           Atlas
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://jointsdgfund.org/sdg-financing#PROFILES')}
+          onClick={() =>
+            openInNewTab('https://jointsdgfund.org/sdg-financing#PROFILES')
+          }
         >
           Fund
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://mptf.undp.org/#impact-to-label')}
+          onClick={() =>
+            openInNewTab('https://mptf.undp.org/#impact-to-label')
+          }
         >
           Hub
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://countrydata.iatistandard.org/')}
+          onClick={() =>
+            openInNewTab('https://countrydata.iatistandard.org/')
+          }
         >
           Aid
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://unstats.un.org/UNSDWebsite/undatacommons/search')}
+          onClick={() =>
+            openInNewTab('https://unstats.un.org/UNSDWebsite/undatacommons/search')
+          }
         >
           Data
         </button>
 
         <button
           className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://www.local2030.org/discover-tools')}
+          onClick={() =>
+            openInNewTab('https://www.local2030.org/discover-tools')
+          }
         >
           Tools
         </button>
@@ -196,7 +264,6 @@ const Tools: React.FC = () => {
         >
           News
         </button>
-
       </div>
     </div>
   );
