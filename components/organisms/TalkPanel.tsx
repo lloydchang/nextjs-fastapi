@@ -39,6 +39,14 @@ const TalkPanel: React.FC = () => {
     } else {
       console.log('components/organisms/TalkPanel.tsx - Subsequent render detected, skipping search.');
     }
+
+    // Cleanup function to abort any pending requests when component unmounts or before next effect run
+    return () => {
+      if (abortControllerRef.current) {
+        console.log('components/organisms/TalkPanel.tsx - Aborting request in cleanup function');
+        abortControllerRef.current.abort();
+      }
+    };
   }, []); // Empty dependency array to run only on mount
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
@@ -67,8 +75,6 @@ const TalkPanel: React.FC = () => {
     await sendFirstAvailableTranscript(query, processedData);
   };
 
-  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
   const performSearch = async (query: string) => {
     if (isSearchInProgress.current) {
       console.log('components/organisms/TalkPanel.tsx - Search is already in progress, skipping new search.');
@@ -76,19 +82,21 @@ const TalkPanel: React.FC = () => {
     }
 
     if (abortControllerRef.current) {
+      console.log('components/organisms/TalkPanel.tsx - Aborting the previous request');
       abortControllerRef.current.abort();
     }
 
-    abortControllerRef.current = new AbortController();
+    abortControllerRef.current = new AbortController(); // Create a new AbortController for the new search
     isSearchInProgress.current = true;
     dispatch(setError(null));
     dispatch(setLoading(true));
 
     try {
       console.log(`components/organisms/TalkPanel.tsx - Performing search with query: ${query}`);
-      const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`, {
-        signal: abortControllerRef.current.signal,
-      });
+      const response = await axios.get(
+        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`,
+        { signal: abortControllerRef.current.signal } // Use the new AbortController signal
+      );
 
       if (response.status !== 200) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
@@ -112,7 +120,7 @@ const TalkPanel: React.FC = () => {
       }
     } finally {
       dispatch(setLoading(false));
-      isSearchInProgress.current = false;
+      isSearchInProgress.current = false; // Reset flag even on abort or failure
     }
   };
 
@@ -138,8 +146,8 @@ const TalkPanel: React.FC = () => {
 
     // Move the selected talk logic and other side effects before dispatching the message
     dispatch(setSelectedTalk(talk));
-    lastDispatchedTalkId.current = talk.title; 
-    hasSentMessage.current.add(talk.title); 
+    lastDispatchedTalkId.current = talk.title;
+    hasSentMessage.current.add(talk.title);
     console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
     console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
 
@@ -148,7 +156,9 @@ const TalkPanel: React.FC = () => {
       const sendTranscript = talk.transcript || '';
       const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
 
-      const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
+      const result = await dispatch(
+        sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true })
+      );
       console.log(`components/organisms/TalkPanel.tsx - Successfully sent message for talk: ${talk.title}. Result:`, result);
     } catch (dispatchError) {
       console.error(`components/organisms/TalkPanel.tsx - Failed to send transcript for ${talk.title}:`, dispatchError);
@@ -173,11 +183,11 @@ const TalkPanel: React.FC = () => {
   useEffect(() => {
     if (selectedTalk) {
       console.log(`components/organisms/TalkPanel.tsx - New talk selected: ${selectedTalk.title}`);
-      
+
       // Move selected talk to the top
-      const updatedTalks = talks.filter(talk => talk.title !== selectedTalk.title);
+      const updatedTalks = talks.filter((talk) => talk.title !== selectedTalk.title);
       dispatch(setTalks([selectedTalk, ...updatedTalks]));
-      
+
       // Scroll to the top
       if (scrollableContainerRef.current) {
         scrollableContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -205,7 +215,6 @@ const TalkPanel: React.FC = () => {
 
   return (
     <div className={styles.TalkPanel}>
-      
       {/* Iframe for the selected talk, now placed first */}
       {selectedTalk && (
         <div className={styles.nowPlaying}>
@@ -218,7 +227,7 @@ const TalkPanel: React.FC = () => {
           />
         </div>
       )}
-      
+
       {/* Search bar section */}
       <div className={styles.searchContainer}>
         <div className={styles.searchInputWrapper}>
