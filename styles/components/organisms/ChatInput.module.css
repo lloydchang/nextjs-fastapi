@@ -15,6 +15,7 @@
   flex-grow: 1; /* Allow textarea to take the full width */
   padding: 8px 12px;
   color: white;
+  font-size: 16px;
   background-color: #005C4B;
   border: 0px solid #ccc;
   border-radius: 0px;
@@ -23,12 +24,6 @@
   word-wrap: break-word;
   height: auto;
   min-height: 30px;
-}
-
-.interimSpeech {
-  margin-top: 5px;
-  color: #888;
-  font-style: italic;
 }
 
 .buttonRow {

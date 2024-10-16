@@ -93,7 +93,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
         onClick={toggleListening}
         className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
       >
-        {isListening ? 'Stop Listening 🙉' : 'Start Listening 👂'}
+        {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
       </button>
       
       <textarea
