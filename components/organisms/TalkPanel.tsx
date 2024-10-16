@@ -33,22 +33,22 @@ const TalkPanel: React.FC = () => {
 
   useEffect(() => {
     if (initialRender.current) {
-      console.log('TalkPanel - Initial mount detected, performing search:', searchQuery);
+      console.log('components/organisms/TalkPanel.tsx - Initial mount detected, performing search:', searchQuery);
       performSearch(searchQuery);
       initialRender.current = false;
     } else {
-      console.log('TalkPanel - Subsequent render detected, skipping search.');
+      console.log('components/organisms/TalkPanel.tsx - Subsequent render detected, skipping search.');
     }
   }, []); // Empty dependency array to run only on mount
 
   const handleSearchResults = async (query: string, data: Talk[]): Promise<void> => {
-    console.log('TalkPanel - Search results received for query:', query, 'Data:', data);
+    console.log('components/organisms/TalkPanel.tsx - Search results received for query:', query, 'Data:', data);
     let processedData = data;
 
     if (isFirstSearch.current) {
       processedData = shuffleArray(data);
       isFirstSearch.current = false;
-      console.log('TalkPanel - Shuffling talks for the first search query.');
+      console.log('components/organisms/TalkPanel.tsx - Shuffling talks for the first search query.');
     }
 
     // Dispatch all fetched talks
@@ -57,7 +57,7 @@ const TalkPanel: React.FC = () => {
     // Immediately set the first talk as selected if none is currently selected
     if (!selectedTalk && processedData.length > 0) {
       dispatch(setSelectedTalk(processedData[0])); // Select the first talk
-      console.log('TalkPanel - New selected talk:', processedData[0].title);
+      console.log('components/organisms/TalkPanel.tsx - New selected talk:', processedData[0].title);
     }
 
     // Save fetched data to localStorage
@@ -71,7 +71,7 @@ const TalkPanel: React.FC = () => {
 
   const performSearch = async (query: string) => {
     if (isSearchInProgress.current) {
-      console.log('TalkPanel - Search is already in progress, skipping new search.');
+      console.log('components/organisms/TalkPanel.tsx - Search is already in progress, skipping new search.');
       return;
     }
 
@@ -85,7 +85,7 @@ const TalkPanel: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      console.log(`TalkPanel - Performing search with query: ${query}`);
+      console.log(`components/organisms/TalkPanel.tsx - Performing search with query: ${query}`);
       const response = await axios.get(`https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`, {
         signal: abortControllerRef.current.signal,
       });
@@ -101,13 +101,13 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || 'Transcript not available',
       }));
 
-      console.log('TalkPanel - Successfully fetched talks:', data);
+      console.log('components/organisms/TalkPanel.tsx - Successfully fetched talks:', data);
       await handleSearchResults(query, data);
     } catch (error) {
       if (axios.isCancel(error)) {
-        console.log('TalkPanel - Request aborted:', error.message);
+        console.log('components/organisms/TalkPanel.tsx - Request aborted:', error.message);
       } else {
-        console.error('TalkPanel - Error during performSearch:', error);
+        console.error('components/organisms/TalkPanel.tsx - Error during performSearch:', error);
         dispatch(setError('Error fetching talks. Please try again.'));
       }
     } finally {
@@ -127,12 +127,12 @@ const TalkPanel: React.FC = () => {
   };
 
   const sendTranscriptForTalk = async (query: string, talk: Talk): Promise<void> => {
-    console.log(`TalkPanel - Checking if talk already dispatched or sent: ${talk.title}`);
+    console.log(`components/organisms/TalkPanel.tsx - Checking if talk already dispatched or sent: ${talk.title}`);
     console.log('Current lastDispatchedTalkId:', lastDispatchedTalkId.current);
     console.log('HasSentMessage set:', [...hasSentMessage.current]);
 
     if (lastDispatchedTalkId.current === talk.title || hasSentMessage.current.has(talk.title)) {
-      console.log(`TalkPanel - Skipping already dispatched or sent talk: ${talk.title}`);
+      console.log(`components/organisms/TalkPanel.tsx - Skipping already dispatched or sent talk: ${talk.title}`);
       return;
     }
 
@@ -149,22 +149,22 @@ const TalkPanel: React.FC = () => {
       const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
 
       const result = await dispatch(sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true }));
-      console.log(`TalkPanel - Successfully sent message for talk: ${talk.title}. Result:`, result);
+      console.log(`components/organisms/TalkPanel.tsx - Successfully sent message for talk: ${talk.title}. Result:`, result);
     } catch (dispatchError) {
-      console.error(`TalkPanel - Failed to send transcript for ${talk.title}:`, dispatchError);
+      console.error(`components/organisms/TalkPanel.tsx - Failed to send transcript for ${talk.title}:`, dispatchError);
       dispatch(setError(`Failed to send transcript for ${talk.title}.`));
     }
   };
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]): Promise<void> => {
-    console.log('TalkPanel - Sending first available transcript for query:', query);
+    console.log('components/organisms/TalkPanel.tsx - Sending first available transcript for query:', query);
     for (let i = 0; i < talks.length; i++) {
       try {
-        console.log(`TalkPanel - Attempting to send transcript for talk: ${talks[i].title}`);
+        console.log(`components/organisms/TalkPanel.tsx - Attempting to send transcript for talk: ${talks[i].title}`);
         await sendTranscriptForTalk(query, talks[i]);
         return;
       } catch (error) {
-        console.error(`TalkPanel - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
+        console.error(`components/organisms/TalkPanel.tsx - Failed to send transcript for talk: ${talks[i].title}. Error:`, error);
       }
     }
     dispatch(setError('Failed to send transcripts for all talks.'));
@@ -172,7 +172,7 @@ const TalkPanel: React.FC = () => {
 
   useEffect(() => {
     if (selectedTalk) {
-      console.log(`TalkPanel - New talk selected: ${selectedTalk.title}`);
+      console.log(`components/organisms/TalkPanel.tsx - New talk selected: ${selectedTalk.title}`);
       
       // Move selected talk to the top
       const updatedTalks = talks.filter(talk => talk.title !== selectedTalk.title);
