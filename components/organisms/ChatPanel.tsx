@@ -84,7 +84,7 @@ const ChatPanel: React.FC = () => {
   );
 
   const handleInterimUpdate = useCallback((interimResult: string) => {
-    setInterimSpeech(interimResult); // Fix here: this properly returns from the function
+    setInterimSpeech(interimResult); 
   }, []);
 
   return (
