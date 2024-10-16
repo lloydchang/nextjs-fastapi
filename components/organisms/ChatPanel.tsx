@@ -24,6 +24,7 @@ const ChatPanel: React.FC = () => {
   const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia(); // Using useMedia hook for media control
   const [chatInput, setChatInput] = useState<string>('');
   const [interimSpeech, setInterimSpeech] = useState<string>('');
+  const [isListening, setIsListening] = useState<boolean>(false); // Add isListening state
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
