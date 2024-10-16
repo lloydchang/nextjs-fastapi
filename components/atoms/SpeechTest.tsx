@@ -9,10 +9,20 @@ interface SpeechTestProps {
   toggleMic: () => Promise<void>; // Add toggleMic to control the microphone state
   onSpeechResult: (finalResult: string) => void;
   onInterimUpdate: (interimResult: string) => void;
-  showFinalResult?: boolean; // New prop to optionally show final result textarea
+  showFinalResult?: boolean; // Option to show final result textarea
+  showInterimResult?: boolean; // Option to show interim result textarea
+  showIsListening?: boolean; // Option to show listening status
 }
 
-const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechResult, onInterimUpdate, showFinalResult = true }) => {
+const SpeechTest: React.FC<SpeechTestProps> = ({
+  isMicOn,
+  toggleMic,
+  onSpeechResult,
+  onInterimUpdate,
+  showFinalResult = true,
+  showInterimResult = true,
+  showIsListening = true,
+}) => {
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -21,19 +31,25 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
   const interimRef = useRef<HTMLTextAreaElement>(null);
   const finalRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleFinal = useCallback((text: string) => {
-    console.log('Final Speech:', text);
-    setFinalResult((prev) => prev + ' ' + text); // Append new final results
+  const handleFinal = useCallback(
+    (text: string) => {
+      console.log('Final Speech:', text);
+      setFinalResult((prev) => prev + ' ' + text); // Append new final results
 
-    // Send the result to parent (e.g., as a chat message)
-    onSpeechResult(text);
-  }, [onSpeechResult]);
+      // Send the result to parent (e.g., as a chat message)
+      onSpeechResult(text);
+    },
+    [onSpeechResult]
+  );
 
-  const handleInterim = useCallback((text: string) => {
-    console.log('Interim Speech:', text);
-    setInterimResult(text);
-    onInterimUpdate(text); // Pass the interim result to the parent
-  }, [onInterimUpdate]);
+  const handleInterim = useCallback(
+    (text: string) => {
+      console.log('Interim Speech:', text);
+      setInterimResult(text);
+      onInterimUpdate(text); // Pass the interim result to the parent
+    },
+    [onInterimUpdate]
+  );
 
   const { startListening, stopListening } = useSpeechRecognition({
     isMicOn,
@@ -95,16 +111,19 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
       >
         {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
       </button>
-      
-      <textarea
-        value={interimResult}
-        readOnly
-        placeholder=""
-        rows={1}
-        ref={interimRef}
-        className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
-        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-      />
+
+      {/* Conditionally render interim result based on showInterimResult and isListening */}
+      {showInterimResult && isListening && (
+        <textarea
+          value={interimResult}
+          readOnly
+          placeholder=""
+          rows={1}
+          ref={interimRef}
+          className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
+          style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        />
+      )}
 
       {/* Conditionally render Final Result based on showFinalResult prop */}
       {showFinalResult && (
@@ -117,6 +136,13 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
           className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
           style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         />
+      )}
+
+      {/* Conditionally render the listening status */}
+      {showIsListening && (
+        <div className={`${styles.listeningStatus} ${isListening ? styles.listening : styles.notListening}`}>
+          {isListening ? 'Currently Listening...' : 'Not Listening'}
+        </div>
       )}
     </div>
   );
