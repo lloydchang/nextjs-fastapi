@@ -82,6 +82,7 @@
   }
   
   .button-group {
+    padding: 10px 0px;         /* Adjust padding for better spacing */
     position: relative;       /* Use absolute positioning */
     bottom: 120px;            /* Adjusted: Move container further down */
     right: -14px;             /* Align container slightly to the left for aesthetics */
