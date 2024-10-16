@@ -30,7 +30,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
     // Clear final result after it is sent
     setTimeout(() => {
       setFinalResult(''); // Ensure the final result is cleared after it’s displayed
-    }, 100); // You can adjust the delay if needed for smoother UI
+    }, 300); // You can adjust the delay if needed for smoother UI
   }, [onSpeechResult]);
 
   const handleInterim = useCallback((text: string) => {
