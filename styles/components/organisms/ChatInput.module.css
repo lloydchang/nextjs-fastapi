@@ -26,6 +26,12 @@
   min-height: 30px;
 }
 
+/* Add styles for the placeholder */
+.input::placeholder {
+  color: white; /* Change the placeholder color to white */
+  font-weight: bold; /* Make the placeholder bold */
+}
+
 .buttonRow {
   display: flex;
   justify-content: space-between; /* Space between the send button and control buttons */
