@@ -15,6 +15,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [isListening, setIsListening] = useState<boolean>(false); // New state to manage listening UI
 
   const interimRef = useRef<HTMLTextAreaElement>(null); // Ref to track interim textarea
   const finalRef = useRef<HTMLTextAreaElement>(null); // Ref to track final textarea
@@ -31,21 +32,24 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
     onInterimUpdate(text); // Pass the interim result to the parent
   }, [onInterimUpdate]);
 
-  const { isListening, startListening, stopListening } = useSpeechRecognition({
+  const { startListening, stopListening } = useSpeechRecognition({
     isMicOn,
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
     onEnd: () => {
       console.log('Clearing final result on recognition end.');
       setFinalResult(''); // Clear final result when recognition ends
+      setIsListening(false); // Reset listening UI state when recognition ends
     },
   });
 
   useEffect(() => {
     if (isMicOn && !isListening) {
       startListening();
+      setIsListening(true); // Update UI when listening starts
     } else if (!isMicOn && isListening) {
       stopListening();
+      setIsListening(false); // Update UI when listening stops
     }
   }, [isMicOn, isListening, startListening, stopListening]);
 
@@ -71,12 +75,14 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
 
     if (isListening) {
       stopListening(); // Stop listening
+      setIsListening(false); // Update UI to reflect stopped listening
       if (isMicOn) {
         console.log('Microphone is on, turning it off.');
         await toggleMic(); // Turn the mic off if it's on
       }
     } else {
       startListening(); // Start listening
+      setIsListening(true); // Update UI to reflect started listening
     }
   };
 
