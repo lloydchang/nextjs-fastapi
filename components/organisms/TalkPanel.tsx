@@ -29,8 +29,8 @@ const TalkPanel: React.FC = () => {
   const isFirstSearch = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
+  const hasProcessedSelectedTalk = useRef(false); // Track updates to prevent loops
 
-  // Ensure `performSearch` is memoized to prevent unnecessary re-renders.
   const performSearch = useCallback(
     async (query: string) => {
       if (isSearchInProgress.current) {
@@ -50,6 +50,7 @@ const TalkPanel: React.FC = () => {
 
       try {
         let finalQuery = query;
+
         if (query.toLowerCase() === 'sdg') {
           const sdgKeys = Object.keys(sdgTitleMap).filter((key) => key.startsWith('sdg') && key !== 'sdg');
           finalQuery = sdgKeys[Math.floor(Math.random() * sdgKeys.length)];
@@ -173,7 +174,7 @@ const TalkPanel: React.FC = () => {
   );
 
   useEffect(() => {
-    if (selectedTalk) {
+    if (selectedTalk && !hasProcessedSelectedTalk.current) {
       const updatedTalks = talks.filter((talk) => talk.title !== selectedTalk.title);
       dispatch(setTalks([selectedTalk, ...updatedTalks]));
 
@@ -182,6 +183,7 @@ const TalkPanel: React.FC = () => {
       }
 
       sendTranscriptForTalk(searchQuery, selectedTalk);
+      hasProcessedSelectedTalk.current = true; // Mark as processed
     }
   }, [selectedTalk, dispatch, sendTranscriptForTalk, searchQuery, talks]);
 
@@ -215,7 +217,9 @@ const TalkPanel: React.FC = () => {
           className={styles.searchInput}
         />
         {loading && <LoadingSpinner />}
-        <button onClick={() => performSearch(searchQuery)} disabled={loading}>Search</button>
+        <button onClick={() => performSearch(searchQuery)} disabled={loading}>
+          Search
+        </button>
         <button onClick={openTranscriptInNewTab}>Transcript</button>
       </div>
 
