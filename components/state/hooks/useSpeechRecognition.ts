@@ -6,40 +6,39 @@ interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
   isMicOn?: boolean;
-  onEnd?: () => void; // Add onEnd callback to the props
+  toggleMic: () => Promise<void>; // Pass toggleMic to manage the mic state alongside speech recognition
 }
 
 const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
   isMicOn = false,
-  onEnd, // Handle onEnd callback
+  toggleMic,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [isRecognitionActive, setIsRecognitionActive] = useState(false); // Add a flag to track recognition start
 
-  const startListening = useCallback(() => {
-    if (!recognition || isRecognitionActive) return; // Check if recognition is already active
+  const startListening = useCallback(async () => {
+    if (!recognition || isListening) return;
 
     try {
+      await toggleMic(); // Ensure mic is on when starting listening
       recognition.start();
       setIsListening(true);
-      setIsRecognitionActive(true); // Mark recognition as active
       console.log('Speech recognition started.');
     } catch (error) {
-      console.error('Failed to start recognition:', error);
+      console.error('Failed to start recognition or toggle mic:', error);
     }
-  }, [recognition, isRecognitionActive]);
+  }, [recognition, isListening, toggleMic]);
 
-  const stopListening = useCallback(() => {
-    if (!recognition || !isRecognitionActive) return; // Only stop if recognition is active
+  const stopListening = useCallback(async () => {
+    if (!recognition || !isListening) return;
 
     recognition.stop();
     setIsListening(false);
-    setIsRecognitionActive(false); // Mark recognition as inactive
+    await toggleMic(); // Ensure mic is off when stopping listening
     console.log('Speech recognition stopped.');
-  }, [recognition, isRecognitionActive]);
+  }, [recognition, isListening, toggleMic]);
 
   useEffect(() => {
     const SpeechRecognitionConstructor =
@@ -71,29 +70,20 @@ const useSpeechRecognition = ({
 
     newRecognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
-      if (event.error !== 'no-speech') {
-        stopListening();
-      }
+      stopListening(); // Stop listening if there is an error
     };
 
     newRecognition.onend = () => {
       console.log('Speech recognition ended.');
       setIsListening(false);
-      setIsRecognitionActive(false); // Mark recognition as inactive
-      if (onEnd) onEnd(); // Trigger the onEnd callback if provided
-    };
-
-    newRecognition.onstart = () => {
-      console.log('Speech recognition started.');
-      setIsRecognitionActive(true); // Mark recognition as active
     };
 
     setRecognition(newRecognition);
 
     return () => {
-      newRecognition.abort(); // Clean up
+      newRecognition.abort(); // Cleanup
     };
-  }, [onSpeechResult, onInterimUpdate, stopListening, onEnd]);
+  }, [onSpeechResult, onInterimUpdate, stopListening]);
 
   useEffect(() => {
     if (isMicOn && !isListening) {

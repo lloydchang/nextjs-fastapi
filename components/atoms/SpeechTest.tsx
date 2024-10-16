@@ -6,7 +6,7 @@ import styles from 'styles/components/atoms/SpeechTest.module.css';
 
 interface SpeechTestProps {
   isMicOn: boolean;
-  toggleMic: () => Promise<void>; // Add toggleMic to control the microphone state
+  toggleMic: () => Promise<void>; // Added toggleMic to manage the microphone
   onSpeechResult: (finalResult: string) => void;
   onInterimUpdate: (interimResult: string) => void;
 }
@@ -14,90 +14,60 @@ interface SpeechTestProps {
 const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechResult, onInterimUpdate }) => {
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-
   const interimRef = useRef<HTMLTextAreaElement>(null); // Ref to track interim textarea
   const finalRef = useRef<HTMLTextAreaElement>(null); // Ref to track final textarea
 
   const handleFinal = useCallback((text: string) => {
-    console.log('Final Speech:', text);
-    setFinalResult((prev) => prev + ' ' + text); // Append new final results
+    setFinalResult((prev) => prev + ' ' + text);
     onSpeechResult(text); // Pass the result to the parent
   }, [onSpeechResult]);
 
   const handleInterim = useCallback((text: string) => {
-    console.log('Interim Speech:', text);
     setInterimResult(text);
     onInterimUpdate(text); // Pass the interim result to the parent
   }, [onInterimUpdate]);
 
   const { isListening, startListening, stopListening } = useSpeechRecognition({
     isMicOn,
+    toggleMic, // Pass toggleMic to manage mic state
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
-    onEnd: () => {
-      console.log('Clearing final result on recognition end.');
-      setFinalResult(''); // Clear final result when recognition ends
-    },
   });
 
-  useEffect(() => {
-    if (isMicOn && !isListening) {
-      startListening();
-    } else if (!isMicOn && isListening) {
-      stopListening();
+  const toggleListening = async () => {
+    if (isListening) {
+      await stopListening();
+    } else {
+      await startListening();
     }
-  }, [isMicOn, isListening, startListening, stopListening]);
+  };
 
-  // Effect to scroll the interim textarea to the end when content updates
   useEffect(() => {
     if (interimRef.current) {
       interimRef.current.scrollLeft = interimRef.current.scrollWidth; // Scroll to the right (end)
     }
   }, [interimResult]);
 
-  // Effect to scroll the final textarea to the end when content updates
   useEffect(() => {
     if (finalRef.current) {
       finalRef.current.scrollLeft = finalRef.current.scrollWidth; // Scroll to the right (end)
     }
   }, [finalResult]);
 
-  const toggleListening = async () => {
-    if (!isMicOn) {
-      console.log('Microphone is off, turning it on.');
-      await toggleMic(); // Turn the mic on if it's off
-    }
-
-    if (isListening) {
-      stopListening(); // Stop listening
-      if (isMicOn) {
-        console.log('Microphone is on, turning it off.');
-        await toggleMic(); // Turn the mic off if it's on
-      }
-    } else {
-      startListening(); // Start listening
-    }
-  };
-
   return (
-    <div className={`${styles.speechTest} ${isDarkMode ? styles.dark : styles.light}`}>
-      {/* Start/Stop Button with dynamic background color */}
-      <button
-        onClick={toggleListening}
-        className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
-      >
+    <div className={`${styles.speechTest}`}>
+      <button onClick={toggleListening} className={styles.toggleButton}>
         {isListening ? 'Stop Listening 🙉' : 'Start Listening 👂'}
       </button>
-      
+
       {/* Interim Result Textarea */}
       <textarea
         value={interimResult}
         readOnly
         placeholder="Interim Result..."
-        rows={1} // Keep the textarea with 1 row, but allow scrolling
-        ref={interimRef} // Attach ref to track scroll position
-        className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
+        rows={1}
+        ref={interimRef}
+        className={styles.textarea}
         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       />
 
@@ -106,9 +76,9 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
         value={finalResult}
         readOnly
         placeholder="Final Result..."
-        rows={1} // Keep the textarea with 1 row, but allow scrolling
-        ref={finalRef} // Attach ref to track scroll position
-        className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
+        rows={1}
+        ref={finalRef}
+        className={styles.textarea}
         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       />
     </div>
