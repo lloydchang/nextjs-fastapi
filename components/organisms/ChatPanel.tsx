@@ -99,7 +99,6 @@ const ChatPanel: React.FC = () => {
         alt=""
         fill
         className={styles.backgroundImage}
-        priority
         unoptimized
       />
       <div className={styles.overlay} />
