@@ -96,7 +96,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             eraseMemory={eraseMemory}
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
-            hasVisibleMessages={hasVisibleMessages}
+            hasVisibleMessages={hasVisibleMessages} // Pass the prop to ControlButtons
             isListening={isListening} // Pass the isListening prop here
           />
         </div>

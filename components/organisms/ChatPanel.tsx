@@ -21,7 +21,7 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-  const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
+  const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia(); // Using useMedia hook for media control
   const [chatInput, setChatInput] = useState<string>('');
   const [interimSpeech, setInterimSpeech] = useState<string>('');
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
@@ -110,6 +110,7 @@ const ChatPanel: React.FC = () => {
 
           <SpeechTest 
             isMicOn={mediaState.isMicOn} 
+            toggleMic={toggleMic} // Pass toggleMic function to SpeechTest
             onSpeechResult={handleSpeechResult} 
             onInterimUpdate={handleInterimUpdate}
           />
