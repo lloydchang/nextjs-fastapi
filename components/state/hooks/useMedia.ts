@@ -22,7 +22,7 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
-    isMicOn: true, // Microphone is initialized as ON by default
+    isMicOn: false, // Microphone is initialized as OFF by default
     isPipOn: false,
     isMemOn: true,
   });
