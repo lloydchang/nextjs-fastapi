@@ -114,17 +114,13 @@ const SpeechTest: React.FC<SpeechTestProps> = ({ isMicOn, toggleMic, onSpeechRes
 
       {/* Final Result Textarea */}
       <textarea
-        value={finalResult} // Bind the value to finalResult state
+        value={finalResult}
         readOnly
         placeholder="Final Result..."
         rows={1} // Keep the textarea with 1 row, but allow scrolling
-        ref={finalRef} // Attach ref to track scroll position (if necessary)
+        ref={finalRef} // Attach ref to track scroll position
         className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
-        style={{
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
+        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       />
     </div>
   );
