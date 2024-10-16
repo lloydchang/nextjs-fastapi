@@ -35,7 +35,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
-  isListening,
+  isListening, // Add isListening prop
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 

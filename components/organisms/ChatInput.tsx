@@ -21,6 +21,7 @@ interface ChatInputProps {
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean; // New prop to track if there are visible messages
+  isListening: boolean; // New prop to indicate if speech recognition is listening
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -40,6 +41,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
+  isListening, // Add isListening prop
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -94,7 +96,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
             eraseMemory={eraseMemory}
             isFullScreenOn={isFullScreenOn}
             toggleFullScreen={toggleFullScreen}
-            hasVisibleMessages={hasVisibleMessages} // Pass the prop to ControlButtons
+            hasVisibleMessages={hasVisibleMessages}
+            isListening={isListening} // Pass the isListening prop here
           />
         </div>
       </div>
