@@ -1,3 +1,5 @@
+// File: ChatPanel.tsx
+
 'use client'; // Mark as Client Component
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -133,6 +135,7 @@ const ChatPanel: React.FC = () => {
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreenMode}
             hasVisibleMessages={hasVisibleMessages}
+            isListening={isListening}  {/* Passing the isListening prop */}
           />
         </div>
       </div>
