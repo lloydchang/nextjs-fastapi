@@ -252,7 +252,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 96vw;
+  width: 93vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
   z-index: 999;
