@@ -39,19 +39,6 @@ const ChatPanel: React.FC = () => {
 
   const hasVisibleMessages = messages.some((message) => !message.hidden);
 
-  // Synchronize isMicOn and isListening
-  const handleMicToggle = useCallback(async () => {
-    if (mediaState.isMicOn || isListening) {
-      // Stop listening and turn off the mic
-      setIsListening(false);
-      await toggleMic(); // Turn off the mic
-    } else {
-      // Start listening and turn on the mic
-      await toggleMic(); // Turn on the mic
-      setIsListening(true);
-    }
-  }, [mediaState.isMicOn, isListening, toggleMic]);
-
   const handleChat = useCallback(() => {
     if (chatInput.trim()) {
       const messageToSend = chatInput.trim();
@@ -126,7 +113,7 @@ const ChatPanel: React.FC = () => {
 
           <SpeechTest 
             isMicOn={mediaState.isMicOn} 
-            toggleMic={handleMicToggle}  // Updated to use handleMicToggle
+            toggleMic={toggleMic}
             onSpeechResult={handleSpeechResult} 
             onInterimUpdate={handleInterimUpdate}
           />
@@ -137,7 +124,7 @@ const ChatPanel: React.FC = () => {
             handleChat={handleChat}
             isCamOn={mediaState.isCamOn}
             isMicOn={mediaState.isMicOn}
-            toggleMic={handleMicToggle} // Updated to use handleMicToggle
+            toggleMic={toggleMic}
             startCam={startCam}
             stopCam={stopCam}
             isPipOn={mediaState.isPipOn}
@@ -148,7 +135,7 @@ const ChatPanel: React.FC = () => {
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreenMode}
             hasVisibleMessages={hasVisibleMessages}
-            isListening={isListening}  // Pass the isListening state to ChatInput
+            isListening={isListening}
           />
         </div>
       </div>
