@@ -33,7 +33,7 @@
   white-space: nowrap; /* Ensure text stays on one line */
   padding: 10px;
   font-size: 14px;
-  border: 1px solid #ccc;
+  border: 0px solid #ccc;
   border-radius: 4px;
   scroll-behavior: smooth; /* Smooth scrolling */
 }
