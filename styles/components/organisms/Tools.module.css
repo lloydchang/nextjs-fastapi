@@ -2,8 +2,8 @@
 
 .tools-container {
   position: absolute;       /* Use absolute positioning */
-  bottom: -470px;           /* Greater negative numbers move container further down */
-  right: -14px;             /* Align container slightly to the left for aesthetics */
+  bottom: -680px;           /* Greater negative numbers move container further down */
+  right: -18px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
   align-items: flex-end;    /* Align buttons to the right */
@@ -25,8 +25,8 @@
   border-radius: 3px;       /* Small rounded corners */
   cursor: pointer;          /* Change cursor to pointer */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Light shadow */
-  font-size: 8px;          /* Much smaller font size */
-  width: 40px;              /* Fixed width for tiny buttons */
+  font-size: 14px;          /* Much smaller font size */
+  width: 60px;              /* Fixed width for tiny buttons */
   text-align: center;       /* Center text inside the button */
   transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
 }
@@ -95,8 +95,8 @@
   .right-edge-button {
     padding: 0px 0px;         /* Adjust padding for better spacing */
     margin-left: 6px;        /* Add spacing between buttons in a row */
-    font-size: 6px;          /* Smaller font size */
-    width: 30px;             /* Smaller fixed width */
+    font-size: 14px;          /* Smaller font size */
+    width: 40px;             /* Smaller fixed width */
   }
 
   .right-edge-button:hover {
