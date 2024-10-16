@@ -97,7 +97,7 @@
   /* Button styles */
   .right-edge-button {
     padding: 0px 0px;         /* Adjust padding for better spacing */
-    margin-left: 10px;        /* Add spacing between buttons in a row */
+    margin-left: 0px;        /* Add spacing between buttons in a row */
     font-size: 9px;          /* Smaller font size */
     width: 30px;             /* Smaller fixed width */
   }
@@ -105,4 +105,31 @@
   .right-edge-button:hover {
     transform: translateY(-5px); /* Shift button slightly up on hover */
   }  
+}
+
+.lazy-arrow-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.flashing-arrow {
+  position: absolute;
+  left: -32px; /* Positioning the arrow to the left of the button */
+  top: 40%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background-color: #0288d1;
+  clip-path: polygon(100% 50%, 0% 0%, 30% 50%, 0% 100%);
+  animation: flash 1s infinite; /* Flash animation */
+}
+
+@keyframes flash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }

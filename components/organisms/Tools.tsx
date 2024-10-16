@@ -59,6 +59,7 @@ const Tools: React.FC = () => {
       onMouseDown={handleMouseDown} // Attaching mouse down event to initiate drag
     >
       <div className={styles['button-group']}>
+      <div className={styles['lazy-arrow-container']}>
         <button
           className={styles['right-edge-button']}
           onClick={() =>
@@ -67,6 +68,8 @@ const Tools: React.FC = () => {
         >
           Lazy
         </button>
+        <div className={styles['flashing-arrow']}></div>
+      </div>
 
         <button
           className={styles['right-edge-button']}
