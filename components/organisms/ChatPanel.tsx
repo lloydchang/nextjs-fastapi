@@ -116,6 +116,7 @@ const ChatPanel: React.FC = () => {
             toggleMic={toggleMic}
             onSpeechResult={handleSpeechResult} 
             onInterimUpdate={handleInterimUpdate}
+            showIsListening={false} // Do not show listening UI in ChatPanel
             showFinalResult={false} // Do not show final result in ChatPanel
           />
 

@@ -139,12 +139,14 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
         </div>
       )} */}
 
-      <button
-        onClick={toggleListening}
-        className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
-      >
-        {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
-      </button>
+      {showIsListening && (
+        <button
+          onClick={toggleListening}
+          className={`${styles.toggleButton} ${isListening ? styles.stopButton : styles.startButton}`}
+        >
+          {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
+        </button>
+      )}
     </div>
   );
 };

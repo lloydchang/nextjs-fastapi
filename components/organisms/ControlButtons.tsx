@@ -54,7 +54,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   return (
     <div className={styles.container}>
       {/* Microphone Button */}
-      {/* <button
+      <button
         type="button"
         onClick={toggleMic}
         className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`} // Apply styles based on isMicOn state
@@ -63,7 +63,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         disabled={isListening} // Disable button while speech recognition is listening
       >
         {micButtonText}
-      </button> */}
+      </button>
 
       {/* Erase Button */}
       <button
