@@ -22,6 +22,7 @@ const SpeechTestPage: React.FC = () => {
         toggleMic={toggleMic} // Pass toggleMic to control mic
         onSpeechResult={handleSpeechResult} 
         onInterimUpdate={handleInterimUpdate} 
+        showFinalResult={true} // Show final result in speech-test page
       />
       <button onClick={toggleMic}>
         {mediaState.isMicOn ? 'Turn Mic Off' : 'Turn Mic On'}
