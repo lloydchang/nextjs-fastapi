@@ -1,6 +1,4 @@
-// File: ChatPanel.tsx
-
-'use client'; // Mark as Client Component
+'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,10 +21,10 @@ const HeavyChatMessages = dynamic(() => import('components/molecules/ChatMessage
 const ChatPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const messages = useSelector((state: RootState) => state.chat.messages);
-  const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia(); // Using useMedia hook for media control
+  const { mediaState, toggleMic, startCam, stopCam, togglePip, toggleMem } = useMedia();
   const [chatInput, setChatInput] = useState<string>('');
   const [interimSpeech, setInterimSpeech] = useState<string>('');
-  const [isListening, setIsListening] = useState<boolean>(false); // Add isListening state
+  const [isListening, setIsListening] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -84,7 +82,7 @@ const ChatPanel: React.FC = () => {
   );
 
   const handleInterimUpdate = useCallback((interimResult: string) => {
-    setInterimSpeech(interimResult); 
+    setInterimSpeech(interimResult);
   }, []);
 
   return (
@@ -113,7 +111,7 @@ const ChatPanel: React.FC = () => {
 
           <SpeechTest 
             isMicOn={mediaState.isMicOn} 
-            toggleMic={toggleMic} // Pass toggleMic function to SpeechTest
+            toggleMic={toggleMic}
             onSpeechResult={handleSpeechResult} 
             onInterimUpdate={handleInterimUpdate}
           />
@@ -135,7 +133,7 @@ const ChatPanel: React.FC = () => {
             isFullScreenOn={isFullScreen}
             toggleFullScreen={toggleFullScreenMode}
             hasVisibleMessages={hasVisibleMessages}
-            isListening={isListening}  {/* Passing the isListening prop */}
+            isListening={isListening}
           />
         </div>
       </div>
