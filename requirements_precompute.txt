@@ -1,8 +1,0 @@
-# File: requirements_precompute.txt
-
-scikit-learn
-numpy
-joblib
-scipy
-threadpoolctl
-pandas
