@@ -26,10 +26,18 @@ function capitalizeWords(text: string): string {
     .join(' ');
 }
 
-// Helper function to remove the presenter's name from the title and clean up spaces
+// Helper function to remove diacritics (accents) from a string
+function removeDiacritics(text: string): string {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Helper function to remove the presenter's name from the title (without accents) and clean spaces
 function removePresenterFromTitle(presenter: string, title: string): string {
-  const regex = new RegExp(`\\b${presenter}\\b`, 'gi');
-  const cleanedTitle = title.replace(regex, '').trim(); // Remove presenter and extra spaces
+  const normalizedPresenter = removeDiacritics(presenter);
+  const normalizedTitle = removeDiacritics(title);
+
+  const regex = new RegExp(`\\b${normalizedPresenter}\\b`, 'gi');
+  const cleanedTitle = normalizedTitle.replace(regex, '').trim();
   return cleanedTitle.replace(/\s+/g, ' '); // Ensure single spaces between words
 }
 
