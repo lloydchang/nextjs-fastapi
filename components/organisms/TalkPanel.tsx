@@ -31,13 +31,11 @@ const TalkPanel: React.FC = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const sentMessagesRef = useRef<Set<string>>(new Set());
-
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
+  // Debounced search to prevent rapid API calls
   const debouncedPerformSearch = useCallback(
-    debounce((query: string) => {
-      performSearch(query);
-    }, 500),
+    debounce((query: string) => performSearch(query), 500),
     []
   );
 
@@ -57,7 +55,6 @@ const TalkPanel: React.FC = () => {
     const processedData = isFirstSearch.current ? shuffleArray(data) : data;
     isFirstSearch.current = false;
 
-    // Filter out duplicate talks by URL
     const uniqueTalks = processedData.filter(
       (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
     );
@@ -76,7 +73,6 @@ const TalkPanel: React.FC = () => {
     const trimmedQuery = query.trim().toLowerCase();
 
     if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) return;
-
     if (abortControllerRef.current) abortControllerRef.current.abort();
 
     abortControllerRef.current = new AbortController();
@@ -118,37 +114,34 @@ const TalkPanel: React.FC = () => {
 
   const sendTranscriptForTalk = async (query: string, talk: Talk) => {
     try {
-      // Ensure the talk hasn't already been dispatched or sent.
       if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) {
         console.log(`Skipping already dispatched talk: ${talk.title}`);
         return;
       }
-  
-      // Set the talk as selected and track it to avoid duplication.
+
       dispatch(setSelectedTalk(talk));
       lastDispatchedTalkId.current = talk.title;
       sentMessagesRef.current.add(talk.title);
-  
+
       const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
-  
-      // Dispatch each message part with proper error handling.
+
       for (const part of messageParts) {
         console.log(`Sending message part: ${part}`);
         const result = await dispatch(sendMessage({ text: part, hidden: true }));
-        
+
         if (result.error) {
           console.error(`Failed to send message: ${part}`, result.error);
           dispatch(setApiError(`Failed to send message: ${part}`));
           return;
         }
-  
+
         console.log(`Successfully sent message part: ${part}`);
       }
     } catch (error) {
       console.error(`Error sending transcript for ${talk.title}:`, error);
       dispatch(setApiError(`Failed to send transcript for ${talk.title}.`));
     }
-  };  
+  };
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
     for (const talk of talks) {
@@ -219,7 +212,7 @@ const TalkPanel: React.FC = () => {
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
           <TalkItem
-            key={`${talk.url}-${index}`} // Generate unique key using URL and index
+            key={`${talk.url}-${index}`}
             talk={talk}
             selected={selectedTalk?.title === talk.title}
           />
