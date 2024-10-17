@@ -10,8 +10,9 @@ import logger from 'app/api/chat/utils/logger';
 export function validateEnvVars(vars: string[]): boolean {
   const areValid = vars.every(varName => {
     const value = process.env[varName];
-    // Check for both '-your' and '-YOUR'
-    return value && !/your-/i.test(value);
+    // Check for both '-YOUR' and '-your' placeholders
+    // The /i flag in the regular expression makes the match case-insensitive.
+    return value && !/YOUR-/i.test(value);
   });
 
   if (!areValid) {
