@@ -27,6 +27,11 @@ class ApiError extends Error {
   }
 }
 
+// Type guard to check if the input is of type Partial<Message>
+function isMessage(input: any): input is Partial<Message> {
+  return typeof input === 'object' && input !== null && 'sender' in input;
+}
+
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
@@ -191,12 +196,12 @@ export const sendMessage = (
 
   const userMessage: Message = {
     id: uuidv4() || '',
-    sender: input.sender || '',
-    text: input.text || '',
-    role: input.role || '',
-    content: input.text || '',
-    hidden: input.hidden || false,
-    persona: input.persona || '',
+    sender: isMessage(input) ? input.sender || '' : '',
+    text: isMessage(input) ? input.text || '' : '',
+    role: isMessage(input) ? input.role || '' : '',
+    content: isMessage(input) ? input.text || '' : '',
+    hidden: isMessage(input) ? input.hidden || false : false,
+    persona: isMessage(input) ? input.persona || '' : '',
     timestamp: Date.now() || '',
   };
 
