@@ -48,8 +48,6 @@ const Tools: React.FC = () => {
     return Object.keys(toolsButtonsParagraphs)[0];
   };
 
-  const previousHighlightedButton = useRef<string>(highlightedButton);
-
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1].text;
@@ -59,9 +57,20 @@ const Tools: React.FC = () => {
         console.debug(`Matching button found: ${matchingButton}`);
         setHighlightedButton(matchingButton);
 
-        // Send a chat message with the paragraph of the new button
-        const paragraphToSend = toolsButtonsParagraphs[matchingButton].paragraph || '';
-        dispatch(sendMessage({ text: paragraphToSend, sender: 'bot', hidden: true }));
+        // Combine button name, paragraph, and URL into a single message text
+        const buttonToSend = `***${matchingButton || ''}***: `;
+        const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
+        const urlToSend = `${toolsButtonsParagraphs[matchingButton].url || ''}`;
+
+        const messageText = buttonToSend + paragraphToSend + urlToSend;
+
+        dispatch(
+          sendMessage({
+            text: messageText,
+            sender: 'user',
+            hidden: true,
+          })
+        );
       }
     }
   }, [messages, dispatch, highlightedButton]);

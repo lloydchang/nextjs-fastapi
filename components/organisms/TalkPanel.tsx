@@ -142,7 +142,11 @@ const TalkPanel: React.FC = () => {
     ];
 
     for (const part of messageParts) {
-      dispatch(sendMessage({ text: part, hidden: false }));
+      dispatch(sendMessage({
+        text: part,
+        sender: 'user',
+        hidden: true
+      }));
       debugLog(`Sent message part: ${part}`);
     }
   };
