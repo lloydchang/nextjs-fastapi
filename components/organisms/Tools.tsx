@@ -75,7 +75,7 @@ const Tools: React.FC = () => {
         const blurbText = `${buttonBlurb[matchingButton].blurb || ''}`;
         const url = buttonBlurb[matchingButton].url || '';
 
-        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${buttonText}: ${blurbText}</a>`;
+        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
 
         // Check if the new message is the same as the last ad message
         if (lastAdMessageRef.current !== messageText) {
@@ -84,7 +84,7 @@ const Tools: React.FC = () => {
               id: uuidv4(),
               content: messageText,
               timestamp: Date.now(),
-              persona: 'Ad',
+              persona: buttonText,
               role: 'ad',
               sender: 'ad',
               text: messageText,
