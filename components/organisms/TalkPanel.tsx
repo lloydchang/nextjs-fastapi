@@ -1,3 +1,5 @@
+// File: components/organisms/TalkPanel.tsx
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -77,6 +79,7 @@ const TalkPanel: React.FC = () => {
     debugLog('Dispatching loading state.');
 
     try {
+      debugLog(`Making API request to fetch talks with query: "${trimmedQuery}"`);
       const response = await axios.get(
         `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
         { signal: abortControllerRef.current.signal }
