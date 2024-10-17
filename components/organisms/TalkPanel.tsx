@@ -1,5 +1,3 @@
-// File: components/organisms/TalkPanel.tsx
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -7,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
-import { setLoading, setApiError } from 'store/apiSlice'; // Correct imports from apiSlice
+import { setLoading, setApiError } from 'store/apiSlice'; 
 import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
@@ -15,13 +13,13 @@ import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPane
 import { localStorageUtil } from 'components/utils/localStorage';
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
-import { debounce } from 'lodash'; // Import debounce from lodash
+import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
-  const { loading, error } = useSelector((state: RootState) => state.api); // Access loading and error from api slice
+  const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
   const isSearchInProgress = useRef(false);
@@ -29,7 +27,7 @@ const TalkPanel: React.FC = () => {
   const lastDispatchedTalkId = useRef<string | null>(null);
   const isFirstSearch = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const lastQueryRef = useRef<string>(''); // Tracks the last search query
+  const lastQueryRef = useRef<string>('');
   const sentMessagesRef = useRef<Set<string>>(new Set());
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
@@ -51,13 +49,14 @@ const TalkPanel: React.FC = () => {
       if (abortControllerRef.current) abortControllerRef.current.abort();
       debouncedPerformSearch.cancel();
     };
-  }, []); 
+  }, []);
 
   const handleSearchResults = async (query: string, data: Talk[]) => {
-    let processedData = isFirstSearch.current ? shuffleArray(data) : data;
-    if (isFirstSearch.current) isFirstSearch.current = false;
+    const processedData = isFirstSearch.current ? shuffleArray(data) : data;
+    isFirstSearch.current = false;
 
-    dispatch(setTalks([...talks, ...processedData]));
+    // Clear previous talks and set new ones
+    dispatch(setTalks(processedData));
 
     if (!selectedTalk && processedData.length > 0) {
       dispatch(setSelectedTalk(processedData[0]));
@@ -81,11 +80,12 @@ const TalkPanel: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      let finalQuery = trimmedQuery === 'sdg'
-        ? Object.keys(sdgTitleMap).filter((key) => key.startsWith('sdg'))[
-            Math.floor(Math.random() * 17)
-          ]
-        : trimmedQuery;
+      const finalQuery =
+        trimmedQuery === 'sdg'
+          ? Object.keys(sdgTitleMap).filter((key) => key.startsWith('sdg'))[
+              Math.floor(Math.random() * 17)
+            ]
+          : trimmedQuery;
 
       const response = await axios.get(
         `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(finalQuery)}`,
@@ -94,7 +94,7 @@ const TalkPanel: React.FC = () => {
 
       if (response.status !== 200) throw new Error(response.statusText);
 
-      const data = response.data.results.map((result: any) => ({
+      const data: Talk[] = response.data.results.map((result: any) => ({
         title: result.document.slug.replace(/_/g, ' '),
         url: `https://www.ted.com/talks/${result.document.slug}`,
         sdg_tags: result.document.sdg_tags || [],
