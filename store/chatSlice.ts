@@ -63,11 +63,9 @@ const chatSlice = createSlice({
 
 // Helper functions
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const timeoutPromise = (ms: number) =>
   new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
-// Parsing incoming messages
 export const parseIncomingMessage = (jsonString: string) => {
   try {
     if (jsonString === '[DONE]') return null;
@@ -85,7 +83,6 @@ export const parseIncomingMessage = (jsonString: string) => {
   }
 };
 
-// Debounced API call
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -99,16 +96,12 @@ const debouncedApiCall = debounce(
     dispatch(setLoading(true));
     dispatch(clearApiError());
 
-    console.debug('Starting API call with input:', input);
-
     const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
     let retryCount = 0;
     const maxRetries = 3;
 
     while (retryCount < maxRetries) {
       try {
-        console.debug('Preparing to fetch API with messages:', messagesArray);
-        
         const response = await Promise.race([
           fetch('/api/chat', {
             method: 'POST',
@@ -118,13 +111,9 @@ const debouncedApiCall = debounce(
           timeoutPromise(10000),
         ]);
 
-        console.debug('Received API response:', response);
-
         if (!response.ok) {
-          console.debug(`Response not OK, status: ${response.status}`);
           if (response.status === 429) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-            console.warn(`Rate limited. Retrying after ${retryAfter} seconds.`);
             await wait(retryAfter * 1000);
             retryCount++;
             continue;
@@ -143,8 +132,6 @@ const debouncedApiCall = debounce(
               if (done) break;
 
               textBuffer += decoder.decode(value, { stream: true });
-              console.debug('Current text buffer:', textBuffer);
-              
               const messages = textBuffer.split('\n\n');
               textBuffer = messages.pop() || '';
 
@@ -160,7 +147,6 @@ const debouncedApiCall = debounce(
                       content: parsedData.message,
                       persona: parsedData.persona,
                     };
-                    console.debug('Dispatching bot message:', botMessage);
                     dispatch(addMessage(botMessage));
                   }
                 }
@@ -174,15 +160,11 @@ const debouncedApiCall = debounce(
         dispatch(setLoading(false));
         return;
       } catch (error: any) {
-        console.error('Error during API call:', error);
-
         if ((error instanceof ApiError && error.status === 429) || error.message === 'Timeout') {
           retryCount++;
-          console.warn(`Retrying API call. Attempt ${retryCount}`);
           await wait(Math.pow(2, retryCount) * 1000);
           continue;
         }
-
         dispatch(setApiError(error.message || 'An unknown error occurred'));
         dispatch(setLoading(false));
         return;
@@ -192,12 +174,9 @@ const debouncedApiCall = debounce(
   1000
 );
 
-// Send message function
 export const sendMessage = (
   input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
-  console.debug('sendMessage called with input:', input);
-
   dispatch(clearError());
 
   const clientId = localStorage.getItem('clientId') || uuidv4();
@@ -206,21 +185,24 @@ export const sendMessage = (
   const userMessage: Message =
     typeof input === 'string'
       ? { id: uuidv4(), sender: 'user', text: input, role: 'user', content: input }
-      : { ...input, id: uuidv4(), sender: input.sender || 'user' };
+      : {
+          id: uuidv4(),
+          sender: input.sender || 'user',
+          text: input.text || '',
+          role: input.sender === 'bot' ? 'bot' : 'user',
+          content: input.text || '',
+          hidden: input.hidden,
+          persona: input.persona,
+        };
 
-  console.debug('Dispatching user message:', userMessage);
   dispatch(addMessage(userMessage));
 
   try {
     await debouncedApiCall(dispatch, getState, input, clientId);
   } catch (error) {
-    console.error('Error during sendMessage:', error);
     dispatch(setApiError('Failed to send message.'));
   }
-
-  console.debug('Redux state after sendMessage:', getState());
 };
 
-// Exporting actions and reducer
 export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
 export default chatSlice.reducer;
