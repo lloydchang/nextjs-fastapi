@@ -123,8 +123,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
         onClick={handleOpenModal}
         style={{ position: 'relative' }} // Ensure the parent is relative
       >
-        {/* Display Persona Label for bot messages only */}
-        {sender === 'bot' && persona && (
+        {/* Display Persona Label */}
+        {persona && (
           <div className={`${showFullMessage ? styles.personaLabelHovered : styles.personaLabel}`} style={{ color: personaColor }}>
             <strong>{persona}</strong>
           </div>
