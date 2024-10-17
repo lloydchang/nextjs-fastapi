@@ -26,44 +26,104 @@ const TalkPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
   const isSearchInProgress = useRef(false);
   const initialRender = useRef(true);
+  const lastDispatchedTalkId = useRef<string | null>(null);
+  const isFirstSearch = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const sentMessagesRef = useRef<Set<string>>(new Set());
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
+  console.debug('TalkPanel: Initializing component...');
+
   const debouncedPerformSearch = useCallback(
-    debounce((query: string) => performSearch(query), 500),
+    debounce((query: string) => {
+      console.debug('Debounced search triggered for query:', query);
+      performSearch(query);
+    }, 500),
     []
   );
 
+  const createAbortController = () => {
+    console.debug('Creating new AbortController...');
+    if (abortControllerRef.current) {
+      console.debug('Aborting previous request...');
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    return abortControllerRef.current;
+  };
+
   useEffect(() => {
+    console.debug('useEffect: Checking if this is the initial render...');
     if (initialRender.current) {
+      console.debug('Performing initial search with query:', searchQuery);
       performSearch(searchQuery);
       initialRender.current = false;
     }
+
     return () => {
-      abortControllerRef.current?.abort();
+      console.debug('Cleanup: Aborting ongoing requests and canceling debounced search.');
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       debouncedPerformSearch.cancel();
     };
   }, []);
 
-  const performSearch = async (query: string) => {
-    const trimmedQuery = query.trim().toLowerCase();
-    if (isSearchInProgress.current || trimmedQuery === lastQueryRef.current) return;
+  const handleSearchResults = async (query: string, data: Talk[]) => {
+    console.debug('Handling search results for query:', query);
+    console.debug('Received data:', data);
 
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
+    const processedData = isFirstSearch.current ? shuffleArray(data) : data;
+    isFirstSearch.current = false;
+
+    const uniqueTalks = processedData.filter(
+      (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
+    );
+
+    console.debug('Unique talks after filtering:', uniqueTalks);
+
+    dispatch(setTalks(uniqueTalks));
+
+    if (!selectedTalk && uniqueTalks.length > 0) {
+      console.debug('Setting first talk as selected:', uniqueTalks[0]);
+      dispatch(setSelectedTalk(uniqueTalks[0]));
+    }
+
+    localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
+    await sendFirstAvailableTranscript(query, uniqueTalks);
+  };
+
+  const performSearch = async (query: string) => {
+    console.debug('Performing search with query:', query);
+    const trimmedQuery = query.trim().toLowerCase();
+
+    if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) {
+      console.debug('Search already in progress for the same query. Skipping...');
+      return;
+    }
+
+    const controller = createAbortController();
     isSearchInProgress.current = true;
     lastQueryRef.current = trimmedQuery;
-    dispatch(setLoading(true));
     dispatch(setApiError(null));
+    dispatch(setLoading(true));
 
     try {
+      const finalQuery =
+        trimmedQuery === 'sdg'
+          ? Object.keys(sdgTitleMap).filter((key) => key.startsWith('sdg'))[
+              Math.floor(Math.random() * 17)
+            ]
+          : trimmedQuery;
+
+      console.debug('Final search query:', finalQuery);
+
       const response = await axios.get(
-        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
-        { signal: abortControllerRef.current.signal }
+        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(finalQuery)}`,
+        { signal: controller.signal }
       );
+
+      console.debug('Received response:', response);
 
       if (response.status !== 200) throw new Error(response.statusText);
 
@@ -74,31 +134,70 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || 'Transcript not available',
       }));
 
-      handleSearchResults(data);
+      await handleSearchResults(finalQuery, data);
     } catch (error) {
-      if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
+      if (!axios.isCancel(error)) {
+        console.error('Error fetching talks:', error);
+        dispatch(setApiError('Error fetching talks.'));
+      }
     } finally {
+      console.debug('Search completed. Setting loading to false.');
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
   };
 
-  const handleSearchResults = (data: Talk[]) => {
-    const uniqueTalks = shuffleArray(data).filter(
-      (talk) => !talks.some((existing) => existing.url === talk.url)
-    );
-    dispatch(setTalks(uniqueTalks));
+  const sendTranscriptForTalk = async (query: string, talk: Talk) => {
+    console.debug('Sending transcript for talk:', talk.title);
 
-    if (uniqueTalks.length > 0) dispatch(setSelectedTalk(uniqueTalks[0]));
-    localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
+    try {
+      if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) {
+        console.debug(`Skipping already dispatched talk: ${talk.title}`);
+        return;
+      }
+
+      dispatch(setSelectedTalk(talk));
+      lastDispatchedTalkId.current = talk.title;
+      sentMessagesRef.current.add(talk.title);
+
+      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
+
+      for (const part of messageParts) {
+        console.debug(`Sending message part: ${part}`);
+        const result = await dispatch(sendMessage({ text: part, hidden: true }));
+
+        if (result.error) {
+          console.error(`Failed to send message: ${part}`, result.error);
+          dispatch(setApiError(`Failed to send message: ${part}`));
+          return;
+        }
+
+        console.debug(`Successfully sent message part: ${part}`);
+      }
+    } catch (error) {
+      console.error(`Error sending transcript for ${talk.title}:`, error);
+      dispatch(setApiError(`Failed to send transcript for ${talk.title}.`));
+    }
+  };
+
+  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
+    console.debug('Sending first available transcript...');
+    for (const talk of talks) {
+      try {
+        await sendTranscriptForTalk(query, talk);
+        break;
+      } catch (error) {
+        console.error('Error sending transcript:', error);
+      }
+    }
+    dispatch(setApiError('Try searching for a different word.'));
   };
 
   const openTranscriptInNewTab = () => {
-    if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
-  };
-
-  const shuffleTalks = () => {
-    dispatch(setTalks(shuffleArray(talks)));
+    if (selectedTalk) {
+      console.debug('Opening transcript in new tab:', selectedTalk.url);
+      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    }
   };
 
   return (
@@ -108,10 +207,10 @@ const TalkPanel: React.FC = () => {
           <iframe
             src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
             width="100%"
-            height="400"
+            height="400px"
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
-            title={selectedTalk.title}
+            title={`${selectedTalk.title} video`}
           />
         </div>
       )}
@@ -135,11 +234,17 @@ const TalkPanel: React.FC = () => {
         >
           Search
         </button>
-        <button onClick={shuffleTalks} className={`${styles.button} ${styles.shuffleButton}`}>
+        <button
+          onClick={() => shuffleTalks()}
+          className={`${styles.button} ${styles.shuffleButton}`}
+        >
           Shuffle
         </button>
         {selectedTalk && (
-          <button onClick={openTranscriptInNewTab} className={`${styles.button} ${styles.tedButton}`}>
+          <button
+            onClick={openTranscriptInNewTab}
+            className={`${styles.button} ${styles.tedButton}`}
+          >
             Transcript
           </button>
         )}
@@ -149,7 +254,11 @@ const TalkPanel: React.FC = () => {
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
-          <TalkItem key={`${talk.url}-${index}`} talk={talk} selected={selectedTalk?.title === talk.title} />
+          <TalkItem
+            key={`${talk.url}-${index}`}
+            talk={talk}
+            selected={selectedTalk?.title === talk.title}
+          />
         ))}
       </div>
     </div>
