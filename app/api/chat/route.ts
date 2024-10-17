@@ -83,6 +83,12 @@ export async function POST(request: NextRequest) {
 
     try {
       const body = await request.json();
+
+      // **New Silly Log Statement: Log the Request Body**
+      logger.silly(
+        `Request body for RequestId: ${requestId}, clientId: ${clientId}: ${JSON.stringify(body)}`
+      );
+
       const { messages } = body;
 
       // Ensure messages is an array
