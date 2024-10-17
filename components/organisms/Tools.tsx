@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react'; // Updated to includ
 import { useSelector } from 'react-redux';
 import { RootState } from 'store/store';
 import * as use from '@tensorflow-models/universal-sentence-encoder'; // TensorFlow.js
+import '@tensorflow/tfjs-backend-webgl'; // WebGL backend
+import '@tensorflow/tfjs-backend-cpu'; // Optional CPU backend fallback
 import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the button-paragraph map
 import styles from 'styles/components/organisms/Tools.module.css';
 
@@ -15,7 +17,7 @@ const Tools: React.FC = () => {
   const dragStartPosition = useRef({ x: 0, y: 0 });
 
   // State to highlight the button based on semantic similarity
-  const [highlightedButton, setHighlightedButton] = useState<string | null>(null); 
+  const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
 
   // TensorFlow.js model state
   const [model, setModel] = useState<use.UniversalSentenceEncoder | null>(null);
@@ -30,31 +32,45 @@ const Tools: React.FC = () => {
 
   // Load TensorFlow.js Universal Sentence Encoder on component mount
   useEffect(() => {
-    use.load().then((loadedModel) => setModel(loadedModel));
+    const loadModel = async () => {
+      try {
+        await tf.setBackend('webgl'); // Attempt to use WebGL backend
+        await tf.ready(); // Ensure backend is initialized
+        const loadedModel = await use.load();
+        setModel(loadedModel);
+      } catch (error) {
+        console.error('Error loading TensorFlow model:', error);
+      }
+    };
+    loadModel();
   }, []);
 
   // Compute semantic similarity between user message and button paragraphs
   const computeSimilarity = async (message: string) => {
     if (!model) return;
 
-    const inputEmbedding = await model.embed(message);
-    let bestMatch: string | null = null;
-    let highestSimilarity = 0;
+    try {
+      const inputEmbedding = await model.embed([message]); // Embed message as array
 
-    for (const [buttonName, { paragraphs }] of Object.entries(toolsButtonsParagraphs)) {
-      const paragraphEmbedding = await model.embed(paragraphs);
-      const similarity = cosineSimilarity(
-        inputEmbedding.arraySync()[0], // Convert tensors to arrays
-        paragraphEmbedding.arraySync()[0]
+      const similarities = await Promise.all(
+        Object.entries(toolsButtonsParagraphs).map(async ([buttonName, { paragraphs }]) => {
+          const paragraphEmbedding = await model.embed(paragraphs); // Embed paragraphs as array
+          const similarity = cosineSimilarity(
+            inputEmbedding.arraySync()[0],
+            paragraphEmbedding.arraySync()[0]
+          );
+          return { buttonName, similarity };
+        })
       );
 
-      if (similarity > highestSimilarity) {
-        highestSimilarity = similarity;
-        bestMatch = buttonName;
-      }
-    }
+      const bestMatch = similarities.reduce((prev, curr) =>
+        curr.similarity > prev.similarity ? curr : prev
+      );
 
-    setHighlightedButton(bestMatch); // Set the matching button as highlighted
+      setHighlightedButton(bestMatch.buttonName);
+    } catch (error) {
+      console.error('Error computing similarity:', error);
+    }
   };
 
   // Monitor chat messages and trigger similarity computation
@@ -113,8 +129,8 @@ const Tools: React.FC = () => {
   return (
     <div
       className={styles['tools-container']}
-      style={{ transform: `translate(${position.x}px, ${position.y}px)` }} // Positioning applied via inline styles
-      onMouseDown={handleMouseDown} // Attach mouse down event to initiate drag
+      style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+      onMouseDown={handleMouseDown}
     >
       <div className={styles['button-group']}>
         {Object.keys(toolsButtonsParagraphs).map((buttonName) => (
@@ -128,7 +144,7 @@ const Tools: React.FC = () => {
             {buttonName}
           </button>
         ))}
-        {highlightedButton && <div className={styles['flashing-arrow']} />} {/* Flashing arrow */}
+        {highlightedButton && <div className={styles['flashing-arrow']} />}
       </div>
     </div>
   );
