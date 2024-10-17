@@ -1,6 +1,6 @@
 // File: components/organisms/Tools.tsx
 
-import React, { useState, useRef, useEffect } from 'react'; // Updated to include useState, useRef, useEffect
+import React, { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from 'store/store';
 import * as use from '@tensorflow-models/universal-sentence-encoder'; // TensorFlow.js
@@ -83,17 +83,13 @@ const Tools: React.FC = () => {
   }, [messages, model]);
 
   const cosineSimilarity = (vecA: number[], vecB: number[]) => {
-    console.debug('Calculating cosine similarity');
     const dotProduct = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
     const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
     const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
-    const similarity = dotProduct / (magnitudeA * magnitudeB);
-    console.debug(`Cosine similarity: ${similarity}`);
-    return similarity;
+    return dotProduct / (magnitudeA * magnitudeB);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    console.debug('Mouse down event detected');
     setIsDragging(true);
     dragItem.current = e.currentTarget as HTMLDivElement;
     dragStartPosition.current = { x: e.clientX - position.x, y: e.clientY - position.y };
@@ -105,23 +101,19 @@ const Tools: React.FC = () => {
         x: e.clientX - dragStartPosition.current.x,
         y: e.clientY - dragStartPosition.current.y,
       };
-      console.debug(`Dragging to position: ${JSON.stringify(newPosition)}`);
       setPosition(newPosition);
     }
   };
 
   const handleMouseUp = () => {
-    console.debug('Mouse up event detected, stopping drag');
     setIsDragging(false);
   };
 
   useEffect(() => {
     if (isDragging) {
-      console.debug('Adding drag event listeners');
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
     } else {
-      console.debug('Removing drag event listeners');
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     }
@@ -139,17 +131,19 @@ const Tools: React.FC = () => {
     >
       <div className={styles['button-group']}>
         {Object.keys(toolsButtonsParagraphs).map((buttonName) => (
-          <button
-            key={buttonName}
-            className={`${styles['right-edge-button']} ${
-              highlightedButton === buttonName ? styles['highlight'] : ''
-            }`}
-            onClick={() => openInNewTab(toolsButtonsParagraphs[buttonName].url)}
-          >
-            {buttonName}
-          </button>
+          <div key={buttonName} className={styles['lazy-arrow-container']}>
+            <button
+              className={`${styles['right-edge-button']} ${
+                highlightedButton === buttonName ? styles['highlight'] : ''
+              }`}
+              onClick={() => openInNewTab(toolsButtonsParagraphs[buttonName].url)}
+            >
+              {buttonName}
+            </button>
+            {/* Flashing arrow next to every button */}
+            <div className={styles['flashing-arrow']} />
+          </div>
         ))}
-        {highlightedButton && <div className={styles['flashing-arrow']} />}
       </div>
     </div>
   );
