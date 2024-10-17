@@ -24,11 +24,9 @@ const Tools: React.FC = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  // Function to find the matching button, prioritizing button names
   const findMatchingButton = (message: string): string => {
     message = message.toLowerCase(); // Normalize to lowercase for case-insensitive matching
 
-    // 1. Check if any button name matches the message
     const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) =>
       message.includes(buttonName.toLowerCase())
     );
@@ -37,27 +35,30 @@ const Tools: React.FC = () => {
       return matchingButtonName; // Return the button name if found
     }
 
-    // 2. If no button name matches, search in the paragraph text
     for (const [buttonName, { paragraph }] of Object.entries(toolsButtonsParagraphs)) {
       if (paragraph.toLowerCase().includes(message)) {
         return buttonName; // Return the button name if the paragraph matches
       }
     }
 
-    // 3. Default to the first button if no match is found
-    return Object.keys(toolsButtonsParagraphs)[0];
+    return Object.keys(toolsButtonsParagraphs)[0]; // Default to the first button
+  };
+
+  const getLatestBotMessage = () => {
+    const botMessages = messages.filter((msg) => msg.sender === 'bot');
+    return botMessages.length > 0 ? botMessages[botMessages.length - 1].text : '';
   };
 
   useEffect(() => {
-    if (messages.length > 0) {
-      const latestMessage = messages[messages.length - 1].text;
-      const matchingButton = findMatchingButton(latestMessage);
+    const latestBotMessage = getLatestBotMessage(); // Get the latest bot message
+    if (latestBotMessage) {
+      const matchingButton = findMatchingButton(latestBotMessage);
 
       if (matchingButton !== highlightedButton) {
         console.debug(`Matching button found: ${matchingButton}`);
         setHighlightedButton(matchingButton);
 
-        // Combine button name, paragraph, and URL into a single message text
+        // Combine button name, paragraph, and URL into a single message text (if needed)
         // const buttonToSend = `***${matchingButton || ''}***: `;
         // const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
         // const urlToSend = `${toolsButtonsParagraphs[matchingButton].url || ''}`;
