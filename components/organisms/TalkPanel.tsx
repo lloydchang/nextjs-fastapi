@@ -1,5 +1,3 @@
-// File: components/organisms/TalkPanel.tsx
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -114,7 +112,10 @@ const TalkPanel: React.FC = () => {
 
   const sendTranscriptForTalk = async (query: string, talk: Talk) => {
     try {
-      if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) {
+      if (
+        lastDispatchedTalkId.current === talk.title ||
+        sentMessagesRef.current.has(talk.title)
+      ) {
         console.log(`Skipping already dispatched talk: ${talk.title}`);
         return;
       }
@@ -123,14 +124,20 @@ const TalkPanel: React.FC = () => {
       lastDispatchedTalkId.current = talk.title;
       sentMessagesRef.current.add(talk.title);
 
-      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
+      const messageParts = [
+        query,
+        talk.title,
+        talk.transcript,
+        talk.sdg_tags[0] || '',
+      ];
 
       for (const part of messageParts) {
         console.log(`Sending message part: ${part}`);
         const result = await dispatch(sendMessage({ text: part, hidden: true }));
+        console.log('sendMessage result:', result);
 
-        if (result.error) {
-          console.error(`Failed to send message: ${part}`, result.error);
+        if (sendMessage.rejected.match(result)) {
+          console.error(`Failed to send message: ${part}`, result.payload);
           dispatch(setApiError(`Failed to send message: ${part}`));
           return;
         }
@@ -147,14 +154,23 @@ const TalkPanel: React.FC = () => {
     for (const talk of talks) {
       try {
         await sendTranscriptForTalk(query, talk);
-        break;
-      } catch {}
+        // If successful, exit the loop
+        return;
+      } catch {
+        // Continue to the next talk if there's an error
+      }
     }
+    // If all talks failed
     dispatch(setApiError('Try searching for a different word.'));
   };
 
   const openTranscriptInNewTab = () => {
-    if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    if (selectedTalk)
+      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+  };
+
+  const shuffleTalks = () => {
+    dispatch(setTalks(shuffleArray(talks)));
   };
 
   return (
