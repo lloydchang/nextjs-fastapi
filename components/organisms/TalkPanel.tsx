@@ -2,114 +2,87 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
-import { performSearch, debouncedPerformSearch } from 'components/utils/apiUtils';
-import TalkItem from './TalkItem';
-import LoadingSpinner from './LoadingSpinner';
+import { setTalks, setSelectedTalk } from 'store/talkSlice';
+import { setLoading, setApiError } from 'store/apiSlice';
+import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { shuffleArray } from 'components/utils/talkPanelUtils';
+import TalkItem from './TalkItem';
+import LoadingSpinner from './LoadingSpinner';
+import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
+import { performSearch } from 'components/utils/apiUtils'; // Import search logic
 
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
   const { loading, error } = useSelector((state: RootState) => state.api);
 
-  const [searchQuery, setSearchQuery] = useState<string>('SDG');
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const hasSearchedOnce = useRef(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const isSearchInProgress = useRef(false); // Track ongoing searches
+  const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Debounce search input to prevent unnecessary API calls
+  const debouncedPerformSearch = useCallback(
+    debounce((query: string) => {
+      dispatch(performSearch(query));
+    }, 500),
+    [dispatch]
+  );
+
+  // Perform the initial search on mount
   useEffect(() => {
     console.log('Component mounted. Performing initial search...');
-
-    if (!hasSearchedOnce.current) {
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-      dispatch(performSearch(searchQuery, controller.signal));
-      hasSearchedOnce.current = true;
-    }
+    if (searchQuery) debouncedPerformSearch(searchQuery);
 
     return () => {
-      console.log('Cleaning up tasks on unmount...');
-      abortControllerRef.current?.abort();
       debouncedPerformSearch.cancel();
     };
-  }, [dispatch, searchQuery]);
+  }, [searchQuery, debouncedPerformSearch]);
 
-  const handleSearch = () => {
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    debouncedPerformSearch(searchQuery, dispatch, controller.signal);
+  const handleSearchResults = (data: Talk[]) => {
+    console.log('Handling search results:', data);
+    const uniqueTalks = shuffleArray(data).filter(
+      (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
+    );
+
+    dispatch(setTalks(uniqueTalks));
+    if (uniqueTalks.length > 0) dispatch(setSelectedTalk(uniqueTalks[0]));
   };
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
-      console.log(`Opening transcript for ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
     }
-  };
-
-  const shuffleTalks = () => {
-    const shuffledTalks = shuffleArray(talks);
-    console.log('Shuffled talks:', shuffledTalks);
-    dispatch(setTalks(shuffledTalks));
   };
 
   return (
     <div className={styles.TalkPanel}>
       {selectedTalk && (
-        <div className={styles.nowPlaying}>
-          <iframe
-            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
-            width="100%"
-            height="400px"
-            allow="autoplay; fullscreen; encrypted-media"
-            className={styles.videoFrame}
-            title={`${selectedTalk.title} video`}
-          />
-        </div>
+        <iframe
+          src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
+          width="100%"
+          height="400"
+          allow="autoplay; fullscreen; encrypted-media"
+        />
       )}
 
       <div className={styles.searchContainer}>
-        <div className={styles.searchInputWrapper}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className={styles.searchInput}
-            placeholder="Search for talks..."
-          />
-          {loading && <LoadingSpinner />}
-        </div>
-        <button
-          onClick={handleSearch}
-          className={`${styles.button} ${styles.searchButton}`}
-          disabled={loading}
-        >
-          Search
-        </button>
-        <button
-          onClick={shuffleTalks}
-          className={`${styles.button} ${styles.shuffleButton}`}
-        >
-          Shuffle
-        </button>
-        {selectedTalk && (
-          <button
-            onClick={openTranscriptInNewTab}
-            className={`${styles.button} ${styles.tedButton}`}
-          >
-            Transcript
-          </button>
-        )}
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && debouncedPerformSearch(searchQuery)}
+        />
+        {loading && <LoadingSpinner />}
       </div>
 
-      {error && <div className={styles.errorContainer}>{error}</div>}
+      {error && <div>{error}</div>}
 
-      <div className={styles.scrollableContainer}>
+      <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
           <TalkItem
             key={`${talk.url}-${index}`}
@@ -118,6 +91,10 @@ const TalkPanel: React.FC = () => {
           />
         ))}
       </div>
+
+      {selectedTalk && (
+        <button onClick={openTranscriptInNewTab}>View Transcript</button>
+      )}
     </div>
   );
 };

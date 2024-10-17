@@ -4,20 +4,17 @@ import axios from 'axios';
 import { setTalks, setSelectedTalk, addSearchHistory } from 'store/talkSlice';
 import { setLoading, setApiError, clearApiError } from 'store/apiSlice';
 import { AppDispatch } from 'store/store';
-import { debounce } from 'lodash';
 
 /**
- * Performs a search for talks using the provided query.
- * This function is called from the TalkPanel component.
+ * Perform an API search for talks with proper error handling.
  */
-export const performSearch = (query: string, signal?: AbortSignal) => async (dispatch: AppDispatch) => {
+export const performSearch = (query: string) => async (dispatch: AppDispatch) => {
   dispatch(setLoading(true));
   dispatch(clearApiError());
 
   try {
     const response = await axios.get(
-      `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`,
-      { signal }
+      `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`
     );
 
     if (response.status !== 200) throw new Error(response.statusText);
@@ -30,7 +27,6 @@ export const performSearch = (query: string, signal?: AbortSignal) => async (dis
     }));
 
     console.log('Search results:', data);
-
     dispatch(setTalks(data));
     dispatch(addSearchHistory(query));
 
@@ -38,20 +34,9 @@ export const performSearch = (query: string, signal?: AbortSignal) => async (dis
       dispatch(setSelectedTalk(data[0]));
     }
   } catch (error) {
-    if (axios.isCancel(error)) {
-      console.log('Search aborted: CanceledError');
-    } else {
-      console.error('Error during search:', error);
-      dispatch(setApiError('Error fetching talks.'));
-    }
+    console.error('Error during search:', error);
+    dispatch(setApiError(error.message || 'Failed to fetch talks.'));
   } finally {
     dispatch(setLoading(false));
   }
 };
-
-export const debouncedPerformSearch = debounce(
-  (query: string, dispatch: AppDispatch, signal: AbortSignal) => {
-    dispatch(performSearch(query, signal));
-  },
-  500
-);
