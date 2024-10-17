@@ -22,28 +22,36 @@ const TalkPanel: React.FC = () => {
   const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const isSearchInProgress = useRef(false); 
-  const hasSearchedOnce = useRef(false); 
+  const isSearchInProgress = useRef(false);
+  const hasSearchedOnce = useRef(false);
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Debounced search to optimize API calls
+  // Log Redux state to console for debugging.
+  const logState = (label: string) => {
+    console.log(`[${label}] Redux State:`, { talks, selectedTalk, loading, error });
+  };
+
+  // Debounced search to prevent excessive API calls.
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
+      console.log(`Debounced search initiated for query: ${query}`);
       dispatch(performSearch(query));
     }, 500),
     [dispatch]
   );
 
-  // Ensure the initial search only runs once
+  // Ensure the initial search runs only once.
   useEffect(() => {
+    console.log('Component mounted.');
+
     if (!hasSearchedOnce.current) {
-      console.log('Component mounted. Performing initial search...');
+      console.log('Performing initial search...');
       debouncedPerformSearch(searchQuery);
       hasSearchedOnce.current = true;
     }
 
     return () => {
-      console.log('Cleaning up tasks on unmount...');
+      console.log('Component unmounted. Cancelling debounced search...');
       debouncedPerformSearch.cancel();
     };
   }, [searchQuery, debouncedPerformSearch]);
@@ -54,26 +62,32 @@ const TalkPanel: React.FC = () => {
       (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
     );
 
+    console.log('Unique talks after filtering:', uniqueTalks);
     dispatch(setTalks(uniqueTalks));
 
     if (uniqueTalks.length > 0) {
       const firstTalk = uniqueTalks[0];
       dispatch(setSelectedTalk(firstTalk));
 
-      // Send the first talk's data as a message
+      // Dispatch message with talk title
+      console.log(`Sending message with talk title: ${firstTalk.title}`);
       dispatch(sendMessage({ text: `Selected talk: ${firstTalk.title}`, hidden: false }));
-      console.log('Message sent with talk details:', firstTalk.title);
     }
+
+    logState('After handling search results');
   };
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
       console.log(`Opening transcript for ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    } else {
+      console.log('No talk selected. Cannot open transcript.');
     }
   };
 
   const shuffleTalks = () => {
+    console.log('Shuffling talks...');
     const shuffledTalks = shuffleArray(talks);
     console.log('Shuffled talks:', shuffledTalks);
     dispatch(setTalks(shuffledTalks));
@@ -98,15 +112,23 @@ const TalkPanel: React.FC = () => {
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && debouncedPerformSearch(searchQuery)}
+          onChange={(e) => {
+            console.log('Search query changed:', e.target.value);
+            setSearchQuery(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              console.log('Enter key pressed. Performing search...');
+              debouncedPerformSearch(searchQuery);
+            }
+          }}
           className={styles.searchInput}
           placeholder="Search for talks..."
         />
         {loading && <LoadingSpinner />}
       </div>
 
-      {error && <div>{error}</div>}
+      {error && <div className={styles.errorContainer}>{error}</div>}
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
