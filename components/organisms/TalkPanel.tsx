@@ -4,52 +4,58 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from 'store/store';
 import axios from 'axios';
+import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
 import { setLoading, setApiError } from 'store/apiSlice';
 import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
-import { determineInitialKeyword } from 'components/utils/talkPanelUtils';
-import { debounce } from 'lodash';
+import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
+import { localStorageUtil } from 'components/utils/localStorage';
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
+import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
+  const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState<string>(determineInitialKeyword());
 
-  // Use flags and references to prevent redundant behavior.
   const isSearchInProgress = useRef(false);
-  const hasSearchedOnce = useRef(false); // Prevent repeated initial searches
+  const hasSearchedOnce = useRef(false); 
+  const lastQueryRef = useRef<string>(''); 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
+  const sentMessagesRef = useRef<Set<string>>(new Set());
+
+  const logState = () => {
+    console.log('Redux State:', { talks, selectedTalk, loading, error });
+  };
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
-      console.log('Debounced search initiated:', query);
+      console.log(`Debounced search initiated: ${query}`);
       performSearch(query);
     }, 500),
     []
   );
 
-  // **Initialize search on mount, but guard against Strict Mode remounts.**
   useEffect(() => {
-    console.log('TalkPanel - Component mounted. Initializing search...');
+    console.log('Component mounted. Initializing search...');
+    logState();
 
     if (!hasSearchedOnce.current) {
-      performSearch(searchQuery); // Perform search only once.
+      console.log('Performing initial search...');
+      performSearch(searchQuery);
       hasSearchedOnce.current = true;
     }
 
     return () => {
       console.log('Cleaning up tasks on unmount...');
-      if (abortControllerRef.current) {
-        console.log('Aborting task:', abortControllerRef.current);
-        abortControllerRef.current.abort();
-      }
+      abortControllerRef.current?.abort();
       debouncedPerformSearch.cancel();
     };
   }, [searchQuery]);
@@ -58,15 +64,18 @@ const TalkPanel: React.FC = () => {
     console.log(`Performing search with query: ${query}`);
     const trimmedQuery = query.trim().toLowerCase();
 
-    if (isSearchInProgress.current) {
-      console.log('Search in progress. Aborting previous search...');
-      abortControllerRef.current?.abort();
+    if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) {
+      console.log(`Skipping duplicate search for query: ${trimmedQuery}`);
+      return;
     }
 
+    abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
     isSearchInProgress.current = true;
+    lastQueryRef.current = trimmedQuery;
+    dispatch(setApiError(null));
     dispatch(setLoading(true));
 
     try {
@@ -84,22 +93,47 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || 'Transcript not available',
       }));
 
-      console.log('Search results:', data);
-      dispatch(setTalks(data));
-      if (!selectedTalk && data.length) {
-        dispatch(setSelectedTalk(data[0]));
-      }
+      console.log('Search response data:', data);
+      handleSearchResults(trimmedQuery, data);
     } catch (error) {
-      if (axios.isCancel(error)) {
-        console.log('Search aborted:', error);
-      } else {
-        console.error('Search failed:', error);
-        dispatch(setApiError('Failed to fetch talks.'));
-      }
+      console.error('Error during search:', error);
+      if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
+      console.log('Search completed.');
     }
+  };
+
+  const handleSearchResults = (query: string, data: Talk[]) => {
+    console.log(`Handling search results for query: ${query}. Data:`, data);
+    const processedData = shuffleArray(data);
+    const uniqueTalks = processedData.filter(
+      (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
+    );
+
+    console.log('Unique talks after filtering:', uniqueTalks);
+    dispatch(setTalks(uniqueTalks));
+
+    if (!selectedTalk && uniqueTalks.length > 0) {
+      dispatch(setSelectedTalk(uniqueTalks[0]));
+      console.log('Selected first talk:', uniqueTalks[0]);
+    }
+
+    localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
+  };
+
+  const openTranscriptInNewTab = () => {
+    if (selectedTalk) {
+      console.log(`Opening transcript for ${selectedTalk.title}`);
+      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    }
+  };
+
+  const shuffleTalks = () => {
+    const shuffledTalks = shuffleArray(talks);
+    console.log('Shuffled talks:', shuffledTalks);
+    dispatch(setTalks(shuffledTalks));
   };
 
   return (
@@ -112,26 +146,55 @@ const TalkPanel: React.FC = () => {
             height="400px"
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
-            title={selectedTalk.title}
+            title={`${selectedTalk.title} video`}
           />
         </div>
       )}
 
       <div className={styles.searchContainer}>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && debouncedPerformSearch(searchQuery)}
-          className={styles.searchInput}
-          placeholder="Search for talks..."
-        />
-        <LoadingSpinner loading={isSearchInProgress.current} />
+        <div className={styles.searchInputWrapper}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && performSearch(searchQuery)}
+            className={styles.searchInput}
+            placeholder="Search for talks..."
+          />
+          {loading && <LoadingSpinner />}
+        </div>
+        <button
+          onClick={() => performSearch(searchQuery)}
+          className={`${styles.button} ${styles.searchButton}`}
+          disabled={loading}
+        >
+          Search
+        </button>
+        <button
+          onClick={shuffleTalks}
+          className={`${styles.button} ${styles.shuffleButton}`}
+        >
+          Shuffle
+        </button>
+        {selectedTalk && (
+          <button
+            onClick={openTranscriptInNewTab}
+            className={`${styles.button} ${styles.tedButton}`}
+          >
+            Transcript
+          </button>
+        )}
       </div>
 
-      <div className={styles.scrollableContainer}>
-        {talks.map((talk) => (
-          <TalkItem key={talk.url} talk={talk} selected={selectedTalk?.title === talk.title} />
+      {error && <div className={styles.errorContainer}>{error}</div>}
+
+      <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
+        {talks.map((talk, index) => (
+          <TalkItem
+            key={`${talk.url}-${index}`}
+            talk={talk}
+            selected={selectedTalk?.title === talk.title}
+          />
         ))}
       </div>
     </div>
