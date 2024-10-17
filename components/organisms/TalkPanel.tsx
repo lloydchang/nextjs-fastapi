@@ -13,31 +13,25 @@ import { Talk } from 'types';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import { localStorageUtil } from 'components/utils/localStorage';
 import TalkItem from './TalkItem';
-import LoadingSpinner from './LoadingSpinner'; // Your existing loading spinner
+import LoadingSpinner from './LoadingSpinner';
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
 
-// Helper function to convert SDG tags to their full titles
-const getSdgTitles = (sdgTags: string[]): string[] =>
-  sdgTags.map(tag => sdgTitleMap[tag] || tag); // Fallback to raw tag if not found
-
-// Helper function for debug logging
-const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
+// Helper functions...
 
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
-  const { isLoading, error } = useSelector((state: RootState) => state.api); // Updated to isLoading
+  const { isLoading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const isStrictMode = useRef(false); // Track if in Strict Mode
-  const mountCounter = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const isSearchInProgress = useRef(false);
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
@@ -45,27 +39,18 @@ const TalkPanel: React.FC = () => {
   );
 
   useEffect(() => {
-    mountCounter.current += 1;
-
-    if (mountCounter.current === 1) {
-      isStrictMode.current = true; // Initial mount in Strict Mode
-      debugLog('Initial mount detected; entering strict mode.');
-    } else {
-      isStrictMode.current = false; // Subsequent mounts are normal
-      debugLog('Subsequent mount detected; exiting strict mode.');
+    if (!initialized.current) {
+      initialized.current = true;
       performSearch(searchQuery);
     }
 
     return () => {
-      if (!isStrictMode.current) {
-        abortControllerRef.current?.abort();
-        debugLog('Cleanup: aborting any ongoing search requests.');
-      }
+      abortControllerRef.current?.abort();
       debouncedPerformSearch.cancel();
     };
-  }, []);
+  }, [searchQuery, performSearch, debouncedPerformSearch]);
 
-  const performSearch = async (query: string) => {
+  const performSearch = useCallback(async (query: string) => {
     const trimmedQuery = query.trim().toLowerCase();
     debugLog(`Performing search with query: "${trimmedQuery}"`);
 
@@ -101,9 +86,7 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || '',
       }));
 
-      if (!isStrictMode.current) {
-        handleSearchResults(data);
-      }
+      handleSearchResults(data);
     } catch (error) {
       if (!axios.isCancel(error)) {
         console.error('[performSearch] Error fetching talks:', error);
@@ -114,11 +97,11 @@ const TalkPanel: React.FC = () => {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
-  };
+  }, [dispatch]);
 
-  const handleSearchResults = (data: Talk[]) => {
+  const handleSearchResults = useCallback((data: Talk[]) => {
     debugLog(`Handling search results: ${data.length} talks received.`);
-    dispatch(setTalks(data)); // Directly set talks without deduplication logic
+    dispatch(setTalks(data));
 
     if (data.length > 0) {
       const firstTalk = data[0];
@@ -127,9 +110,9 @@ const TalkPanel: React.FC = () => {
     }
 
     localStorageUtil.setItem('lastSearchData', JSON.stringify(data));
-  };
+  }, [dispatch]);
 
-  const sendTranscriptAsMessage = async (talk: Talk) => {
+  const sendTranscriptAsMessage = useCallback(async (talk: Talk) => {
     if (sentMessagesRef.current.has(talk.title)) {
       debugLog(`Message for talk "${talk.title}" already sent, skipping.`);
       return;
@@ -137,13 +120,8 @@ const TalkPanel: React.FC = () => {
 
     sentMessagesRef.current.add(talk.title);
     debugLog(`Sending transcript for talk: ${talk.title}`);
- 
+
     const messageParts = [
-      // `Presenter: ${talk.presenterDisplayName}`,
-      // `Talk: ${talk.title}`,
-      // `URL: ${talk.url}`,
-      // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
-      // `Transcript: ${talk.transcript}`,
       `${talk.transcript} —— ${talk.title}\n\n${getSdgTitles(talk.sdg_tags).join(', ')}`,
     ];
 
@@ -157,25 +135,25 @@ const TalkPanel: React.FC = () => {
       }));
       debugLog(`Sent message part: ${part}`);
     }
-  };
+  }, [dispatch]);
 
-  const openTranscriptInNewTab = () => {
+  const openTranscriptInNewTab = useCallback(() => {
     if (selectedTalk) {
       debugLog(`Opening transcript for: ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
     }
-  };
+  }, [selectedTalk]);
 
-  const shuffleTalks = () => {
+  const shuffleTalks = useCallback(() => {
     debugLog('Shuffling talks.');
     dispatch(setTalks(shuffleArray(talks)));
-  };
+  }, [dispatch, talks]);
 
   return (
     <div className={styles.TalkPanel}>
-      {isLoading && <LoadingSpinner />} {/* Ensure this is the SDG wheel component */}
+      {isLoading && <LoadingSpinner />}
 
-      {!isStrictMode.current && selectedTalk && (
+      {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
             src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
