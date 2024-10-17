@@ -1,6 +1,6 @@
 // File: components/atoms/ChatMessage.tsx
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -42,6 +42,7 @@ const palette = [
   '#BCBD22', '#17BECF',
 ];
 
+// Generate a color for a persona based on its name
 const hashPersonaToColor = (persona: string): string => {
   let hash = 0;
   for (let i = 0; i < persona.length; i++) {
@@ -51,6 +52,7 @@ const hashPersonaToColor = (persona: string): string => {
   return palette[index];
 };
 
+// Convert plain URLs into clickable Markdown links
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
   const urlPattern = /(?<!\S)(https?:\/\/[\w.-]+\.[\w]{2,}|www\.[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
   return text.replace(urlPattern, (match) => {
@@ -68,22 +70,26 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   role,
 }) => {
   const { openModal, closeModal, activeModal } = useModal(); // Use modal context
-  const displayPersona = persona || sender;
-  const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
-  const isUser = role === 'user';
+  const [showFullMessage, setShowFullMessage] = useState(false); // Control hover display
 
-  const processedText = convertPlainUrlsToMarkdownLinks(text);
-  const shouldShorten = text.split(' ').length > 10 && !isFullScreen;
-  const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
-  const modalId = `modal-${text}`; // Unique ID based on message text
-  const isModalOpen = activeModal === modalId; // Check if this modal is active
+  const displayPersona = persona || sender; // Use sender if persona is missing
+  const personaColor = persona ? hashPersonaToColor(persona) : '#777777'; // Generate persona color
+  const isUser = role === 'user'; // Determine if message is from the user
 
-  // Open the modal using the modal context
+  const processedText = convertPlainUrlsToMarkdownLinks(text); // Process links in text
+  const shouldShorten = text.split(' ').length > 10 && !isFullScreen; // Check if text should be shortened
+  const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text; // Shorten text if needed
+
+  const modalId = `modal-${text}`; // Unique ID for each message modal
+  const isModalOpen = activeModal === modalId; // Check if this modal is open
+
+  // Open modal when the message is clicked
   const handleOpenModal = useCallback(() => {
-    openModal(modalId); // Open this specific modal
+    openModal(modalId); // Open this modal via context
     console.debug('Opening modal for message:', text);
   }, [modalId, openModal, text]);
 
+  // Render markdown with plugins
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -94,10 +100,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     </ReactMarkdown>
   );
 
-  // Handle closing the modal with the Escape key
+  // Close modal on Escape key press
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeModal(); // Close modal on Escape
+      if (event.key === 'Escape') closeModal(); // Close on Escape
     };
 
     if (isModalOpen) {
@@ -106,9 +112,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [isModalOpen, closeModal]);
 
+  // Handle keyboard interactions (Enter/Space to open modal)
   const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      handleOpenModal(); // Open modal on Enter or Space key
+      handleOpenModal(); // Open modal on Enter or Space
     }
   };
 

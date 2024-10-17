@@ -2,24 +2,23 @@
 
 import React, { useEffect } from 'react';
 import styles from 'styles/components/atoms/Modal.module.css';
-import { useModal } from 'components/state/context/ModalContext'; // Correct import
+import { useModal } from 'components/state/context/ModalContext'; // Import useModal
 
 interface ModalProps {
   modalId: string; // Unique identifier for this modal
-  onConfirm: () => void;
   title: string;
-  message: React.ReactNode; // Accept JSX
+  message: React.ReactNode; // Supports JSX
   confirmText: string;
+  onConfirm: () => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ modalId, onConfirm, title, message, confirmText }) => {
+const Modal: React.FC<ModalProps> = ({ modalId, title, message, confirmText, onConfirm }) => {
   const { activeModal, closeModal } = useModal(); // Use modal context
   const isOpen = activeModal === modalId; // Check if this modal is active
 
-  // Close modal when Escape key is pressed
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeModal(); // Close modal on Escape
+      if (event.key === 'Escape') closeModal(); // Close modal on Escape key
     };
 
     if (isOpen) {
@@ -28,8 +27,7 @@ const Modal: React.FC<ModalProps> = ({ modalId, onConfirm, title, message, confi
     }
   }, [isOpen, closeModal]);
 
-  // Return null if the modal is not open
-  if (!isOpen) return null;
+  if (!isOpen) return null; // Don't render if the modal is not active
 
   return (
     <div className={styles.modalOverlay} onClick={closeModal} role="dialog" aria-modal="true">
@@ -38,7 +36,7 @@ const Modal: React.FC<ModalProps> = ({ modalId, onConfirm, title, message, confi
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
       >
         <h2>{title}</h2>
-        <div>{message}</div> {/* Render JSX */}
+        <div>{message}</div> {/* Render JSX content */}
         <div className={styles.buttons}>
           <button className={styles.cancelButton} onClick={closeModal}>
             Cancel
