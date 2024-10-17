@@ -4,17 +4,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
 import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
-import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
-import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
+import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers'; // Import the centralized handler
+import { isValidConfig } from 'app/api/chat/utils/validation'; // Import the shared utility
 
 /**
  * Union type for text model configuration keys.
@@ -37,20 +33,6 @@ const maxContextMessages = 100; // Keep only the last 100 messages (adjust based
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
-
-/**
- * Helper function to check if a configuration value is valid.
- * @param value - The configuration value to validate.
- * @returns True if valid, else false.
- */
-function isValidConfig(value: any): boolean {
-  return (
-    typeof value === 'string' &&
-    value.trim() !== '' &&
-    value.trim().toLowerCase() !== 'undefined' &&
-    value.trim().toLowerCase() !== 'null'
-  );
-}
 
 /**
  * Handles POST requests to the chat API.
@@ -122,96 +104,8 @@ export async function POST(request: NextRequest) {
         async start(controller) {
           const botFunctions: BotFunction[] = [];
 
-          /**
-           * Adds a bot function to the botFunctions array if its configuration is valid.
-           * @param personaPrefix - The persona prefix for the bot.
-           * @param textModelConfigKey - The key in AppConfig for the text model.
-           * @param endpointEnvVars - The environment variables required for the endpoint.
-           * @param handlerFunction - The function to handle text processing.
-           */
-          const addBotFunction = (
-            personaPrefix: string,
-            textModelConfigKey: TextModelConfigKey, // Use union type
-            endpointEnvVars: string[],
-            handlerFunction: (input: { userPrompt: string; textModel: string }, config: AppConfig) => Promise<string | null>,
-          ) => {
-            if (isValidConfig(config[textModelConfigKey]) && validateEnvVars(endpointEnvVars)) {
-              const textModel = config[textModelConfigKey] || "defaultModel";
-
-              botFunctions.push({
-                persona: `${personaPrefix} ${textModel}`,
-                valid: isValidConfig(config[textModelConfigKey]),
-                generate: async (currentContext: any[]) => {
-                  let prompt = config.systemPrompt || '';
-                  if (currentContext.length > 0) {
-                    prompt += `${extractValidMessages(currentContext)}`;
-                  }
-                
-                  if (prompt.trim().length === 0) {
-                    logger.warn(`app/api/chat/route.ts - Prompt for clientId: ${clientId} is empty.`);
-                    return null;
-                  }
-                
-                  // Get the response from the handler function
-                  const botResponse = await handlerFunction({ userPrompt: prompt, textModel }, config);
-                  
-                  if (botResponse && botResponse.trim().length > 0) {
-                    controller.enqueue(
-                      `data: ${JSON.stringify({ persona: `${personaPrefix} ${textModel}`, message: botResponse })}\n\n`
-                    );
-                
-                    context.push({ role: 'bot', content: botResponse, persona: `${personaPrefix} ${textModel}` });
-                    return botResponse; // Return the actual response (string)
-                  }
-                
-                  return null; // If no response or empty response, return null
-                },               
-              });
-            }
-          };
-
-          // Add all bot functions
-          addBotFunction(
-            'Ollama',
-            'ollamaGemmaTextModel',
-            ['OLLAMA_GEMMA_TEXT_MODEL', 'OLLAMA_GEMMA_ENDPOINT'],
-            handleTextWithOllamaGemmaTextModel
-          );
-
-          addBotFunction(
-            'Ollama',
-            'ollamaLlamaTextModel',
-            ['OLLAMA_LLAMA_TEXT_MODEL', 'OLLAMA_LLAMA_ENDPOINT'],
-            handleTextWithOllamaLlamaTextModel
-          );
-
-          addBotFunction(
-            'Cloudflare',
-            'cloudflareGemmaTextModel',
-            ['CLOUDFLARE_GEMMA_TEXT_MODEL', 'CLOUDFLARE_GEMMA_ENDPOINT', 'CLOUDFLARE_GEMMA_BEARER_TOKEN'],
-            handleTextWithCloudflareGemmaTextModel
-          );
-
-          addBotFunction(
-            'Cloudflare',
-            'cloudflareLlamaTextModel',
-            ['CLOUDFLARE_LLAMA_TEXT_MODEL', 'CLOUDFLARE_LLAMA_ENDPOINT', 'CLOUDFLARE_LLAMA_BEARER_TOKEN'],
-            handleTextWithCloudflareLlamaTextModel
-          );
-
-          addBotFunction(
-            'Google Vertex',
-            'googleVertexGemmaTextModel',
-            ['GOOGLE_VERTEX_GEMMA_TEXT_MODEL', 'GOOGLE_VERTEX_GEMMA_ENDPOINT', 'GOOGLE_VERTEX_GEMMA_LOCATION'],
-            handleTextWithGoogleVertexGemmaTextModel
-          );
-
-          addBotFunction(
-            'Google Vertex',
-            'googleVertexLlamaTextModel',
-            ['GOOGLE_VERTEX_LLAMA_TEXT_MODEL', 'GOOGLE_VERTEX_LLAMA_ENDPOINT', 'GOOGLE_VERTEX_LLAMA_LOCATION'],
-            handleTextWithGoogleVertexLlamaTextModel
-          );
+          // Use the centralized addBotFunctions to populate botFunctions
+          addBotFunctions(botFunctions, config);
 
           /**
            * Processes all bot functions and streams their responses.
@@ -226,6 +120,13 @@ export async function POST(request: NextRequest) {
                 if (botResponse && typeof botResponse === 'string') {
                   logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
 
+                  // Stream the response
+                  controller.enqueue(
+                    `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                  );
+
+                  // Update context with bot response
+                  context.push({ role: 'bot', content: botResponse, persona: botPersona });
                   return true;
                 }
                 return false;
