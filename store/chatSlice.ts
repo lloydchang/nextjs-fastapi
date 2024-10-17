@@ -190,14 +190,14 @@ export const sendMessage = (
   localStorage.setItem('clientId', clientId);
 
   const userMessage: Message = {
-    id: uuidv4(),
-    sender: input.sender || 'user',
+    id: uuidv4() || '',
+    sender: input.sender || '',
     text: input.text || '',
-    role: input.role || 'user',
+    role: input.role || '',
     content: input.text || '',
     hidden: input.hidden || false,
-    persona: input.persona,
-    timestamp: Date.now(),
+    persona: input.persona || '',
+    timestamp: Date.now() || '',
   };
 
   dispatch(addMessage(userMessage));
