@@ -63,41 +63,51 @@ const TalkPanel: React.FC = () => {
   const performSearch = async (query: string) => {
     console.log(`Performing search with query: ${query}`);
     const trimmedQuery = query.trim().toLowerCase();
-
+  
     if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) {
       console.log(`Skipping duplicate search for query: ${trimmedQuery}`);
       return;
     }
-
-    abortControllerRef.current?.abort();
+  
+    // Abort the previous search and clear the controller to release memory.
+    if (abortControllerRef.current) {
+      console.log('Aborting previous search...');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null; // Clear reference to avoid leaks
+    }
+  
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
+  
     isSearchInProgress.current = true;
     lastQueryRef.current = trimmedQuery;
     dispatch(setApiError(null));
     dispatch(setLoading(true));
-
+  
     try {
       const response = await axios.get(
         `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
         { signal: controller.signal }
       );
-
+  
       if (response.status !== 200) throw new Error(response.statusText);
-
+  
       const data: Talk[] = response.data.results.map((result: any) => ({
         title: result.document.slug.replace(/_/g, ' '),
         url: `https://www.ted.com/talks/${result.document.slug}`,
         sdg_tags: result.document.sdg_tags || [],
         transcript: result.document.transcript || 'Transcript not available',
       }));
-
+  
       console.log('Search response data:', data);
       handleSearchResults(trimmedQuery, data);
     } catch (error) {
-      console.error('Error during search:', error);
-      if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
+      if (axios.isCancel(error)) {
+        console.log('Search aborted: Expected CanceledError'); // Suppress noisy logs
+      } else {
+        console.error('Error during search:', error);
+        dispatch(setApiError('Error fetching talks.'));
+      }
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
