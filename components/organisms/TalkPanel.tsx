@@ -27,10 +27,11 @@ const TalkPanel: React.FC = () => {
 
   const isSearchInProgress = useRef(false);
   const initialSearchDone = useRef(false); 
+  const lastQueryRef = useRef<string>(''); // Correctly initialize lastQueryRef
   const abortControllerRef = useRef<AbortController | null>(null);
   const sentMessagesRef = useRef<Set<string>>(new Set());
-  const activeTasksRef = useRef<AbortController[]>([]); // Track active tasks
-  const scrollableContainerRef = useRef<HTMLDivElement | null>(null); // Ensure ref is initialized
+  const activeTasksRef = useRef<AbortController[]>([]);
+  const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
@@ -40,7 +41,6 @@ const TalkPanel: React.FC = () => {
     []
   );
 
-  // Ensure all active tasks are aborted when unmounting.
   useEffect(() => {
     if (!initialSearchDone.current) {
       console.log('TalkPanel - Initial render detected. Performing search.');
@@ -58,7 +58,6 @@ const TalkPanel: React.FC = () => {
     };
   }, [searchQuery]);
 
-  // Helper to abort a specific task and track it in the active tasks list.
   const createAbortController = () => {
     const controller = new AbortController();
     activeTasksRef.current.push(controller);
@@ -84,9 +83,11 @@ const TalkPanel: React.FC = () => {
     console.log(`Performing search with query: ${query}`);
     const trimmedQuery = query.trim().toLowerCase();
 
-    if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) return;
+    if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) {
+      console.log('Skipping duplicate search:', trimmedQuery);
+      return;
+    }
 
-    // Abort any ongoing search before starting a new one.
     if (abortControllerRef.current) {
       console.log('Aborting previous search...');
       abortControllerRef.current.abort();
