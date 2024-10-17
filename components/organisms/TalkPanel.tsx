@@ -4,66 +4,101 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
 import { setLoading, setApiError } from 'store/apiSlice';
 import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
-import { shuffleArray } from 'components/utils/talkPanelUtils';
+import { sdgTitleMap } from 'components/constants/sdgTitles';
+import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
+import { localStorageUtil } from 'components/utils/localStorage';
 import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner';
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
-import { performSearch } from 'components/utils/apiUtils';
 
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
   const { loading, error } = useSelector((state: RootState) => state.api);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const hasSearchedOnce = useRef(false);
-  const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
+  const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
+  const isSearchInProgress = useRef(false);
+  const initialRender = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const lastQueryRef = useRef<string>('');
+  const sentMessagesRef = useRef<Set<string>>(new Set());
 
-  const logState = (label: string) => {
-    console.log(`[${label}] Redux State:`, { talks, selectedTalk, loading, error });
-  };
+  const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
   const debouncedPerformSearch = useCallback(
-    debounce((query: string) => {
-      console.log(`Debounced search initiated for query: ${query}`);
-      dispatch(performSearch(query));
-    }, 500),
-    [dispatch]
+    debounce((query: string) => performSearch(query), 500),
+    []
   );
 
   useEffect(() => {
-    console.log('Component mounted.');
-
-    if (!hasSearchedOnce.current) {
-      console.log('Performing initial search...');
-      debouncedPerformSearch(searchQuery);
-      hasSearchedOnce.current = true;
+    if (initialRender.current) {
+      performSearch(searchQuery);
+      initialRender.current = false;
     }
-
     return () => {
-      console.log('Component unmounted. Cancelling debounced search...');
+      abortControllerRef.current?.abort();
       debouncedPerformSearch.cancel();
     };
-  }, [searchQuery, debouncedPerformSearch]);
+  }, []);
 
-  const shuffleTalks = () => {
-    console.log('Shuffling talks...');
-    const shuffledTalks = shuffleArray(talks);
-    console.log('Shuffled talks:', shuffledTalks);
-    dispatch(setTalks(shuffledTalks));
+  const performSearch = async (query: string) => {
+    const trimmedQuery = query.trim().toLowerCase();
+    if (isSearchInProgress.current || trimmedQuery === lastQueryRef.current) return;
+
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+    isSearchInProgress.current = true;
+    lastQueryRef.current = trimmedQuery;
+    dispatch(setLoading(true));
+    dispatch(setApiError(null));
+
+    try {
+      const response = await axios.get(
+        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
+        { signal: abortControllerRef.current.signal }
+      );
+
+      if (response.status !== 200) throw new Error(response.statusText);
+
+      const data: Talk[] = response.data.results.map((result: any) => ({
+        title: result.document.slug.replace(/_/g, ' '),
+        url: `https://www.ted.com/talks/${result.document.slug}`,
+        sdg_tags: result.document.sdg_tags || [],
+        transcript: result.document.transcript || 'Transcript not available',
+      }));
+
+      handleSearchResults(data);
+    } catch (error) {
+      if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
+    } finally {
+      dispatch(setLoading(false));
+      isSearchInProgress.current = false;
+    }
+  };
+
+  const handleSearchResults = (data: Talk[]) => {
+    const uniqueTalks = shuffleArray(data).filter(
+      (talk) => !talks.some((existing) => existing.url === talk.url)
+    );
+    dispatch(setTalks(uniqueTalks));
+
+    if (uniqueTalks.length > 0) dispatch(setSelectedTalk(uniqueTalks[0]));
+    localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
   };
 
   const openTranscriptInNewTab = () => {
-    if (selectedTalk) {
-      console.log(`Opening transcript for ${selectedTalk.title}`);
-      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
-    }
+    if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+  };
+
+  const shuffleTalks = () => {
+    dispatch(setTalks(shuffleArray(talks)));
   };
 
   return (
@@ -76,59 +111,45 @@ const TalkPanel: React.FC = () => {
             height="400"
             allow="autoplay; fullscreen; encrypted-media"
             className={styles.videoFrame}
-            title={`${selectedTalk.title} video`}
+            title={selectedTalk.title}
           />
         </div>
       )}
 
       <div className={styles.searchContainer}>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              console.log('Enter key pressed. Performing search...');
-              debouncedPerformSearch(searchQuery);
-            }
-          }}
-          className={styles.searchInput}
-          placeholder="Search for talks..."
-        />
-
-        <div className={styles.buttonsContainer}>
-          <button
-            onClick={() => debouncedPerformSearch(searchQuery)}
-            className={`${styles.button} ${styles.searchButton}`}
-            disabled={loading}
-          >
-            Search
-          </button>
-          <button onClick={shuffleTalks} className={`${styles.button} ${styles.shuffleButton}`}>
-            Shuffle Talks
-          </button>
-          {selectedTalk && (
-            <button
-              onClick={openTranscriptInNewTab}
-              className={`${styles.button} ${styles.tedButton}`}
-            >
-              View Transcript
-            </button>
-          )}
+        <div className={styles.searchInputWrapper}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && performSearch(searchQuery)}
+            className={styles.searchInput}
+            placeholder="Search for talks..."
+          />
+          {loading && <LoadingSpinner />}
         </div>
+        <button
+          onClick={() => performSearch(searchQuery)}
+          className={`${styles.button} ${styles.searchButton}`}
+          disabled={loading}
+        >
+          Search
+        </button>
+        <button onClick={shuffleTalks} className={`${styles.button} ${styles.shuffleButton}`}>
+          Shuffle
+        </button>
+        {selectedTalk && (
+          <button onClick={openTranscriptInNewTab} className={`${styles.button} ${styles.tedButton}`}>
+            Transcript
+          </button>
+        )}
       </div>
-
-      {loading && <LoadingSpinner />}
 
       {error && <div className={styles.errorContainer}>{error}</div>}
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
-          <TalkItem
-            key={`${talk.url}-${index}`}
-            talk={talk}
-            selected={selectedTalk?.title === talk.title}
-          />
+          <TalkItem key={`${talk.url}-${index}`} talk={talk} selected={selectedTalk?.title === talk.title} />
         ))}
       </div>
     </div>
