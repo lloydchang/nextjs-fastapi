@@ -22,30 +22,39 @@ const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
   const { loading, error } = useSelector((state: RootState) => state.api);
+  const chatMessages = useSelector((state: RootState) => state.chat.messages);
 
   const [searchQuery, setSearchQuery] = useState<string>(determineInitialKeyword());
 
   const isSearchInProgress = useRef(false);
-  const initialSearchDone = useRef(false); 
-  const lastQueryRef = useRef<string>(''); // Correctly initialize lastQueryRef
+  const hasSearchedOnce = useRef(false); 
+  const lastQueryRef = useRef<string>(''); 
   const abortControllerRef = useRef<AbortController | null>(null);
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const activeTasksRef = useRef<AbortController[]>([]);
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
+  const logState = () => {
+    console.log('Redux State:', { talks, selectedTalk, chatMessages, loading, error });
+  };
+
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
-      console.log('Debounced search initiated:', query);
+      console.log(`Debounced search initiated: ${query}`);
       performSearch(query);
     }, 500),
     []
   );
 
+  // Ensure all active tasks are aborted when unmounting.
   useEffect(() => {
-    if (!initialSearchDone.current) {
-      console.log('TalkPanel - Initial render detected. Performing search.');
+    console.log('Component mounted. Initializing search...');
+    logState();
+
+    if (!hasSearchedOnce.current) {
+      console.log('Performing initial search...');
       performSearch(searchQuery);
-      initialSearchDone.current = true;
+      hasSearchedOnce.current = true;
     }
 
     return () => {
@@ -60,19 +69,25 @@ const TalkPanel: React.FC = () => {
 
   const createAbortController = () => {
     const controller = new AbortController();
+    console.log('Created new AbortController:', controller);
     activeTasksRef.current.push(controller);
     return controller;
   };
 
   const handleSearchResults = async (query: string, data: Talk[]) => {
-    const processedData = isFirstSearch.current ? shuffleArray(data) : data;
+    console.log(`Handling search results for query: ${query}. Data:`, data);
+
+    const processedData = shuffleArray(data);
     const uniqueTalks = processedData.filter(
       (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
     );
 
+    console.log('Unique talks after filtering:', uniqueTalks);
     dispatch(setTalks(uniqueTalks));
+
     if (!selectedTalk && uniqueTalks.length > 0) {
       dispatch(setSelectedTalk(uniqueTalks[0]));
+      console.log('Selected first talk:', uniqueTalks[0]);
     }
 
     localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
@@ -84,7 +99,7 @@ const TalkPanel: React.FC = () => {
     const trimmedQuery = query.trim().toLowerCase();
 
     if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) {
-      console.log('Skipping duplicate search:', trimmedQuery);
+      console.log(`Skipping duplicate search for query: ${trimmedQuery}`);
       return;
     }
 
@@ -92,8 +107,8 @@ const TalkPanel: React.FC = () => {
       console.log('Aborting previous search...');
       abortControllerRef.current.abort();
     }
-    abortControllerRef.current = createAbortController();
 
+    abortControllerRef.current = createAbortController();
     isSearchInProgress.current = true;
     lastQueryRef.current = trimmedQuery;
     dispatch(setApiError(null));
@@ -114,19 +129,26 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || 'Transcript not available',
       }));
 
+      console.log('Search response data:', data);
       await handleSearchResults(trimmedQuery, data);
     } catch (error) {
+      console.error('Error during search:', error);
       if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
+      console.log('Search completed.');
     }
   };
 
   const sendTranscriptForTalk = async (query: string, talk: Talk) => {
     try {
-      if (sentMessagesRef.current.has(talk.title)) return;
+      if (sentMessagesRef.current.has(talk.title)) {
+        console.log(`Skipping already sent transcript for talk: ${talk.title}`);
+        return;
+      }
 
+      console.log(`Sending transcript for talk: ${talk.title}`);
       dispatch(setSelectedTalk(talk));
       sentMessagesRef.current.add(talk.title);
 
@@ -152,6 +174,7 @@ const TalkPanel: React.FC = () => {
   };
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
+    console.log('Attempting to send the first available transcript...');
     for (const talk of talks) {
       try {
         await sendTranscriptForTalk(query, talk);
@@ -164,7 +187,10 @@ const TalkPanel: React.FC = () => {
   };
 
   const openTranscriptInNewTab = () => {
-    if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    if (selectedTalk) {
+      console.log(`Opening transcript for ${selectedTalk.title}`);
+      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    }
   };
 
   return (
