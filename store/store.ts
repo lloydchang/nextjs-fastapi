@@ -14,7 +14,7 @@ export const store = configureStore({
     api: apiReducer,
   },
   middleware: (getDefaultMiddleware) => {
-    console.debug('[Store] Configuring middleware');
+    // console.debug('[Store] Configuring middleware');
     return getDefaultMiddleware({ serializableCheck: false, thunk: true });
   },
 });
@@ -25,14 +25,14 @@ export type AppDispatch = typeof store.dispatch;
 
 // Create a persisted store
 export const createPersistedStore = async () => {
-  console.debug('[Store] Creating persisted store');
+  // console.debug('[Store] Creating persisted store');
 
   const { persistStore, persistReducer } = await import('redux-persist');
 
   const storage =
     typeof window !== 'undefined'
       ? await import('redux-persist/lib/storage').then((mod) => {
-          console.debug('[Store] Using local storage for persistence');
+          // console.debug('[Store] Using local storage for persistence');
           return mod.default;
         })
       : noopStorage;
@@ -50,13 +50,13 @@ export const createPersistedStore = async () => {
       api: persistedApiReducer,
     },
     middleware: (getDefaultMiddleware) => {
-      console.debug('[Store] Configuring middleware for persisted store');
+      // console.debug('[Store] Configuring middleware for persisted store');
       return getDefaultMiddleware({ serializableCheck: false, thunk: true });
     },
   });
 
   const persistor = persistStore(persistedStore);
-  console.debug('[Store] Persisted store created successfully');
+  // console.debug('[Store] Persisted store created successfully');
 
   return { persistedStore, persistor };
 };
