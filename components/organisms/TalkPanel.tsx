@@ -1,5 +1,3 @@
-// File: components/organisms/TalkPanel.tsx
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -17,27 +15,6 @@ import LoadingSpinner from './LoadingSpinner'; // Your existing loading spinner
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
-// Helper function to capitalize only the first word (sentence case)
-function toSentenceCase(text: string): string {
-  const lowerText = text.toLowerCase();
-  return lowerText.charAt(0).toUpperCase() + lowerText.slice(1);
-}
-
-// Helper function to remove diacritics (accents) from a string
-function removeDiacritics(text: string): string {
-  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-// Helper function to remove the presenter's name from the title (ignoring accents)
-function removePresenterFromTitle(presenter: string, title: string): string {
-  const normalizedPresenter = removeDiacritics(presenter);
-  const normalizedTitle = removeDiacritics(title);
-
-  const regex = new RegExp(`\\b${normalizedPresenter}\\b`, 'gi');
-  const cleanedTitle = normalizedTitle.replace(regex, '').trim();
-  return cleanedTitle.replace(/\s+/g, ' '); // Ensure single spaces between words
-}
-
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
@@ -52,7 +29,6 @@ const TalkPanel: React.FC = () => {
   const sentMessagesRef = useRef<Set<string>>(new Set());
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
-  const iframeSrcRef = useRef<string | null>(null); // Ref to store iframe source
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
@@ -100,28 +76,19 @@ const TalkPanel: React.FC = () => {
       if (response.status !== 200) throw new Error(response.statusText);
 
       const data: Talk[] = response.data.results.map((result: any) => {
-        const presenterName = toSentenceCase(result.document.presenterDisplayName || '');
-        let talkTitleToSend = result.document.slug.replace(/_/g, ' ') || '';
-
-        // Remove presenter's name from the title (ignoring diacritics)
-        talkTitleToSend = removePresenterFromTitle(presenterName, talkTitleToSend);
-
-        // Convert the cleaned title to sentence case
-        talkTitleToSend = toSentenceCase(talkTitleToSend);
+        const presenterName = result.document.presenterDisplayName || '';
+        const talkTitleToSend = result.document.slug.replace(/_/g, ' ') || ''; // Use slug directly
 
         return {
           presenterDisplayName: presenterName,
-          title: talkTitleToSend, // Use the talkTitleToSend variable here
+          title: talkTitleToSend, // Use the slug directly as title
           url: `https://www.ted.com/talks/${result.document.slug}`,
           sdg_tags: result.document.sdg_tags || [],
           transcript: result.document.transcript || '',
         };
       });
 
-      // Only update the talks state if not in Strict Mode
-      if (!isStrictModeMount.current) {
-        handleSearchResults(data);
-      }
+      handleSearchResults(data);
     } catch (error) {
       if (!axios.isCancel(error)) {
         console.error('[performSearch] Error fetching talks:', error);
@@ -135,22 +102,15 @@ const TalkPanel: React.FC = () => {
   };
 
   const handleSearchResults = (data: Talk[]) => {
-    const uniqueTalks = shuffleArray(data).filter(
-      (talk) => !talks.some((existing) => existing.url === talk.url)
-    );
-    dispatch(setTalks(uniqueTalks));
+    dispatch(setTalks(data)); // Directly set talks without deduplication logic
 
-    if (uniqueTalks.length > 0) {
-      const firstTalk = uniqueTalks[0];
+    if (data.length > 0) {
+      const firstTalk = data[0];
       dispatch(setSelectedTalk(firstTalk));
       sendTranscriptAsMessage(firstTalk);
-      // Set iframe source only if not in Strict Mode
-      if (!isStrictModeMount.current) {
-        iframeSrcRef.current = `https://embed.ted.com/talks/${firstTalk.url.match(/talks\/([\w_]+)/)?.[1]}`;
-      }
     }
 
-    localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
+    localStorageUtil.setItem('lastSearchData', JSON.stringify(data));
   };
 
   const sendTranscriptAsMessage = async (talk: Talk) => {
@@ -162,7 +122,7 @@ const TalkPanel: React.FC = () => {
 
     const messageParts = [
       `Presenter: ${talk.presenterDisplayName}`,
-      `Talk: ${talk.title}`, // Use the talkTitleToSend variable here
+      `Talk: ${talk.title}`, // Use the title directly here
       `URL: ${talk.url}`,
       `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       `Transcript: ${talk.transcript}`,
@@ -190,7 +150,7 @@ const TalkPanel: React.FC = () => {
       {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
-            src={isStrictModeMount.current ? undefined : iframeSrcRef.current} // Set iframe src conditionally
+            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
             width="100%"
             height="400"
             allow="autoplay; fullscreen; encrypted-media"
