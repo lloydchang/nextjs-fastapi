@@ -43,10 +43,17 @@ export async function POST(request: NextRequest) {
   const requestId = uuidv4();
   const clientId = request.headers.get('x-client-id') || `anon-${uuidv4()}`; // Generate unique ID for anonymous clients
 
+  // Log the receipt of a new POST request
+  logger.silly(
+    `Received POST request [${requestId}] from clientId: ${clientId}`
+  );
+
   // Handle rate limiting
   const { limited, retryAfter } = checkRateLimit(clientId);
   if (limited) {
-    // logger.warn(`app/api/chat/route.ts - ClientId: ${clientId} has exceeded the rate limit.`);
+    logger.warn(
+      `ClientId: ${clientId} has exceeded the rate limit. RequestId: ${requestId}`
+    );
     return NextResponse.json(
       {
         error: 'Too Many Requests',
@@ -65,10 +72,14 @@ export async function POST(request: NextRequest) {
   if (!mutex) {
     mutex = new Mutex();
     clientMutexes.set(clientId, mutex);
+    logger.silly(`Created new mutex for clientId: ${clientId}`);
   }
 
   return mutex.runExclusive(async () => {
     lastInteractionTimes.set(clientId, Date.now());
+    logger.silly(
+      `Updated last interaction time for clientId: ${clientId} at ${new Date().toISOString()}`
+    );
 
     try {
       const body = await request.json();
@@ -76,17 +87,34 @@ export async function POST(request: NextRequest) {
 
       // Ensure messages is an array
       if (!Array.isArray(messages)) {
-        return NextResponse.json({ error: 'Invalid request format: messages must be an array' }, { status: 400 });
+        logger.warn(
+          `Invalid request format: messages must be an array. RequestId: ${requestId}, clientId: ${clientId}`
+        );
+        return NextResponse.json(
+          { error: 'Invalid request format: messages must be an array' },
+          { status: 400 }
+        );
       }
+
+      logger.silly(
+        `Received ${messages.length} messages from clientId: ${clientId}, RequestId: ${requestId}`
+      );
 
       // Filter out invalid messages (e.g., empty content)
       const validMessages = messages.filter(
-        (msg: any) => msg.content && typeof msg.content === 'string' && msg.content.trim() !== ''
+        (msg: any) =>
+          msg.content &&
+          typeof msg.content === 'string' &&
+          msg.content.trim() !== ''
+      );
+
+      logger.silly(
+        `Filtered to ${validMessages.length} valid messages for clientId: ${clientId}, RequestId: ${requestId}`
       );
 
       if (validMessages.length === 0) {
         logger.warn(
-          `app/api/chat/route.ts - Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`
+          `Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`
         );
         return NextResponse.json(
           { error: 'Invalid request format or no valid messages provided.' },
@@ -100,6 +128,10 @@ export async function POST(request: NextRequest) {
       context = context.slice(-maxContextMessages); // Keep context within limits
       clientContexts.set(clientId, context);
 
+      logger.silly(
+        `Updated context for clientId: ${clientId}. Current context size: ${context.length}`
+      );
+
       const stream = new ReadableStream({
         async start(controller) {
           const botFunctions: BotFunction[] = [];
@@ -111,6 +143,10 @@ export async function POST(request: NextRequest) {
            * Processes all bot functions and streams their responses.
            */
           async function processBots() {
+            logger.silly(
+              `Processing ${botFunctions.length} bot functions for clientId: ${clientId}, RequestId: ${requestId}`
+            );
+
             // Process all bots concurrently
             const botPromises = botFunctions.map(async (bot) => {
               try {
@@ -118,20 +154,34 @@ export async function POST(request: NextRequest) {
                 const botPersona = bot.persona;
 
                 if (botResponse && typeof botResponse === 'string') {
-                  logger.debug(`app/api/chat/route.ts - Response from ${botPersona}: ${botResponse}`);
+                  logger.debug(
+                    `Response from ${botPersona}: ${botResponse}`
+                  );
 
                   // Stream the response
                   controller.enqueue(
-                    `data: ${JSON.stringify({ persona: botPersona, message: botResponse })}\n\n`
+                    `data: ${JSON.stringify({
+                      persona: botPersona,
+                      message: botResponse,
+                    })}\n\n`
                   );
 
                   // Update context with bot response
-                  context.push({ role: 'bot', content: botResponse, persona: botPersona });
+                  context.push({
+                    role: 'bot',
+                    content: botResponse,
+                    persona: botPersona,
+                  });
+                  logger.silly(
+                    `Added bot response to context. New context size: ${context.length}`
+                  );
                   return true;
                 }
                 return false;
               } catch (error) {
-                logger.error(`app/api/chat/route.ts - Error in bot ${bot.persona} processing: ${error}`);
+                logger.error(
+                  `Error in bot ${bot.persona} processing: ${error}`
+                );
                 return false;
               }
             });
@@ -143,29 +193,44 @@ export async function POST(request: NextRequest) {
             context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
 
+            logger.silly(
+              `Final context size after bot processing for clientId: ${clientId}: ${context.length}`
+            );
+
             // Handle session timeout
             const lastInteraction = lastInteractionTimes.get(clientId) || 0;
             if (Date.now() - lastInteraction > sessionTimeout) {
               clientContexts.delete(clientId);
               lastInteractionTimes.delete(clientId);
-              logger.silly(`app/api/chat/route.ts - Session timed out for clientId: ${clientId}. Context reset.`);
+              logger.silly(
+                `Session timed out for clientId: ${clientId}. Context reset.`
+              );
               context = []; // Reset context after timeout
             }
 
             if (!hasResponse) {
-              logger.silly(`app/api/chat/route.ts - No bot responded. Ending interaction.`);
+              logger.silly(
+                `No bot responded for clientId: ${clientId}, RequestId: ${requestId}. Ending interaction.`
+              );
             }
 
             try {
               controller.enqueue('data: [DONE]\n\n');
               controller.close();
+              logger.silly(
+                `Stream closed successfully for clientId: ${clientId}, RequestId: ${requestId}`
+              );
             } catch (enqueueError) {
-              logger.error(`app/api/chat/route.ts - Error finalizing stream: ${enqueueError}`);
+              logger.error(
+                `Error finalizing stream: ${enqueueError} for clientId: ${clientId}, RequestId: ${requestId}`
+              );
             }
           }
 
           processBots().catch((error) => {
-            logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
+            logger.error(
+              `Error in streaming bot interaction: ${error} for clientId: ${clientId}, RequestId: ${requestId}`
+            );
             controller.error(error);
           });
         },
@@ -179,9 +244,16 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (error) {
-      logger.error(`app/api/chat/route.ts - Error in streaming bot interaction: ${error}`);
+      logger.error(
+        `Error in streaming bot interaction: ${
+          error instanceof Error ? error.message : error
+        } for clientId: ${clientId}, RequestId: ${requestId}`
+      );
       return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Internal Server Error' },
+        {
+          error:
+            error instanceof Error ? error.message : 'Internal Server Error',
+        },
         { status: 500 }
       );
     }
