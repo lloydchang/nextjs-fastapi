@@ -13,7 +13,7 @@ export interface UserPrompt {
  */
 export interface Message {
   id: string; // Unique identifier for the message
-  sender: 'user' | 'bot'; // Sender of the message (limited to user or bot)
+  sender: 'system' | 'user' | 'bot' | 'ad'; // Includes 'ad' as a valid sender
   text: string; // Always a string representing the message text
   persona?: string; // Optional persona to attribute messages
   hidden?: boolean; // If true, the message is hidden from the UI
