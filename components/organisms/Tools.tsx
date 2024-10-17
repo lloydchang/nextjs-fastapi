@@ -1,6 +1,10 @@
 // File: components/organisms/Tools.tsx
 
 import React, { useState, useRef, useEffect } from 'react'; // Updated to include useState, useRef, useEffect
+import { useSelector } from 'react-redux';
+import { RootState } from 'store/store';
+import * as use from '@tensorflow-models/universal-sentence-encoder'; // TensorFlow.js
+import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the button-paragraph map
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
@@ -10,9 +14,63 @@ const Tools: React.FC = () => {
   const dragItem = useRef<HTMLDivElement | null>(null);
   const dragStartPosition = useRef({ x: 0, y: 0 });
 
-  // Open links in new tab
+  // State to highlight the button based on semantic similarity
+  const [highlightedButton, setHighlightedButton] = useState<string | null>(null); 
+
+  // TensorFlow.js model state
+  const [model, setModel] = useState<use.UniversalSentenceEncoder | null>(null);
+
+  // Redux selector to get chat messages
+  const messages = useSelector((state: RootState) => state.chat.messages);
+
+  // Open URLs in a new tab
   const openInNewTab = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // Load TensorFlow.js Universal Sentence Encoder on component mount
+  useEffect(() => {
+    use.load().then((loadedModel) => setModel(loadedModel));
+  }, []);
+
+  // Compute semantic similarity between user message and button paragraphs
+  const computeSimilarity = async (message: string) => {
+    if (!model) return;
+
+    const inputEmbedding = await model.embed(message);
+    let bestMatch: string | null = null;
+    let highestSimilarity = 0;
+
+    for (const [buttonName, { paragraphs }] of Object.entries(toolsButtonsParagraphs)) {
+      const paragraphEmbedding = await model.embed(paragraphs);
+      const similarity = cosineSimilarity(
+        inputEmbedding.arraySync()[0], // Convert tensors to arrays
+        paragraphEmbedding.arraySync()[0]
+      );
+
+      if (similarity > highestSimilarity) {
+        highestSimilarity = similarity;
+        bestMatch = buttonName;
+      }
+    }
+
+    setHighlightedButton(bestMatch); // Set the matching button as highlighted
+  };
+
+  // Monitor chat messages and trigger similarity computation
+  useEffect(() => {
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1].text;
+      computeSimilarity(latestMessage);
+    }
+  }, [messages, model]);
+
+  // Cosine similarity function
+  const cosineSimilarity = (vecA: number[], vecB: number[]) => {
+    const dotProduct = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
+    const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
+    const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
+    return dotProduct / (magnitudeA * magnitudeB);
   };
 
   // Mouse down event to start dragging
@@ -37,7 +95,7 @@ const Tools: React.FC = () => {
     setIsDragging(false);
   };
 
-  // useEffect to add and remove event listeners
+  // useEffect to add and remove drag event listeners
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -56,253 +114,21 @@ const Tools: React.FC = () => {
     <div
       className={styles['tools-container']}
       style={{ transform: `translate(${position.x}px, ${position.y}px)` }} // Positioning applied via inline styles
-      onMouseDown={handleMouseDown} // Attaching mouse down event to initiate drag
+      onMouseDown={handleMouseDown} // Attach mouse down event to initiate drag
     >
       <div className={styles['button-group']}>
-      <div className={styles['lazy-arrow-container']}>
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://www.un.org/sustainabledevelopment/takeaction/')
-          }
-        >
-          Lazy
-        </button>
-        <div className={styles['flashing-arrow']}></div>
-      </div>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/'
-            )
-          }
-        >
-          Water
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://www.un.org/sustainabledevelopment/climate-action-superheroes/'
-            )
-          }
-        >
-          Heroes
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://www.un.org/en/actnow')
-          }
-        >
-          Act
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://drive.google.com/file/d/1iMdE6DLLuCqwq3K9U-DaTUWB6KyMa8QG/view'
-            )
-          }
-        >
-          Daily
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://actnow.aworld.org/')
-          }
-        >
-          App
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://go-goals.org/')
-          }
-        >
-          Game
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() => openInNewTab('https://www.unsdglearn.org/learning/')}
-        >
-          Learn
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://sdgs.un.org/topics/voluntary-local-reviews')
-          }
-        >
-          Voluntary
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://www.local2030.org/vlrs')
-          }
-        >
-          Local
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap'
-            )
-          }
-        >
-          Review
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://www.iges.or.jp/en/projects/vlr')
-          }
-        >
-          Lab
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://open-sdg.org/community#cities-and-regions')
-          }
-        >
-          City
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://unstats.un.org/sdgs/dataportal/countryprofiles')
-          }
-        >
-          Country
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://sdgs.un.org/gsdr')
-          }
-        >
-          Global
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://sdgs.un.org/goals')
-          }
-        >
-          Annual
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://hdr.undp.org/data-center/country-insights#/ranks')
-          }
-        >
-          Rank
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://datatopics.worldbank.org/sdgatlas')
-          }
-        >
-          Atlas
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://globalaffairs.ucdavis.edu/sdgs-grants')
-          }
-        >
-          Grant
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://jointsdgfund.org/sdg-financing#PROFILES')
-          }
-        >
-          Fund
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://mptf.undp.org/#impact-to-label')
-          }
-        >
-          Hub
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://countrydata.iatistandard.org/')
-          }
-        >
-          Aid
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://unstats.un.org/UNSDWebsite/undatacommons/search')
-          }
-        >
-          Data
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://ai4good.org/what-we-do/sdg-data-catalog/')
-          }
-        >
-          Catalog
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab('https://www.local2030.org/discover-tools')
-          }
-        >
-          Tool
-        </button>
-
-        <button
-          className={styles['right-edge-button']}
-          onClick={() =>
-            openInNewTab(
-              'https://news.google.com/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YTI1c1poSUNaVzRvQUFQAQ'
-            )
-          }
-        >
-          News
-        </button>
+        {Object.keys(toolsButtonsParagraphs).map((buttonName) => (
+          <button
+            key={buttonName}
+            className={`${styles['right-edge-button']} ${
+              highlightedButton === buttonName ? styles['highlight'] : ''
+            }`}
+            onClick={() => openInNewTab(toolsButtonsParagraphs[buttonName].url)}
+          >
+            {buttonName}
+          </button>
+        ))}
+        {highlightedButton && <div className={styles['flashing-arrow']} />} {/* Flashing arrow */}
       </div>
     </div>
   );
