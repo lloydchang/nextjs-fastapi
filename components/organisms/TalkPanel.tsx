@@ -1,3 +1,5 @@
+// File: components/organisms/TalkPanel.tsx
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -42,14 +44,15 @@ const TalkPanel: React.FC = () => {
   const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const isStrictModeMount = useRef(true);
-  const mountCounter = useRef(0);
+  const isStrictModeMount = useRef(true); // Track Strict Mode remount
+  const mountCounter = useRef(0); // Track the number of mounts
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const isSearchInProgress = useRef(false);
   const sentMessagesRef = useRef<Set<string>>(new Set());
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
+  const iframeSrcRef = useRef<string | null>(null); // Ref to store iframe source
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
@@ -60,9 +63,9 @@ const TalkPanel: React.FC = () => {
     mountCounter.current += 1;
 
     if (mountCounter.current === 1) {
-      isStrictModeMount.current = true;
+      isStrictModeMount.current = true; // Initial mount in Strict Mode
     } else {
-      isStrictModeMount.current = false;
+      isStrictModeMount.current = false; // Subsequent mounts are normal
       performSearch(searchQuery);
     }
 
@@ -115,7 +118,10 @@ const TalkPanel: React.FC = () => {
         };
       });
 
-      handleSearchResults(data);
+      // Only update the talks state if not in Strict Mode
+      if (!isStrictModeMount.current) {
+        handleSearchResults(data);
+      }
     } catch (error) {
       if (!axios.isCancel(error)) {
         console.error('[performSearch] Error fetching talks:', error);
@@ -138,6 +144,10 @@ const TalkPanel: React.FC = () => {
       const firstTalk = uniqueTalks[0];
       dispatch(setSelectedTalk(firstTalk));
       sendTranscriptAsMessage(firstTalk);
+      // Set iframe source only if not in Strict Mode
+      if (!isStrictModeMount.current) {
+        iframeSrcRef.current = `https://embed.ted.com/talks/${firstTalk.url.match(/talks\/([\w_]+)/)?.[1]}`;
+      }
     }
 
     localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
@@ -150,12 +160,9 @@ const TalkPanel: React.FC = () => {
 
     sentMessagesRef.current.add(talk.title);
 
-    // Create a new variable for the talk title to send
-    const talkTitleToSend = talk.title; // Cloning the title here
-
     const messageParts = [
       `Presenter: ${talk.presenterDisplayName}`,
-      `Talk: ${talkTitleToSend}`, // Use the cloned variable here
+      `Talk: ${talk.title}`, // Use the talkTitleToSend variable here
       `URL: ${talk.url}`,
       `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       `Transcript: ${talk.transcript}`,
@@ -183,7 +190,7 @@ const TalkPanel: React.FC = () => {
       {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
-            src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
+            src={isStrictModeMount.current ? undefined : iframeSrcRef.current} // Set iframe src conditionally
             width="100%"
             height="400"
             allow="autoplay; fullscreen; encrypted-media"
