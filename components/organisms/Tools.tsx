@@ -6,6 +6,7 @@ import { RootState, AppDispatch } from 'store/store';
 import { addMessage } from 'store/chatSlice';
 import toolsButtonsParagraphs from './toolsButtonsParagraphs';
 import styles from 'styles/components/organisms/Tools.module.css';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique ids
 
 const Tools: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -74,6 +75,9 @@ const Tools: React.FC = () => {
 
         dispatch(
           addMessage({
+            id: uuidv4(), // Unique ID for the message
+            content: messageText, // Map `text` to `content`
+            timestamp: Date.now(), // Current timestamp in milliseconds
             persona: 'Ad',
             role: 'ad',
             sender: 'ad',
