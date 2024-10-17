@@ -20,12 +20,12 @@ const Tools: React.FC = () => {
   const dragStartPosition = useRef({ x: 0, y: 0 });
 
   const messages = useSelector((state: RootState) => state.chat.messages);
+  const lastAdMessageRef = useRef<string | null>(null); // Store the last ad message
 
   const openInNewTab = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  // Utility function to escape special regex characters
   const escapeRegExp = (string: string) =>
     string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -77,18 +77,22 @@ const Tools: React.FC = () => {
 
         const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${buttonText}: ${paragraphText}</a>`;
 
-        dispatch(
-          addMessage({
-            id: uuidv4(),
-            content: messageText,
-            timestamp: Date.now(),
-            persona: 'Ad',
-            role: 'ad',
-            sender: 'ad',
-            text: messageText,
-            hidden: false,
-          })
-        );
+        // Check if the new message is the same as the last ad message
+        if (lastAdMessageRef.current !== messageText) {
+          dispatch(
+            addMessage({
+              id: uuidv4(),
+              content: messageText,
+              timestamp: Date.now(),
+              persona: 'Ad',
+              role: 'ad',
+              sender: 'ad',
+              text: messageText,
+              hidden: false,
+            })
+          );
+          lastAdMessageRef.current = messageText; // Update the last ad message
+        }
       }
     }
   }, [messages, dispatch, highlightedButton]);
