@@ -27,16 +27,18 @@ const Tools: React.FC = () => {
   const findMatchingButton = (message: string): string => {
     message = message.toLowerCase();
 
-    const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) =>
-      message.includes(buttonName.toLowerCase())
-    );
+    const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) => {
+      const regex = new RegExp(`\\b${buttonName.toLowerCase()}\\b`, 'i');
+      return regex.test(message);
+    });
 
     if (matchingButtonName) {
       return matchingButtonName;
     }
 
     for (const [buttonName, { paragraph }] of Object.entries(toolsButtonsParagraphs)) {
-      if (paragraph.toLowerCase().includes(message)) {
+      const regex = new RegExp(`\\b${message}\\b`, 'i');
+      if (regex.test(paragraph.toLowerCase())) {
         return buttonName;
       }
     }
@@ -55,7 +57,7 @@ const Tools: React.FC = () => {
   };
 
   useEffect(() => {
-    const latestMessage = getLatestMessage(); // Get the latest user or bot message
+    const latestMessage = getLatestMessage();
 
     if (latestMessage) {
       const matchingButton = findMatchingButton(latestMessage);
@@ -68,7 +70,6 @@ const Tools: React.FC = () => {
         const paragraphText = `${toolsButtonsParagraphs[matchingButton].paragraph || ''}`;
         const url = toolsButtonsParagraphs[matchingButton].url || '';
 
-        // Create the hyperlink message
         const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${buttonText}: ${paragraphText}</a>`;
 
         dispatch(
