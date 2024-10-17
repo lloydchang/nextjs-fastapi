@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
 import { setLoading, setApiError } from 'store/apiSlice';
-import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { shuffleArray } from 'components/utils/talkPanelUtils';
 import TalkItem from './TalkItem';
@@ -22,7 +21,8 @@ const TalkPanel: React.FC = () => {
   const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const isSearchInProgress = useRef(false); // Track ongoing searches
+  const isSearchInProgress = useRef(false); 
+  const hasSearchedOnce = useRef(false); // Track if search has already executed
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Debounce search input to prevent unnecessary API calls
@@ -33,10 +33,13 @@ const TalkPanel: React.FC = () => {
     [dispatch]
   );
 
-  // Perform the initial search on mount
+  // Prevent double execution of initial search in Strict Mode
   useEffect(() => {
-    console.log('Component mounted. Performing initial search...');
-    if (searchQuery) debouncedPerformSearch(searchQuery);
+    if (!hasSearchedOnce.current) {
+      console.log('Component mounted. Performing initial search...');
+      debouncedPerformSearch(searchQuery);
+      hasSearchedOnce.current = true; // Ensure the search only runs once
+    }
 
     return () => {
       debouncedPerformSearch.cancel();
