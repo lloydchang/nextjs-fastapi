@@ -1,8 +1,9 @@
 // File: components/organisms/ControlButtons.tsx
 
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import styles from 'styles/components/organisms/ControlButtons.module.css';
 import Modal from 'components/atoms/Modal';
+import { useModal } from 'components/state/context/ModalContext'; // Import useModal
 
 interface ControlButtonsProps {
   isCamOn: boolean;
@@ -18,7 +19,7 @@ interface ControlButtonsProps {
   isFullScreenOn: boolean;
   toggleFullScreen: () => void;
   hasVisibleMessages: boolean;
-  isListening: boolean; // New prop to indicate if speech recognition is listening
+  isListening: boolean; // Indicates if speech recognition is active
 }
 
 const ControlButtons: React.FC<ControlButtonsProps> = ({
@@ -35,21 +36,27 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
   isFullScreenOn,
   toggleFullScreen,
   hasVisibleMessages,
-  isListening, // Add isListening prop
+  isListening,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openModal, closeModal, activeModal } = useModal(); // Use modal context
+  const modalId = 'erase-chat-modal'; // Unique ID for the erase confirmation modal
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const isModalOpen = activeModal === modalId; // Check if the modal is active
 
-  const confirmEraseMemory = () => {
-    eraseMemory();
-    closeModal();
-  };
+  // Open the modal for erase confirmation
+  const handleOpenModal = useCallback(() => {
+    openModal(modalId); // Use the modal context to open
+  }, [openModal, modalId]);
 
-  const micButtonText = '🎤'; // Use only the emoji for mic button text
-  const eraseButtonText = '🗑️';
-  const fullScreenButtonText = '⛶';
+  // Confirm erase and close the modal
+  const confirmEraseMemory = useCallback(() => {
+    eraseMemory(); // Call eraseMemory function
+    closeModal(); // Close the modal after erasing
+  }, [eraseMemory, closeModal]);
+
+  const micButtonText = '🎤'; // Emoji for mic button
+  const eraseButtonText = '🗑️'; // Emoji for erase button
+  const fullScreenButtonText = '⛶'; // Emoji for full-screen button
 
   return (
     <div className={styles.container}>
@@ -57,10 +64,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       <button
         type="button"
         onClick={toggleMic}
-        className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`} // Apply styles based on isMicOn state
+        className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`}
         aria-pressed={isMicOn}
         aria-label="Toggle Microphone"
-        disabled={isListening} // Disable button while speech recognition is listening
+        disabled={isListening} // Disable button while listening
       >
         {micButtonText}
       </button>
@@ -68,10 +75,10 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
       {/* Erase Button */}
       <button
         type="button"
-        onClick={openModal}
+        onClick={handleOpenModal} // Use the context-based modal open function
         className={`${styles.button} ${styles.eraseButton}`}
         aria-label="Erase Chat"
-        disabled={!hasVisibleMessages}
+        disabled={!hasVisibleMessages} // Disable if no messages to erase
       >
         {eraseButtonText}
       </button>
@@ -89,9 +96,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
 
       {/* Modal for Erase Confirmation */}
       <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onConfirm={confirmEraseMemory}
+        modalId={modalId} // Pass the unique modal ID
         title="Erase chat messages?"
         message={
           <>
@@ -100,6 +105,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
           </>
         }
         confirmText="Erase"
+        onConfirm={confirmEraseMemory} // Call confirm function on confirm
       />
     </div>
   );
