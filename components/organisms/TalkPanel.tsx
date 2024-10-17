@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store';
@@ -133,6 +133,19 @@ const TalkPanel: React.FC = () => {
     [dispatch]
   );
 
+  const reorderedTalks = useMemo(() => {
+    if (!selectedTalk) return talks;
+    if (talks[0]?.title === selectedTalk.title) return talks;
+
+    return [selectedTalk, ...talks.filter(talk => talk.title !== selectedTalk.title)];
+  }, [selectedTalk, talks]);
+
+  useEffect(() => {
+    if (reorderedTalks !== talks) {
+      dispatch(setTalks(reorderedTalks));
+    }
+  }, [dispatch, reorderedTalks, talks]);
+
   const shuffleTalks = useCallback(async () => {
     if (talks.length > 0) {
       const shuffledTalks = shuffleArray([...talks]);
@@ -150,16 +163,6 @@ const TalkPanel: React.FC = () => {
 
     return abortPendingRequest;
   }, [performSearch, abortPendingRequest, searchQuery]);
-
-  useEffect(() => {
-    if (selectedTalk) {
-      const updatedTalks = talks.filter(talk => talk.title !== selectedTalk.title);
-      dispatch(setTalks([selectedTalk, ...updatedTalks]));
-
-      scrollableContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-      sendTranscriptForTalk(searchQuery, selectedTalk);
-    }
-  }, [dispatch, searchQuery, selectedTalk, talks, sendTranscriptForTalk]);
 
   return (
     <div className={styles.TalkPanel}>
@@ -187,7 +190,14 @@ const TalkPanel: React.FC = () => {
           Search
         </button>
         <button onClick={shuffleTalks}>Shuffle</button>
-        {selectedTalk && <button onClick={() => window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank')}>Transcript</button>}
+        {selectedTalk && (
+          <button
+            onClick={() => window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank')}
+            className={styles.tedButton}
+          >
+            Transcript
+          </button>
+        )}
       </div>
       {error && <div className={styles.errorContainer}>{error}</div>}
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
