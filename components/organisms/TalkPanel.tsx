@@ -1,5 +1,3 @@
-// File: components/organisms/TalkPanel.tsx
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -22,31 +20,30 @@ const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
   const { loading, error } = useSelector((state: RootState) => state.api);
-  const chatMessages = useSelector((state: RootState) => state.chat.messages);
 
   const [searchQuery, setSearchQuery] = useState<string>(determineInitialKeyword());
-
+  
   const isSearchInProgress = useRef(false);
   const hasSearchedOnce = useRef(false); 
   const lastQueryRef = useRef<string>(''); 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const sentMessagesRef = useRef<Set<string>>(new Set());
   const activeTasksRef = useRef<AbortController[]>([]);
+  const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
   const logState = () => {
-    console.log('Redux State:', { talks, selectedTalk, chatMessages, loading, error });
+    console.log('Redux State:', { talks, selectedTalk, loading, error });
   };
 
+  // **Debounce search to avoid rapid calls.**
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
-      console.log(`Debounced search initiated: ${query}`);
+      console.log('Debounced search initiated:', query);
       performSearch(query);
     }, 500),
     []
   );
 
-  // Ensure all active tasks are aborted when unmounting.
   useEffect(() => {
     console.log('Component mounted. Initializing search...');
     logState();
@@ -65,7 +62,7 @@ const TalkPanel: React.FC = () => {
       });
       debouncedPerformSearch.cancel();
     };
-  }, [searchQuery]);
+  }, []);
 
   const createAbortController = () => {
     const controller = new AbortController();
@@ -82,7 +79,6 @@ const TalkPanel: React.FC = () => {
       (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
     );
 
-    console.log('Unique talks after filtering:', uniqueTalks);
     dispatch(setTalks(uniqueTalks));
 
     if (!selectedTalk && uniqueTalks.length > 0) {
@@ -132,58 +128,17 @@ const TalkPanel: React.FC = () => {
       console.log('Search response data:', data);
       await handleSearchResults(trimmedQuery, data);
     } catch (error) {
-      console.error('Error during search:', error);
-      if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
+      if (axios.isCancel(error)) {
+        console.warn('Search aborted:', error);
+      } else {
+        console.error('Error during search:', error);
+        dispatch(setApiError('Error fetching talks.'));
+      }
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
       console.log('Search completed.');
     }
-  };
-
-  const sendTranscriptForTalk = async (query: string, talk: Talk) => {
-    try {
-      if (sentMessagesRef.current.has(talk.title)) {
-        console.log(`Skipping already sent transcript for talk: ${talk.title}`);
-        return;
-      }
-
-      console.log(`Sending transcript for talk: ${talk.title}`);
-      dispatch(setSelectedTalk(talk));
-      sentMessagesRef.current.add(talk.title);
-
-      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
-      const controller = createAbortController();
-
-      for (const part of messageParts) {
-        console.log(`Sending message part: ${part}`);
-        const result = await dispatch(
-          sendMessage({ text: part, hidden: true, signal: controller.signal })
-        );
-
-        if (result.error) {
-          console.error(`Failed to send message: ${part}`, result.error);
-          dispatch(setApiError(`Failed to send message: ${part}`));
-          return;
-        }
-      }
-    } catch (error) {
-      console.error(`Error sending transcript for ${talk.title}:`, error);
-      dispatch(setApiError(`Failed to send transcript for ${talk.title}.`));
-    }
-  };
-
-  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
-    console.log('Attempting to send the first available transcript...');
-    for (const talk of talks) {
-      try {
-        await sendTranscriptForTalk(query, talk);
-        break;
-      } catch (error) {
-        console.error('Failed to send transcript:', error);
-      }
-    }
-    dispatch(setApiError('Try searching for a different word.'));
   };
 
   const openTranscriptInNewTab = () => {
@@ -227,20 +182,6 @@ const TalkPanel: React.FC = () => {
         >
           Search
         </button>
-        <button
-          onClick={() => shuffleTalks()}
-          className={`${styles.button} ${styles.shuffleButton}`}
-        >
-          Shuffle
-        </button>
-        {selectedTalk && (
-          <button
-            onClick={openTranscriptInNewTab}
-            className={`${styles.button} ${styles.tedButton}`}
-          >
-            Transcript
-          </button>
-        )}
       </div>
 
       {error && <div className={styles.errorContainer}>{error}</div>}
