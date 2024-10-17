@@ -167,15 +167,12 @@ const TalkPanel: React.FC = () => {
       const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
 
       const result = await dispatch(
-        sendMessage({ text: ${query}, hidden: true })
-        sendMessage({ text: ${talk.title}, hidden: true })
-        sendMessage({ text: ${sendTranscript}, hidden: true })
-        sendMessage({ text: ${sendSdgTag}, hidden: true })
+        sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true })
       );
-      console.log(components/organisms/TalkPanel.tsx - Successfully sent message for talk: ${talk.title}. Result:, result);
+      console.log(`components/organisms/TalkPanel.tsx - Successfully sent message for talk: ${talk.title}. Result:`, result);
     } catch (dispatchError) {
-      console.error(components/organisms/TalkPanel.tsx - Failed to send transcript for ${talk.title}:, dispatchError);
-      dispatch(setError(Failed to send transcript for ${talk.title}.));
+      console.error(`components/organisms/TalkPanel.tsx - Failed to send transcript for ${talk.title}:`, dispatchError);
+      dispatch(setError(`Failed to send transcript for ${talk.title}.`));
     }
   };
 
