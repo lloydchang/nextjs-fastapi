@@ -12,13 +12,6 @@ const TalkPanel = dynamic(() => import('../components/organisms/TalkPanel'), { s
 const ChatPanel = dynamic(() => import('../components/organisms/ChatPanel'), { ssr: false });
 
 const Home: React.FC = () => {
-  useEffect(() => {
-    console.log('Home component mounted.');
-    return () => {
-      console.log('Home component unmounted.');
-    };
-  }, []);
-
   return (
     <ReduxProvider>
       <div className="container">
