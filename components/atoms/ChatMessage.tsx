@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw'; // Import rehypeRaw
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
@@ -14,8 +15,11 @@ interface ChatMessageProps extends Message {
 }
 
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
-  const urlPattern = /(?<!\S)(www\.[\w.-]+\.[\w]{2,}|[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
-  return text.replace(urlPattern, (match) => `[${match}](http://${match})`);
+  const urlPattern = /(?<!\S)(https?:\/\/[\w.-]+\.[\w]{2,}|www\.[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
+  return text.replace(urlPattern, (match) => {
+    const url = match.startsWith('http') ? match : `https://${match}`;
+    return `[${match}](${url})`;
+  });
 };
 
 const hashPersonaToColor = (persona: string): string => {
@@ -39,9 +43,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const displayPersona = persona;
   const personaColor = displayPersona ? hashPersonaToColor(displayPersona) : '#777777';
-  
+
   const processedText = convertPlainUrlsToMarkdownLinks(text);
-  const shortenedText = 
+  const shortenedText =
     text.split(' ').length > 10 && !isFullScreen
       ? `${text.split(' ').slice(0, 10).join(' ')}…`
       : text;
@@ -80,7 +84,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <div className={`${styles.text} ${isAd ? styles.adContent : ''}`}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight]}
+                rehypePlugins={[rehypeHighlight, rehypeRaw]} // Add rehypeRaw here
                 components={{ a: ({ node, ...props }) => <LinkRenderer {...props} /> }}
               >
                 {processedText}
@@ -111,7 +115,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         <div className={`${styles.text} ${isAd ? styles.adContent : ''}`}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
+            rehypePlugins={[rehypeHighlight, rehypeRaw]} // Add rehypeRaw here
             components={{ a: ({ node, ...props }) => <LinkRenderer {...props} /> }}
           >
             {shortenedText}
