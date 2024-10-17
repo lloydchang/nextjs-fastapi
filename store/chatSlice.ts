@@ -107,6 +107,8 @@ const debouncedApiCall = debounce(
 
     while (retryCount < maxRetries) {
       try {
+        console.debug('Preparing to fetch API with messages:', messagesArray);
+        
         const response = await Promise.race([
           fetch('/api/chat', {
             method: 'POST',
@@ -119,6 +121,7 @@ const debouncedApiCall = debounce(
         console.debug('Received API response:', response);
 
         if (!response.ok) {
+          console.debug(`Response not OK, status: ${response.status}`);
           if (response.status === 429) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
             console.warn(`Rate limited. Retrying after ${retryAfter} seconds.`);
@@ -140,6 +143,8 @@ const debouncedApiCall = debounce(
               if (done) break;
 
               textBuffer += decoder.decode(value, { stream: true });
+              console.debug('Current text buffer:', textBuffer);
+              
               const messages = textBuffer.split('\n\n');
               textBuffer = messages.pop() || '';
 
