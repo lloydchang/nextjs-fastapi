@@ -5,12 +5,25 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw'; // Reintroduced for rendering raw HTML
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'; // Added for sanitization
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
 
-// Add a prop for Full Screen mode detection
+// Define a custom schema if you need to allow specific HTML elements or attributes
+const customSchema = {
+  ...defaultSchema,
+  // Example: Allow <iframe> with specific attributes (use cautiously)
+  attributes: {
+    ...defaultSchema.attributes,
+    iframe: ['src', 'title', 'width', 'height', 'allow', 'allowfullscreen'],
+    // Add more tags and attributes as needed
+  },
+  // Example: Allow <iframe> tag (use cautiously)
+  tagNames: [...defaultSchema.tagNames, 'iframe'],
+};
+
 interface ChatMessageProps extends Message {
   isFullScreen: boolean;
 }
@@ -87,7 +100,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeHighlight, rehypeRaw]} // rehypeRaw reintroduced
+      rehypePlugins={[rehypeHighlight, rehypeRaw, [rehypeSanitize, customSchema]]} // Added rehypeSanitize with custom schema
       components={{ a: LinkRenderer }}
     >
       {content}
