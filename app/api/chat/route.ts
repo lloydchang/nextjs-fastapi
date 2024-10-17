@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
 
       // **New Silly Log Statement: Log the Request Body**
-      logger.silly(
+      logger.debug(
         `Request body for RequestId: ${requestId}, clientId: ${clientId}: ${JSON.stringify(body)}`
       );
 
