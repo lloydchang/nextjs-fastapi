@@ -21,19 +21,19 @@ const Tools: React.FC = () => {
   const messages = useSelector((state: RootState) => state.chat.messages);
 
   const openInNewTab = (url: string) => {
-    console.log(`Opening URL: ${url}`);
+    console.debug(`Opening URL: ${url}`);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.log('Loading TensorFlow model...');
+        console.debug('Loading TensorFlow model...');
         await tf.setBackend('webgl');
         await tf.ready();
         const loadedModel = await use.load();
         setModel(loadedModel);
-        console.log('Model loaded successfully');
+        console.debug('Model loaded successfully');
       } catch (error) {
         console.error('Error loading TensorFlow model:', error);
       }
@@ -47,7 +47,7 @@ const Tools: React.FC = () => {
       return;
     }
 
-    console.log(`Computing similarity for message: "${message}"`);
+    console.debug(`Computing similarity for message: "${message}"`);
     try {
       const inputEmbedding = await model.embed([message]);
 
@@ -58,7 +58,7 @@ const Tools: React.FC = () => {
             inputEmbedding.arraySync()[0],
             paragraphEmbedding.arraySync()[0]
           );
-          console.log(`Similarity for ${buttonName}: ${similarity}`);
+          console.debug(`Similarity for ${buttonName}: ${similarity}`);
           return { buttonName, similarity };
         })
       );
@@ -67,7 +67,7 @@ const Tools: React.FC = () => {
         curr.similarity > prev.similarity ? curr : prev
       );
 
-      console.log(`Best match: ${bestMatch.buttonName}`);
+      console.debug(`Best match: ${bestMatch.buttonName}`);
       setHighlightedButton(bestMatch.buttonName);
     } catch (error) {
       console.error('Error computing similarity:', error);
@@ -77,23 +77,23 @@ const Tools: React.FC = () => {
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1].text;
-      console.log(`New message detected: "${latestMessage}"`);
+      console.debug(`New message detected: "${latestMessage}"`);
       computeSimilarity(latestMessage);
     }
   }, [messages, model]);
 
   const cosineSimilarity = (vecA: number[], vecB: number[]) => {
-    console.log('Calculating cosine similarity');
+    console.debug('Calculating cosine similarity');
     const dotProduct = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
     const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
     const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
     const similarity = dotProduct / (magnitudeA * magnitudeB);
-    console.log(`Cosine similarity: ${similarity}`);
+    console.debug(`Cosine similarity: ${similarity}`);
     return similarity;
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    console.log('Mouse down event detected');
+    console.debug('Mouse down event detected');
     setIsDragging(true);
     dragItem.current = e.currentTarget as HTMLDivElement;
     dragStartPosition.current = { x: e.clientX - position.x, y: e.clientY - position.y };
@@ -105,23 +105,23 @@ const Tools: React.FC = () => {
         x: e.clientX - dragStartPosition.current.x,
         y: e.clientY - dragStartPosition.current.y,
       };
-      console.log(`Dragging to position: ${JSON.stringify(newPosition)}`);
+      console.debug(`Dragging to position: ${JSON.stringify(newPosition)}`);
       setPosition(newPosition);
     }
   };
 
   const handleMouseUp = () => {
-    console.log('Mouse up event detected, stopping drag');
+    console.debug('Mouse up event detected, stopping drag');
     setIsDragging(false);
   };
 
   useEffect(() => {
     if (isDragging) {
-      console.log('Adding drag event listeners');
+      console.debug('Adding drag event listeners');
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
     } else {
-      console.log('Removing drag event listeners');
+      console.debug('Removing drag event listeners');
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     }
