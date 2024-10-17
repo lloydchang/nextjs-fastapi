@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { addMessage } from 'store/chatSlice';
-import toolsButtonsParagraphs from './toolsButtonsParagraphs';
+import buttonBlurb from 'components/organisms/buttonBlurb';
 import styles from 'styles/components/organisms/Tools.module.css';
 import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique ids
 
@@ -13,7 +13,7 @@ const Tools: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [highlightedButton, setHighlightedButton] = useState<string>(
-    Object.keys(toolsButtonsParagraphs)[0]
+    Object.keys(buttonBlurb)[0]
   );
 
   const dragItem = useRef<HTMLDivElement | null>(null);
@@ -32,7 +32,7 @@ const Tools: React.FC = () => {
   const findMatchingButton = (message: string): string => {
     message = message.toLowerCase();
 
-    const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) => {
+    const matchingButtonName = Object.keys(buttonBlurb).find((buttonName) => {
       const regex = new RegExp(`\\b${escapeRegExp(buttonName.toLowerCase())}\\b`, 'i');
       return regex.test(message);
     });
@@ -41,14 +41,14 @@ const Tools: React.FC = () => {
       return matchingButtonName;
     }
 
-    for (const [buttonName, { paragraph }] of Object.entries(toolsButtonsParagraphs)) {
+    for (const [buttonName, { blurb }] of Object.entries(buttonBlurb)) {
       const regex = new RegExp(`\\b${escapeRegExp(message)}\\b`, 'i');
-      if (regex.test(paragraph.toLowerCase())) {
+      if (regex.test(blurb.toLowerCase())) {
         return buttonName;
       }
     }
 
-    return Object.keys(toolsButtonsParagraphs)[0];
+    return Object.keys(buttonBlurb)[0];
   };
 
   const getLatestMessage = () => {
@@ -72,10 +72,10 @@ const Tools: React.FC = () => {
         setHighlightedButton(matchingButton);
 
         const buttonText = `***${matchingButton || ''}***`;
-        const paragraphText = `${toolsButtonsParagraphs[matchingButton].paragraph || ''}`;
-        const url = toolsButtonsParagraphs[matchingButton].url || '';
+        const blurbText = `${buttonBlurb[matchingButton].blurb || ''}`;
+        const url = buttonBlurb[matchingButton].url || '';
 
-        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${buttonText}: ${paragraphText}</a>`;
+        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${buttonText}: ${blurbText}</a>`;
 
         // Check if the new message is the same as the last ad message
         if (lastAdMessageRef.current !== messageText) {
@@ -136,13 +136,13 @@ const Tools: React.FC = () => {
       onMouseDown={handleMouseDown}
     >
       <div className={styles['button-group']}>
-        {Object.keys(toolsButtonsParagraphs).map((buttonName) => (
+        {Object.keys(buttonBlurb).map((buttonName) => (
           <div key={buttonName} className={styles['lazy-arrow-container']}>
             <button
               className={`${styles['right-edge-button']} ${
                 highlightedButton === buttonName ? styles['highlight'] : ''
               }`}
-              onClick={() => openInNewTab(toolsButtonsParagraphs[buttonName].url)}
+              onClick={() => openInNewTab(buttonBlurb[buttonName].url)}
             >
               {buttonName}
             </button>
