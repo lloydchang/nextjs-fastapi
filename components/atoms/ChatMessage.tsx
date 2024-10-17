@@ -155,6 +155,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
           </ReactMarkdown>
         </div>
       </div>
+
+      {/* Debugging messages */}
+      {console.debug(`ChatMessage rendered: sender=${sender}, text=${text}, processedText=${processedText}`)}
     </>
   );
 };
