@@ -161,15 +161,22 @@ const TalkPanel: React.FC = () => {
     console.log('Updated lastDispatchedTalkId:', lastDispatchedTalkId.current);
     console.log('Updated HasSentMessage set:', [...hasSentMessage.current]);
 
-    // Dispatch the message as the final step
+    // Dispatch the messages as the final step
     try {
       const sendTranscript = talk.transcript || '';
       const sendSdgTag = talk.sdg_tags.length > 0 ? sdgTitleMap[talk.sdg_tags[0]] : '';
 
-      const result = await dispatch(
-        sendMessage({ text: `${query} | ${talk.title} | ${sendTranscript} | ${sendSdgTag}`, hidden: true })
-      );
-      console.log(`components/organisms/TalkPanel.tsx - Successfully sent message for talk: ${talk.title}. Result:`, result);
+      const messageParts = [
+        `${query}`,
+        `${talk.title}`,
+        `${sendTranscript}`,
+        `${sendSdgTag}`
+      ];
+
+      for (const part of messageParts) {
+        const result = await dispatch(sendMessage({ text: part, hidden: true }));
+        console.log(`components/organisms/TalkPanel.tsx - Successfully sent message part: ${part}. Result:`, result);
+      }
     } catch (dispatchError) {
       console.error(`components/organisms/TalkPanel.tsx - Failed to send transcript for ${talk.title}:`, dispatchError);
       dispatch(setError(`Failed to send transcript for ${talk.title}.`));
