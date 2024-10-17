@@ -74,7 +74,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const isUser = role === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
-  const shouldShorten = sender === 'bot' && text.split(' ').length > 10 && !isFullScreen;
+  const shouldShorten = text.split(' ').length > 10 && !isFullScreen;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
   const handleOpenModal = useCallback(() => {
