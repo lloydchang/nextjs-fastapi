@@ -31,13 +31,13 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      const existingMessage = state.messages.find((msg) => msg.id === action.payload.id);
-      if (!existingMessage) {
-        if (state.messages.length >= MAX_MESSAGES) {
-          state.messages.shift(); // Remove oldest message to control state size
-        }
-        state.messages.push(action.payload);
+      // Prevent duplicate messages
+      if (state.messages.some((msg) => msg.text === action.payload.text)) {
+        console.log('Duplicate message detected, skipping:', action.payload.text);
+        return;
       }
+      if (state.messages.length >= MAX_MESSAGES) state.messages.shift();
+      state.messages.push(action.payload);
     },
     clearMessages: (state) => {
       state.messages = [];
@@ -58,18 +58,12 @@ const timeoutPromise = (ms: number) =>
 
 export const parseIncomingMessage = (jsonString: string) => {
   try {
-    // Ignore the "[DONE]" message
-    if (jsonString === '[DONE]') {
-      return null; // Returning null to signal the end of the stream
-    }
+    if (jsonString === '[DONE]') return null; // End of stream
 
     const sanitizedString = he.decode(jsonString);
     const parsedData = JSON.parse(sanitizedString);
 
-    if (!parsedData.persona || !parsedData.message) {
-      return null;
-    }
-
+    if (!parsedData.persona || !parsedData.message) return null;
     return parsedData;
   } catch (error) {
     console.error('Error parsing message:', jsonString, error);
@@ -83,31 +77,25 @@ const debouncedApiCall = debounce(
     getState: () => RootState,
     input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string },
     clientId: string
-  ): Promise<void> => {
+  ) => {
     const state = getState();
-    if (state.api?.isLoading) {
-      return;
-    }
+    if (state.api?.isLoading) return;
 
-    const maxRetries = 3;
+    dispatch(setLoading(true));
+
+    const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
     let retryCount = 0;
+    const maxRetries = 3;
 
     while (retryCount < maxRetries) {
       try {
-        const messagesArray = [
-          { role: 'user', content: typeof input === 'string' ? input : input.text },
-        ];
-
         const response = await Promise.race([
           fetch('/api/chat', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-client-id': clientId,
-            },
+            headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
             body: JSON.stringify({ messages: messagesArray }),
           }),
-          timeoutPromise(10000), // Timeout after 10 seconds
+          timeoutPromise(10000),
         ]);
 
         if (!response.ok) {
@@ -131,7 +119,6 @@ const debouncedApiCall = debounce(
               if (done) break;
 
               textBuffer += decoder.decode(value, { stream: true });
-
               const messages = textBuffer.split('\n\n');
               textBuffer = messages.pop() || '';
 
@@ -153,26 +140,24 @@ const debouncedApiCall = debounce(
               }
             }
           } finally {
-            reader.releaseLock(); // Ensure reader is released
+            reader.releaseLock();
           }
         }
+        dispatch(setLoading(false));
         return;
       } catch (error: any) {
-        if (error instanceof ApiError && error.status === 429 && retryCount < maxRetries - 1) {
-          retryCount++;
-          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff: 2, 4, 8 seconds
-          continue;
-        } else if (error.message === 'Timeout' && retryCount < maxRetries - 1) {
+        if ((error instanceof ApiError && error.status === 429) || error.message === 'Timeout') {
           retryCount++;
           await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
         }
         dispatch(setError(error.message || 'An unknown error occurred'));
+        dispatch(setLoading(false));
         return;
       }
     }
   },
-  1000 // Debounce time: 1 second
+  1000
 );
 
 export const sendMessage = (
@@ -182,35 +167,15 @@ export const sendMessage = (
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(clearError());
 
-  let clientId: string;
-  if (typeof window !== 'undefined' && window.localStorage) {
-    clientId = localStorage.getItem('clientId') || uuidv4();
-    localStorage.setItem('clientId', clientId);
-  } else {
-    clientId = uuidv4();
-  }
+  let clientId = localStorage.getItem('clientId') || uuidv4();
+  localStorage.setItem('clientId', clientId);
 
   const userMessage: Message =
     typeof input === 'string'
-      ? {
-          id: uuidv4(), // Use UUID for unique IDs
-          sender: 'user',
-          text: input,
-          role: 'user',
-          content: input,
-        }
-      : {
-          id: uuidv4(),
-          sender: input.sender || 'user',
-          text: input.text,
-          role: 'user',
-          content: input.text,
-          hidden: input.hidden || false,
-          persona: input.persona,
-        };
+      ? { id: uuidv4(), sender: 'user', text: input, role: 'user', content: input }
+      : { ...input, id: uuidv4(), sender: input.sender || 'user' };
 
   dispatch(addMessage(userMessage));
-
   await debouncedApiCall(dispatch, getState, input, clientId);
 };
 
