@@ -23,17 +23,14 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
   const { loading, error } = useSelector((state: RootState) => state.api);
 
-  // Initialize the search query immediately.
   const [searchQuery, setSearchQuery] = useState<string>(determineInitialKeyword());
 
   const isSearchInProgress = useRef(false);
-  const didMount = useRef(false); // Track initial mount
+  const initialSearchDone = useRef(false); 
   const abortControllerRef = useRef<AbortController | null>(null);
-  const lastQueryRef = useRef<string>('');
   const sentMessagesRef = useRef<Set<string>>(new Set());
-  const scrollableContainerRef = useRef<HTMLDivElement>(null);
+  const activeTasksRef = useRef<AbortController[]>([]); // Track all active tasks
 
-  // **Debounced search function to prevent redundant calls.**
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
       console.log('Debounced search initiated:', query);
@@ -42,29 +39,35 @@ const TalkPanel: React.FC = () => {
     []
   );
 
-  // **Ensure search only triggers once on mount.**
+  // **Ensure all active tasks are aborted when unmounting.**
   useEffect(() => {
-    if (!didMount.current) {
+    if (!initialSearchDone.current) {
       console.log('TalkPanel - Initial render detected. Performing search.');
       performSearch(searchQuery);
-      didMount.current = true; // Mark as mounted
+      initialSearchDone.current = true;
     }
 
     return () => {
-      if (abortControllerRef.current) abortControllerRef.current.abort();
+      console.log('Cleaning up tasks on unmount...');
+      activeTasksRef.current.forEach((controller) => controller.abort()); // Abort all active tasks
       debouncedPerformSearch.cancel();
     };
-  }, []); // Empty dependency ensures it runs only once
+  }, [searchQuery]);
+
+  // Helper to abort a specific task and track it in the active tasks list.
+  const createAbortController = () => {
+    const controller = new AbortController();
+    activeTasksRef.current.push(controller);
+    return controller;
+  };
 
   const handleSearchResults = async (query: string, data: Talk[]) => {
     const processedData = isFirstSearch.current ? shuffleArray(data) : data;
-
     const uniqueTalks = processedData.filter(
       (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
     );
 
     dispatch(setTalks(uniqueTalks));
-
     if (!selectedTalk && uniqueTalks.length > 0) {
       dispatch(setSelectedTalk(uniqueTalks[0]));
     }
@@ -79,24 +82,18 @@ const TalkPanel: React.FC = () => {
 
     if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) return;
 
+    // Abort any ongoing search before starting a new one.
     if (abortControllerRef.current) abortControllerRef.current.abort();
+    abortControllerRef.current = createAbortController();
 
-    abortControllerRef.current = new AbortController();
     isSearchInProgress.current = true;
     lastQueryRef.current = trimmedQuery;
     dispatch(setApiError(null));
     dispatch(setLoading(true));
 
     try {
-      const finalQuery =
-        trimmedQuery === 'sdg'
-          ? Object.keys(sdgTitleMap).filter((key) => key.startsWith('sdg'))[
-              Math.floor(Math.random() * 17)
-            ]
-          : trimmedQuery;
-
       const response = await axios.get(
-        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(finalQuery)}`,
+        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
         { signal: abortControllerRef.current.signal }
       );
 
@@ -109,13 +106,53 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || 'Transcript not available',
       }));
 
-      await handleSearchResults(finalQuery, data);
+      await handleSearchResults(trimmedQuery, data);
     } catch (error) {
       if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
+  };
+
+  const sendTranscriptForTalk = async (query: string, talk: Talk) => {
+    try {
+      if (sentMessagesRef.current.has(talk.title)) return;
+
+      dispatch(setSelectedTalk(talk));
+      sentMessagesRef.current.add(talk.title);
+
+      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
+      const controller = createAbortController();
+
+      for (const part of messageParts) {
+        console.log(`Sending message part: ${part}`);
+        const result = await dispatch(
+          sendMessage({ text: part, hidden: true, signal: controller.signal })
+        );
+
+        if (result.error) {
+          console.error(`Failed to send message: ${part}`, result.error);
+          dispatch(setApiError(`Failed to send message: ${part}`));
+          return;
+        }
+      }
+    } catch (error) {
+      console.error(`Error sending transcript for ${talk.title}:`, error);
+      dispatch(setApiError(`Failed to send transcript for ${talk.title}.`));
+    }
+  };
+
+  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
+    for (const talk of talks) {
+      try {
+        await sendTranscriptForTalk(query, talk);
+        break;
+      } catch (error) {
+        console.error('Failed to send transcript:', error);
+      }
+    }
+    dispatch(setApiError('Try searching for a different word.'));
   };
 
   const openTranscriptInNewTab = () => {
@@ -156,6 +193,12 @@ const TalkPanel: React.FC = () => {
         >
           Search
         </button>
+        <button
+          onClick={() => shuffleTalks()}
+          className={`${styles.button} ${styles.shuffleButton}`}
+        >
+          Shuffle
+        </button>
         {selectedTalk && (
           <button
             onClick={openTranscriptInNewTab}
@@ -171,7 +214,7 @@ const TalkPanel: React.FC = () => {
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
           <TalkItem
-            key={`${talk.url}-${index}`} // Ensure unique keys
+            key={`${talk.url}-${index}`}
             talk={talk}
             selected={selectedTalk?.title === talk.title}
           />
