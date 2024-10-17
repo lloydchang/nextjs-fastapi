@@ -87,10 +87,11 @@ const TalkPanel: React.FC = () => {
       if (response.status !== 200) throw new Error(response.statusText);
 
       const data: Talk[] = response.data.results.map((result: any) => ({
-        title: result.document.slug.replace(/_/g, ' '),
-        url: `https://www.ted.com/talks/${result.document.slug}`,
+        presenterDisplayName: result.document.presenterDisplayName || [],
+        title: result.document.slug.replace(/_/g, ' ') || [],
+        url: `https://www.ted.com/talks/${result.document.slug}` || [],
         sdg_tags: result.document.sdg_tags || [],
-        transcript: result.document.transcript || 'Transcript not available',
+        transcript: result.document.transcript || [],
       }));
 
       handleSearchResults(data);
@@ -132,10 +133,11 @@ const TalkPanel: React.FC = () => {
     sentMessagesRef.current.add(talk.title); // Track sent messages
 
     const messageParts = [
-      `Talk: ${talk.title}`,
-      `URL: ${talk.url}`,
-      `SDG Tags: ${talk.sdg_tags.join(', ') || 'None'}`,
-      `Transcript: ${talk.transcript}`,
+      `Presenter: ${talk.presenterDisplayName}` || '',
+      `Talk: ${talk.title}` || '',
+      `URL: ${talk.url}` || '',
+      `SDG Tags: ${talk.sdg_tags.join(', ') || ''}`,
+      `Transcript: ${talk.transcript}` || '',
     ];
 
     for (const part of messageParts) {
