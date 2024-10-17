@@ -4,15 +4,10 @@ import React, { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import './globals.css'; 
 import ErrorBoundary from '../components/organisms/ErrorBoundary';
-import ReduxProvider from '../components/ReduxProvider'; // Import the ReduxProvider
+import ReduxProvider from '../components/ReduxProvider'; 
 
-const TalkPanel = dynamic(() => import('../components/organisms/TalkPanel'), {
-  ssr: true,
-});
-
-const ChatPanel = dynamic(() => import('../components/organisms/ChatPanel'), {
-  ssr: true,
-});
+const TalkPanel = dynamic(() => import('../components/organisms/TalkPanel'), { ssr: true });
+const ChatPanel = dynamic(() => import('../components/organisms/ChatPanel'), { ssr: true });
 
 const Home: React.FC = () => {
   return (

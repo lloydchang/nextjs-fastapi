@@ -24,7 +24,6 @@ const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, []);
 
   if (!persistor) {
-    // Render without PersistGate during SSR or while initializing
     return <Provider store={persistedStore}>{children}</Provider>;
   }
 
