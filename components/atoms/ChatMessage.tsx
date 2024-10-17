@@ -1,6 +1,6 @@
 // File: components/atoms/ChatMessage.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -18,7 +18,7 @@ interface ChatMessageProps extends Message {
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
   const urlPattern = /(?<!\S)(https?:\/\/[\w.-]+\.[\w]{2,}|www\.[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
   return text.replace(urlPattern, (match) => {
-    const url = match.startsWith('www.') ? `http://${match}` : `http://${match}`;
+    const url = match.startsWith('www.') ? `http://${match}` : match;
     return `[${match}](${url})`;
   });
 };
@@ -34,78 +34,80 @@ const hashPersonaToColor = (persona: string): string => {
   return `#${rangeValue.toString(16).padStart(6, '0')}`; // Ensure it's 6 characters
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isFullScreen, role }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  sender,
+  text,
+  isInterim,
+  persona,
+  isFullScreen,
+  role,
+}) => {
   const [showFullScreen, setShowFullScreen] = useState(false);
-  const [showFullMessage, setShowFullMessage] = useState(false); // Retained for non-full-screen mode
+  const [showFullMessage, setShowFullMessage] = useState(false);
 
   const displayPersona = persona || sender;
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
 
   const isUser = role === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
-
-  // Update shortening logic to consider isFullScreen
   const shouldShorten = sender === 'bot' && text.split(' ').length > 10 && !isFullScreen;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
-
-  const handleOpenModal = () => {
+  const handleOpenModal = useCallback(() => {
     setShowFullScreen(true);
     console.debug('Opening full screen for message:', text);
-  };
+  }, [text]);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowFullScreen(false);
     console.debug('Closing full screen modal');
-  };
+  }, []);
 
-  // Handle Escape key press to close the modal
   useEffect(() => {
     if (showFullScreen) {
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          handleCloseModal();
-        }
+        if (event.key === 'Escape') handleCloseModal();
       };
-
-      // Attach event listener
       document.addEventListener('keydown', handleKeyDown);
-
-      // Clean up event listener on unmount or modal close
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
+      return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [showFullScreen]); // Re-run effect only when `showFullScreen` changes
+  }, [showFullScreen, handleCloseModal]);
 
   return (
     <>
-      {/* Full-Screen Modal */}
       {showFullScreen && (
-        <div className={styles.modalBackdrop} onClick={handleCloseModal}>
-          <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header with Persona Label and Close Button */}
+        <div
+          className={styles.modalBackdrop}
+          onClick={handleCloseModal}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className={styles.fullScreenMessage}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
-              {/* Persona Label */}
               {persona && (
-                <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
+                <div
+                  className={styles.modalPersonaLabel}
+                  style={{ color: personaColor }}
+                >
                   <strong>{persona}</strong>
                 </div>
               )}
-              {/* Close Button */}
-              <button className={styles.modalCloseButton} onClick={handleCloseModal}>
+              <button
+                className={styles.modalCloseButton}
+                onClick={handleCloseModal}
+              >
                 Close
               </button>
             </div>
 
-            {/* Apply the same .text class inside the modal to ensure markdown styles are inherited */}
             <div className={styles.text}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
-                components={{
-                  a: ({ node, ...props }) => <LinkRenderer {...props} />,
-                }}
+                components={{ a: LinkRenderer }}
               >
                 {processedText}
               </ReactMarkdown>
@@ -118,39 +120,37 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
         } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => !isFullScreen && setShowFullMessage(true)} // Retained for non-full-screen mode
-        onMouseLeave={() => isFullScreen && setShowFullMessage(false)} // Retained for non-full-screen mode
+        onMouseEnter={() => !isFullScreen && setShowFullMessage(true)}
+        onMouseLeave={() => setShowFullMessage(false)}
         onClick={handleOpenModal}
-        style={{ position: 'relative' }} // Ensure the parent is relative
+        style={{ position: 'relative' }}
       >
-        {/* Display Persona Label */}
         {persona && (
-          <div className={`${showFullMessage ? styles.personaLabelHovered : styles.personaLabel}`} style={{ color: personaColor }}>
+          <div
+            className={`${
+              showFullMessage ? styles.personaLabelHovered : styles.personaLabel
+            }`}
+            style={{ color: personaColor }}
+          >
             <strong>{persona}</strong>
           </div>
         )}
-        {/* Hovered text will be shown below the persona label */}
         {!isFullScreen && showFullMessage && (
           <div className={styles.textHovered}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
-              components={{
-                a: ({ node, ...props }) => <LinkRenderer {...props} />,
-              }}
+              components={{ a: LinkRenderer }}
             >
               {processedText}
             </ReactMarkdown>
           </div>
         )}
-        {/* Shortened or Full text based on mode */}
         <div className={styles.text}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
-            components={{
-              a: ({ node, ...props }) => <LinkRenderer {...props} />,
-            }}
+            components={{ a: LinkRenderer }}
           >
             {shouldShorten ? shortenedText : processedText}
           </ReactMarkdown>
