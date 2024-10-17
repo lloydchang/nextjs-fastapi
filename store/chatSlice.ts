@@ -61,11 +61,13 @@ const chatSlice = createSlice({
   },
 });
 
+// Helper functions
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const timeoutPromise = (ms: number) =>
   new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
+// Parsing incoming messages
 export const parseIncomingMessage = (jsonString: string) => {
   try {
     if (jsonString === '[DONE]') return null;
@@ -83,6 +85,7 @@ export const parseIncomingMessage = (jsonString: string) => {
   }
 };
 
+// Debounced API call
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -184,6 +187,7 @@ const debouncedApiCall = debounce(
   1000
 );
 
+// Send message function
 export const sendMessage = (
   input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
@@ -212,5 +216,6 @@ export const sendMessage = (
   console.debug('Redux state after sendMessage:', getState());
 };
 
+// Exporting actions and reducer
 export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
 export default chatSlice.reducer;
