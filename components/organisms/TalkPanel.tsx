@@ -15,6 +15,9 @@ import LoadingSpinner from './LoadingSpinner'; // Your existing loading spinner
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
+// Helper function for debug logging
+const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
+
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
@@ -40,16 +43,17 @@ const TalkPanel: React.FC = () => {
 
     if (mountCounter.current === 1) {
       isStrictMode.current = true; // Initial mount in Strict Mode
+      debugLog('Initial mount detected; entering strict mode.');
     } else {
       isStrictMode.current = false; // Subsequent mounts are normal
-      if (!isStrictMode.current) {
-        performSearch(searchQuery);
-      }
+      debugLog('Subsequent mount detected; exiting strict mode.');
+      performSearch(searchQuery);
     }
 
     return () => {
       if (!isStrictMode.current) {
         abortControllerRef.current?.abort();
+        debugLog('Cleanup: aborting any ongoing search requests.');
       }
       debouncedPerformSearch.cancel();
     };
@@ -57,8 +61,10 @@ const TalkPanel: React.FC = () => {
 
   const performSearch = async (query: string) => {
     const trimmedQuery = query.trim().toLowerCase();
+    debugLog(`Performing search with query: "${trimmedQuery}"`);
 
     if (isSearchInProgress.current || trimmedQuery === lastQueryRef.current) {
+      debugLog('Search already in progress or query has not changed. Exiting.');
       return;
     }
 
@@ -68,6 +74,7 @@ const TalkPanel: React.FC = () => {
     lastQueryRef.current = trimmedQuery;
     dispatch(setLoading(true));
     dispatch(setApiError(null));
+    debugLog('Dispatching loading state.');
 
     try {
       const response = await axios.get(
@@ -76,6 +83,7 @@ const TalkPanel: React.FC = () => {
       );
 
       if (response.status !== 200) throw new Error(response.statusText);
+      debugLog(`Search successful: ${response.data.results.length} results received.`);
 
       const data: Talk[] = response.data.results.map((result: any) => {
         const presenterName = result.document.presenterDisplayName || '';
@@ -99,13 +107,14 @@ const TalkPanel: React.FC = () => {
         dispatch(setApiError('Error fetching talks.'));
       }
     } finally {
-      console.debug('[performSearch] Setting loading to false.');
+      debugLog('Setting loading to false.');
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
   };
 
   const handleSearchResults = (data: Talk[]) => {
+    debugLog(`Handling search results: ${data.length} talks received.`);
     dispatch(setTalks(data)); // Directly set talks without deduplication logic
 
     if (data.length > 0) {
@@ -119,10 +128,12 @@ const TalkPanel: React.FC = () => {
 
   const sendTranscriptAsMessage = async (talk: Talk) => {
     if (sentMessagesRef.current.has(talk.title)) {
+      debugLog(`Message for talk "${talk.title}" already sent, skipping.`);
       return;
     }
 
     sentMessagesRef.current.add(talk.title);
+    debugLog(`Sending transcript for talk: ${talk.title}`);
 
     const messageParts = [
       `Presenter: ${talk.presenterDisplayName}`,
@@ -134,16 +145,19 @@ const TalkPanel: React.FC = () => {
 
     for (const part of messageParts) {
       dispatch(sendMessage({ text: part, hidden: false }));
+      debugLog(`Sent message part: ${part}`);
     }
   };
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
+      debugLog(`Opening transcript for: ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
     }
   };
 
   const shuffleTalks = () => {
+    debugLog('Shuffling talks.');
     dispatch(setTalks(shuffleArray(talks)));
   };
 
@@ -170,15 +184,26 @@ const TalkPanel: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && performSearch(searchQuery)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              debugLog(`Search query updated: "${e.target.value}"`);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                debugLog(`Search initiated via Enter key with query: "${searchQuery}"`);
+                performSearch(searchQuery);
+              }
+            }}
             className={styles.searchInput}
             placeholder="Search for talks..."
           />
           {loading && <LoadingSpinner />} {/* Confirm that both loading indicators are displayed */}
         </div>
         <button
-          onClick={() => performSearch(searchQuery)}
+          onClick={() => {
+            debugLog(`Search button clicked with query: "${searchQuery}"`);
+            performSearch(searchQuery);
+          }}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={loading}
         >
