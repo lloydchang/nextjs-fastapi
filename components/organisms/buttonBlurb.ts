@@ -1,7 +1,7 @@
-// File: components/organisms/toolsButtonsParagraphs.ts
-// Mapping buttons to concise calls to action and URLs
+// File: components/organisms/buttonBlurb.ts
+// Mapping a button to a concise Call To Action and URL
 
-const buttonblurb: { [key: string]: { blurb: string; url: string } } = {
+const buttonBlurb: { [key: string]: { blurb: string; url: string } } = {
   Lazy: {
     blurb: "Start your sustainability journey today.",
     url: 'https://www.un.org/sustainabledevelopment/takeaction/',
