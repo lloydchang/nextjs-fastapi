@@ -108,4 +108,4 @@ const buttonblurb: { [key: string]: { blurb: string; url: string } } = {
   },
 };
 
-export default buttonBlurbs;
+export default buttonBlurb;
