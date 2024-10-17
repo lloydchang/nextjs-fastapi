@@ -40,22 +40,22 @@ const TalkPanel: React.FC = () => {
 
   useEffect(() => {
     mountCounter.current += 1;
-    console.log(`[TalkPanel] Mount count: ${mountCounter.current}`);
+    console.debug(`[TalkPanel] Mount count: ${mountCounter.current}`);
 
     if (mountCounter.current === 1) {
-      console.log('[TalkPanel] Initial Strict Mode mount detected. Skipping API call.');
+      console.debug('[TalkPanel] Initial Strict Mode mount detected. Skipping API call.');
       isStrictModeMount.current = true;
     } else {
-      console.log('[TalkPanel] Real mount. Performing initial search.');
+      console.debug('[TalkPanel] Real mount. Performing initial search.');
       isStrictModeMount.current = false;
       performSearch(searchQuery);
     }
 
     return () => {
-      console.log('[TalkPanel] Component unmounted.');
+      console.debug('[TalkPanel] Component unmounted.');
 
       if (!isStrictModeMount.current) {
-        console.log('[TalkPanel] Aborting ongoing search due to real unmount.');
+        console.debug('[TalkPanel] Aborting ongoing search due to real unmount.');
         abortControllerRef.current?.abort();
       }
       debouncedPerformSearch.cancel();
@@ -64,10 +64,10 @@ const TalkPanel: React.FC = () => {
 
   const performSearch = async (query: string) => {
     const trimmedQuery = query.trim().toLowerCase();
-    console.log(`[performSearch] Query: ${trimmedQuery}`);
+    console.debug(`[performSearch] Query: ${trimmedQuery}`);
 
     if (isSearchInProgress.current || trimmedQuery === lastQueryRef.current) {
-      console.log('[performSearch] Skipping duplicate or ongoing search.');
+      console.debug('[performSearch] Skipping duplicate or ongoing search.');
       return;
     }
 
@@ -107,15 +107,17 @@ const TalkPanel: React.FC = () => {
   };
 
   const handleSearchResults = (data: Talk[]) => {
-    console.log('[handleSearchResults] Received data:', data);
+    console.debug('[handleSearchResults] Received data:', data);
 
     const uniqueTalks = shuffleArray(data).filter(
       (talk) => !talks.some((existing) => existing.url === talk.url)
     );
     dispatch(setTalks(uniqueTalks));
+    console.debug('[handleSearchResults] Unique talks dispatched:', uniqueTalks);
 
     if (uniqueTalks.length > 0) {
       const firstTalk = uniqueTalks[0];
+      console.debug('[handleSearchResults] Selecting first talk:', firstTalk);
       dispatch(setSelectedTalk(firstTalk));
       sendTranscriptAsMessage(firstTalk); // Send transcript on selection
     }
@@ -125,11 +127,11 @@ const TalkPanel: React.FC = () => {
 
   const sendTranscriptAsMessage = async (talk: Talk) => {
     if (sentMessagesRef.current.has(talk.title)) {
-      console.log(`[sendTranscriptAsMessage] Skipping duplicate message for: ${talk.title}`);
+      console.debug(`[sendTranscriptAsMessage] Skipping duplicate message for: ${talk.title}`);
       return;
     }
 
-    console.log(`[sendTranscriptAsMessage] Sending transcript for: ${talk.title}`);
+    console.debug(`[sendTranscriptAsMessage] Sending transcript for: ${talk.title}`);
     sentMessagesRef.current.add(talk.title); // Track sent messages
 
     const messageParts = [
@@ -141,20 +143,21 @@ const TalkPanel: React.FC = () => {
     ];
 
     for (const part of messageParts) {
-      console.log(`[sendTranscriptAsMessage] Sending part: ${part}`);
-      dispatch(sendMessage({ text: part, hidden: false }));
+      console.debug(`[sendTranscriptAsMessage] Sending part: ${part}`);
+      const dispatchedMessage = dispatch(sendMessage({ text: part, hidden: false }));
+      console.debug('[sendTranscriptAsMessage] Dispatched message:', dispatchedMessage);
     }
   };
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
-      console.log(`[openTranscriptInNewTab] Opening transcript for: ${selectedTalk.title}`);
+      console.debug(`[openTranscriptInNewTab] Opening transcript for: ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
     }
   };
 
   const shuffleTalks = () => {
-    console.log('[shuffleTalks] Shuffling talks.');
+    console.debug('[shuffleTalks] Shuffling talks.');
     dispatch(setTalks(shuffleArray(talks)));
   };
 
