@@ -31,12 +31,12 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      // Prevent duplicate messages
+      // Prevent duplicate messages by checking content
       if (state.messages.some((msg) => msg.text === action.payload.text)) {
         console.log('Duplicate message detected, skipping:', action.payload.text);
         return;
       }
-      if (state.messages.length >= MAX_MESSAGES) state.messages.shift();
+      if (state.messages.length >= MAX_MESSAGES) state.messages.shift(); // Control state size
       state.messages.push(action.payload);
     },
     clearMessages: (state) => {
@@ -81,7 +81,7 @@ const debouncedApiCall = debounce(
     const state = getState();
     if (state.api?.isLoading) return;
 
-    dispatch(setLoading(true));
+    dispatch(setLoading(true)); // Set loading state
 
     const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
     let retryCount = 0;
@@ -95,7 +95,7 @@ const debouncedApiCall = debounce(
             headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
             body: JSON.stringify({ messages: messagesArray }),
           }),
-          timeoutPromise(10000),
+          timeoutPromise(10000), // 10-second timeout
         ]);
 
         if (!response.ok) {
@@ -120,7 +120,7 @@ const debouncedApiCall = debounce(
 
               textBuffer += decoder.decode(value, { stream: true });
               const messages = textBuffer.split('\n\n');
-              textBuffer = messages.pop() || '';
+              textBuffer = messages.pop() || ''; // Keep the remaining partial message
 
               for (const message of messages) {
                 if (message.startsWith('data: ')) {
@@ -140,15 +140,15 @@ const debouncedApiCall = debounce(
               }
             }
           } finally {
-            reader.releaseLock();
+            reader.releaseLock(); // Ensure the reader is released
           }
         }
-        dispatch(setLoading(false));
+        dispatch(setLoading(false)); // Reset loading state
         return;
       } catch (error: any) {
         if ((error instanceof ApiError && error.status === 429) || error.message === 'Timeout') {
           retryCount++;
-          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
+          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff: 2, 4, 8 seconds
           continue;
         }
         dispatch(setError(error.message || 'An unknown error occurred'));
@@ -157,7 +157,7 @@ const debouncedApiCall = debounce(
       }
     }
   },
-  1000
+  1000 // Debounce time: 1 second
 );
 
 export const sendMessage = (
@@ -167,7 +167,7 @@ export const sendMessage = (
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(clearError());
 
-  let clientId = localStorage.getItem('clientId') || uuidv4();
+  const clientId = localStorage.getItem('clientId') || uuidv4();
   localStorage.setItem('clientId', clientId);
 
   const userMessage: Message =
