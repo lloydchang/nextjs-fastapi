@@ -22,9 +22,16 @@ const TalkPanel: React.FC = () => {
   const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const isSearchInProgress = useRef(false);
   const hasSearchedOnce = useRef(false);
   const scrollableContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Log Redux state to console for debugging.
+  const logState = (label: string) => {
+    console.log(`[${label}] Redux State:`, { talks, selectedTalk, loading, error });
+  };
+
+  // Debounced search to prevent excessive API calls.
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
       console.log(`Debounced search initiated for query: ${query}`);
@@ -33,25 +40,56 @@ const TalkPanel: React.FC = () => {
     [dispatch]
   );
 
+  // Ensure the initial search runs only once.
   useEffect(() => {
+    console.log('Component mounted.');
+
     if (!hasSearchedOnce.current) {
       console.log('Performing initial search...');
       debouncedPerformSearch(searchQuery);
       hasSearchedOnce.current = true;
     }
 
-    return () => debouncedPerformSearch.cancel();
+    return () => {
+      console.log('Component unmounted. Cancelling debounced search...');
+      debouncedPerformSearch.cancel();
+    };
   }, [searchQuery, debouncedPerformSearch]);
 
-  const shuffleTalks = () => {
-    const shuffledTalks = shuffleArray(talks);
-    dispatch(setTalks(shuffledTalks));
+  const handleSearchResults = (data: Talk[]) => {
+    console.log('Handling search results:', data);
+    const uniqueTalks = shuffleArray(data).filter(
+      (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
+    );
+
+    console.log('Unique talks after filtering:', uniqueTalks);
+    dispatch(setTalks(uniqueTalks));
+
+    if (uniqueTalks.length > 0) {
+      const firstTalk = uniqueTalks[0];
+      dispatch(setSelectedTalk(firstTalk));
+
+      console.log(`Sending message with talk title: ${firstTalk.title}`);
+      dispatch(sendMessage({ text: `Selected talk: ${firstTalk.title}`, hidden: false }));
+    }
+
+    logState('After handling search results');
   };
 
   const openTranscriptInNewTab = () => {
     if (selectedTalk) {
+      console.log(`Opening transcript for ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    } else {
+      console.log('No talk selected. Cannot open transcript.');
     }
+  };
+
+  const shuffleTalks = () => {
+    console.log('Shuffling talks...');
+    const shuffledTalks = shuffleArray(talks);
+    console.log('Shuffled talks:', shuffledTalks);
+    dispatch(setTalks(shuffledTalks));
   };
 
   return (
@@ -73,21 +111,39 @@ const TalkPanel: React.FC = () => {
         <input
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && debouncedPerformSearch(searchQuery)}
+          onChange={(e) => {
+            console.log('Search query changed:', e.target.value);
+            setSearchQuery(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              console.log('Enter key pressed. Performing search...');
+              debouncedPerformSearch(searchQuery);
+            }
+          }}
           className={styles.searchInput}
           placeholder="Search for talks..."
         />
 
         <div className={styles.buttonsContainer}>
-          <button onClick={() => debouncedPerformSearch(searchQuery)} disabled={loading} className={styles.searchButton}>
+          <button
+            onClick={() => debouncedPerformSearch(searchQuery)}
+            className={`${styles.button} ${styles.searchButton}`}
+            disabled={loading}
+          >
             Search
           </button>
-          <button onClick={shuffleTalks} className={styles.shuffleButton}>
-            Shuffle
+          <button
+            onClick={shuffleTalks}
+            className={`${styles.button} ${styles.shuffleButton}`}
+          >
+            Shuffle Talks
           </button>
           {selectedTalk && (
-            <button onClick={openTranscriptInNewTab} className={styles.tedButton}>
+            <button
+              onClick={openTranscriptInNewTab}
+              className={`${styles.button} ${styles.tedButton}`}
+            >
               View Transcript
             </button>
           )}
@@ -100,7 +156,11 @@ const TalkPanel: React.FC = () => {
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
-          <TalkItem key={`${talk.url}-${index}`} talk={talk} selected={selectedTalk?.title === talk.title} />
+          <TalkItem
+            key={`${talk.url}-${index}`}
+            talk={talk}
+            selected={selectedTalk?.title === talk.title}
+          />
         ))}
       </div>
     </div>
