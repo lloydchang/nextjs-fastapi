@@ -74,6 +74,7 @@ const Tools: React.FC = () => {
         dispatch(
           addMessage({
             persona: 'Ad',
+            role: 'ad',
             sender: 'ad',
             text: messageText,
             hidden: false,

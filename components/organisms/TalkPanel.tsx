@@ -145,6 +145,7 @@ const TalkPanel: React.FC = () => {
     for (const part of messageParts) {
       dispatch(sendMessage({
         persona: `${talk.presenterDisplayName}`,
+        role: 'bot',
         sender: 'bot',
         text: part,
         hidden: false,

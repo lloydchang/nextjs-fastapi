@@ -73,6 +73,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [showFullScreen, handleCloseModal]);
 
+  const renderMarkdown = (content: string) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight, rehypeRaw]}
+      components={{ a: LinkRenderer }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+
   return (
     <>
       {showFullScreen && (
@@ -103,16 +113,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               </button>
             </div>
 
-            <div className={styles.text}>
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight, rehypeRaw]}
-                components={{ a: LinkRenderer }}
-                components={{ a: ({ node, ...props }) => <LinkRenderer {...props} /> }}
-              >
-                {processedText}
-              </ReactMarkdown>
-            </div>
+            <div className={styles.text}>{renderMarkdown(processedText)}</div>
           </div>
         </div>
       )}
@@ -138,23 +139,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         )}
         {!isFullScreen && showFullMessage && (
           <div className={styles.textHovered}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={{ a: LinkRenderer }}
-            >
-              {processedText}
-            </ReactMarkdown>
+            {renderMarkdown(processedText)}
           </div>
         )}
         <div className={styles.text}>
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeHighlight]}
-            components={{ a: LinkRenderer }}
-          >
-            {shouldShorten ? shortenedText : processedText}
-          </ReactMarkdown>
+          {renderMarkdown(shouldShorten ? shortenedText : processedText)}
         </div>
       </div>
     </>
