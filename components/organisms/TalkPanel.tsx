@@ -74,9 +74,10 @@ const TalkPanel: React.FC = () => {
     abortControllerRef.current = new AbortController();
     isSearchInProgress.current = true;
     lastQueryRef.current = trimmedQuery;
+    
+    debugLog('Dispatching loading state.');
     dispatch(setLoading(true));
     dispatch(setApiError(null));
-    debugLog('Dispatching loading state.');
 
     try {
       debugLog(`Making API request to fetch talks with query: "${trimmedQuery}"`);
