@@ -61,7 +61,7 @@
 .textHovered {
   position: absolute;
   top: calc(100% + 17px);
-  right: 0;
+  left: 0;
   z-index: 9;
   background-color: #fff;
   color: #000;
