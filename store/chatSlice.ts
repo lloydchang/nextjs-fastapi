@@ -6,14 +6,14 @@ import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
-import { setLoading, setApiError, clearApiError } from './apiSlice'; // Import actions from apiSlice
+import { setLoading, setApiError, clearApiError } from './apiSlice';
 
 interface ChatState {
   messages: Message[];
   error: string | null;
 }
 
-const MAX_MESSAGES = 100; // Limit messages to prevent memory growth
+const MAX_MESSAGES = 100;
 
 const initialState: ChatState = {
   messages: [],
@@ -32,22 +32,30 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      // Prevent duplicate messages by checking content
+      console.debug('Adding message:', action.payload);
+
       if (state.messages.some((msg) => msg.text === action.payload.text)) {
-        console.log('Duplicate message detected, skipping:', action.payload.text);
+        console.debug('Duplicate message detected, skipping:', action.payload.text);
         return;
       }
-      if (state.messages.length >= MAX_MESSAGES) state.messages.shift(); // Control state size
+      if (state.messages.length >= MAX_MESSAGES) {
+        console.debug('Reached max messages. Removing oldest message.');
+        state.messages.shift();
+      }
+
       state.messages.push(action.payload);
+      console.debug('Updated message list:', state.messages);
     },
     clearMessages: (state) => {
-      console.log('Clearing messages');
+      console.debug('Clearing all messages');
       state.messages = [];
     },
     setError: (state, action: PayloadAction<string>) => {
+      console.debug('Setting error:', action.payload);
       state.error = action.payload;
     },
     clearError: (state) => {
+      console.debug('Clearing error');
       state.error = null;
     },
   },
@@ -60,12 +68,14 @@ const timeoutPromise = (ms: number) =>
 
 export const parseIncomingMessage = (jsonString: string) => {
   try {
-    if (jsonString === '[DONE]') return null; // End of stream
+    if (jsonString === '[DONE]') return null;
 
     const sanitizedString = he.decode(jsonString);
     const parsedData = JSON.parse(sanitizedString);
 
     if (!parsedData.persona || !parsedData.message) return null;
+
+    console.debug('Parsed incoming message:', parsedData);
     return parsedData;
   } catch (error) {
     console.error('Error parsing message:', jsonString, error);
@@ -81,10 +91,12 @@ const debouncedApiCall = debounce(
     clientId: string
   ) => {
     const state = getState();
-    if (state.api?.isLoading) return; // Prevent multiple requests
+    if (state.api?.isLoading) return;
 
-    dispatch(setLoading(true)); // Set loading state
-    dispatch(clearApiError()); // Clear previous API errors
+    dispatch(setLoading(true));
+    dispatch(clearApiError());
+
+    console.debug('Starting API call with input:', input);
 
     const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
     let retryCount = 0;
@@ -98,12 +110,15 @@ const debouncedApiCall = debounce(
             headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
             body: JSON.stringify({ messages: messagesArray }),
           }),
-          timeoutPromise(10000), // 10-second timeout
+          timeoutPromise(10000),
         ]);
+
+        console.debug('Received API response:', response);
 
         if (!response.ok) {
           if (response.status === 429) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+            console.warn(`Rate limited. Retrying after ${retryAfter} seconds.`);
             await wait(retryAfter * 1000);
             retryCount++;
             continue;
@@ -123,7 +138,7 @@ const debouncedApiCall = debounce(
 
               textBuffer += decoder.decode(value, { stream: true });
               const messages = textBuffer.split('\n\n');
-              textBuffer = messages.pop() || ''; // Keep the remaining partial message
+              textBuffer = messages.pop() || '';
 
               for (const message of messages) {
                 if (message.startsWith('data: ')) {
@@ -137,36 +152,42 @@ const debouncedApiCall = debounce(
                       content: parsedData.message,
                       persona: parsedData.persona,
                     };
+                    console.debug('Dispatching bot message:', botMessage);
                     dispatch(addMessage(botMessage));
                   }
                 }
               }
             }
           } finally {
-            reader.releaseLock(); // Ensure the reader is released
+            reader.releaseLock();
           }
         }
-        dispatch(setLoading(false)); // Reset loading state
+
+        dispatch(setLoading(false));
         return;
       } catch (error: any) {
+        console.error('Error during API call:', error);
+
         if ((error instanceof ApiError && error.status === 429) || error.message === 'Timeout') {
           retryCount++;
-          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
+          console.warn(`Retrying API call. Attempt ${retryCount}`);
+          await wait(Math.pow(2, retryCount) * 1000);
           continue;
         }
-        dispatch(setApiError(error.message || 'An unknown error occurred')); // Set API error state
+
+        dispatch(setApiError(error.message || 'An unknown error occurred'));
         dispatch(setLoading(false));
         return;
       }
     }
   },
-  1000 // Debounce time: 1 second
+  1000
 );
 
 export const sendMessage = (
   input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
-  console.log('sendMessage called:', input);
+  console.debug('sendMessage called with input:', input);
 
   dispatch(clearError());
 
@@ -178,7 +199,7 @@ export const sendMessage = (
       ? { id: uuidv4(), sender: 'user', text: input, role: 'user', content: input }
       : { ...input, id: uuidv4(), sender: input.sender || 'user' };
 
-  console.log('Dispatching user message:', userMessage);
+  console.debug('Dispatching user message:', userMessage);
   dispatch(addMessage(userMessage));
 
   try {
@@ -188,7 +209,7 @@ export const sendMessage = (
     dispatch(setApiError('Failed to send message.'));
   }
 
-  console.log('Redux state after sendMessage:', getState());
+  console.debug('Redux state after sendMessage:', getState());
 };
 
 export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
