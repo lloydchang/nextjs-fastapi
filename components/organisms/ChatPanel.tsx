@@ -94,8 +94,8 @@ const ChatPanel: React.FC = () => {
     >
       <Image
         src={BackgroundImage}
-        loading="eager"  // Set to 'eager' to prioritize loading
-        alt="Background image"  // Adding alt text for better accessibility
+        priority  // Add this to load the image with high priority
+        alt="Background image"  // Ensure accessibility
         fill
         className={styles.backgroundImage}
         unoptimized
