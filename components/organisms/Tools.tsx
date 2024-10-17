@@ -58,11 +58,9 @@ const Tools: React.FC = () => {
         setHighlightedButton(matchingButton);
 
         // Combine button name, paragraph, and URL into a single message text
-        const buttonToSend = `***${matchingButton || ''}***: `;
         const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
-        const urlToSend = `${toolsButtonsParagraphs[matchingButton].url || ''}`;
 
-        const messageText = buttonToSend + paragraphToSend + urlToSend;
+        const messageText = paragraphToSend;
 
         dispatch(
           sendMessage({
