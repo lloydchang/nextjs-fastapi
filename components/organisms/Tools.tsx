@@ -72,7 +72,7 @@ const Tools: React.FC = () => {
 
         dispatch(
           addMessage({
-            persona: 'Advertisement',
+            persona: 'Ad',
             sender: 'ad',
             text: messageText,
             hidden: false,

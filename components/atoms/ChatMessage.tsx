@@ -36,10 +36,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   role,
 }) => {
   const [showFullScreen, setShowFullScreen] = useState(false);
-
-  // If the message is an ad, override the persona to 'Ad'
-  const displayPersona = role === 'ad' ? 'Ad' : persona;
-  const personaColor = displayPersona ? hashPersonaToColor(displayPersona) : '#777777';
   
   const processedText = convertPlainUrlsToMarkdownLinks(text);
   const shortenedText = 
