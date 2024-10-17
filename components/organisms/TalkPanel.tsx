@@ -26,7 +26,7 @@ const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
-  const { isLoading, error } = useSelector((state: RootState) => state.api); // Updated to isLoading
+  const { isLoading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
 
