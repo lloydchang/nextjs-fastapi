@@ -10,14 +10,13 @@ import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import { Message } from 'types';
 
-// Adjusted LinkRenderer with appropriate typing
-import { AnchorHTMLAttributes, DetailedHTMLProps } from 'react';
-
-// Define the LinkRenderer with correct types
-const LinkRenderer: React.FC<
-  DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>
-> = ({ href, children, ...rest }) => (
-  <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>
+// Inline anchor renderer with correct typing
+const LinkRenderer = ({
+  href,
+  children,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
     {children}
   </a>
 );
@@ -109,7 +108,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeHighlight, rehypeRaw, [rehypeSanitize, customSchema]]}
-      components={{ a: LinkRenderer as React.ElementType }}
+      components={{ a: LinkRenderer }}
     >
       {content}
     </ReactMarkdown>
