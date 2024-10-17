@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
 import { setLoading, setApiError } from 'store/apiSlice';
-import { sendMessage } from 'store/chatSlice'; // Import sendMessage action
+import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { shuffleArray } from 'components/utils/talkPanelUtils';
 import TalkItem from './TalkItem';
@@ -69,7 +69,6 @@ const TalkPanel: React.FC = () => {
       const firstTalk = uniqueTalks[0];
       dispatch(setSelectedTalk(firstTalk));
 
-      // Dispatch message with talk title
       console.log(`Sending message with talk title: ${firstTalk.title}`);
       dispatch(sendMessage({ text: `Selected talk: ${firstTalk.title}`, hidden: false }));
     }
@@ -125,8 +124,33 @@ const TalkPanel: React.FC = () => {
           className={styles.searchInput}
           placeholder="Search for talks..."
         />
-        {loading && <LoadingSpinner />}
+
+        <div className={styles.buttonsContainer}>
+          <button
+            onClick={() => debouncedPerformSearch(searchQuery)}
+            className={`${styles.button} ${styles.searchButton}`}
+            disabled={loading}
+          >
+            Search
+          </button>
+          <button
+            onClick={shuffleTalks}
+            className={`${styles.button} ${styles.shuffleButton}`}
+          >
+            Shuffle Talks
+          </button>
+          {selectedTalk && (
+            <button
+              onClick={openTranscriptInNewTab}
+              className={`${styles.button} ${styles.tedButton}`}
+            >
+              View Transcript
+            </button>
+          )}
+        </div>
       </div>
+
+      {loading && <LoadingSpinner />}
 
       {error && <div className={styles.errorContainer}>{error}</div>}
 
@@ -139,16 +163,6 @@ const TalkPanel: React.FC = () => {
           />
         ))}
       </div>
-
-      <button onClick={shuffleTalks} className={styles.button}>
-        Shuffle Talks
-      </button>
-
-      {selectedTalk && (
-        <button onClick={openTranscriptInNewTab} className={styles.button}>
-          View Transcript
-        </button>
-      )}
     </div>
   );
 };
