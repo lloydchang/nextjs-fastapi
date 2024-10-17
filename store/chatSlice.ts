@@ -6,6 +6,7 @@ import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
+import { setLoading, setApiError, clearApiError } from './apiSlice'; // Import actions from apiSlice
 
 interface ChatState {
   messages: Message[];
@@ -79,9 +80,10 @@ const debouncedApiCall = debounce(
     clientId: string
   ) => {
     const state = getState();
-    if (state.api?.isLoading) return;
+    if (state.api?.isLoading) return; // Prevent multiple requests
 
     dispatch(setLoading(true)); // Set loading state
+    dispatch(clearApiError()); // Clear previous API errors
 
     const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
     let retryCount = 0;
@@ -148,10 +150,10 @@ const debouncedApiCall = debounce(
       } catch (error: any) {
         if ((error instanceof ApiError && error.status === 429) || error.message === 'Timeout') {
           retryCount++;
-          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff: 2, 4, 8 seconds
+          await wait(Math.pow(2, retryCount) * 1000); // Exponential backoff
           continue;
         }
-        dispatch(setError(error.message || 'An unknown error occurred'));
+        dispatch(setApiError(error.message || 'An unknown error occurred')); // Set API error state
         dispatch(setLoading(false));
         return;
       }
