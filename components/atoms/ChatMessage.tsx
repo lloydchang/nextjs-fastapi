@@ -4,8 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-// Removed rehypeRaw for security; using DOMPurify to sanitize instead
-import DOMPurify from 'dompurify';
+import rehypeRaw from 'rehype-raw'; // Reintroduced for rendering raw HTML
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
@@ -85,18 +84,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [showFullScreen, handleCloseModal]);
 
-  const renderMarkdown = (content: string) => {
-    const sanitizedContent = DOMPurify.sanitize(content);
-    return (
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight]} // Removed rehypeRaw for security
-        components={{ a: LinkRenderer }}
-      >
-        {sanitizedContent}
-      </ReactMarkdown>
-    );
-  };
+  const renderMarkdown = (content: string) => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight, rehypeRaw]} // rehypeRaw reintroduced
+      components={{ a: LinkRenderer }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
