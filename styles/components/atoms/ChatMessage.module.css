@@ -256,9 +256,14 @@
   height: 100vh;
   background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
   z-index: 999;
-  display: flex;
+  display: none; /* Hide modals by default */
   justify-content: right;
   align-items: top;
+}
+
+/* Modal Active State */
+.modalBackdrop.active {
+  display: flex; /* Show modal only when active class is present */
 }
 
 .fullScreenMessage {

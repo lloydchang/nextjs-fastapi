@@ -1,6 +1,6 @@
 // File: components/atoms/ChatMessage.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -9,6 +9,7 @@ import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'; // Added for sa
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import { Message } from 'types';
+import { useModal } from '../state/context/ModalContext'; // Import useModal
 
 // Inline anchor renderer with correct typing
 const LinkRenderer = ({
@@ -66,43 +67,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isFullScreen,
   role,
 }) => {
-  const [showFullScreen, setShowFullScreen] = useState(false);
-  const [showFullMessage, setShowFullMessage] = useState(false);
-
+  const { openModal, closeModal, activeModal } = useModal(); // Use modal context
   const displayPersona = persona || sender;
   const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
-
   const isUser = role === 'user';
+
   const processedText = convertPlainUrlsToMarkdownLinks(text);
   const shouldShorten = text.split(' ').length > 10 && !isFullScreen;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
+  const modalId = `modal-${text}`; // Unique ID based on message text
+  const isModalOpen = activeModal === modalId; // Check if this modal is active
 
+  // Open the modal using the modal context
   const handleOpenModal = useCallback(() => {
-    setShowFullScreen(true);
-    console.debug('Opening full screen for message:', text);
-  }, [text]);
-
-  const handleCloseModal = useCallback(() => {
-    setShowFullScreen(false);
-    console.debug('Closing full screen modal');
-  }, []);
-
-  useEffect(() => {
-    if (showFullScreen) {
-      const previouslyFocusedElement = document.activeElement as HTMLElement;
-      const modal = document.getElementById('chat-message-modal');
-      modal?.focus();
-
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') handleCloseModal();
-      };
-      document.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-        previouslyFocusedElement?.focus();
-      };
-    }
-  }, [showFullScreen, handleCloseModal]);
+    openModal(modalId); // Open this specific modal
+    console.debug('Opening modal for message:', text);
+  }, [modalId, openModal, text]);
 
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
@@ -114,18 +94,30 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     </ReactMarkdown>
   );
 
+  // Handle closing the modal with the Escape key
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeModal(); // Close modal on Escape
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isModalOpen, closeModal]);
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      handleOpenModal();
+      handleOpenModal(); // Open modal on Enter or Space key
     }
   };
 
   return (
     <>
-      {showFullScreen && (
+      {isModalOpen && (
         <div
           className={styles.modalBackdrop}
-          onClick={handleCloseModal}
+          onClick={closeModal}
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
@@ -134,7 +126,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         >
           <div
             className={styles.fullScreenMessage}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
             role="document"
           >
             <div className={styles.modalHeader}>
@@ -148,7 +140,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               )}
               <button
                 className={styles.modalCloseButton}
-                onClick={handleCloseModal}
+                onClick={closeModal}
                 aria-label="Close modal"
               >
                 Close
@@ -171,7 +163,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         role="button"
         tabIndex={0}
         onKeyPress={handleKeyPress}
-        aria-expanded={showFullScreen}
+        aria-expanded={isModalOpen}
       >
         {persona && (
           <div
