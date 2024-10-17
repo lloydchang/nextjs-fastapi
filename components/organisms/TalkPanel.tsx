@@ -16,6 +16,11 @@ import TalkItem from './TalkItem';
 import LoadingSpinner from './LoadingSpinner'; // Your existing loading spinner
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
+import { sdgTitleMap } from 'components/constants/sdgTitles';
+
+// Helper function to convert SDG tags to their full titles
+const getSdgTitles = (sdgTags: string[]): string[] =>
+  sdgTags.map(tag => sdgTitleMap[tag] || tag); // Fallback to raw tag if not found
 
 // Helper function for debug logging
 const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
@@ -132,14 +137,14 @@ const TalkPanel: React.FC = () => {
 
     sentMessagesRef.current.add(talk.title);
     debugLog(`Sending transcript for talk: ${talk.title}`);
-
+ 
     const messageParts = [
       // `Presenter: ${talk.presenterDisplayName}`,
       // `Talk: ${talk.title}`,
       // `URL: ${talk.url}`,
       // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       // `Transcript: ${talk.transcript}`,
-      `${talk.transcript} —— ${talk.title}\n\n${talk.sdg_tags.join(', ')}`,
+      `${talk.transcript} —— ${talk.title}\n\n${getSdgTitles(talk.sdg_tags).join(', ')}`,
     ];
 
     for (const part of messageParts) {
