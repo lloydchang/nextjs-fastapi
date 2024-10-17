@@ -10,34 +10,30 @@ import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the but
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
-  // State and refs for dragging functionality
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const dragItem = useRef<HTMLDivElement | null>(null);
   const dragStartPosition = useRef({ x: 0, y: 0 });
 
-  // State to highlight the button based on semantic similarity
   const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
-
-  // TensorFlow.js model state
   const [model, setModel] = useState<use.UniversalSentenceEncoder | null>(null);
 
-  // Redux selector to get chat messages
   const messages = useSelector((state: RootState) => state.chat.messages);
 
-  // Open URLs in a new tab
   const openInNewTab = (url: string) => {
+    console.log(`Opening URL: ${url}`);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  // Load TensorFlow.js Universal Sentence Encoder on component mount
   useEffect(() => {
     const loadModel = async () => {
       try {
-        await tf.setBackend('webgl'); // Attempt to use WebGL backend
-        await tf.ready(); // Ensure backend is initialized
+        console.log('Loading TensorFlow model...');
+        await tf.setBackend('webgl');
+        await tf.ready();
         const loadedModel = await use.load();
         setModel(loadedModel);
+        console.log('Model loaded successfully');
       } catch (error) {
         console.error('Error loading TensorFlow model:', error);
       }
@@ -45,20 +41,24 @@ const Tools: React.FC = () => {
     loadModel();
   }, []);
 
-  // Compute semantic similarity between user message and button paragraphs
   const computeSimilarity = async (message: string) => {
-    if (!model) return;
+    if (!model) {
+      console.warn('Model is not loaded yet');
+      return;
+    }
 
+    console.log(`Computing similarity for message: "${message}"`);
     try {
-      const inputEmbedding = await model.embed([message]); // Embed message as array
+      const inputEmbedding = await model.embed([message]);
 
       const similarities = await Promise.all(
         Object.entries(toolsButtonsParagraphs).map(async ([buttonName, { paragraphs }]) => {
-          const paragraphEmbedding = await model.embed(paragraphs); // Embed paragraphs as array
+          const paragraphEmbedding = await model.embed(paragraphs);
           const similarity = cosineSimilarity(
             inputEmbedding.arraySync()[0],
             paragraphEmbedding.arraySync()[0]
           );
+          console.log(`Similarity for ${buttonName}: ${similarity}`);
           return { buttonName, similarity };
         })
       );
@@ -67,56 +67,61 @@ const Tools: React.FC = () => {
         curr.similarity > prev.similarity ? curr : prev
       );
 
+      console.log(`Best match: ${bestMatch.buttonName}`);
       setHighlightedButton(bestMatch.buttonName);
     } catch (error) {
       console.error('Error computing similarity:', error);
     }
   };
 
-  // Monitor chat messages and trigger similarity computation
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1].text;
+      console.log(`New message detected: "${latestMessage}"`);
       computeSimilarity(latestMessage);
     }
   }, [messages, model]);
 
-  // Cosine similarity function
   const cosineSimilarity = (vecA: number[], vecB: number[]) => {
+    console.log('Calculating cosine similarity');
     const dotProduct = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
     const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
     const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (magnitudeA * magnitudeB);
+    const similarity = dotProduct / (magnitudeA * magnitudeB);
+    console.log(`Cosine similarity: ${similarity}`);
+    return similarity;
   };
 
-  // Mouse down event to start dragging
   const handleMouseDown = (e: React.MouseEvent) => {
+    console.log('Mouse down event detected');
     setIsDragging(true);
     dragItem.current = e.currentTarget as HTMLDivElement;
     dragStartPosition.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
 
-  // Mouse move event to handle the drag movement
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging) {
-      setPosition({
+      const newPosition = {
         x: e.clientX - dragStartPosition.current.x,
         y: e.clientY - dragStartPosition.current.y,
-      });
+      };
+      console.log(`Dragging to position: ${JSON.stringify(newPosition)}`);
+      setPosition(newPosition);
     }
   };
 
-  // Mouse up event to stop dragging
   const handleMouseUp = () => {
+    console.log('Mouse up event detected, stopping drag');
     setIsDragging(false);
   };
 
-  // useEffect to add and remove drag event listeners
   useEffect(() => {
     if (isDragging) {
+      console.log('Adding drag event listeners');
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
     } else {
+      console.log('Removing drag event listeners');
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     }
