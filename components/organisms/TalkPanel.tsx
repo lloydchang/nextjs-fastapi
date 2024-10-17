@@ -1,5 +1,3 @@
-// File: components/organisms/TalkPanel.tsx
-
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -99,7 +97,22 @@ const TalkPanel: React.FC = () => {
       if (response.status !== 200) throw new Error(response.statusText);
 
       const data: Talk[] = response.data.results.map((result: any) => {
-        // Process results...
+        const presenterName = toSentenceCase(result.document.presenterDisplayName || '');
+        let talkTitleToSend = result.document.slug.replace(/_/g, ' ') || '';
+
+        // Remove presenter's name from the title (ignoring diacritics)
+        talkTitleToSend = removePresenterFromTitle(presenterName, talkTitleToSend);
+
+        // Convert the cleaned title to sentence case
+        talkTitleToSend = toSentenceCase(talkTitleToSend);
+
+        return {
+          presenterDisplayName: presenterName,
+          title: talkTitleToSend, // Use the talkTitleToSend variable here
+          url: `https://www.ted.com/talks/${result.document.slug}`,
+          sdg_tags: result.document.sdg_tags || [],
+          transcript: result.document.transcript || '',
+        };
       });
 
       handleSearchResults(data);
@@ -137,9 +150,12 @@ const TalkPanel: React.FC = () => {
 
     sentMessagesRef.current.add(talk.title);
 
+    // Create a new variable for the talk title to send
+    const talkTitleToSend = talk.title; // Cloning the title here
+
     const messageParts = [
       `Presenter: ${talk.presenterDisplayName}`,
-      `Talk: ${talk.title}`,
+      `Talk: ${talkTitleToSend}`, // Use the cloned variable here
       `URL: ${talk.url}`,
       `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       `Transcript: ${talk.transcript}`,
