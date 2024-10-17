@@ -27,15 +27,13 @@ const TalkPanel: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>(determineInitialKeyword());
 
   const isSearchInProgress = useRef(false);
-  const initialRender = useRef(true);
-  const lastDispatchedTalkId = useRef<string | null>(null);
-  const isFirstSearch = useRef(true);
+  const didMount = useRef(false); // Track initial mount
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search function to prevent rapid calls.
+  // **Debounced search function to prevent redundant calls.**
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => {
       console.log('Debounced search initiated:', query);
@@ -44,22 +42,22 @@ const TalkPanel: React.FC = () => {
     []
   );
 
-  // **Trigger search on first render automatically.**
+  // **Ensure search only triggers once on mount.**
   useEffect(() => {
-    console.log('TalkPanel - Initial render detected.');
-    performSearch(searchQuery); // Trigger search immediately.
-    initialRender.current = false;
+    if (!didMount.current) {
+      console.log('TalkPanel - Initial render detected. Performing search.');
+      performSearch(searchQuery);
+      didMount.current = true; // Mark as mounted
+    }
 
     return () => {
       if (abortControllerRef.current) abortControllerRef.current.abort();
       debouncedPerformSearch.cancel();
     };
-  }, [searchQuery]); // Ensure this runs when `searchQuery` is set.
+  }, []); // Empty dependency ensures it runs only once
 
-  // Handle the search results.
   const handleSearchResults = async (query: string, data: Talk[]) => {
     const processedData = isFirstSearch.current ? shuffleArray(data) : data;
-    isFirstSearch.current = false;
 
     const uniqueTalks = processedData.filter(
       (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
@@ -75,7 +73,6 @@ const TalkPanel: React.FC = () => {
     await sendFirstAvailableTranscript(query, uniqueTalks);
   };
 
-  // Perform the search by querying the API.
   const performSearch = async (query: string) => {
     console.log(`Performing search with query: ${query}`);
     const trimmedQuery = query.trim().toLowerCase();
@@ -121,47 +118,6 @@ const TalkPanel: React.FC = () => {
     }
   };
 
-  const sendTranscriptForTalk = async (query: string, talk: Talk) => {
-    try {
-      if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) {
-        console.log(`Skipping already dispatched talk: ${talk.title}`);
-        return;
-      }
-
-      dispatch(setSelectedTalk(talk));
-      lastDispatchedTalkId.current = talk.title;
-      sentMessagesRef.current.add(talk.title);
-
-      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
-
-      for (const part of messageParts) {
-        console.log(`Sending message part: ${part}`);
-        const result = await dispatch(sendMessage({ text: part, hidden: true }));
-
-        if (result.error) {
-          console.error(`Failed to send message: ${part}`, result.error);
-          dispatch(setApiError(`Failed to send message: ${part}`));
-          return;
-        }
-
-        console.log(`Successfully sent message part: ${part}`);
-      }
-    } catch (error) {
-      console.error(`Error sending transcript for ${talk.title}:`, error);
-      dispatch(setApiError(`Failed to send transcript for ${talk.title}.`));
-    }
-  };
-
-  const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
-    for (const talk of talks) {
-      try {
-        await sendTranscriptForTalk(query, talk);
-        break;
-      } catch {}
-    }
-    dispatch(setApiError('Try searching for a different word.'));
-  };
-
   const openTranscriptInNewTab = () => {
     if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
   };
@@ -200,12 +156,6 @@ const TalkPanel: React.FC = () => {
         >
           Search
         </button>
-        <button
-          onClick={() => shuffleTalks()}
-          className={`${styles.button} ${styles.shuffleButton}`}
-        >
-          Shuffle
-        </button>
         {selectedTalk && (
           <button
             onClick={openTranscriptInNewTab}
@@ -221,7 +171,7 @@ const TalkPanel: React.FC = () => {
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
           <TalkItem
-            key={`${talk.url}-${index}`}
+            key={`${talk.url}-${index}`} // Ensure unique keys
             talk={talk}
             selected={selectedTalk?.title === talk.title}
           />
