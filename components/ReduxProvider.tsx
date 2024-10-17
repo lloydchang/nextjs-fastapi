@@ -25,7 +25,7 @@ const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
     initializeStore();
   }, []);
 
-  if (!persistor) return <div>Loading...</div>; // Prevent remounting by waiting
+  if (!persistor) return <div></div>; // Prevent remounting by waiting
 
   return (
     <Provider store={persistedStore}>
