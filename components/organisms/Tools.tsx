@@ -49,10 +49,24 @@ const Tools: React.FC = () => {
     return botMessages.length > 0 ? botMessages[botMessages.length - 1].text : '';
   };
 
+  const getLatestUserMessage = () => {
+    const userMessages = messages.filter((msg) => msg.sender === 'user');
+    return userMessages.length > 0 ? userMessages[userMessages.length - 1].text : '';
+  };
+
   useEffect(() => {
-    const latestBotMessage = getLatestBotMessage(); // Get the latest bot message
-    if (latestBotMessage) {
-      const matchingButton = findMatchingButton(latestBotMessage);
+
+    // const latestBotMessage = getLatestBotMessage(); // Get the latest bot message
+
+    const latestUserMessage = getLatestUserMessage(); // Get the latest user message
+
+    // if (latestBotMessage) {
+
+    // const matchingButton = findMatchingButton(latestBotMessage);
+
+    if (latestUserMessage) {
+
+      const matchingButton = findMatchingButton(latestUserMessage);
 
       if (matchingButton !== highlightedButton) {
         console.debug(`Matching button found: ${matchingButton}`);
@@ -69,7 +83,7 @@ const Tools: React.FC = () => {
         dispatch(
           sendMessage({
             text: messageText,
-            sender: 'user',
+            sender: 'bot',
             hidden: false,
           })
         );

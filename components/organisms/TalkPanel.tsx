@@ -134,11 +134,12 @@ const TalkPanel: React.FC = () => {
     debugLog(`Sending transcript for talk: ${talk.title}`);
 
     const messageParts = [
-      `Presenter: ${talk.presenterDisplayName}`,
+      // `Presenter: ${talk.presenterDisplayName}`,
       // `Talk: ${talk.title}`,
       // `URL: ${talk.url}`,
       // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
-      `Transcript: ${talk.transcript}`,
+      // `Transcript: ${talk.transcript}`,
+      `${talk.presenterDisplayName}: ${talk.transcript}`,
     ];
 
     for (const part of messageParts) {
