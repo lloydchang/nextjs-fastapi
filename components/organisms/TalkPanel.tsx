@@ -135,9 +135,9 @@ const TalkPanel: React.FC = () => {
 
     const messageParts = [
       `Presenter: ${talk.presenterDisplayName}`,
-      `Talk: ${talk.title}`,
-      `URL: ${talk.url}`,
-      `SDG Tags: ${talk.sdg_tags.join(', ')}`,
+      // `Talk: ${talk.title}`,
+      // `URL: ${talk.url}`,
+      // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       `Transcript: ${talk.transcript}`,
     ];
 
@@ -145,7 +145,7 @@ const TalkPanel: React.FC = () => {
       dispatch(sendMessage({
         text: part,
         sender: 'user',
-        hidden: true
+        hidden: false,
       }));
       debugLog(`Sent message part: ${part}`);
     }

@@ -58,17 +58,19 @@ const Tools: React.FC = () => {
         setHighlightedButton(matchingButton);
 
         // Combine button name, paragraph, and URL into a single message text
-        const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
+        // const buttonToSend = `***${matchingButton || ''}***: `;
+        // const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
+        // const urlToSend = `${toolsButtonsParagraphs[matchingButton].url || ''}`;
 
-        const messageText = paragraphToSend;
+        // const messageText = buttonToSend + paragraphToSend + urlToSend;
 
-        dispatch(
-          sendMessage({
-            text: messageText,
-            sender: 'user',
-            hidden: true,
-          })
-        );
+        // dispatch(
+        //   sendMessage({
+        //     text: messageText,
+        //     sender: 'user',
+        //     hidden: false,
+        //   })
+        // );
       }
     }
   }, [messages, dispatch, highlightedButton]);

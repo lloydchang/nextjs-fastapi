@@ -10,7 +10,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       paragraph: `Learn simple actions to protect water and contribute to the UN's Sustainable Development Goals.`,
       url: 'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/',
     },
-    Heroes: {
+    Hero: {
       paragraph: `Meet the Climate Action Superheroes and learn how to join the fight against climate change.`,
       url: 'https://www.un.org/sustainabledevelopment/climate-action-superheroes/',
     },
@@ -42,7 +42,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       paragraph: `Explore Local2030, a network supporting the on-the-ground delivery of the Sustainable Development Goals.`,
       url: 'https://www.local2030.org/vlrs',
     },
-    Reviews: {
+    Review: {
       paragraph: `Discover how cities are using Voluntary Local Reviews to track SDG progress.`,
       url: 'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap',
     },
@@ -74,7 +74,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       paragraph: `Explore the Atlas of Sustainable Development Goals, featuring interactive data visualizations on SDG progress.`,
       url: 'https://datatopics.worldbank.org/sdgatlas/',
     },
-    Grants: {
+    Grant: {
       paragraph: `Learn about grants for advancing the UN Sustainable Development Goals and promoting collaborations.`,
       url: 'https://globalaffairs.ucdavis.edu/sdgs-grants',
     },
