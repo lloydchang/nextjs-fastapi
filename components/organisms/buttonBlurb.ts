@@ -3,109 +3,109 @@
 
 const buttonblurb: { [key: string]: { blurb: string; url: string } } = {
   Lazy: {
-    blurb: `Take simple steps toward sustainable development.`,
+    blurb: "Start your sustainability journey today.",
     url: 'https://www.un.org/sustainabledevelopment/takeaction/',
   },
   Water: {
-    blurb: `Help protect water with easy actions.`,
+    blurb: "Save water with simple daily actions.",
     url: 'https://www.un.org/sustainabledevelopment/the-lazy-persons-guide-to-saving-water/',
   },
   Hero: {
-    blurb: `Join the fight with Climate Action Superheroes.`,
+    blurb: "Become a Climate Action Superhero.",
     url: 'https://www.un.org/sustainabledevelopment/climate-action-superheroes/',
   },
   Act: {
-    blurb: `Join ActNow and support global sustainability.`,
+    blurb: "Take action for global sustainability.",
     url: 'https://www.un.org/en/actnow',
   },
   Daily: {
-    blurb: `Transform the world with 170 daily actions.`,
+    blurb: "Choose from 170 impactful actions.",
     url: 'https://drive.google.com/file/d/1iMdE6DLLuCqwq3K9U-DaTUWB6KyMa8QG/view',
   },
   App: {
-    blurb: `Track your impact with the AWorld app.`,
+    blurb: "Monitor your sustainability impact.",
     url: 'https://actnow.aworld.org/',
   },
   Game: {
-    blurb: `Learn SDGs through the Go Goals! game.`,
+    blurb: "Play to learn about SDGs.",
     url: 'https://go-goals.org/',
   },
   Learn: {
-    blurb: `Discover SDG learning resources and courses.`,
+    blurb: "Access SDG learning materials.",
     url: 'https://www.unsdglearn.org/learning/',
   },
   Voluntary: {
-    blurb: `Explore local SDG implementation efforts.`,
+    blurb: "See local SDG initiatives.",
     url: 'https://sdgs.un.org/topics/voluntary-local-reviews',
   },
   Local: {
-    blurb: `Support SDGs with Local2030 initiatives.`,
+    blurb: "Connect with Local2030 programs.",
     url: 'https://www.local2030.org/vlrs',
   },
   Review: {
-    blurb: `Track progress with Voluntary Local Reviews.`,
+    blurb: "Monitor local SDG progress.",
     url: 'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap',
   },
   Lab: {
-    blurb: `Explore VLR Lab for locally-led transformations for SDGs.`,
+    blurb: "Drive local SDG transformation.",
     url: 'https://www.iges.or.jp/en/projects/vlr',
   },
   City: {
-    blurb: `Discover cities using Open SDG platforms.`,
+    blurb: "Find Open SDG city platforms.",
     url: 'https://open-sdg.org/community#cities-and-regions',
   },
   Country: {
-    blurb: `Access SDG country profiles and data.`,
+    blurb: "View country SDG data.",
     url: 'https://unstats.un.org/sdgs/dataportal/countryprofiles',
   },
   Global: {
-    blurb: `Explore the Global SDG Report insights.`,
+    blurb: "Access Global SDG insights.",
     url: 'https://sdgs.un.org/gsdr',
   },
   Annual: {
-    blurb: `Learn about the 17 SDGs and their history.`,
+    blurb: "Explore the 17 SDGs.",
     url: 'https://sdgs.un.org/goals',
   },
   Rank: {
-    blurb: `Explore human development rankings worldwide.`,
+    blurb: "Compare development rankings.",
     url: 'https://hdr.undp.org/data-center/country-insights#/ranks',
   },
   Atlas: {
-    blurb: `Visualize SDG progress with the Atlas.`,
+    blurb: "See SDG progress worldwide.",
     url: 'https://datatopics.worldbank.org/sdgatlas/',
   },
   Grant: {
-    blurb: `Find grants for SDG initiatives.`,
+    blurb: "Find SDG funding opportunities.",
     url: 'https://globalaffairs.ucdavis.edu/sdgs-grants',
   },
   Fund: {
-    blurb: `Support SDG progress with joint funds.`,
+    blurb: "Discover joint SDG funds.",
     url: 'https://jointsdgfund.org/sdg-financing#PROFILES',
   },
   Hub: {
-    blurb: `Discover pooled funding initiatives.`,
+    blurb: "Explore pooled funding options.",
     url: 'https://mptf.undp.org/#impact-to-label',
   },
   Aid: {
-    blurb: `Access global aid data insights.`,
+    blurb: "Access global aid insights.",
     url: 'https://countrydata.iatistandard.org/',
   },
   Data: {
-    blurb: `Explore UN's data repository.`,
+    blurb: "Browse UN data resources.",
     url: 'https://unstats.un.org/UNSDWebsite/undatacommons/search',
   },
   Catalog: {
-    blurb: `Access SDG data catalog globally.`,
+    blurb: "Search global SDG data.",
     url: 'https://ai4good.org/what-we-do/sdg-data-catalog/',
   },
   Tool: {
-    blurb: `Use tools to implement SDGs locally.`,
+    blurb: "Find local SDG tools.",
     url: 'https://www.local2030.org/discover-tools',
   },
   News: {
-    blurb: `Stay updated on SDG news.`,
+    blurb: "Get latest SDG updates.",
     url: 'https://news.google.com/topics/CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YTI1c1poSUNaVzRvQUFQAQ',
   },
 };
 
-export default buttonblurb;
+export default buttonBlurbs;
