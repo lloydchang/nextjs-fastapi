@@ -107,7 +107,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw]}
-                components={{ a: LinkRenderer }}
+                components={{ a: ({ node, ...props }) => <LinkRenderer {...props} /> }}
               >
                 {processedText}
               </ReactMarkdown>
