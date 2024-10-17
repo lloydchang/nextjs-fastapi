@@ -130,8 +130,12 @@ export async function POST(request: NextRequest) {
 
       // Get or initialize the context for this client
       let context = clientContexts.get(clientId) || [];
-      context = [...context, ...validMessages]; // Append new valid messages to the context
-      context = context.slice(-maxContextMessages); // Keep context within limits
+
+      // Prepend new valid messages in reverse order to prioritize latest messages
+      context = [...validMessages.reverse(), ...context];
+
+      // Trim the context to ensure it doesn't exceed the max message limit
+      context = context.slice(-maxContextMessages);
       clientContexts.set(clientId, context);
 
       logger.silly(
