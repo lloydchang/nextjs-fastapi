@@ -130,7 +130,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       `,
       url: 'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap',
     },
-    City: {
+    Lab: {
       paragraph: `
   Online Voluntary Local Review (VLR) Lab | IGES
   This online platform provides all you need to know about cities and regions taking a lead on “Voluntary Local Reviews.”

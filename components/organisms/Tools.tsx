@@ -1,12 +1,14 @@
 // File: components/organisms/Tools.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from 'store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from 'store/store';
+import { sendMessage } from 'store/chatSlice'; // Import sendMessage action
 import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the button-paragraph map
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [highlightedButton, setHighlightedButton] = useState<string>(
@@ -23,12 +25,7 @@ const Tools: React.FC = () => {
   };
 
   // Function to find the matching button, prioritizing button names
-  const findMatchingButton = (message: string | undefined): string => {
-    if (!message) {
-      // If the message is undefined or empty, default to the first button
-      return Object.keys(toolsButtonsParagraphs)[0];
-    }
-
+  const findMatchingButton = (message: string): string => {
     message = message.toLowerCase(); // Normalize to lowercase for case-insensitive matching
 
     // 1. Check if any button name matches the message
@@ -40,10 +37,10 @@ const Tools: React.FC = () => {
       return matchingButtonName; // Return the button name if found
     }
 
-    // 2. If no button name matches, search in the paragraphs
-    for (const [buttonName, { paragraphs }] of Object.entries(toolsButtonsParagraphs)) {
-      if (Array.isArray(paragraphs) && paragraphs.some((paragraph) => paragraph.toLowerCase().includes(message))) {
-        return buttonName; // Return the button name if a paragraph matches
+    // 2. If no button name matches, search in the paragraph text
+    for (const [buttonName, { paragraph }] of Object.entries(toolsButtonsParagraphs)) {
+      if (paragraph.toLowerCase().includes(message)) {
+        return buttonName; // Return the button name if the paragraph matches
       }
     }
 
@@ -51,15 +48,23 @@ const Tools: React.FC = () => {
     return Object.keys(toolsButtonsParagraphs)[0];
   };
 
-  // Analyze the latest message whenever messages are updated
+  const previousHighlightedButton = useRef<string>(highlightedButton);
+
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1].text;
       const matchingButton = findMatchingButton(latestMessage);
-      console.debug(`Matching button found: ${matchingButton}`);
-      setHighlightedButton(matchingButton); // Set the highlighted button
+
+      if (matchingButton !== highlightedButton) {
+        console.debug(`Matching button found: ${matchingButton}`);
+        setHighlightedButton(matchingButton);
+
+        // Send a chat message with the paragraph of the new button
+        const paragraphToSend = toolsButtonsParagraphs[matchingButton].paragraph || '';
+        dispatch(sendMessage({ text: paragraphToSend, sender: 'bot', hidden: true }));
+      }
     }
-  }, [messages]);
+  }, [messages, dispatch, highlightedButton]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);

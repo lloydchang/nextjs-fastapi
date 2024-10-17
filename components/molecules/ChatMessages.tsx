@@ -54,6 +54,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ isFullScreen }) => {
               role={msg.role} // Add the missing role property
               content={msg.content} // Add the missing content property
               isFullScreen={isFullScreen} // Pass the isFullScreen prop to each ChatMessage
+              timestamp={msg.timestamp} // Pass the timestamp prop to ChatMessage
             />
           );
         })}

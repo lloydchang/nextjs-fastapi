@@ -20,6 +20,7 @@ export interface Message {
   isInterim?: boolean; // Optional property for interim status
   role: 'system' | 'user' | 'bot';
   content: string;
+  timestamp: number; // Add this line to fix the error
 }
 
 /**
