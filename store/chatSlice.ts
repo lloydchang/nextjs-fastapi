@@ -41,6 +41,7 @@ const chatSlice = createSlice({
       state.messages.push(action.payload);
     },
     clearMessages: (state) => {
+      console.log('Clearing messages');
       state.messages = [];
     },
     setError: (state, action: PayloadAction<string>) => {
@@ -178,7 +179,13 @@ export const sendMessage = (
       : { ...input, id: uuidv4(), sender: input.sender || 'user' };
 
   dispatch(addMessage(userMessage));
-  await debouncedApiCall(dispatch, getState, input, clientId);
+
+  try {
+    await debouncedApiCall(dispatch, getState, input, clientId);
+  } catch (error) {
+    console.error('Error during sendMessage:', error);
+    dispatch(setApiError('Failed to send message.'));
+  }
 };
 
 export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
