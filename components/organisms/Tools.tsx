@@ -12,7 +12,9 @@ import styles from 'styles/components/organisms/Tools.module.css';
 const Tools: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
+  const [highlightedButton, setHighlightedButton] = useState<string | null>(
+    Object.keys(toolsButtonsParagraphs)[0] // Default to first button
+  );
   const [model, setModel] = useState<use.UniversalSentenceEncoder | null>(null);
 
   const dragItem = useRef<HTMLDivElement | null>(null);
@@ -130,7 +132,7 @@ const Tools: React.FC = () => {
             >
               {buttonName}
             </button>
-            {/* Render the flashing arrow only once next to the highlighted button */}
+            {/* Always render one arrow next to the highlighted button */}
             {highlightedButton === buttonName && (
               <div className={styles['flashing-arrow']} />
             )}
