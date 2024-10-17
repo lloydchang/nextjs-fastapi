@@ -150,9 +150,7 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
-            openInNewTab(
-              'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap'
-            )
+            openInNewTab('https://www.local2030.org/vlrs')
           }
         >
           Local
@@ -161,7 +159,9 @@ const Tools: React.FC = () => {
         <button
           className={styles['right-edge-button']}
           onClick={() =>
-            openInNewTab('https://www.local2030.org/vlrs')
+            openInNewTab(
+              'https://unhabitat.org/topics/voluntary-local-reviews?order=field_year_of_publication_vlr&sort=desc#block-vlrworldmap'
+            )
           }
         >
           Review
