@@ -164,10 +164,10 @@ const debouncedApiCall = debounce(
 );
 
 export const sendMessage = (
-  input:
-    | string
-    | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
+  input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
+  console.log('sendMessage called:', input);
+
   dispatch(clearError());
 
   const clientId = localStorage.getItem('clientId') || uuidv4();
@@ -178,6 +178,7 @@ export const sendMessage = (
       ? { id: uuidv4(), sender: 'user', text: input, role: 'user', content: input }
       : { ...input, id: uuidv4(), sender: input.sender || 'user' };
 
+  console.log('Dispatching user message:', userMessage);
   dispatch(addMessage(userMessage));
 
   try {
@@ -186,6 +187,8 @@ export const sendMessage = (
     console.error('Error during sendMessage:', error);
     dispatch(setApiError('Failed to send message.'));
   }
+
+  console.log('Redux state after sendMessage:', getState());
 };
 
 export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
