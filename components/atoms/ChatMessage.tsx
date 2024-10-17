@@ -39,7 +39,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
   const [showFullMessage, setShowFullMessage] = useState(false); // Retained for non-full-screen mode
 
   const displayPersona = persona || sender;
-  const personaColor = displayPersona ? hashPersonaToColor(displayPersona) : '#777777';
+  const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
 
   const isUser = role === 'user';
   const processedText = convertPlainUrlsToMarkdownLinks(text);
@@ -48,7 +48,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
   const shouldShorten = sender === 'bot' && text.split(' ').length > 10 && !isFullScreen;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
-  const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
 
   const handleOpenModal = () => {
     setShowFullScreen(true);
