@@ -2,16 +2,19 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, createPersistedStore } from '../store/store';
-import type { Store } from '@reduxjs/toolkit';
-import type { Persistor } from 'redux-persist';
+import { useState, useEffect } from 'react';
 
-const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [persistedStore, setPersistedStore] = useState<Store>(store);
-  const [persistor, setPersistor] = useState<Persistor | null>(null);
+interface ReduxProviderProps {
+  children: ReactNode;
+}
+
+const ReduxProvider: React.FC<ReduxProviderProps> = ({ children }) => {
+  const [persistedStore, setPersistedStore] = useState(store);
+  const [persistor, setPersistor] = useState<any>(null);
 
   useEffect(() => {
     const initializeStore = async () => {
@@ -19,13 +22,10 @@ const ReduxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       setPersistedStore(persistedStore);
       setPersistor(persistor);
     };
-
     initializeStore();
   }, []);
 
-  if (!persistor) {
-    return <Provider store={persistedStore}>{children}</Provider>;
-  }
+  if (!persistor) return <div>Loading...</div>; // Prevent remounting by waiting
 
   return (
     <Provider store={persistedStore}>
