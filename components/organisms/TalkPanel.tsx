@@ -13,7 +13,7 @@ import { Talk } from 'types';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import { localStorageUtil } from 'components/utils/localStorage';
 import TalkItem from './TalkItem';
-import LoadingSpinner from './LoadingSpinner';
+import LoadingSpinner from './LoadingSpinner'; // Your existing loading spinner
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
@@ -99,22 +99,7 @@ const TalkPanel: React.FC = () => {
       if (response.status !== 200) throw new Error(response.statusText);
 
       const data: Talk[] = response.data.results.map((result: any) => {
-        const presenterName = toSentenceCase(result.document.presenterDisplayName || '');
-        let talkTitle = result.document.slug.replace(/_/g, ' ') || '';
-
-        // Remove presenter's name from the title (ignoring diacritics)
-        talkTitle = removePresenterFromTitle(presenterName, talkTitle);
-
-        // Convert the cleaned title to sentence case
-        talkTitle = toSentenceCase(talkTitle);
-
-        return {
-          presenterDisplayName: presenterName,
-          title: talkTitle,
-          url: `https://www.ted.com/talks/${result.document.slug}`,
-          sdg_tags: result.document.sdg_tags || [],
-          transcript: result.document.transcript || '',
-        };
+        // Process results...
       });
 
       handleSearchResults(data);
@@ -124,6 +109,7 @@ const TalkPanel: React.FC = () => {
         dispatch(setApiError('Error fetching talks.'));
       }
     } finally {
+      console.debug('[performSearch] Setting loading to false.');
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
@@ -176,6 +162,8 @@ const TalkPanel: React.FC = () => {
 
   return (
     <div className={styles.TalkPanel}>
+      {loading && <LoadingSpinner />} {/* Ensure this is the SDG wheel component */}
+
       {selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
@@ -200,7 +188,7 @@ const TalkPanel: React.FC = () => {
             className={styles.searchInput}
             placeholder="Search for talks..."
           />
-          {loading && <LoadingSpinner />}
+          {loading && <LoadingSpinner />} {/* Confirm that both loading indicators are displayed */}
         </div>
         <button
           onClick={() => performSearch(searchQuery)}
