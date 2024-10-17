@@ -3,37 +3,34 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from 'store/store';
-import * as use from '@tensorflow-models/universal-sentence-encoder'; // TensorFlow.js
-import '@tensorflow/tfjs-backend-webgl'; // WebGL backend
-import '@tensorflow/tfjs-backend-cpu'; // Optional CPU backend fallback
-import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the button-paragraph map
+import * as use from '@tensorflow-models/universal-sentence-encoder';
+import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-backend-cpu';
+import toolsButtonsParagraphs from './toolsButtonsParagraphs';
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const dragItem = useRef<HTMLDivElement | null>(null);
-  const dragStartPosition = useRef({ x: 0, y: 0 });
-
   const [highlightedButton, setHighlightedButton] = useState<string | null>(null);
   const [model, setModel] = useState<use.UniversalSentenceEncoder | null>(null);
+
+  const dragItem = useRef<HTMLDivElement | null>(null);
+  const dragStartPosition = useRef({ x: 0, y: 0 });
 
   const messages = useSelector((state: RootState) => state.chat.messages);
 
   const openInNewTab = (url: string) => {
-    console.debug(`Opening URL: ${url}`);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   useEffect(() => {
     const loadModel = async () => {
       try {
-        console.debug('Loading TensorFlow model...');
         await tf.setBackend('webgl');
         await tf.ready();
         const loadedModel = await use.load();
         setModel(loadedModel);
-        console.debug('Model loaded successfully');
       } catch (error) {
         console.error('Error loading TensorFlow model:', error);
       }
@@ -42,12 +39,8 @@ const Tools: React.FC = () => {
   }, []);
 
   const computeSimilarity = async (message: string) => {
-    if (!model) {
-      console.warn('Model is not loaded yet');
-      return;
-    }
+    if (!model) return;
 
-    console.debug(`Computing similarity for message: "${message}"`);
     try {
       const inputEmbedding = await model.embed([message]);
 
@@ -58,7 +51,6 @@ const Tools: React.FC = () => {
             inputEmbedding.arraySync()[0],
             paragraphEmbedding.arraySync()[0]
           );
-          console.debug(`Similarity for ${buttonName}: ${similarity}`);
           return { buttonName, similarity };
         })
       );
@@ -67,7 +59,6 @@ const Tools: React.FC = () => {
         curr.similarity > prev.similarity ? curr : prev
       );
 
-      console.debug(`Best match: ${bestMatch.buttonName}`);
       setHighlightedButton(bestMatch.buttonName);
     } catch (error) {
       console.error('Error computing similarity:', error);
@@ -77,7 +68,6 @@ const Tools: React.FC = () => {
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1].text;
-      console.debug(`New message detected: "${latestMessage}"`);
       computeSimilarity(latestMessage);
     }
   }, [messages, model]);
@@ -140,8 +130,10 @@ const Tools: React.FC = () => {
             >
               {buttonName}
             </button>
-            {/* Flashing arrow next to every button */}
-            <div className={styles['flashing-arrow']} />
+            {/* Render the flashing arrow only once next to the highlighted button */}
+            {highlightedButton === buttonName && (
+              <div className={styles['flashing-arrow']} />
+            )}
           </div>
         ))}
       </div>

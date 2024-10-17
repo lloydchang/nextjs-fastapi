@@ -137,7 +137,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       `,
       url: 'https://www.iges.or.jp/en/projects/vlr',
     },
-    OpenSDG: { 
+    City: { 
       paragraph: `
   Who is using Open SDG?Permalink
   Below is a list of some of the countries and localities that are currently using the Open SDG platform.
@@ -146,7 +146,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       `,
       url: 'https://open-sdg.org/community#cities-and-regions',
     },
-    CountryProfiles: { 
+    Country: { 
       paragraph: `
   SDG Country Profiles
   
@@ -501,7 +501,7 @@ const buttonparagraphs: { [key: string]: { paragraph: string; url: string } } = 
       `,
       url: 'https://jointsdgfund.org/sdg-financing#PROFILES',
     },
-    MultiPartner: {  
+    Hub: {  
       paragraph: `
   Multi-Partner Trust Fund Office | Gateway
   The United Nations centre of expertise on pooled funding mechanisms
