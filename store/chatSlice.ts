@@ -196,9 +196,9 @@ export const sendMessage = (
 
   const userMessage: Message = {
     id: uuidv4() || '',
-    sender: isMessage(input) ? input.sender || '' : '',
+    sender: isMessage(input) ? input.sender || 'user' : 'user', // Valid default sender
     text: isMessage(input) ? input.text || '' : '',
-    role: isMessage(input) ? input.role || '' : '',
+    role: isMessage(input) ? input.role || 'user' : 'user', // Valid default role
     content: isMessage(input) ? input.text || '' : '',
     hidden: isMessage(input) ? input.hidden || false : false,
     persona: isMessage(input) ? input.persona || '' : '',
