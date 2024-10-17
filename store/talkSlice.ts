@@ -3,7 +3,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Talk } from 'types';
 import { AppDispatch } from './store';
-import { setLoading, setApiError, clearApiError } from './apiSlice'; // Import actions from apiSlice
+import { setLoading, setApiError, clearApiError } from './apiSlice'; // Import API actions
 
 interface TalkState {
   talks: Talk[];
@@ -28,7 +28,10 @@ const talkSlice = createSlice({
       state.selectedTalk = action.payload;
     },
     addSearchHistory: (state, action: PayloadAction<string>) => {
-      state.searchHistory.push(action.payload);
+      // Avoid duplicate entries in the search history
+      if (!state.searchHistory.includes(action.payload)) {
+        state.searchHistory.push(action.payload);
+      }
     },
   },
 });
@@ -38,10 +41,11 @@ export default talkSlice.reducer;
 
 /**
  * Thunk to fetch talks from an API with centralized loading and error handling.
+ * This ensures consistent state management across the app.
  */
 export const fetchTalks = (query: string) => async (dispatch: AppDispatch) => {
   dispatch(setLoading(true)); // Start loading state
-  dispatch(clearApiError()); // Clear previous errors
+  dispatch(clearApiError()); // Clear any previous error messages
 
   try {
     const response = await fetch(
@@ -60,11 +64,16 @@ export const fetchTalks = (query: string) => async (dispatch: AppDispatch) => {
       transcript: result.document.transcript || 'Transcript not available',
     }));
 
+    console.log('Fetched Talks:', talks);
+
     dispatch(setTalks(talks));
-    dispatch(addSearchHistory(query)); // Save the search query to history
+    dispatch(addSearchHistory(query)); // Track successful queries
+    if (talks.length > 0) {
+      dispatch(setSelectedTalk(talks[0])); // Automatically select the first talk
+    }
   } catch (error: any) {
     console.error('Error fetching talks:', error);
-    dispatch(setApiError(error.message || 'An unknown error occurred')); // Set the error state
+    dispatch(setApiError(error.message || 'An unknown error occurred')); // Store error in state
   } finally {
     dispatch(setLoading(false)); // End loading state
   }
