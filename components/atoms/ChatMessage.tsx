@@ -36,12 +36,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   role,
 }) => {
   const [showFullScreen, setShowFullScreen] = useState(false);
+
   const displayPersona = persona;
+  const personaColor = displayPersona ? hashPersonaToColor(displayPersona) : '#777777';
+  
   const processedText = convertPlainUrlsToMarkdownLinks(text);
   const shortenedText = 
     text.split(' ').length > 10 && !isFullScreen
       ? `${text.split(' ').slice(0, 10).join(' ')}…`
       : text;
+
+  const isUser = role === 'user';
+  const isAd = role === 'ad';
+
   const handleOpenModal = () => setShowFullScreen(true);
   const handleCloseModal = () => setShowFullScreen(false);
 

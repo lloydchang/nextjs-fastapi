@@ -64,11 +64,12 @@ const Tools: React.FC = () => {
         console.debug(`Matching button found: ${matchingButton}`);
         setHighlightedButton(matchingButton);
 
-        const buttonToSend = `***${matchingButton || ''}***: `;
-        const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
-        const urlToSend = `${toolsButtonsParagraphs[matchingButton].url || ''}`;
+        const buttonText = `***${matchingButton || ''}***`;
+        const paragraphText = `${toolsButtonsParagraphs[matchingButton].paragraph || ''}`;
+        const url = toolsButtonsParagraphs[matchingButton].url || '';
 
-        const messageText = buttonToSend + paragraphToSend + urlToSend;
+        // Create the hyperlink message
+        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${buttonText}: ${paragraphText}</a>`;
 
         dispatch(
           addMessage({
