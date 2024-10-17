@@ -1,3 +1,5 @@
+// File: components/organisms/TalkPanel.tsx
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -21,7 +23,9 @@ const TalkPanel: React.FC = () => {
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
   const { loading, error } = useSelector((state: RootState) => state.api);
 
-  const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
+  // Initialize the search query immediately.
+  const [searchQuery, setSearchQuery] = useState<string>(determineInitialKeyword());
+
   const isSearchInProgress = useRef(false);
   const initialRender = useRef(true);
   const lastDispatchedTalkId = useRef<string | null>(null);
@@ -31,24 +35,28 @@ const TalkPanel: React.FC = () => {
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search to prevent rapid API calls
+  // Debounced search function to prevent rapid calls.
   const debouncedPerformSearch = useCallback(
-    debounce((query: string) => performSearch(query), 500),
+    debounce((query: string) => {
+      console.log('Debounced search initiated:', query);
+      performSearch(query);
+    }, 500),
     []
   );
 
+  // **Trigger search on first render automatically.**
   useEffect(() => {
-    if (initialRender.current) {
-      performSearch(searchQuery);
-      initialRender.current = false;
-    }
+    console.log('TalkPanel - Initial render detected.');
+    performSearch(searchQuery); // Trigger search immediately.
+    initialRender.current = false;
 
     return () => {
       if (abortControllerRef.current) abortControllerRef.current.abort();
       debouncedPerformSearch.cancel();
     };
-  }, []);
+  }, [searchQuery]); // Ensure this runs when `searchQuery` is set.
 
+  // Handle the search results.
   const handleSearchResults = async (query: string, data: Talk[]) => {
     const processedData = isFirstSearch.current ? shuffleArray(data) : data;
     isFirstSearch.current = false;
@@ -67,10 +75,13 @@ const TalkPanel: React.FC = () => {
     await sendFirstAvailableTranscript(query, uniqueTalks);
   };
 
+  // Perform the search by querying the API.
   const performSearch = async (query: string) => {
+    console.log(`Performing search with query: ${query}`);
     const trimmedQuery = query.trim().toLowerCase();
 
     if (isSearchInProgress.current && trimmedQuery === lastQueryRef.current) return;
+
     if (abortControllerRef.current) abortControllerRef.current.abort();
 
     abortControllerRef.current = new AbortController();
@@ -112,10 +123,7 @@ const TalkPanel: React.FC = () => {
 
   const sendTranscriptForTalk = async (query: string, talk: Talk) => {
     try {
-      if (
-        lastDispatchedTalkId.current === talk.title ||
-        sentMessagesRef.current.has(talk.title)
-      ) {
+      if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) {
         console.log(`Skipping already dispatched talk: ${talk.title}`);
         return;
       }
@@ -124,20 +132,14 @@ const TalkPanel: React.FC = () => {
       lastDispatchedTalkId.current = talk.title;
       sentMessagesRef.current.add(talk.title);
 
-      const messageParts = [
-        query,
-        talk.title,
-        talk.transcript,
-        talk.sdg_tags[0] || '',
-      ];
+      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
 
       for (const part of messageParts) {
         console.log(`Sending message part: ${part}`);
         const result = await dispatch(sendMessage({ text: part, hidden: true }));
-        console.log('sendMessage result:', result);
 
-        if (sendMessage.rejected.match(result)) {
-          console.error(`Failed to send message: ${part}`, result.payload);
+        if (result.error) {
+          console.error(`Failed to send message: ${part}`, result.error);
           dispatch(setApiError(`Failed to send message: ${part}`));
           return;
         }
@@ -154,23 +156,14 @@ const TalkPanel: React.FC = () => {
     for (const talk of talks) {
       try {
         await sendTranscriptForTalk(query, talk);
-        // If successful, exit the loop
-        return;
-      } catch {
-        // Continue to the next talk if there's an error
-      }
+        break;
+      } catch {}
     }
-    // If all talks failed
     dispatch(setApiError('Try searching for a different word.'));
   };
 
   const openTranscriptInNewTab = () => {
-    if (selectedTalk)
-      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
-  };
-
-  const shuffleTalks = () => {
-    dispatch(setTalks(shuffleArray(talks)));
+    if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
   };
 
   return (
