@@ -11,17 +11,14 @@ import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
 
-// Define a custom schema if you need to allow specific HTML elements or attributes
+// Safely handling tagNames with nullish coalescing operator
 const customSchema = {
   ...defaultSchema,
-  // Example: Allow <iframe> with specific attributes (use cautiously)
   attributes: {
     ...defaultSchema.attributes,
     iframe: ['src', 'title', 'width', 'height', 'allow', 'allowfullscreen'],
-    // Add more tags and attributes as needed
   },
-  // Example: Allow <iframe> tag (use cautiously)
-  tagNames: [...defaultSchema.tagNames, 'iframe'],
+  tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'], // Ensure tagNames is iterable
 };
 
 interface ChatMessageProps extends Message {
@@ -31,7 +28,7 @@ interface ChatMessageProps extends Message {
 const palette = [
   '#1F77B4', '#FF7F0E', '#2CA02C', '#D62728',
   '#9467BD', '#8C564B', '#E377C2', '#7F7F7F',
-  '#BCBD22', '#17BECF'
+  '#BCBD22', '#17BECF',
 ];
 
 const hashPersonaToColor = (persona: string): string => {
@@ -100,7 +97,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeHighlight, rehypeRaw, [rehypeSanitize, customSchema]]} // Added rehypeSanitize with custom schema
+      rehypePlugins={[rehypeHighlight, rehypeRaw, [rehypeSanitize, customSchema]]}
       components={{ a: LinkRenderer }}
     >
       {content}
