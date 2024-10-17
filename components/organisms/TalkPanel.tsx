@@ -139,13 +139,14 @@ const TalkPanel: React.FC = () => {
       // `URL: ${talk.url}`,
       // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       // `Transcript: ${talk.transcript}`,
-      `${talk.presenterDisplayName}: ${talk.transcript}`,
+      `${talk.transcript} —— ${talk.title}\n\n${talk.sdg_tags.join(', ')}`,
     ];
 
     for (const part of messageParts) {
       dispatch(sendMessage({
+        persona: `${talk.presenterDisplayName}`,
+        sender: 'bot',
         text: part,
-        sender: 'user',
         hidden: false,
       }));
       debugLog(`Sent message part: ${part}`);

@@ -3,8 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
-import { sendMessage } from 'store/chatSlice'; // Import sendMessage action
-import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the button-paragraph map
+import { addMessage } from 'store/chatSlice';
+import toolsButtonsParagraphs from './toolsButtonsParagraphs';
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
@@ -12,7 +12,7 @@ const Tools: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [highlightedButton, setHighlightedButton] = useState<string>(
-    Object.keys(toolsButtonsParagraphs)[0] // Default to the first button
+    Object.keys(toolsButtonsParagraphs)[0]
   );
 
   const dragItem = useRef<HTMLDivElement | null>(null);
@@ -25,54 +25,44 @@ const Tools: React.FC = () => {
   };
 
   const findMatchingButton = (message: string): string => {
-    message = message.toLowerCase(); // Normalize to lowercase for case-insensitive matching
+    message = message.toLowerCase();
 
     const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) =>
       message.includes(buttonName.toLowerCase())
     );
 
     if (matchingButtonName) {
-      return matchingButtonName; // Return the button name if found
+      return matchingButtonName;
     }
 
     for (const [buttonName, { paragraph }] of Object.entries(toolsButtonsParagraphs)) {
       if (paragraph.toLowerCase().includes(message)) {
-        return buttonName; // Return the button name if the paragraph matches
+        return buttonName;
       }
     }
 
-    return Object.keys(toolsButtonsParagraphs)[0]; // Default to the first button
+    return Object.keys(toolsButtonsParagraphs)[0];
   };
 
-  const getLatestBotMessage = () => {
+  const getLatestMessage = () => {
     const botMessages = messages.filter((msg) => msg.sender === 'bot');
-    return botMessages.length > 0 ? botMessages[botMessages.length - 1].text : '';
-  };
-
-  const getLatestUserMessage = () => {
     const userMessages = messages.filter((msg) => msg.sender === 'user');
-    return userMessages.length > 0 ? userMessages[userMessages.length - 1].text : '';
+
+    const latestBotMessage = botMessages.length > 0 ? botMessages[botMessages.length - 1].text : '';
+    const latestUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1].text : '';
+
+    return latestUserMessage || latestBotMessage;
   };
 
   useEffect(() => {
+    const latestMessage = getLatestMessage(); // Get the latest user or bot message
 
-    // const latestBotMessage = getLatestBotMessage(); // Get the latest bot message
-
-    const latestUserMessage = getLatestUserMessage(); // Get the latest user message
-
-    // if (latestBotMessage) {
-
-    // const matchingButton = findMatchingButton(latestBotMessage);
-
-    if (latestUserMessage) {
-
-      const matchingButton = findMatchingButton(latestUserMessage);
+    if (latestMessage) {
+      const matchingButton = findMatchingButton(latestMessage);
 
       if (matchingButton !== highlightedButton) {
         console.debug(`Matching button found: ${matchingButton}`);
         setHighlightedButton(matchingButton);
-
-        // Combine button name, paragraph, and URL into a single message text (if needed)
 
         const buttonToSend = `***${matchingButton || ''}***: `;
         const paragraphToSend = `${toolsButtonsParagraphs[matchingButton].paragraph || ''} `;
@@ -81,9 +71,10 @@ const Tools: React.FC = () => {
         const messageText = buttonToSend + paragraphToSend + urlToSend;
 
         dispatch(
-          sendMessage({
+          addMessage({
+            persona: 'Advertisement',
+            sender: 'ad',
             text: messageText,
-            sender: 'bot',
             hidden: false,
           })
         );

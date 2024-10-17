@@ -34,11 +34,11 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       console.debug('Adding message:', action.payload);
 
-      // **Update**: Check both text and timestamp to avoid duplicate filtering
       if (
         state.messages.some(
           (msg) =>
-            msg.text === action.payload.text && msg.timestamp === action.payload.timestamp
+            msg.text === action.payload.text &&
+            msg.timestamp === action.payload.timestamp
         )
       ) {
         console.debug('Duplicate message detected, skipping:', action.payload);
@@ -93,7 +93,7 @@ const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
     getState: () => RootState,
-    input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string },
+    input: string | Partial<Message>,
     clientId: string
   ) => {
     const state = getState();
@@ -152,7 +152,7 @@ const debouncedApiCall = debounce(
                       role: 'bot',
                       content: parsedData.message,
                       persona: parsedData.persona,
-                      timestamp: Date.now(), // Ensure timestamp for all messages
+                      timestamp: Date.now(),
                     };
                     dispatch(addMessage(botMessage));
                   }
@@ -167,7 +167,7 @@ const debouncedApiCall = debounce(
         dispatch(setLoading(false));
         return;
       } catch (error: any) {
-        if ((error instanceof ApiError && error.status === 429) || error.message === 'Timeout') {
+        if (error instanceof ApiError && error.status === 429) {
           retryCount++;
           await wait(Math.pow(2, retryCount) * 1000);
           continue;
@@ -182,7 +182,7 @@ const debouncedApiCall = debounce(
 );
 
 export const sendMessage = (
-  input: string | { text: string; hidden?: boolean; sender?: 'user' | 'bot'; persona?: string }
+  input: string | Partial<Message>
 ) => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(clearError());
 
@@ -191,13 +191,13 @@ export const sendMessage = (
 
   const userMessage: Message = {
     id: uuidv4(),
-    sender: typeof input === 'string' ? 'user' : input.sender || 'user',
-    text: typeof input === 'string' ? input : input.text || '',
-    role: typeof input === 'string' ? 'user' : input.sender === 'bot' ? 'bot' : 'user',
-    content: typeof input === 'string' ? input : input.text || '',
-    hidden: typeof input === 'string' ? false : input.hidden,
-    persona: typeof input === 'string' ? undefined : input.persona,
-    timestamp: Date.now(), // Add timestamp to all outgoing messages
+    sender: input.sender || 'user',
+    text: input.text || '',
+    role: input.role || 'user',
+    content: input.text || '',
+    hidden: input.hidden || false,
+    persona: input.persona,
+    timestamp: Date.now(),
   };
 
   dispatch(addMessage(userMessage));

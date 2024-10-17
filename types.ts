@@ -1,61 +1,62 @@
 // File: types.ts
 
 /**
- * Represents a user or system prompt in the conversation.
+ * Represents a user, system, bot, or ad prompt in the conversation.
  */
 export interface UserPrompt {
-  role: 'system' | 'user' | 'bot';
-  content: string;
+  role: 'system' | 'user' | 'bot' | 'ad'; // Includes 'ad' as a valid role
+  content: string; // The text content of the prompt
 }
 
 /**
  * Represents a message in the conversation.
  */
 export interface Message {
-  id: string;
-  sender: 'user' | 'bot';
-  text: string; // Always a string
-  persona?: string;
-  hidden?: boolean;
-  isInterim?: boolean; // Optional property for interim status
-  role: 'system' | 'user' | 'bot';
-  content: string;
-  timestamp: number; // Add this line to fix the error
+  id: string; // Unique identifier for the message
+  sender: 'user' | 'bot'; // Sender of the message (limited to user or bot)
+  text: string; // Always a string representing the message text
+  persona?: string; // Optional persona to attribute messages
+  hidden?: boolean; // If true, the message is hidden from the UI
+  isInterim?: boolean; // Optional, indicates if the message is in progress
+  role: 'system' | 'user' | 'bot' | 'ad'; // Role of the message, including 'ad'
+  content: string; // Same as `text`, kept for structural consistency
+  timestamp: number; // Timestamp of when the message was sent
 }
 
 /**
  * Represents the request body structure for the chatbot API.
  */
 export interface ChatbotRequestBody {
-  model: string;
-  prompt: UserPrompt[]; // Changed from string to array of UserPrompt
-  temperature: number;
+  model: string; // AI model to use (e.g., GPT-3.5)
+  prompt: UserPrompt[]; // Array of user, system, bot, or ad prompts
+  temperature: number; // Controls randomness of responses
 }
 
 /**
- * Represents a segment of the response to be streamed back to the client.
+ * Represents a segment of the response streamed back to the client.
  */
 export interface ResponseSegment {
-  message: string;
-  context: string | null;
+  message: string; // Part of the response message
+  context: string | null; // Optional additional context, if any
 }
 
 /**
  * Represents a TED Talk.
  */
 export interface Talk {
-  title: string;
-  url: string;
-  sdg_tags: string[];
-  presenterDisplayName: string; // Add the presenterDisplayName property here
-  transcript: string; // Add the transcript property here
+  title: string; // Title of the TED Talk
+  url: string; // URL of the TED Talk
+  sdg_tags: string[]; // Tags related to Sustainable Development Goals (SDGs)
+  presenterDisplayName: string; // Name of the presenter
+  transcript: string; // Full transcript of the talk
 }
 
 /**
  * Defines the structure for each bot function.
  */
 export interface BotFunction {
-  persona: string;
-  valid: boolean;
-  generate: (this: BotFunction, currentContext: UserPrompt[]) => Promise<string | null>;
+  persona: string; // Persona name for the bot function
+  valid: boolean; // Indicates if the function is valid for execution
+  generate: (this: BotFunction, currentContext: UserPrompt[]) => Promise<string | null>; 
+  // Function to generate a response based on the current context
 }

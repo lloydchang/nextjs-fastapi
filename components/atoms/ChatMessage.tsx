@@ -9,17 +9,13 @@ import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
 
-// Add a prop for Full Screen mode detection
 interface ChatMessageProps extends Message {
   isFullScreen: boolean;
 }
 
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
-  const urlPattern = /(?<!\S)(www\.[a-zA-Z0-9-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(\/\S*)?(?!\S)/g;
-  return text.replace(urlPattern, (match) => {
-    const url = match.startsWith('www.') ? `http://${match}` : `http://${match}`;
-    return `[${match}](${url})`;
-  });
+  const urlPattern = /(?<!\S)(www\.[\w.-]+\.[\w]{2,}|[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
+  return text.replace(urlPattern, (match) => `[${match}](http://${match})`);
 };
 
 const hashPersonaToColor = (persona: string): string => {
@@ -27,84 +23,66 @@ const hashPersonaToColor = (persona: string): string => {
   for (let i = 0; i < persona.length; i++) {
     hash = persona.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const minColorValue = parseInt('777777', 16);
-  const maxColorValue = parseInt('FFFFFF', 16);
-  const rangeValue = minColorValue + (Math.abs(hash) % (maxColorValue - minColorValue));
-  return `#${rangeValue.toString(16).padStart(6, '0')}`; // Ensure it's 6 characters
+  const colorValue = 0x777777 + (Math.abs(hash) % (0xffffff - 0x777777));
+  return `#${colorValue.toString(16).padStart(6, '0')}`;
 };
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, persona, isFullScreen }) => {
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  sender,
+  text,
+  isInterim,
+  persona,
+  isFullScreen,
+  role,
+}) => {
   const [showFullScreen, setShowFullScreen] = useState(false);
-  const [showFullMessage, setShowFullMessage] = useState(false); // Retained for non-full-screen mode
 
-  const isUser = sender.toLowerCase() === 'user';
+  // If the message is an ad, override the persona to 'Ad'
+  const displayPersona = role === 'ad' ? 'Ad' : persona;
+  const personaColor = displayPersona ? hashPersonaToColor(displayPersona) : '#777777';
+  
   const processedText = convertPlainUrlsToMarkdownLinks(text);
+  const shortenedText = 
+    text.split(' ').length > 10 && !isFullScreen
+      ? `${text.split(' ').slice(0, 10).join(' ')}…`
+      : text;
 
-  // Update shortening logic to consider isFullScreen
-  const shouldShorten = sender === 'bot' && text.split(' ').length > 10 && !isFullScreen;
-  const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
+  const isUser = sender === 'user';
+  const isAd = role === 'ad';
 
-  const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
+  const handleOpenModal = () => setShowFullScreen(true);
+  const handleCloseModal = () => setShowFullScreen(false);
 
-  const handleOpenModal = () => {
-    if (!isUser) {
-      setShowFullScreen(true);
-      console.debug('Opening full screen for message:', text);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShowFullScreen(false);
-    console.debug('Closing full screen modal');
-  };
-
-  // Handle Escape key press to close the modal
   useEffect(() => {
     if (showFullScreen) {
       const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          handleCloseModal();
-        }
+        if (event.key === 'Escape') handleCloseModal();
       };
-
-      // Attach event listener
       document.addEventListener('keydown', handleKeyDown);
-
-      // Clean up event listener on unmount or modal close
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
+      return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [showFullScreen]); // Re-run effect only when `showFullScreen` changes
+  }, [showFullScreen]);
 
   return (
     <>
-      {/* Full-Screen Modal - Only for bot messages */}
-      {showFullScreen && !isUser && (
+      {showFullScreen && (
         <div className={styles.modalBackdrop} onClick={handleCloseModal}>
           <div className={styles.fullScreenMessage} onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header with Persona Label and Close Button */}
             <div className={styles.modalHeader}>
-              {/* Persona Label */}
-              {sender === 'bot' && persona && (
+              {displayPersona && (
                 <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
-                  <strong>{persona}</strong>
+                  <strong>{displayPersona}</strong>
                 </div>
               )}
-              {/* Close Button */}
               <button className={styles.modalCloseButton} onClick={handleCloseModal}>
                 Close
               </button>
             </div>
-
-            {/* Apply the same .text class inside the modal to ensure markdown styles are inherited */}
-            <div className={styles.text}>
+            <div className={`${styles.text} ${isAd ? styles.adContent : ''}`}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
-                components={{
-                  a: ({ node, ...props }) => <LinkRenderer {...props} />,
-                }}
+                components={{ a: ({ node, ...props }) => <LinkRenderer {...props} /> }}
               >
                 {processedText}
               </ReactMarkdown>
@@ -116,48 +94,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
       <div
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
-        } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => !isUser && !isFullScreen && setShowFullMessage(true)} // Retained for non-full-screen mode
-        onMouseLeave={() => !isUser && !isFullScreen && setShowFullMessage(false)} // Retained for non-full-screen mode
+        } ${isInterim ? styles.interim : ''} ${isAd ? styles.adMessage : ''}`}
         onClick={handleOpenModal}
-        style={{ position: 'relative' }} // Ensure the parent is relative
+        style={{ position: 'relative' }}
       >
-        {/* Display Persona Label for bot messages only */}
-        {sender === 'bot' && persona && (
-          <div className={`${showFullMessage ? styles.personaLabelHovered : styles.personaLabel}`} style={{ color: personaColor }}>
-            <strong>{persona}</strong>
+        {displayPersona && (
+          <div
+            className={`${styles.personaLabel} ${
+              showFullScreen ? styles.personaLabelHovered : ''
+            }`}
+            style={{ color: personaColor }}
+          >
+            <strong>{displayPersona}</strong>
           </div>
         )}
-        {/* Hovered text will be shown below the persona label */}
-        {!isFullScreen && showFullMessage && !isUser && (
-          <div className={styles.textHovered}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={{
-                a: ({ node, ...props }) => <LinkRenderer {...props} />,
-              }}
-            >
-              {processedText}
-            </ReactMarkdown>
-          </div>
-        )}
-        {/* Shortened or Full text based on mode */}
-        <div className={styles.text}>
+
+        <div className={`${styles.text} ${isAd ? styles.adContent : ''}`}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
-            components={{
-              a: ({ node, ...props }) => <LinkRenderer {...props} />,
-            }}
+            components={{ a: ({ node, ...props }) => <LinkRenderer {...props} /> }}
           >
-            {shouldShorten ? shortenedText : processedText}
+            {shortenedText}
           </ReactMarkdown>
         </div>
       </div>
-
-      {/* Debugging messages */}
-      {console.debug(`ChatMessage rendered: sender=${sender}, text=${text}, processedText=${processedText}`)}
     </>
   );
 };
