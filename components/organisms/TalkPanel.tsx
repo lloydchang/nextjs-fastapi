@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
-import { setLoading, setApiError } from 'store/apiSlice'; 
+import { setLoading, setApiError } from 'store/apiSlice';
 import { sendMessage } from 'store/chatSlice';
 import { Talk } from 'types';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
@@ -57,15 +57,19 @@ const TalkPanel: React.FC = () => {
     const processedData = isFirstSearch.current ? shuffleArray(data) : data;
     isFirstSearch.current = false;
 
-    // Clear previous talks and set new ones
-    dispatch(setTalks(processedData));
+    // Filter out duplicate talks by URL
+    const uniqueTalks = processedData.filter(
+      (newTalk) => !talks.some((existingTalk) => existingTalk.url === newTalk.url)
+    );
 
-    if (!selectedTalk && processedData.length > 0) {
-      dispatch(setSelectedTalk(processedData[0]));
+    dispatch(setTalks(uniqueTalks));
+
+    if (!selectedTalk && uniqueTalks.length > 0) {
+      dispatch(setSelectedTalk(uniqueTalks[0]));
     }
 
-    localStorageUtil.setItem('lastSearchData', JSON.stringify(processedData));
-    await sendFirstAvailableTranscript(query, processedData);
+    localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
+    await sendFirstAvailableTranscript(query, uniqueTalks);
   };
 
   const performSearch = async (query: string) => {
@@ -193,8 +197,12 @@ const TalkPanel: React.FC = () => {
       {error && <div className={styles.errorContainer}>{error}</div>}
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
-        {talks.map((talk) => (
-          <TalkItem key={talk.url} talk={talk} selected={selectedTalk?.title === talk.title} />
+        {talks.map((talk, index) => (
+          <TalkItem
+            key={`${talk.url}-${index}`} // Generate unique key using URL and index
+            talk={talk}
+            selected={selectedTalk?.title === talk.title}
+          />
         ))}
       </div>
     </div>
