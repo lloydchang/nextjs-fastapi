@@ -25,11 +25,15 @@ const Tools: React.FC = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // Utility function to escape special regex characters
+  const escapeRegExp = (string: string) =>
+    string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   const findMatchingButton = (message: string): string => {
     message = message.toLowerCase();
 
     const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) => {
-      const regex = new RegExp(`\\b${buttonName.toLowerCase()}\\b`, 'i');
+      const regex = new RegExp(`\\b${escapeRegExp(buttonName.toLowerCase())}\\b`, 'i');
       return regex.test(message);
     });
 
@@ -38,7 +42,7 @@ const Tools: React.FC = () => {
     }
 
     for (const [buttonName, { paragraph }] of Object.entries(toolsButtonsParagraphs)) {
-      const regex = new RegExp(`\\b${message}\\b`, 'i');
+      const regex = new RegExp(`\\b${escapeRegExp(message)}\\b`, 'i');
       if (regex.test(paragraph.toLowerCase())) {
         return buttonName;
       }
@@ -75,9 +79,9 @@ const Tools: React.FC = () => {
 
         dispatch(
           addMessage({
-            id: uuidv4(), // Unique ID for the message
-            content: messageText, // Map `text` to `content`
-            timestamp: Date.now(), // Current timestamp in milliseconds
+            id: uuidv4(),
+            content: messageText,
+            timestamp: Date.now(),
             persona: 'Ad',
             role: 'ad',
             sender: 'ad',
