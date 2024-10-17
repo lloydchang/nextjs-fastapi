@@ -18,6 +18,8 @@ import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
 
+const isDevelopment = process.env.NODE_ENV === 'development'; // Check if in development
+
 // Helper function to convert SDG tags to their full titles
 const getSdgTitles = (sdgTags: string[]): string[] =>
   sdgTags.map(tag => sdgTitleMap[tag] || tag); // Fallback to raw tag if not found
@@ -45,19 +47,21 @@ const TalkPanel: React.FC = () => {
   );
 
   useEffect(() => {
-    mountCounter.current += 1;
+    if (isDevelopment) {
+      mountCounter.current += 1;
 
-    if (mountCounter.current === 1) {
-      isStrictMode.current = true; // Initial mount in Strict Mode
-      debugLog('Initial mount detected; entering strict mode.');
-    } else {
-      isStrictMode.current = false; // Subsequent mounts are normal
-      debugLog('Subsequent mount detected; exiting strict mode.');
-      performSearch(searchQuery);
+      if (mountCounter.current === 1) {
+        isStrictMode.current = true; // Initial mount in Strict Mode
+        debugLog('Initial mount detected; entering strict mode.');
+      } else {
+        isStrictMode.current = false; // Subsequent mounts are normal
+        debugLog('Subsequent mount detected; exiting strict mode.');
+        performSearch(searchQuery);
+      }
     }
 
     return () => {
-      if (!isStrictMode.current) {
+      if (isDevelopment && !isStrictMode.current) {
         abortControllerRef.current?.abort();
         debugLog('Cleanup: aborting any ongoing search requests.');
       }
@@ -139,11 +143,6 @@ const TalkPanel: React.FC = () => {
     debugLog(`Sending transcript for talk: ${talk.title}`);
  
     const messageParts = [
-      // `Presenter: ${talk.presenterDisplayName}`,
-      // `Talk: ${talk.title}`,
-      // `URL: ${talk.url}`,
-      // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
-      // `Transcript: ${talk.transcript}`,
       `${talk.transcript} —— ${talk.title}\n\n${getSdgTitles(talk.sdg_tags).join(', ')}`,
     ];
 
@@ -173,7 +172,7 @@ const TalkPanel: React.FC = () => {
 
   return (
     <div className={styles.TalkPanel}>
-      {isLoading && <LoadingSpinner />} {/* Ensure this is the SDG wheel component */}
+      {isLoading && <LoadingSpinner />}
 
       {!isStrictMode.current && selectedTalk && (
         <div className={styles.nowPlaying}>
@@ -210,10 +209,7 @@ const TalkPanel: React.FC = () => {
           {isLoading && <LoadingSpinner />}
         </div>
         <button
-          onClick={() => {
-            debugLog(`Search button clicked with query: "${searchQuery}"`);
-            performSearch(searchQuery);
-          }}
+          onClick={() => performSearch(searchQuery)}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={isLoading}
         >
