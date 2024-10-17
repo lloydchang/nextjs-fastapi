@@ -157,7 +157,7 @@ const debouncedApiCall = debounce(
                       role: 'bot',
                       content: parsedData.message,
                       persona: parsedData.persona,
-                      timestamp: Date.now(),
+                      timestamp: Date.now(), // Fixed: always a number
                     };
                     dispatch(addMessage(botMessage));
                   }
@@ -202,7 +202,7 @@ export const sendMessage = (
     content: isMessage(input) ? input.text || '' : '',
     hidden: isMessage(input) ? input.hidden || false : false,
     persona: isMessage(input) ? input.persona || '' : '',
-    timestamp: Date.now() || '',
+    timestamp: Date.now(), // Fixed: always a number
   };
 
   dispatch(addMessage(userMessage));
