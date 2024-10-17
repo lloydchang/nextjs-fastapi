@@ -44,67 +44,62 @@
 
 /* External Link Button */
 .external-link-button {
-  background-color: #0288d1; /* Maintain different color for external links */
-  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
+  background-color: #0288d1;
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 .external-link-button:hover {
-  background-color: #03a9f4; /* Brighten on hover */
-  transform: translateX(5px); /* Shift slightly to the right on hover */
+  background-color: #03a9f4;
+  transform: translateX(5px);
 }
 
 .external-link-button:active {
-  background-color: #4fc3f7; /* Even brighter on click */
+  background-color: #4fc3f7;
 }
 
 /* Close Button */
 .close-button-active {
-  background-color: #d32f2f; /* Different color for close buttons */
-  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out; /* Add smooth transition */
+  background-color: #d32f2f;
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 .close-button-active:hover {
-  background-color: #e57373; /* Brighten on hover */
-  transform: translateX(5px); /* Shift slightly to the right on hover */
+  background-color: #e57373;
+  transform: translateX(5px);
 }
 
 .close-button-active:active {
-  background-color: #ef9a9a; /* Even brighter on click */
+  background-color: #ef9a9a;
 }
 
 /* Responsive styles for various device sizes */
-
-/* Tablets and Mobile devices */
 @media (max-width: 1023px) {
-
   .tools-container {
-    position: relative;      /* Use relative or absolute depending on your layout needs */
-    bottom: -100px;           /* Adjusted: Move container further down */
-    right: -2vw;              /* Align container 2% of the viewport width from the right */
+    position: relative;
+    bottom: -100px;
+    right: -2vw;
   }
-  
+
   .button-group {
-    padding: 10px 0px;         /* Adjust padding for better spacing */
-    position: relative;       /* Use relative positioning */
-    bottom: 120px;            /* Adjusted: Move container further down */
-    right: -14px;             /* Align container slightly to the left for aesthetics */
-    align-items: flex-start;  /* Correct alignment for smaller devices */
-    flex-wrap: wrap;          /* Allow buttons to wrap into multiple rows */
-    flex-direction: row;      /* Arrange buttons horizontally */
-    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+    padding: 10px 0;
+    position: relative;
+    bottom: 120px;
+    right: -14px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    flex-direction: row;
+    background-color: rgba(0, 0, 0, 0.8);
   }
-  
-  /* Button styles */
+
   .right-edge-button {
-    padding: 0px 0px;         /* Adjust padding for better spacing */
-    margin-left: 0px;        /* Add spacing between buttons in a row */
-    font-size: 9px;          /* Smaller font size */
-    width: 30px;             /* Smaller fixed width */
+    margin-left: 0;
+    font-size: 9px;
+    width: 30px;
   }
 
   .right-edge-button:hover {
-    transform: translateY(-5px); /* Shift button slightly up on hover */
-  }  
+    transform: translateY(-5px);
+  }
 }
 
 .lazy-arrow-container {
@@ -122,14 +117,24 @@
   height: 30px;
   background-color: #0288d1;
   clip-path: polygon(100% 50%, 0% 0%, 30% 50%, 0% 100%);
-  animation: flash 1s infinite; /* Flash animation */
+  animation: flash 2s infinite; /* Slower flash animation */
+  transition: top 0.8s ease-in-out, left 0.8s ease-in-out; /* Smooth arrow movement */
 }
 
 @keyframes flash {
-  0%, 100% {
+  0% {
     opacity: 1;
   }
+  25% {
+    opacity: 0.8;
+  }
   50% {
-    opacity: 0.3;
+    opacity: 0.5;
+  }
+  75% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
   }
 }

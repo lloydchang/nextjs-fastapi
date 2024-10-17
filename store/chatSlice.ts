@@ -34,10 +34,17 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       console.debug('Adding message:', action.payload);
 
-      if (state.messages.some((msg) => msg.text === action.payload.text)) {
-        console.debug('Duplicate message detected, skipping:', action.payload.text);
+      // **Update**: Check both text and timestamp to avoid duplicate filtering
+      if (
+        state.messages.some(
+          (msg) =>
+            msg.text === action.payload.text && msg.timestamp === action.payload.timestamp
+        )
+      ) {
+        console.debug('Duplicate message detected, skipping:', action.payload);
         return;
       }
+
       if (state.messages.length >= MAX_MESSAGES) {
         console.debug('Reached max messages. Removing oldest message.');
         state.messages.shift();
@@ -61,7 +68,6 @@ const chatSlice = createSlice({
   },
 });
 
-// Helper functions
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const timeoutPromise = (ms: number) =>
   new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
@@ -146,6 +152,7 @@ const debouncedApiCall = debounce(
                       role: 'bot',
                       content: parsedData.message,
                       persona: parsedData.persona,
+                      timestamp: Date.now(), // Ensure timestamp for all messages
                     };
                     dispatch(addMessage(botMessage));
                   }
@@ -182,18 +189,16 @@ export const sendMessage = (
   const clientId = localStorage.getItem('clientId') || uuidv4();
   localStorage.setItem('clientId', clientId);
 
-  const userMessage: Message =
-    typeof input === 'string'
-      ? { id: uuidv4(), sender: 'user', text: input, role: 'user', content: input }
-      : {
-          id: uuidv4(),
-          sender: input.sender || 'user',
-          text: input.text || '',
-          role: input.sender === 'bot' ? 'bot' : 'user',
-          content: input.text || '',
-          hidden: input.hidden,
-          persona: input.persona,
-        };
+  const userMessage: Message = {
+    id: uuidv4(),
+    sender: typeof input === 'string' ? 'user' : input.sender || 'user',
+    text: typeof input === 'string' ? input : input.text || '',
+    role: typeof input === 'string' ? 'user' : input.sender === 'bot' ? 'bot' : 'user',
+    content: typeof input === 'string' ? input : input.text || '',
+    hidden: typeof input === 'string' ? false : input.hidden,
+    persona: typeof input === 'string' ? undefined : input.persona,
+    timestamp: Date.now(), // Add timestamp to all outgoing messages
+  };
 
   dispatch(addMessage(userMessage));
 

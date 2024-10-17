@@ -3,19 +3,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from 'store/store';
-import * as use from '@tensorflow-models/universal-sentence-encoder';
-import '@tensorflow/tfjs-backend-webgl';
-import '@tensorflow/tfjs-backend-cpu';
-import toolsButtonsParagraphs from './toolsButtonsParagraphs';
+import toolsButtonsParagraphs from './toolsButtonsParagraphs'; // Import the button-paragraph map
 import styles from 'styles/components/organisms/Tools.module.css';
 
 const Tools: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [highlightedButton, setHighlightedButton] = useState<string | null>(
-    Object.keys(toolsButtonsParagraphs)[0] // Default to first button
+  const [highlightedButton, setHighlightedButton] = useState<string>(
+    Object.keys(toolsButtonsParagraphs)[0] // Default to the first button
   );
-  const [model, setModel] = useState<use.UniversalSentenceEncoder | null>(null);
 
   const dragItem = useRef<HTMLDivElement | null>(null);
   const dragStartPosition = useRef({ x: 0, y: 0 });
@@ -26,60 +22,44 @@ const Tools: React.FC = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        await tf.setBackend('webgl');
-        await tf.ready();
-        const loadedModel = await use.load();
-        setModel(loadedModel);
-      } catch (error) {
-        console.error('Error loading TensorFlow model:', error);
-      }
-    };
-    loadModel();
-  }, []);
-
-  const computeSimilarity = async (message: string) => {
-    if (!model) return;
-
-    try {
-      const inputEmbedding = await model.embed([message]);
-
-      const similarities = await Promise.all(
-        Object.entries(toolsButtonsParagraphs).map(async ([buttonName, { paragraphs }]) => {
-          const paragraphEmbedding = await model.embed(paragraphs);
-          const similarity = cosineSimilarity(
-            inputEmbedding.arraySync()[0],
-            paragraphEmbedding.arraySync()[0]
-          );
-          return { buttonName, similarity };
-        })
-      );
-
-      const bestMatch = similarities.reduce((prev, curr) =>
-        curr.similarity > prev.similarity ? curr : prev
-      );
-
-      setHighlightedButton(bestMatch.buttonName);
-    } catch (error) {
-      console.error('Error computing similarity:', error);
+  // Function to find the matching button, prioritizing button names
+  const findMatchingButton = (message: string | undefined): string => {
+    if (!message) {
+      // If the message is undefined or empty, default to the first button
+      return Object.keys(toolsButtonsParagraphs)[0];
     }
+
+    message = message.toLowerCase(); // Normalize to lowercase for case-insensitive matching
+
+    // 1. Check if any button name matches the message
+    const matchingButtonName = Object.keys(toolsButtonsParagraphs).find((buttonName) =>
+      message.includes(buttonName.toLowerCase())
+    );
+
+    if (matchingButtonName) {
+      return matchingButtonName; // Return the button name if found
+    }
+
+    // 2. If no button name matches, search in the paragraphs
+    for (const [buttonName, { paragraphs }] of Object.entries(toolsButtonsParagraphs)) {
+      if (Array.isArray(paragraphs) && paragraphs.some((paragraph) => paragraph.toLowerCase().includes(message))) {
+        return buttonName; // Return the button name if a paragraph matches
+      }
+    }
+
+    // 3. Default to the first button if no match is found
+    return Object.keys(toolsButtonsParagraphs)[0];
   };
 
+  // Analyze the latest message whenever messages are updated
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1].text;
-      computeSimilarity(latestMessage);
+      const matchingButton = findMatchingButton(latestMessage);
+      console.debug(`Matching button found: ${matchingButton}`);
+      setHighlightedButton(matchingButton); // Set the highlighted button
     }
-  }, [messages, model]);
-
-  const cosineSimilarity = (vecA: number[], vecB: number[]) => {
-    const dotProduct = vecA.reduce((sum, val, i) => sum + val * vecB[i], 0);
-    const magnitudeA = Math.sqrt(vecA.reduce((sum, val) => sum + val * val, 0));
-    const magnitudeB = Math.sqrt(vecB.reduce((sum, val) => sum + val * val, 0));
-    return dotProduct / (magnitudeA * magnitudeB);
-  };
+  }, [messages]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -97,9 +77,7 @@ const Tools: React.FC = () => {
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   useEffect(() => {
     if (isDragging) {
@@ -132,7 +110,6 @@ const Tools: React.FC = () => {
             >
               {buttonName}
             </button>
-            {/* Always render one arrow next to the highlighted button */}
             {highlightedButton === buttonName && (
               <div className={styles['flashing-arrow']} />
             )}
