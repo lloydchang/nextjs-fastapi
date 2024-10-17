@@ -117,18 +117,38 @@ const TalkPanel: React.FC = () => {
   };
 
   const sendTranscriptForTalk = async (query: string, talk: Talk) => {
-    if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) return;
-
-    dispatch(setSelectedTalk(talk));
-    lastDispatchedTalkId.current = talk.title;
-    sentMessagesRef.current.add(talk.title);
-
-    const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
-
-    for (const part of messageParts) {
-      await dispatch(sendMessage({ text: part, hidden: true }));
+    try {
+      // Ensure the talk hasn't already been dispatched or sent.
+      if (lastDispatchedTalkId.current === talk.title || sentMessagesRef.current.has(talk.title)) {
+        console.log(`Skipping already dispatched talk: ${talk.title}`);
+        return;
+      }
+  
+      // Set the talk as selected and track it to avoid duplication.
+      dispatch(setSelectedTalk(talk));
+      lastDispatchedTalkId.current = talk.title;
+      sentMessagesRef.current.add(talk.title);
+  
+      const messageParts = [query, talk.title, talk.transcript, talk.sdg_tags[0] || ''];
+  
+      // Dispatch each message part with proper error handling.
+      for (const part of messageParts) {
+        console.log(`Sending message part: ${part}`);
+        const result = await dispatch(sendMessage({ text: part, hidden: true }));
+        
+        if (result.error) {
+          console.error(`Failed to send message: ${part}`, result.error);
+          dispatch(setApiError(`Failed to send message: ${part}`));
+          return;
+        }
+  
+        console.log(`Successfully sent message part: ${part}`);
+      }
+    } catch (error) {
+      console.error(`Error sending transcript for ${talk.title}:`, error);
+      dispatch(setApiError(`Failed to send transcript for ${talk.title}.`));
     }
-  };
+  };  
 
   const sendFirstAvailableTranscript = async (query: string, talks: Talk[]) => {
     for (const talk of talks) {
