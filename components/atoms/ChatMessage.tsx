@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import rehypeRaw from 'rehype-raw'; // For rendering raw HTML
+// Removed rehypeRaw for security; using DOMPurify to sanitize instead
+import DOMPurify from 'dompurify';
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import LinkRenderer from 'components/atoms/LinkRenderer';
@@ -15,23 +16,27 @@ interface ChatMessageProps extends Message {
   isFullScreen: boolean;
 }
 
-const convertPlainUrlsToMarkdownLinks = (text: string) => {
-  const urlPattern = /(?<!\S)(https?:\/\/[\w.-]+\.[\w]{2,}|www\.[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
-  return text.replace(urlPattern, (match) => {
-    const url = match.startsWith('www.') ? `http://${match}` : match;
-    return `[${match}](${url})`;
-  });
-};
+const palette = [
+  '#1F77B4', '#FF7F0E', '#2CA02C', '#D62728',
+  '#9467BD', '#8C564B', '#E377C2', '#7F7F7F',
+  '#BCBD22', '#17BECF'
+];
 
 const hashPersonaToColor = (persona: string): string => {
   let hash = 0;
   for (let i = 0; i < persona.length; i++) {
     hash = persona.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const minColorValue = parseInt('777777', 16);
-  const maxColorValue = parseInt('FFFFFF', 16);
-  const rangeValue = minColorValue + (Math.abs(hash) % (maxColorValue - minColorValue));
-  return `#${rangeValue.toString(16).padStart(6, '0')}`; // Ensure it's 6 characters
+  const index = Math.abs(hash) % palette.length;
+  return palette[index];
+};
+
+const convertPlainUrlsToMarkdownLinks = (text: string) => {
+  const urlPattern = /(?<!\S)(https?:\/\/[\w.-]+\.[\w]{2,}|www\.[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
+  return text.replace(urlPattern, (match) => {
+    const url = match.startsWith('www.') ? `http://${match}` : match;
+    return `[${match}](${url})`;
+  });
 };
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -65,23 +70,39 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   useEffect(() => {
     if (showFullScreen) {
+      const previouslyFocusedElement = document.activeElement as HTMLElement;
+      const modal = document.getElementById('chat-message-modal');
+      modal?.focus();
+
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'Escape') handleCloseModal();
       };
       document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        previouslyFocusedElement?.focus();
+      };
     }
   }, [showFullScreen, handleCloseModal]);
 
-  const renderMarkdown = (content: string) => (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeHighlight, rehypeRaw]}
-      components={{ a: LinkRenderer }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
+  const renderMarkdown = (content: string) => {
+    const sanitizedContent = DOMPurify.sanitize(content);
+    return (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]} // Removed rehypeRaw for security
+        components={{ a: LinkRenderer }}
+      >
+        {sanitizedContent}
+      </ReactMarkdown>
+    );
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleOpenModal();
+    }
+  };
 
   return (
     <>
@@ -91,10 +112,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           onClick={handleCloseModal}
           role="dialog"
           aria-modal="true"
+          aria-labelledby="modal-title"
+          id="chat-message-modal"
+          tabIndex={-1}
         >
           <div
             className={styles.fullScreenMessage}
             onClick={(e) => e.stopPropagation()}
+            role="document"
           >
             <div className={styles.modalHeader}>
               {persona && (
@@ -102,12 +127,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   className={styles.modalPersonaLabel}
                   style={{ color: personaColor }}
                 >
-                  <strong>{persona}</strong>
+                  <strong id="modal-title">{persona}</strong>
                 </div>
               )}
               <button
                 className={styles.modalCloseButton}
                 onClick={handleCloseModal}
+                aria-label="Close modal"
               >
                 Close
               </button>
@@ -126,6 +152,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         onMouseLeave={() => setShowFullMessage(false)}
         onClick={handleOpenModal}
         style={{ position: 'relative' }}
+        role="button"
+        tabIndex={0}
+        onKeyPress={handleKeyPress}
+        aria-expanded={showFullScreen}
       >
         {persona && (
           <div
