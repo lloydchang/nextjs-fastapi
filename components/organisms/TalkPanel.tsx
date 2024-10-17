@@ -17,13 +17,10 @@ import LoadingSpinner from './LoadingSpinner';
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 
-// Helper function to capitalize words
-function capitalizeWords(text: string): string {
-  return text
-    .toLowerCase()
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+// Helper function to capitalize only the first word (sentence case)
+function toSentenceCase(text: string): string {
+  const lowerText = text.toLowerCase();
+  return lowerText.charAt(0).toUpperCase() + lowerText.slice(1);
 }
 
 // Helper function to remove diacritics (accents) from a string
@@ -31,7 +28,7 @@ function removeDiacritics(text: string): string {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// Helper function to remove the presenter's name from the title (without accents) and clean spaces
+// Helper function to remove the presenter's name from the title (ignoring accents)
 function removePresenterFromTitle(presenter: string, title: string): string {
   const normalizedPresenter = removeDiacritics(presenter);
   const normalizedTitle = removeDiacritics(title);
@@ -102,9 +99,14 @@ const TalkPanel: React.FC = () => {
       if (response.status !== 200) throw new Error(response.statusText);
 
       const data: Talk[] = response.data.results.map((result: any) => {
-        const presenterName = capitalizeWords(result.document.presenterDisplayName || '');
-        let talkTitle = capitalizeWords(result.document.slug.replace(/_/g, ' ') || '');
+        const presenterName = toSentenceCase(result.document.presenterDisplayName || '');
+        let talkTitle = result.document.slug.replace(/_/g, ' ') || '';
+
+        // Remove presenter's name from the title (ignoring diacritics)
         talkTitle = removePresenterFromTitle(presenterName, talkTitle);
+
+        // Convert the cleaned title to sentence case
+        talkTitle = toSentenceCase(talkTitle);
 
         return {
           presenterDisplayName: presenterName,
