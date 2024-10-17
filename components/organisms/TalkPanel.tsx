@@ -8,6 +8,7 @@ import axios from 'axios';
 import { RootState, AppDispatch } from 'store/store';
 import { setTalks, setSelectedTalk } from 'store/talkSlice';
 import { setLoading, setApiError } from 'store/apiSlice';
+import { sendMessage } from 'store/chatSlice'; // Added to send transcript messages
 import { Talk } from 'types';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import { localStorageUtil } from 'components/utils/localStorage';
@@ -22,14 +23,16 @@ const TalkPanel: React.FC = () => {
   const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const isStrictModeMount = useRef(true);  // Track if this is a Strict Mode remount
-  const mountCounter = useRef(0);  // Track the number of mounts to detect initial mount
+  const isStrictModeMount = useRef(true); // Track Strict Mode remount
+  const mountCounter = useRef(0); // Track the number of mounts
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
-  const isSearchInProgress = useRef(false);
+  const isSearchInProgress = useRef(false); // Track search status
+  const sentMessagesRef = useRef<Set<string>>(new Set()); // Prevent duplicate messages
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
+  // Debounced search to prevent excessive API calls
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
     []
@@ -40,11 +43,9 @@ const TalkPanel: React.FC = () => {
     console.log(`[TalkPanel] Mount count: ${mountCounter.current}`);
 
     if (mountCounter.current === 1) {
-      // First mount: Assume it's Strict Mode mount, so we avoid unnecessary logic.
       console.log('[TalkPanel] Initial Strict Mode mount detected. Skipping API call.');
       isStrictModeMount.current = true;
     } else {
-      // Real mount (not a Strict Mode remount)
       console.log('[TalkPanel] Real mount. Performing initial search.');
       isStrictModeMount.current = false;
       performSearch(searchQuery);
@@ -53,7 +54,6 @@ const TalkPanel: React.FC = () => {
     return () => {
       console.log('[TalkPanel] Component unmounted.');
 
-      // Only abort requests if it's a real unmount, not a Strict Mode remount
       if (!isStrictModeMount.current) {
         console.log('[TalkPanel] Aborting ongoing search due to real unmount.');
         abortControllerRef.current?.abort();
@@ -95,7 +95,10 @@ const TalkPanel: React.FC = () => {
 
       handleSearchResults(data);
     } catch (error) {
-      if (!axios.isCancel(error)) dispatch(setApiError('Error fetching talks.'));
+      if (!axios.isCancel(error)) {
+        console.error('[performSearch] Error fetching talks:', error);
+        dispatch(setApiError('Error fetching talks.'));
+      }
     } finally {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
@@ -103,20 +106,53 @@ const TalkPanel: React.FC = () => {
   };
 
   const handleSearchResults = (data: Talk[]) => {
+    console.log('[handleSearchResults] Received data:', data);
+
     const uniqueTalks = shuffleArray(data).filter(
       (talk) => !talks.some((existing) => existing.url === talk.url)
     );
     dispatch(setTalks(uniqueTalks));
 
-    if (uniqueTalks.length > 0) dispatch(setSelectedTalk(uniqueTalks[0]));
+    if (uniqueTalks.length > 0) {
+      const firstTalk = uniqueTalks[0];
+      dispatch(setSelectedTalk(firstTalk));
+      sendTranscriptAsMessage(firstTalk); // Send transcript on selection
+    }
+
     localStorageUtil.setItem('lastSearchData', JSON.stringify(uniqueTalks));
   };
 
+  const sendTranscriptAsMessage = async (talk: Talk) => {
+    if (sentMessagesRef.current.has(talk.title)) {
+      console.log(`[sendTranscriptAsMessage] Skipping duplicate message for: ${talk.title}`);
+      return;
+    }
+
+    console.log(`[sendTranscriptAsMessage] Sending transcript for: ${talk.title}`);
+    sentMessagesRef.current.add(talk.title); // Track sent messages
+
+    const messageParts = [
+      `Talk: ${talk.title}`,
+      `URL: ${talk.url}`,
+      `SDG Tags: ${talk.sdg_tags.join(', ') || 'None'}`,
+      `Transcript: ${talk.transcript}`,
+    ];
+
+    for (const part of messageParts) {
+      console.log(`[sendTranscriptAsMessage] Sending part: ${part}`);
+      dispatch(sendMessage({ text: part, hidden: false }));
+    }
+  };
+
   const openTranscriptInNewTab = () => {
-    if (selectedTalk) window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    if (selectedTalk) {
+      console.log(`[openTranscriptInNewTab] Opening transcript for: ${selectedTalk.title}`);
+      window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
+    }
   };
 
   const shuffleTalks = () => {
+    console.log('[shuffleTalks] Shuffling talks.');
     dispatch(setTalks(shuffleArray(talks)));
   };
 
@@ -159,7 +195,10 @@ const TalkPanel: React.FC = () => {
           Shuffle
         </button>
         {selectedTalk && (
-          <button onClick={openTranscriptInNewTab} className={`${styles.button} ${styles.tedButton}`}>
+          <button
+            onClick={openTranscriptInNewTab}
+            className={`${styles.button} ${styles.tedButton}`}
+          >
             Transcript
           </button>
         )}
