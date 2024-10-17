@@ -8,8 +8,19 @@ import rehypeRaw from 'rehype-raw'; // Reintroduced for rendering raw HTML
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'; // Added for sanitization
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
-import LinkRenderer from 'components/atoms/LinkRenderer';
 import { Message } from 'types';
+
+// Adjusted LinkRenderer with appropriate typing
+import { AnchorHTMLAttributes, DetailedHTMLProps } from 'react';
+
+// Define the LinkRenderer with correct types
+const LinkRenderer: React.FC<
+  DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>
+> = ({ href, children, ...rest }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>
+    {children}
+  </a>
+);
 
 // Safely handling tagNames with nullish coalescing operator
 const customSchema = {
@@ -98,7 +109,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeHighlight, rehypeRaw, [rehypeSanitize, customSchema]]}
-      components={{ a: LinkRenderer }}
+      components={{ a: LinkRenderer as React.ElementType }}
     >
       {content}
     </ReactMarkdown>
