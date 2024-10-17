@@ -35,7 +35,12 @@ export const performSearch = (query: string) => async (dispatch: AppDispatch) =>
     }
   } catch (error) {
     console.error('Error during search:', error);
-    dispatch(setApiError(error.message || 'Failed to fetch talks.'));
+
+    if (error instanceof Error) {
+      dispatch(setApiError(error.message));
+    } else {
+      dispatch(setApiError('Failed to fetch talks.'));
+    }
   } finally {
     dispatch(setLoading(false));
   }
