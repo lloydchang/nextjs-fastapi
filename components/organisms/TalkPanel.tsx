@@ -21,8 +21,8 @@ const TalkPanel: React.FC = () => {
   const { loading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const isStrictModeMount = useRef(true); // Track Strict Mode remount
-  const mountCounter = useRef(0); // Track the number of mounts
+  const isStrictMode = useRef(false); // Track if in Strict Mode
+  const mountCounter = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const isSearchInProgress = useRef(false);
@@ -39,14 +39,16 @@ const TalkPanel: React.FC = () => {
     mountCounter.current += 1;
 
     if (mountCounter.current === 1) {
-      isStrictModeMount.current = true; // Initial mount in Strict Mode
+      isStrictMode.current = true; // Initial mount in Strict Mode
     } else {
-      isStrictModeMount.current = false; // Subsequent mounts are normal
-      performSearch(searchQuery);
+      isStrictMode.current = false; // Subsequent mounts are normal
+      if (!isStrictMode.current) {
+        performSearch(searchQuery);
+      }
     }
 
     return () => {
-      if (!isStrictModeMount.current) {
+      if (!isStrictMode.current) {
         abortControllerRef.current?.abort();
       }
       debouncedPerformSearch.cancel();
@@ -77,18 +79,20 @@ const TalkPanel: React.FC = () => {
 
       const data: Talk[] = response.data.results.map((result: any) => {
         const presenterName = result.document.presenterDisplayName || '';
-        const talkTitleToSend = result.document.slug.replace(/_/g, ' ') || ''; // Use slug directly
+        let talkTitleToSend = result.document.slug.replace(/_/g, ' ') || '';
 
         return {
           presenterDisplayName: presenterName,
-          title: talkTitleToSend, // Use the slug directly as title
+          title: talkTitleToSend,
           url: `https://www.ted.com/talks/${result.document.slug}`,
           sdg_tags: result.document.sdg_tags || [],
           transcript: result.document.transcript || '',
         };
       });
 
-      handleSearchResults(data);
+      if (!isStrictMode.current) {
+        handleSearchResults(data);
+      }
     } catch (error) {
       if (!axios.isCancel(error)) {
         console.error('[performSearch] Error fetching talks:', error);
@@ -122,7 +126,7 @@ const TalkPanel: React.FC = () => {
 
     const messageParts = [
       `Presenter: ${talk.presenterDisplayName}`,
-      `Talk: ${talk.title}`, // Use the title directly here
+      `Talk: ${talk.title}`,
       `URL: ${talk.url}`,
       `SDG Tags: ${talk.sdg_tags.join(', ')}`,
       `Transcript: ${talk.transcript}`,
@@ -147,7 +151,7 @@ const TalkPanel: React.FC = () => {
     <div className={styles.TalkPanel}>
       {loading && <LoadingSpinner />} {/* Ensure this is the SDG wheel component */}
 
-      {selectedTalk && (
+      {!isStrictMode.current && selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
             src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
