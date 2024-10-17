@@ -1,3 +1,5 @@
+// File: components/organisms/TalkPanel.tsx
+
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -26,23 +28,44 @@ const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
-  const { isLoading, error } = useSelector((state: RootState) => state.api);
+  const { isLoading, error } = useSelector((state: RootState) => state.api); // Updated to isLoading
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-
-  // Removed: isStrictMode and mountCounter refs
-  // const isStrictMode = useRef(false); // Track if in Strict Mode
-  // const mountCounter = useRef(0);
-
+  const isStrictMode = useRef(false); // Track if in Strict Mode
+  const mountCounter = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastQueryRef = useRef<string>('');
   const isSearchInProgress = useRef(false);
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
-  const initialized = useRef(false); // Initialization flag
 
-  // Define performSearch first to avoid ReferenceError
-  const performSearch = useCallback(async (query: string) => {
+  const debouncedPerformSearch = useCallback(
+    debounce((query: string) => performSearch(query), 500),
+    []
+  );
+
+  useEffect(() => {
+    mountCounter.current += 1;
+
+    if (mountCounter.current === 1) {
+      isStrictMode.current = true; // Initial mount in Strict Mode
+      debugLog('Initial mount detected; entering strict mode.');
+    } else {
+      isStrictMode.current = false; // Subsequent mounts are normal
+      debugLog('Subsequent mount detected; exiting strict mode.');
+      performSearch(searchQuery);
+    }
+
+    return () => {
+      if (!isStrictMode.current) {
+        abortControllerRef.current?.abort();
+        debugLog('Cleanup: aborting any ongoing search requests.');
+      }
+      debouncedPerformSearch.cancel();
+    };
+  }, []);
+
+  const performSearch = async (query: string) => {
     const trimmedQuery = query.trim().toLowerCase();
     debugLog(`Performing search with query: "${trimmedQuery}"`);
 
@@ -78,7 +101,9 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || '',
       }));
 
-      handleSearchResults(data);
+      if (!isStrictMode.current) {
+        handleSearchResults(data);
+      }
     } catch (error) {
       if (!axios.isCancel(error)) {
         console.error('[performSearch] Error fetching talks:', error);
@@ -89,27 +114,9 @@ const TalkPanel: React.FC = () => {
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
-  }, [dispatch]);
+  };
 
-  // Define debouncedPerformSearch after performSearch
-  const debouncedPerformSearch = useCallback(
-    debounce((query: string) => performSearch(query), 500),
-    [performSearch]
-  );
-
-  useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
-      performSearch(searchQuery); // Initial search on mount
-    }
-
-    return () => {
-      abortControllerRef.current?.abort();
-      debouncedPerformSearch.cancel();
-    };
-  }, [searchQuery, performSearch, debouncedPerformSearch]);
-
-  const handleSearchResults = useCallback((data: Talk[]) => {
+  const handleSearchResults = (data: Talk[]) => {
     debugLog(`Handling search results: ${data.length} talks received.`);
     dispatch(setTalks(data)); // Directly set talks without deduplication logic
 
@@ -120,9 +127,9 @@ const TalkPanel: React.FC = () => {
     }
 
     localStorageUtil.setItem('lastSearchData', JSON.stringify(data));
-  }, [dispatch]);
+  };
 
-  const sendTranscriptAsMessage = useCallback(async (talk: Talk) => {
+  const sendTranscriptAsMessage = async (talk: Talk) => {
     if (sentMessagesRef.current.has(talk.title)) {
       debugLog(`Message for talk "${talk.title}" already sent, skipping.`);
       return;
@@ -132,6 +139,11 @@ const TalkPanel: React.FC = () => {
     debugLog(`Sending transcript for talk: ${talk.title}`);
  
     const messageParts = [
+      // `Presenter: ${talk.presenterDisplayName}`,
+      // `Talk: ${talk.title}`,
+      // `URL: ${talk.url}`,
+      // `SDG Tags: ${talk.sdg_tags.join(', ')}`,
+      // `Transcript: ${talk.transcript}`,
       `${talk.transcript} —— ${talk.title}\n\n${getSdgTitles(talk.sdg_tags).join(', ')}`,
     ];
 
@@ -145,31 +157,25 @@ const TalkPanel: React.FC = () => {
       }));
       debugLog(`Sent message part: ${part}`);
     }
-  }, [dispatch]);
+  };
 
-  const openTranscriptInNewTab = useCallback(() => {
+  const openTranscriptInNewTab = () => {
     if (selectedTalk) {
       debugLog(`Opening transcript for: ${selectedTalk.title}`);
       window.open(`${selectedTalk.url}/transcript?subtitle=en`, '_blank');
     }
-  }, [selectedTalk]);
+  };
 
-  const shuffleTalks = useCallback(() => {
+  const shuffleTalks = () => {
     debugLog('Shuffling talks.');
     dispatch(setTalks(shuffleArray(talks)));
-  }, [dispatch, talks]);
-
-  // Handler for search button click
-  const handleSearchButtonClick = useCallback(() => {
-    debugLog(`Search button clicked with query: "${searchQuery}"`);
-    performSearch(searchQuery);
-  }, [performSearch, searchQuery]);
+  };
 
   return (
     <div className={styles.TalkPanel}>
       {isLoading && <LoadingSpinner />} {/* Ensure this is the SDG wheel component */}
 
-      {selectedTalk && (
+      {!isStrictMode.current && selectedTalk && (
         <div className={styles.nowPlaying}>
           <iframe
             src={`https://embed.ted.com/talks/${selectedTalk.url.match(/talks\/([\w_]+)/)?.[1]}`}
@@ -204,7 +210,10 @@ const TalkPanel: React.FC = () => {
           {isLoading && <LoadingSpinner />}
         </div>
         <button
-          onClick={handleSearchButtonClick}
+          onClick={() => {
+            debugLog(`Search button clicked with query: "${searchQuery}"`);
+            performSearch(searchQuery);
+          }}
           className={`${styles.button} ${styles.searchButton}`}
           disabled={isLoading}
         >
