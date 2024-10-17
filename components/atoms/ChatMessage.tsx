@@ -49,11 +49,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, isInterim, pers
   const handleOpenModal = () => {
     if (!isUser) {
       setShowFullScreen(true);
+      console.debug('Opening full screen for message:', text);
     }
   };
 
   const handleCloseModal = () => {
     setShowFullScreen(false);
+    console.debug('Closing full screen modal');
   };
 
   // Handle Escape key press to close the modal
