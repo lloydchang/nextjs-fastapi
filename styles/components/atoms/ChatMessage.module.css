@@ -398,20 +398,21 @@
     justify-content: left;
   }
 
+  /* Adjust modal message to make it scrollable */
   .modalMessage {
-    background-color: #000;
+    background-color: #fff;
     border-radius: 8px;
     max-width: 50vw;
-    max-height: 100vh;
-    overflow: auto; /* Enable scrolling if necessary */
+    max-height: 80vh; /* Constrain the height to prevent overflow */
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
     padding: 20px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     justify-content: left;
   }
 
-  /* Full Screen Mode Styles */
-  .fullScreenMode .text {
+  /* Modal Mode Styles */
+  .modalMode .text {
     max-width: 50vw;
     justify-content: left;
   }
