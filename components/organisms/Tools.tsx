@@ -72,7 +72,7 @@ const Tools: React.FC = () => {
         setHighlightedButton(matchingButton);
 
         const buttonText = `***${matchingButton || ''}?***`;
-        const blurbText = `${buttonBlurb[matchingButton].blurb || ''}`;
+        const blurbText = `**${buttonBlurb[matchingButton].blurb || ''}**`;
         const url = buttonBlurb[matchingButton].url || '';
 
         const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
