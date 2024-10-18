@@ -12,9 +12,7 @@ const Tools: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [highlightedButton, setHighlightedButton] = useState<string>(
-    Object.keys(buttonBlurb)[0]
-  );
+  const [highlightedButtons, setHighlightedButtons] = useState<string[]>([]);
 
   const dragItem = useRef<HTMLDivElement | null>(null);
   const dragStartPosition = useRef({ x: 0, y: 0 });
@@ -29,23 +27,31 @@ const Tools: React.FC = () => {
   const escapeRegExp = (string: string) =>
     string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const findMatchingButton = useCallback(
-    (message: string): string => {
-      const lowerMessage = message.toLowerCase();
+  // New function to find multiple matching buttons
+  const findMatchingButtons = useCallback(
+    (message: string): string[] => {
+      const lowerMessage = message.trim().toLowerCase();
+      const matchedButtons: string[] = [];
 
-      const matchingButtonName = Object.keys(buttonBlurb).find((buttonName) => {
-        const regex = new RegExp(`\\b${escapeRegExp(buttonName.toLowerCase())}\\b`, 'i');
-        return regex.test(lowerMessage);
+      // Match buttons by name
+      const nameMatches = Object.keys(buttonBlurb).filter((buttonName) =>
+        buttonName.toLowerCase() === lowerMessage
+      );
+      matchedButtons.push(...nameMatches);
+
+      // Match buttons by blurb content
+      const blurbMatches = Object.entries(buttonBlurb)
+        .filter(([_, { blurb }]) =>
+          blurb.toLowerCase().includes(lowerMessage)
+        )
+        .map(([buttonName]) => buttonName);
+
+      // Avoid duplicate matches
+      blurbMatches.forEach((button) => {
+        if (!matchedButtons.includes(button)) matchedButtons.push(button);
       });
 
-      if (matchingButtonName) return matchingButtonName;
-
-      for (const [buttonName, { blurb }] of Object.entries(buttonBlurb)) {
-        const regex = new RegExp(`\\b${escapeRegExp(lowerMessage)}\\b`, 'i');
-        if (regex.test(blurb.toLowerCase())) return buttonName;
-      }
-
-      return Object.keys(buttonBlurb)[0];
+      return matchedButtons.length > 0 ? matchedButtons : [Object.keys(buttonBlurb)[0]];
     },
     []
   );
@@ -62,36 +68,34 @@ const Tools: React.FC = () => {
 
   useEffect(() => {
     if (getLatestMessage) {
-      const matchingButton = findMatchingButton(getLatestMessage);
+      const matchingButtons = findMatchingButtons(getLatestMessage);
+      setHighlightedButtons(matchingButtons);
 
-      if (matchingButton !== highlightedButton) {
-        console.debug(`Matching button found: ${matchingButton}`);
-        setHighlightedButton(matchingButton);
+      const messageText = matchingButtons
+        .map((buttonName) => {
+          const blurbText = `**${buttonBlurb[buttonName].blurb || ''}**`;
+          const url = buttonBlurb[buttonName].url || '';
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
+        })
+        .join(' ');
 
-        const buttonText = `***${matchingButton || ''}?***`;
-        const blurbText = `**${buttonBlurb[matchingButton].blurb || ''}**`;
-        const url = buttonBlurb[matchingButton].url || '';
-
-        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
-
-        if (lastNudgeMessageRef.current !== messageText) {
-          dispatch(
-            addMessage({
-              id: uuidv4(),
-              content: messageText,
-              timestamp: Date.now(),
-              persona: buttonText,
-              role: 'nudge',
-              sender: 'nudge',
-              text: messageText,
-              hidden: false,
-            })
-          );
-          lastNudgeMessageRef.current = messageText;
-        }
+      if (lastNudgeMessageRef.current !== messageText) {
+        dispatch(
+          addMessage({
+            id: uuidv4(),
+            content: messageText,
+            timestamp: Date.now(),
+            persona: matchingButtons.join(', '),
+            role: 'nudge',
+            sender: 'nudge',
+            text: messageText,
+            hidden: false,
+          })
+        );
+        lastNudgeMessageRef.current = messageText;
       }
     }
-  }, [getLatestMessage, dispatch, highlightedButton, findMatchingButton]);
+  }, [getLatestMessage, dispatch, findMatchingButtons]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -143,13 +147,13 @@ const Tools: React.FC = () => {
           <div key={buttonName} className={styles['lazy-arrow-container']}>
             <button
               className={`${styles['right-edge-button']} ${
-                highlightedButton === buttonName ? styles['highlight'] : ''
+                highlightedButtons.includes(buttonName) ? styles['highlight'] : ''
               }`}
               onClick={() => openInNewTab(buttonBlurb[buttonName].url)}
             >
               {buttonName}
             </button>
-            {highlightedButton === buttonName && (
+            {highlightedButtons.includes(buttonName) && (
               <div className={styles['flashing-arrow']} />
             )}
           </div>
