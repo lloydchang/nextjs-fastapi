@@ -112,7 +112,7 @@ async function executeBotFunctions(
       const botResponse = await bot.generate(context);
       if (botResponse) {
         const message = getMessageContent(botResponse);
-        console.log('Generated message:', message); // Debugging log
+        // console.log('Generated message:', message); // Debugging log
         responses.push(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
         logger.silly(`Stream data sent for bot ${bot.persona}.`);
         context.push({ role: 'bot', content: message, persona: bot.persona });
