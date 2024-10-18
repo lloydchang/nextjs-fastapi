@@ -7,6 +7,7 @@ import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
+import { processLocalQnA } from 'utils/tensorflowQnA'; // Import TensorFlow QnA
 
 interface ChatState {
   messages: Message[];
@@ -104,6 +105,24 @@ export const parseIncomingMessage = (jsonString: string) => {
   } catch (error) {
     console.error('Error parsing message:', error);
     return null;
+  }
+};
+
+// Add simultaneous processing of local QnA and API calls
+const simultaneousProcessing = async (
+  dispatch: AppDispatch,
+  getState: () => RootState,
+  input: string | Partial<Message>,
+  clientId: string
+) => {
+  const context = getState().chat.messages.map((msg) => msg.content).join('\n');
+
+  try {
+    const localMessages = await processLocalQnA(input.toString(), context);
+    localMessages.forEach((msg) => dispatch(addMessage(msg)));
+  } catch (error) {
+    console.error('Local QnA error:', error);
+    dispatch(setApiError('Error processing local QnA model.'));
   }
 };
 
@@ -250,7 +269,8 @@ export const sendMessage =
     dispatch(addMessage(userMessage));
 
     try {
-      await debouncedApiCall(dispatch, getState, input, clientId);
+      await simultaneousProcessing(dispatch, getState, input, clientId); // Add TensorFlow QnA processing
+      await debouncedApiCall(dispatch, getState, input, clientId); // Keep existing API call logic
     } catch (error) {
       console.error('Failed to send message:', error);
       dispatch(setApiError('Failed to send message.'));
