@@ -35,7 +35,6 @@ const customSchema = {
 // Props interface extending Message with additional flags
 interface ChatMessageProps extends Message {
   isFullScreen: boolean;
-  isLastMessage: boolean;
 }
 
 const palette = [
@@ -77,7 +76,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   persona,
   isFullScreen,
   role,
-  isLastMessage,
 }) => {
   const { openModal, closeModal, activeModal } = useModal();
   const [showFullMessage, setShowFullMessage] = useState(false);
@@ -89,7 +87,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
   // Updated shortening logic to exclude user messages
-  const shouldShorten = text.split(' ').length > 10 && !isFullScreen && !isLastMessage && !isUser;
+  const shouldShorten = text.split(' ').length > 10 && !isFullScreen && !isUser;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
   const modalId = `modal-${text}`;
