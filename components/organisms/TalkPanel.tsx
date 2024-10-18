@@ -60,6 +60,7 @@ const TalkPanel: React.FC = () => {
       }
     }
     else {
+      // Production code
       performSearch(searchQuery);
     }
 
