@@ -12,4 +12,3 @@ export function getBrowserName(): string {
   
     return "Unknown Browser";
   }
-no
