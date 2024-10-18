@@ -1,5 +1,3 @@
-// File: app/api/chat/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
@@ -175,18 +173,20 @@ export async function POST(request: NextRequest) {
                         );
 
                         // Stream the response
-                        controller.enqueue(
-                          `data: ${JSON.stringify({
-                            persona: botPersona,
-                            message: botResponse,
-                          })}\n\n`
-                        );
+                        if (controller.desiredSize !== null) {
+                          controller.enqueue(
+                            `data: ${JSON.stringify({
+                              persona: botPersona,
+                              message: botResponse,
+                            })}\n\n`
+                          );
+                        }
 
                         // Update context with bot response
                         context.push({
                           role: 'bot',
                           content: botResponse,
-                          persona: botPersona, // Now allowed as UserPrompt includes 'persona'
+                          persona: botPersona,
                         });
                         logger.silly(
                           `Added bot response to context. New context size: ${context.length}`
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
                     logger.silly(
                       `Session timed out for clientId: ${clientId}. Context reset.`
                     );
-                    context = []; // Reset context after timeout
+                    context = [];
                   }
 
                   if (!hasResponse) {
@@ -255,13 +255,15 @@ export async function POST(request: NextRequest) {
               logger.error(
                 `Bot processing timed out for clientId: ${clientId}, RequestId: ${requestId}`
               );
-              controller.enqueue(
-                `data: ${JSON.stringify({
-                  error: 'Bot processing timed out. Please try again.',
-                })}\n\n`
-              );
-              controller.enqueue('data: [DONE]\n\n');
-              controller.close();
+              if (controller.desiredSize !== null) {
+                controller.enqueue(
+                  `data: ${JSON.stringify({
+                    error: 'Bot processing timed out. Please try again.',
+                  })}\n\n`
+                );
+                controller.enqueue('data: [DONE]\n\n');
+                controller.close();
+              }
             }
           }
 
