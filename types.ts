@@ -62,7 +62,7 @@ export interface BotFunction {
   // Function to generate a response based on the current context
 }
 
-export interface Metric {
+export type Metric {
   persona: string;
   duration: number;
   success: boolean;
