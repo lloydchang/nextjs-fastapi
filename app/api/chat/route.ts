@@ -8,7 +8,7 @@ import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
-import { BotFunction } from 'types';
+import { BotFunction, Metric } from 'types';
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
 import { isValidConfig } from 'app/api/chat/utils/validation';
 

@@ -61,3 +61,8 @@ export interface BotFunction {
   generate: (this: BotFunction, currentContext: UserPrompt[]) => Promise<string | null>; 
   // Function to generate a response based on the current context
 }
+
+export type Metric = {
+  name: string;
+  value: number;
+};
