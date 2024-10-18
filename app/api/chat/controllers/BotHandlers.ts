@@ -3,6 +3,7 @@
 import { AppConfig } from 'app/api/chat/utils/config';
 import { BotFunction } from 'types';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
+import { getMessageContent } from 'app/api/chat/utils/messageUtils'; // Import getMessageContent
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
@@ -29,7 +30,6 @@ type TextModelConfigKey =
  * @param botFunctions - The array to populate with bot functions.
  * @param config - The application configuration.
  */
-
 export function addBotFunctions(botFunctions: BotFunction[], config: AppConfig) {
   const handlers: Array<{
     persona: string;
@@ -85,15 +85,15 @@ export function addBotFunctions(botFunctions: BotFunction[], config: AppConfig) 
         persona: `${persona} ${model}`,
         generate: async (context) => {
           const validMessages = extractValidMessages(context);
-          const prompt = getMessageContent(validMessages);
-          
+          const prompt = getMessageContent(validMessages); // Use getMessageContent
+
           if (!prompt.trim()) {
             logger.warn(`Empty prompt for persona: ${persona} ${model}`);
             return null;
           }
           return await handler({ userPrompt: prompt, textModel: model }, config);
         },
-        valid: true,
+        valid: true, // Added 'valid' property
       });
     }
   });
