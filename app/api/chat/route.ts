@@ -239,6 +239,7 @@ export async function POST(request: NextRequest) {
                 duration: 0,
                 success: false,
                 responseSize: 0,
+                error?: string;
               };
 
               try {
