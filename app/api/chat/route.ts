@@ -3,18 +3,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
-import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
+import { checkRateLimit } from 'app/api/chat/utils/rateLimiter';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
 import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
-import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
-import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers'; // Import the centralized handler
-import { isValidConfig } from 'app/api/chat/utils/validation'; // Import the shared utility
+import { BotFunction } from 'types';
+import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
+import { isValidConfig } from 'app/api/chat/utils/validation';
 
-/**
- * Union type for text model configuration keys.
- */
 type TextModelConfigKey =
   | 'ollamaGemmaTextModel'
   | 'ollamaLlamaTextModel'
@@ -25,222 +22,336 @@ type TextModelConfigKey =
 
 const config: AppConfig = getConfig();
 
-const MAX_PROMPT_LENGTH = 128000; // Adjust based on token size limit
-const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
-const maxContextMessages = 100; // Keep only the last 100 messages (adjust based on needs)
+const MAX_PROMPT_LENGTH = 128000;
+const sessionTimeout = 60 * 60 * 1000;
+const maxContextMessages = 100;
 
-// Maps to track client-specific data
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
 const clientContexts = new Map<string, any[]>();
 
-/**
- * Handles POST requests to the chat API.
- * @param request - The incoming NextRequest.
- * @returns A NextResponse containing the streamed bot responses or an error.
- */
+// Add monitoring for global state
+setInterval(() => {
+  logger.info('app/api/chat/route.ts - app/api/chat/route.tsGlobal state metrics', {
+    activeMutexes: clientMutexes.size,
+    activeContexts: clientContexts.size,
+    activeInteractions: lastInteractionTimes.size,
+    memoryUsage: process.memoryUsage(),
+  });
+}, 300000); // Log every 5 minutes
+
 export async function POST(request: NextRequest) {
   const requestId = uuidv4();
-  const clientId = request.headers.get('x-client-id') || `anon-${uuidv4()}`; // Generate unique ID for anonymous clients
+  const startTime = Date.now();
+  const clientId = request.headers.get('x-client-id') || `anon-${uuidv4()}`;
+  
+  const requestMetrics = {
+    requestId,
+    clientId,
+    startTime,
+    processingStages: [] as { stage: string; duration: number; timestamp: number }[],
+  };
 
-  // Log the receipt of a new POST request
-  logger.silly(
-    `Received POST request [${requestId}] from clientId: ${clientId}`
-  );
+  function logStage(stage: string) {
+    const timestamp = Date.now();
+    const duration = timestamp - startTime;
+    requestMetrics.processingStages.push({ stage, duration, timestamp });
+    logger.debug(`app/api/chat/route.ts - [${requestId}] Stage completed: ${stage}`, {
+      clientId,
+      duration,
+      totalDuration: duration,
+      timestamp: new Date(timestamp).toISOString(),
+    });
+  }
 
-  // Handle rate limiting
-  const { limited, retryAfter } = checkRateLimit(clientId);
+  logger.info(`app/api/chat/route.ts - [${requestId}] Chat request initiated`, {
+    clientId,
+    timestamp: new Date().toISOString(),
+    headers: Object.fromEntries(request.headers),
+    userAgent: request.headers.get('user-agent'),
+    ip: request.headers.get('x-forwarded-for') || 'unknown',
+  });
+
+  // Rate limiting check with enhanced logging
+  const { limited, retryAfter, currentUsage } = checkRateLimit(clientId);
+  logger.debug(`app/api/chat/route.ts - [${requestId}] Rate limit check`, {
+    clientId,
+    limited,
+    retryAfter,
+    currentUsage,
+    timestamp: new Date().toISOString(),
+  });
+
   if (limited) {
-    logger.warn(
-      `ClientId: ${clientId} has exceeded the rate limit. RequestId: ${requestId}`
-    );
+    logger.warn(`app/api/chat/route.ts - [${requestId}] Rate limit exceeded`, {
+      clientId,
+      retryAfter,
+      currentUsage,
+      totalDuration: Date.now() - startTime,
+    });
     return NextResponse.json(
       {
         error: 'Too Many Requests',
-        message: `You have exceeded the rate limit. Please try again later.`,
+        message: `Rate limit exceeded. Please try again in ${retryAfter} seconds.`,
       },
       {
         status: 429,
-        headers: {
-          'Retry-After': `${retryAfter}`,
-        },
+        headers: { 'Retry-After': `${retryAfter}` },
       }
     );
   }
 
+  logStage('rate-limit-check');
+
+  // Mutex management with detailed logging
   let mutex = clientMutexes.get(clientId);
   if (!mutex) {
     mutex = new Mutex();
     clientMutexes.set(clientId, mutex);
-    logger.silly(`Created new mutex for clientId: ${clientId}`);
+    logger.debug(`app/api/chat/route.ts - [${requestId}] New mutex created`, {
+      clientId,
+      totalMutexes: clientMutexes.size,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   return mutex.runExclusive(async () => {
+    const lockAcquiredTime = Date.now();
+    logger.debug(`app/api/chat/route.ts - [${requestId}] Mutex lock acquired`, {
+      clientId,
+      lockWaitTime: lockAcquiredTime - startTime,
+      concurrentRequests: clientMutexes.size,
+    });
+
     lastInteractionTimes.set(clientId, Date.now());
-    logger.silly(
-      `Updated last interaction time for clientId: ${clientId} at ${new Date().toISOString()}`
-    );
+    logStage('mutex-acquired');
 
     try {
-      const body = await request.json();
+      const requestBody = await request.json();
+      const bodySize = JSON.stringify(requestBody).length;
+      
+      logger.debug(`app/api/chat/route.ts - [${requestId}] Request body parsed`, {
+        clientId,
+        bodySize,
+        messageCount: requestBody.messages?.length ?? 0,
+        contentLength: request.headers.get('content-length'),
+      });
 
-      // **New Silly Log Statement: Log the Request Body**
-      logger.debug(
-        `Request body for RequestId: ${requestId}, clientId: ${clientId}: ${JSON.stringify(body)}`
-      );
+      logStage('body-parsed');
 
-      const { messages } = body;
+      const { messages } = requestBody;
 
-      // Ensure messages is an array
       if (!Array.isArray(messages)) {
-        logger.warn(
-          `Invalid request format: messages must be an array. RequestId: ${requestId}, clientId: ${clientId}`
-        );
+        logger.error(`app/api/chat/route.ts - [${requestId}] Invalid message format`, {
+          clientId,
+          actualType: typeof messages,
+          bodyPreview: JSON.stringify(requestBody).slice(0, 200),
+          totalDuration: Date.now() - startTime,
+        });
         return NextResponse.json(
           { error: 'Invalid request format: messages must be an array' },
           { status: 400 }
         );
       }
 
-      logger.silly(
-        `Received ${messages.length} messages from clientId: ${clientId}, RequestId: ${requestId}`
-      );
+      // Message validation with detailed metrics
+      const validationStartTime = Date.now();
+      const validMessages = messages.filter((msg: any) => {
+        const isValid = msg.content && typeof msg.content === 'string' && msg.content.trim() !== '';
+        if (!isValid) {
+          logger.warn(`app/api/chat/route.ts - [${requestId}] Invalid message detected`, {
+            clientId,
+            messageContent: typeof msg.content,
+            messagePreview: JSON.stringify(msg).slice(0, 100),
+          });
+        }
+        return isValid;
+      });
 
-      // Filter out invalid messages (e.g., empty content)
-      const validMessages = messages.filter(
-        (msg: any) =>
-          msg.content &&
-          typeof msg.content === 'string' &&
-          msg.content.trim() !== ''
-      );
+      logger.debug(`app/api/chat/route.ts - [${requestId}] Message validation completed`, {
+        clientId,
+        validationDuration: Date.now() - validationStartTime,
+        originalCount: messages.length,
+        validCount: validMessages.length,
+        invalidCount: messages.length - validMessages.length,
+        messagesSizes: validMessages.map(m => m.content.length),
+      });
 
-      logger.silly(
-        `Filtered to ${validMessages.length} valid messages for clientId: ${clientId}, RequestId: ${requestId}`
-      );
+      logStage('messages-validated');
 
       if (validMessages.length === 0) {
-        logger.warn(
-          `Request [${requestId}] from clientId: ${clientId} has invalid format or no valid messages.`
-        );
+        logger.warn(`app/api/chat/route.ts - [${requestId}] No valid messages`, {
+          clientId,
+          originalMessages: JSON.stringify(messages).slice(0, 500),
+          totalDuration: Date.now() - startTime,
+        });
         return NextResponse.json(
-          { error: 'Invalid request format or no valid messages provided.' },
+          { error: 'No valid messages provided' },
           { status: 400 }
         );
       }
 
-      // Get or initialize the context for this client
+      // Context management with metrics
       let context = clientContexts.get(clientId) || [];
-
-      // Prepend new valid messages in reverse order to prioritize latest messages
+      const contextUpdateStart = Date.now();
+      const previousSize = context.length;
+      
       context = [...validMessages.reverse(), ...context];
-
-      // Trim the context to ensure it doesn't exceed the max message limit
       context = context.slice(-maxContextMessages);
       clientContexts.set(clientId, context);
 
-      logger.silly(
-        `Updated context for clientId: ${clientId}. Current context size: ${context.length}`
-      );
+      logger.debug(`app/api/chat/route.ts - [${requestId}] Context updated`, {
+        clientId,
+        updateDuration: Date.now() - contextUpdateStart,
+        previousSize,
+        newSize: context.length,
+        trimmedMessages: previousSize + validMessages.length - context.length,
+        contextSizeBytes: JSON.stringify(context).length,
+      });
+
+      logStage('context-updated');
 
       const stream = new ReadableStream({
         async start(controller) {
+          const streamStartTime = Date.now();
           const botFunctions: BotFunction[] = [];
-
-          // Use the centralized addBotFunctions to populate botFunctions
           addBotFunctions(botFunctions, config);
 
-          /**
-           * Processes all bot functions and streams their responses.
-           */
-          async function processBots() {
-            logger.silly(
-              `Processing ${botFunctions.length} bot functions for clientId: ${clientId}, RequestId: ${requestId}`
-            );
+          logger.debug(`app/api/chat/route.ts - [${requestId}] Stream initialized`, {
+            clientId,
+            botCount: botFunctions.length,
+            botTypes: botFunctions.map(b => b.persona),
+            initDuration: Date.now() - streamStartTime,
+          });
 
-            // Process all bots concurrently
+          async function processBots() {
+            const botProcessingStart = Date.now();
+            const botMetrics: Array<{
+              persona: string;
+              duration: number;
+              success: boolean;
+              error?: string;
+              responseSize?: number;
+            }> = [];
+
             const botPromises = botFunctions.map(async (bot) => {
+              const singleBotStart = Date.now();
+              const metric = {
+                persona: bot.persona,
+                duration: 0,
+                success: false,
+                responseSize: 0,
+              };
+
               try {
                 const botResponse = await bot.generate(context);
-                const botPersona = bot.persona;
+                const processingDuration = Date.now() - singleBotStart;
+                
+                metric.duration = processingDuration;
+                metric.success = !!botResponse;
+                metric.responseSize = botResponse?.length ?? 0;
+
+                logger.debug(`app/api/chat/route.ts - [${requestId}] Bot response generated`, {
+                  clientId,
+                  botPersona: bot.persona,
+                  processingDuration,
+                  responseSize: botResponse?.length ?? 0,
+                  success: !!botResponse,
+                });
 
                 if (botResponse && typeof botResponse === 'string') {
-                  logger.debug(
-                    `Response from ${botPersona}: ${botResponse}`
-                  );
-
-                  // Stream the response
                   controller.enqueue(
                     `data: ${JSON.stringify({
-                      persona: botPersona,
+                      persona: bot.persona,
                       message: botResponse,
                     })}\n\n`
                   );
 
-                  // Update context with bot response
                   context.push({
                     role: 'bot',
                     content: botResponse,
-                    persona: botPersona,
+                    persona: bot.persona,
                   });
-                  logger.silly(
-                    `Added bot response to context. New context size: ${context.length}`
-                  );
                   return true;
                 }
                 return false;
               } catch (error) {
-                logger.error(
-                  `Error in bot ${bot.persona} processing: ${error}`
-                );
+                metric.success = false;
+                metric.error = error instanceof Error ? error.message : 'Unknown error';
+                
+                logger.error(`app/api/chat/route.ts - [${requestId}] Bot processing failed`, {
+                  clientId,
+                  botPersona: bot.persona,
+                  error: error instanceof Error ? error.stack : error,
+                  duration: Date.now() - singleBotStart,
+                });
                 return false;
+              } finally {
+                botMetrics.push(metric);
               }
             });
 
-            // Await all bot responses
-            const responses = await Promise.all(botPromises);
-            const hasResponse = responses.includes(true);
+            const results = await Promise.all(botPromises);
+            const totalBotProcessing = Date.now() - botProcessingStart;
 
+            logger.info(`app/api/chat/route.ts - [${requestId}] Bot processing completed`, {
+              clientId,
+              totalDuration: totalBotProcessing,
+              successfulBots: results.filter(r => r).length,
+              failedBots: results.filter(r => !r).length,
+              botMetrics,
+              finalContextSize: context.length,
+            });
+
+            logStage('bots-processed');
+
+            // Cleanup and session management
             context = context.slice(-maxContextMessages);
             clientContexts.set(clientId, context);
 
-            logger.silly(
-              `Final context size after bot processing for clientId: ${clientId}: ${context.length}`
-            );
-
-            // Handle session timeout
             const lastInteraction = lastInteractionTimes.get(clientId) || 0;
             if (Date.now() - lastInteraction > sessionTimeout) {
               clientContexts.delete(clientId);
               lastInteractionTimes.delete(clientId);
-              logger.silly(
-                `Session timed out for clientId: ${clientId}. Context reset.`
-              );
-              context = []; // Reset context after timeout
-            }
-
-            if (!hasResponse) {
-              logger.silly(
-                `No bot responded for clientId: ${clientId}, RequestId: ${requestId}. Ending interaction.`
-              );
+              clientMutexes.delete(clientId);
+              
+              logger.info(`app/api/chat/route.ts - [${requestId}] Session cleaned up`, {
+                clientId,
+                sessionDuration: Date.now() - lastInteraction,
+                timeout: sessionTimeout,
+                remainingSessions: clientContexts.size,
+              });
             }
 
             try {
               controller.enqueue('data: [DONE]\n\n');
               controller.close();
-              logger.silly(
-                `Stream closed successfully for clientId: ${clientId}, RequestId: ${requestId}`
-              );
-            } catch (enqueueError) {
-              logger.error(
-                `Error finalizing stream: ${enqueueError} for clientId: ${clientId}, RequestId: ${requestId}`
-              );
+              
+              logger.info(`app/api/chat/route.ts - [${requestId}] Request completed`, {
+                clientId,
+                totalDuration: Date.now() - startTime,
+                stages: requestMetrics.processingStages,
+                botMetrics,
+                finalContextSize: context.length,
+                memoryUsage: process.memoryUsage(),
+              });
+            } catch (error) {
+              logger.error(`app/api/chat/route.ts - [${requestId}] Stream closure failed`, {
+                clientId,
+                error: error instanceof Error ? error.stack : error,
+                totalDuration: Date.now() - startTime,
+              });
             }
           }
 
           processBots().catch((error) => {
-            logger.error(
-              `Error in streaming bot interaction: ${error} for clientId: ${clientId}, RequestId: ${requestId}`
-            );
+            logger.error(`app/api/chat/route.ts - [${requestId}] Fatal processing error`, {
+              clientId,
+              error: error instanceof Error ? error.stack : error,
+              totalDuration: Date.now() - startTime,
+              stages: requestMetrics.processingStages,
+              memoryUsage: process.memoryUsage(),
+            });
             controller.error(error);
           });
         },
@@ -254,16 +365,15 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (error) {
-      logger.error(
-        `Error in streaming bot interaction: ${
-          error instanceof Error ? error.message : error
-        } for clientId: ${clientId}, RequestId: ${requestId}`
-      );
+      logger.error(`app/api/chat/route.ts - [${requestId}] Request handling failed`, {
+        clientId,
+        error: error instanceof Error ? error.stack : error,
+        totalDuration: Date.now() - startTime,
+        stages: requestMetrics.processingStages,
+        memoryUsage: process.memoryUsage(),
+      });
       return NextResponse.json(
-        {
-          error:
-            error instanceof Error ? error.message : 'Internal Server Error',
-        },
+        { error: error instanceof Error ? error.message : 'Internal Server Error' },
         { status: 500 }
       );
     }

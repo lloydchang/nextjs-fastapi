@@ -9,7 +9,16 @@ import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
 import { processLocalQnA } from '../utils/tensorflowQnA';
 
-// ChatState interface definition
+// Debug logger configuration
+const createLogger = (namespace: string) => ({
+  debug: (...args: any[]) => console.debug(`[${namespace}]`, ...args),
+  error: (...args: any[]) => console.error(`[${namespace}]`, ...args),
+  info: (...args: any[]) => console.info(`[${namespace}]`, ...args),
+  warn: (...args: any[]) => console.warn(`[${namespace}]`, ...args),
+});
+
+const logger = createLogger('ChatSlice');
+
 interface ChatState {
   messages: Message[];
   error: string | null;
@@ -22,80 +31,126 @@ const initialState: ChatState = {
   error: null,
 };
 
-// Custom error class for API errors
 class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'ApiError';
+    logger.debug('store/chatSlice.ts - ApiError created', { status, message });
   }
 }
 
-// Type guard function to validate if input is Partial<Message>
 function isMessage(input: any): input is Partial<Message> {
-  return typeof input === 'object' && input !== null && 'sender' in input;
+  const result = typeof input === 'object' && input !== null && 'sender' in input;
+  logger.debug('store/chatSlice.ts - Message type check', { input, isValid: result });
+  return result;
 }
 
-// Redux slice definition
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      console.debug('Adding message:', action.payload);
+      const messageId = action.payload.id || '[no-id]';
+      logger.debug('store/chatSlice.ts - Adding message', {
+        id: messageId,
+        sender: action.payload.sender,
+        timestamp: action.payload.timestamp,
+        contentLength: action.payload.text?.length,
+      });
 
-      if (
-        state.messages.some(
-          (msg) =>
-            msg.text === action.payload.text &&
-            msg.timestamp === action.payload.timestamp
-        )
-      ) {
-        console.debug('Duplicate message detected, skipping:', action.payload);
+      // Check for duplicates
+      const isDuplicate = state.messages.some(
+        (msg) =>
+          msg.text === action.payload.text &&
+          msg.timestamp === action.payload.timestamp
+      );
+
+      if (isDuplicate) {
+        logger.warn('store/chatSlice.ts - Duplicate message detected', {
+          id: messageId,
+          text: action.payload.text?.slice(0, 50) + '...',
+          timestamp: action.payload.timestamp,
+        });
         return;
       }
 
+      // Handle message limit
       if (state.messages.length >= MAX_MESSAGES) {
-        console.debug('Reached max messages. Removing oldest message.');
+        logger.info('store/chatSlice.ts - Message limit reached', {
+          maxMessages: MAX_MESSAGES,
+          removingMessage: state.messages[0],
+        });
         state.messages.shift();
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', [...state.messages]);
+      logger.debug('store/chatSlice.ts - Message added successfully', {
+        totalMessages: state.messages.length,
+        lastMessageId: messageId,
+      });
     },
     clearMessages: (state) => {
-      console.debug('Clearing all messages');
+      logger.debug('store/chatSlice.ts - Clearing messages', {
+        messageCount: state.messages.length,
+      });
       state.messages = [];
     },
     setError: (state, action: PayloadAction<string>) => {
-      console.debug('Setting error:', action.payload);
+      logger.warn('store/chatSlice.ts - Setting error state', { error: action.payload });
       state.error = action.payload;
     },
     clearError: (state) => {
-      console.debug('Clearing error');
+      logger.debug('store/chatSlice.ts - Clearing error state', { previousError: state.error });
       state.error = null;
     },
   },
 });
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const timeoutPromise = (ms: number) =>
-  new Promise<Response>((_, reject) =>
-    setTimeout(() => reject(new Error('Timeout')), ms)
+const wait = (ms: number) => {
+  logger.debug('store/chatSlice.ts - Waiting', { milliseconds: ms });
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
+const timeoutPromise = (ms: number) => {
+  logger.debug('store/chatSlice.ts - Setting timeout promise', { milliseconds: ms });
+  return new Promise<Response>((_, reject) =>
+    setTimeout(() => {
+      logger.warn('store/chatSlice.ts - Request timeout reached', { milliseconds: ms });
+      reject(new Error('Timeout'));
+    }, ms)
   );
+};
 
 export const parseIncomingMessage = (jsonString: string) => {
+  logger.debug('store/chatSlice.ts - Parsing incoming message', {
+    messageLength: jsonString.length,
+    preview: jsonString.slice(0, 100) + '...',
+  });
+
   try {
-    if (jsonString === '[DONE]') return null;
+    if (jsonString === '[DONE]') {
+      logger.debug('store/chatSlice.ts - Received DONE signal');
+      return null;
+    }
 
     const sanitizedString = he.decode(jsonString);
     const parsedData = JSON.parse(sanitizedString);
 
-    if (!parsedData.persona || !parsedData.message) return null;
+    if (!parsedData.persona || !parsedData.message) {
+      logger.warn('store/chatSlice.ts - Invalid message format', { parsedData });
+      return null;
+    }
 
-    console.debug('Parsed incoming message:', parsedData);
+    logger.debug('store/chatSlice.ts - Message parsed successfully', {
+      persona: parsedData.persona,
+      messageLength: parsedData.message.length,
+    });
     return parsedData;
   } catch (error) {
-    console.error('Error parsing message:', jsonString, error);
+    logger.error('store/chatSlice.ts - Message parsing failed', {
+      error,
+      jsonString,
+    });
     return null;
   }
 };
@@ -107,8 +162,18 @@ const debouncedApiCall = debounce(
     input: string | Partial<Message>,
     clientId: string
   ) => {
+    const requestId = uuidv4();
+    logger.debug('store/chatSlice.ts - Starting debounced API call', {
+      requestId,
+      clientId,
+      inputType: typeof input,
+    });
+
     const state = getState();
-    if (state.api?.isLoading) return;
+    if (state.api?.isLoading) {
+      logger.debug('store/chatSlice.ts - Skipping API call - already loading', { requestId });
+      return;
+    }
 
     dispatch(setLoading(true));
     dispatch(clearApiError());
@@ -125,14 +190,28 @@ const debouncedApiCall = debounce(
       },
     ];
 
-    console.debug('Prepared API request payload:', JSON.stringify({ messages: messagesArray }, null, 2));
+    logger.debug('store/chatSlice.ts - Prepared request payload', {
+      requestId,
+      messageCount: messagesArray.length,
+      contentLength: userMessageContent.length,
+    });
 
     let retryCount = 0;
     const maxRetries = 3;
 
     while (retryCount < maxRetries) {
       try {
+        logger.debug('store/chatSlice.ts - Processing TensorFlow prediction', {
+          requestId,
+          attempt: retryCount + 1,
+        });
+
         const tfPredictionMessages = await processLocalQnA(input.toString(), '');
+        logger.debug('store/chatSlice.ts - TensorFlow prediction completed', {
+          requestId,
+          resultCount: tfPredictionMessages.length,
+        });
+
         const tfPredictionText =
           tfPredictionMessages.length > 0
             ? tfPredictionMessages[0].text
@@ -147,11 +226,26 @@ const debouncedApiCall = debounce(
           persona: 'tf-model',
           timestamp: Date.now(),
         };
+
+        logger.debug('store/chatSlice.ts - Dispatching TF prediction message', {
+          requestId,
+          messageId: botMessageFromTF.id,
+          contentLength: tfPredictionText.length,
+        });
+
         dispatch(addMessage(botMessageFromTF));
+
+        logger.debug('store/chatSlice.ts - Starting parallel API and TF processing', { requestId });
 
         const [tfResult, apiResult] = await Promise.allSettled([
           processLocalQnA(input.toString(), ''),
           (async () => {
+            logger.debug('store/chatSlice.ts - Initiating API request', {
+              requestId,
+              clientId,
+              endpoint: '/api/chat',
+            });
+
             const response = await fetch('/api/chat', {
               method: 'POST',
               headers: {
@@ -161,10 +255,13 @@ const debouncedApiCall = debounce(
               body: JSON.stringify({ messages: messagesArray }),
             });
 
-            console.debug('API Response Status:', response.status);
+            logger.debug('store/chatSlice.ts - API response received', {
+              requestId,
+              status: response.status,
+              headers: Object.fromEntries(response.headers),
+            });
 
             const responseBody = await response.text();
-            console.debug('API Response Body:', responseBody);
 
             if (!response.ok) {
               if (response.status === 429) {
@@ -172,7 +269,11 @@ const debouncedApiCall = debounce(
                   response.headers.get('Retry-After') || '1',
                   10
                 );
-                console.debug(`Rate limit hit, retrying after ${retryAfter} seconds...`);
+                logger.warn('store/chatSlice.ts - Rate limit encountered', {
+                  requestId,
+                  retryAfter,
+                  attempt: retryCount + 1,
+                });
                 await wait(retryAfter * 1000);
                 throw new ApiError(response.status, 'Retrying...');
               }
@@ -184,6 +285,12 @@ const debouncedApiCall = debounce(
           timeoutPromise(10000),
         ]);
 
+        logger.debug('store/chatSlice.ts - Parallel processing completed', {
+          requestId,
+          tfStatus: tfResult.status,
+          apiStatus: apiResult.status,
+        });
+
         if (tfResult.status === 'fulfilled') {
           const tfMessages = tfResult.value.map((answer: any) => ({
             id: uuidv4(),
@@ -194,6 +301,12 @@ const debouncedApiCall = debounce(
             persona: 'tensorflow-qna',
             timestamp: Date.now(),
           }));
+
+          logger.debug('store/chatSlice.ts - Processing TF messages', {
+            requestId,
+            messageCount: tfMessages.length,
+          });
+
           tfMessages.forEach((msg) => dispatch(addMessage(msg)));
         }
 
@@ -207,28 +320,52 @@ const debouncedApiCall = debounce(
             persona: 'api-bot',
             timestamp: Date.now(),
           };
+
+          logger.debug('store/chatSlice.ts - Processing API message', {
+            requestId,
+            messageId: apiMessage.id,
+            contentLength: apiMessage.text.length,
+          });
+
           dispatch(addMessage(apiMessage));
         }
 
+        logger.debug('store/chatSlice.ts - Request completed successfully', { requestId });
         dispatch(setLoading(false));
         return;
 
       } catch (error: any) {
-        console.error('Error during API or TensorFlow.js call:', error);
+        logger.error('store/chatSlice.ts - Request error', {
+          requestId,
+          attempt: retryCount + 1,
+          error: error.message,
+          status: error instanceof ApiError ? error.status : undefined,
+          stack: error.stack,
+        });
+
         if (error instanceof ApiError && error.status === 429) {
           retryCount++;
           const retryDelay = Math.pow(2, retryCount) * 1000;
-          console.debug(`Retrying API call, attempt ${retryCount} after ${retryDelay}ms...`);
+          logger.info('store/chatSlice.ts - Scheduling retry', {
+            requestId,
+            attempt: retryCount,
+            delay: retryDelay,
+          });
           await wait(retryDelay);
           continue;
         }
+
         dispatch(setApiError(error.message || 'An unknown error occurred'));
         dispatch(setLoading(false));
         return;
       }
     }
 
-    console.error('Max retries reached. Giving up.');
+    logger.error('store/chatSlice.ts - Max retries exceeded', {
+      requestId,
+      maxRetries,
+      totalAttempts: retryCount,
+    });
     dispatch(setApiError('Failed to get a response after multiple attempts.'));
     dispatch(setLoading(false));
   },
@@ -238,6 +375,12 @@ const debouncedApiCall = debounce(
 export const sendMessage =
   (input: string | Partial<Message>) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
+    const messageId = uuidv4();
+    logger.debug('store/chatSlice.ts - Initiating message send', {
+      messageId,
+      inputType: typeof input,
+    });
+
     dispatch(clearError());
 
     const clientId = localStorage.getItem('clientId') || uuidv4();
@@ -254,12 +397,25 @@ export const sendMessage =
       timestamp: Date.now(),
     };
 
-    console.debug('Dispatching user message:', userMessage);
+    logger.debug('store/chatSlice.ts - Created user message', {
+      messageId: userMessage.id,
+      sender: userMessage.sender,
+      contentLength: userMessage.text.length,
+    });
+
     dispatch(addMessage(userMessage));
 
     try {
+      logger.debug('store/chatSlice.ts - Calling debounced API', {
+        messageId,
+        clientId,
+      });
       await debouncedApiCall(dispatch, getState, input, clientId);
     } catch (error) {
+      logger.error('store/chatSlice.ts - Message send failed', {
+        messageId,
+        error,
+      });
       dispatch(setApiError('Failed to send message.'));
     }
   };

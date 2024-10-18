@@ -1,3 +1,5 @@
+// File: utils/tensorflowQnA.ts
+
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -10,8 +12,10 @@ let modelPromise: Promise<any> | null = null;
  */
 const loadScript = (url: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
+    console.debug(`utils/tensorflowQnA.ts - [TensorFlowQnA] Attempting to load script: ${url}`);
+
     if (document.querySelector(`script[src="${url}"]`)) {
-      console.info(`[TensorFlowQnA] Script already loaded: ${url}`);
+      console.info(`utils/tensorflowQnA.ts - [TensorFlowQnA] Script already loaded: ${url}`);
       resolve();
       return;
     }
@@ -20,11 +24,11 @@ const loadScript = (url: string): Promise<void> => {
     script.src = url;
     script.async = true; // Ensure non-blocking load
     script.onload = () => {
-      console.info(`[TensorFlowQnA] Script loaded: ${url}`);
+      console.info(`utils/tensorflowQnA.ts - [TensorFlowQnA] Script loaded: ${url}`);
       resolve();
     };
     script.onerror = (err) => {
-      console.error(`Failed to load script: ${url}`, err);
+      console.error(`utils/tensorflowQnA.ts - Failed to load script: ${url}`, err);
       reject(new Error(`Failed to load script: ${url}`));
     };
     document.body.appendChild(script);
@@ -44,28 +48,28 @@ const loadQnAModel = async (): Promise<any> => {
 
   if (!qna) {
     try {
-      console.info('[TensorFlowQnA] Loading TensorFlow modules from CDN...');
+      console.info('utils/tensorflowQnA.ts - [TensorFlowQnA] Loading TensorFlow modules from CDN...');
       await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest');
       await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@latest');
 
       const tf = (window as any).tf;
       qna = (window as any).qna;
 
-      console.info('[TensorFlow] Initializing backend...');
+      console.info('utils/tensorflowQnA.ts - [TensorFlow] Initializing backend...');
       await tf.ready();
-      console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
+      console.info(`utils/tensorflowQnA.ts - [TensorFlow] Backend initialized: ${tf.getBackend()}`);
     } catch (error) {
-      console.error('[TensorFlow] Backend or module initialization failed:', error);
+      console.error('utils/tensorflowQnA.ts - [TensorFlow] Backend or module initialization failed:', error);
       throw new Error('Failed to initialize TensorFlow backend.');
     }
   }
 
   try {
-    console.info('[TensorFlowQnA] Loading QnA model...');
+    console.info('utils/tensorflowQnA.ts - [TensorFlowQnA] Loading QnA model...');
     modelPromise = qna.load();
     return await modelPromise;
   } catch (error) {
-    console.error('[TensorFlowQnA] Failed to load QnA model:', error);
+    console.error('utils/tensorflowQnA.ts - [TensorFlowQnA] Failed to load QnA model:', error);
     throw new Error('Failed to load QnA model.');
   }
 };
@@ -80,13 +84,13 @@ export const processLocalQnA = async (
   input: string,
   context: string
 ): Promise<Message[]> => {
-  console.debug('[TensorFlowQnA] processLocalQnA called with:', { input, context });
+  console.debug('utils/tensorflowQnA.ts - [TensorFlowQnA] processLocalQnA called with:', { input, context });
 
   try {
     const [tfResult, apiResult] = await Promise.allSettled([
       (async () => {
         const model = await loadQnAModel();
-        console.debug('[TensorFlowQnA] Model loaded. Running findAnswers...', {
+        console.debug('utils/tensorflowQnA.ts - [TensorFlowQnA] Model loaded. Running findAnswers...', {
           input,
           context,
         });
@@ -107,7 +111,7 @@ export const processLocalQnA = async (
     const messages: Message[] = [];
 
     if (tfResult.status === 'fulfilled') {
-      console.debug('[TensorFlowQnA] Answers received from TensorFlow:', tfResult.value);
+      console.debug('utils/tensorflowQnA.ts - [TensorFlowQnA] Answers received from TensorFlow:', tfResult.value);
       const tfMessages = tfResult.value.map((answer: any) => ({
         id: uuidv4(),
         sender: 'bot',
@@ -121,7 +125,7 @@ export const processLocalQnA = async (
     }
 
     if (apiResult.status === 'fulfilled') {
-      console.debug('[API] Response received:', apiResult.value);
+      console.debug('utils/tensorflowQnA.ts - [API] Response received:', apiResult.value);
       const apiMessage: Message = {
         id: uuidv4(),
         sender: 'bot',
@@ -134,10 +138,10 @@ export const processLocalQnA = async (
       messages.push(apiMessage);
     }
 
-    console.info('[TensorFlowQnA] Process completed successfully.');
+    console.info('utils/tensorflowQnA.ts - [TensorFlowQnA] Process completed successfully.');
     return messages;
   } catch (error) {
-    console.error('[TensorFlowQnA] Error processing QnA or API:', error);
+    console.error('utils/tensorflowQnA.ts - [TensorFlowQnA] Error processing QnA or API:', error);
     throw new Error('Failed to process QnA or API response.');
   }
 };
