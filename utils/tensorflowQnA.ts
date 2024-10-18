@@ -20,19 +20,29 @@ const loadScript = (url: string): Promise<void> => {
 
     const script = document.createElement('script');
     script.src = url;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load script: ${url}`));
+    script.async = true; // Ensure non-blocking load
+    script.onload = () => {
+      console.info(`[TensorFlowQnA] Script loaded: ${url}`);
+      resolve();
+    };
+    script.onerror = (err) => {
+      console.error(`Failed to load script: ${url}`, err);
+      reject(new Error(`Failed to load script: ${url}`));
+    };
     document.body.appendChild(script);
   });
 };
 
 /**
- * Load TensorFlow and QnA model from CDN (client-side only).
+ * Load TensorFlow.js and QnA model from CDN (client-side only).
  */
 const loadQnAModel = async (): Promise<any> => {
   if (typeof window === 'undefined') {
     throw new Error('TensorFlow can only be used in the browser.');
   }
+
+  // Avoid redundant loads by caching the model
+  if (modelPromise) return modelPromise;
 
   if (!qna) {
     try {
@@ -52,12 +62,14 @@ const loadQnAModel = async (): Promise<any> => {
     }
   }
 
-  if (!modelPromise) {
+  try {
     console.info('[TensorFlowQnA] Loading QnA model...');
     modelPromise = qna.load();
+    return await modelPromise;
+  } catch (error) {
+    console.error('[TensorFlowQnA] Failed to load QnA model:', error);
+    throw new Error('Failed to load QnA model.');
   }
-
-  return modelPromise;
 };
 
 /**
@@ -70,4 +82,29 @@ export const processLocalQnA = async (
   input: string,
   context: string
 ): Promise<Message[]> => {
-  console.debug('[TensorFlow
+  console.debug('[TensorFlowQnA] processLocalQnA called with:', { input, context });
+
+  try {
+    const model = await loadQnAModel();
+    console.debug('[TensorFlowQnA] Model loaded. Running findAnswers...', { input, context });
+
+    const answers = await model.findAnswers(input, context);
+    console.debug('[TensorFlowQnA] Answers received:', answers);
+
+    const botMessages: Message[] = answers.map((answer) => ({
+      id: uuidv4(),
+      sender: 'bot',
+      text: answer.text,
+      role: 'bot',
+      content: answer.text,
+      persona: 'tensorflow-qna',
+      timestamp: Date.now(),
+    }));
+
+    console.info('[TensorFlowQnA] Process completed successfully.');
+    return botMessages;
+  } catch (error) {
+    console.error('[TensorFlowQnA] Error processing QnA:', error);
+    throw new Error('Failed to process local QnA.');
+  }
+};
