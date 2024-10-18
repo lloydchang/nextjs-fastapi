@@ -55,18 +55,18 @@ export async function generateFromCloudflareGemma(params: {
     };
 
     // Log the request headers and body at 'silly' level
-    logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Request Headers Sent: ${JSON.stringify(maskedHeaders, null, 2)}`);
-    logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Request Body Sent: ${requestBody}`);
+    // logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Request Headers Sent: ${JSON.stringify(maskedHeaders, null, 2)}`);
+    // logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Request Body Sent: ${requestBody}`);
 
-    // Generate cURL equivalent using masked headers
-    const curlCommand = `curl -X POST "${endpoint}" \\
-      -H "Authorization: ${maskedHeaders.Authorization}" \\
-      -H "X-Auth-Email: ${maskedHeaders['X-Auth-Email']}" \\
-      -H "X-Auth-Key: ${maskedHeaders['X-Auth-Key']}" \\
-      -H "Content-Type: ${maskedHeaders['Content-Type']}" \\
-      -d '${requestBody}'`;
+    // // Generate cURL equivalent using masked headers
+    // const curlCommand = `curl -X POST "${endpoint}" \\
+    //   -H "Authorization: ${maskedHeaders.Authorization}" \\
+    //   -H "X-Auth-Email: ${maskedHeaders['X-Auth-Email']}" \\
+    //   -H "X-Auth-Key: ${maskedHeaders['X-Auth-Key']}" \\
+    //   -H "Content-Type: ${maskedHeaders['Content-Type']}" \\
+    //   -d '${requestBody}'`;
 
-    logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - cURL Equivalent:\n\n${curlCommand}`);
+    // logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - cURL Equivalent:\n\n${curlCommand}`);
 
     // Make the API request
     const response = await fetch(endpoint, {
