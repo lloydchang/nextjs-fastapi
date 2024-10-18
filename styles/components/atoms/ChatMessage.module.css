@@ -6,6 +6,12 @@
   flex-direction: column;
   margin-bottom: 10px;
   position: relative; /* Controls absolute positioning of children */
+  transition: transform 0.2s ease-in-out; /* Smooth hover transition */
+}
+
+/* Add subtle scale effect on hover */
+.messageContainer:hover {
+  transform: scale(1.02); /* Slightly enlarge message on hover */
 }
 
 /* --- Persona Label Styling --- */
@@ -17,6 +23,7 @@
   padding: 0 4px; /* Adds some spacing inside the label */
   color: #8696a0; /* Adjusted gray for persona labels */
   background-color: #000; /* Background color for light mode */
+  transition: background-color 0.3s;
 }
 
 /* Hovered Persona Label Styling */
@@ -27,6 +34,7 @@
   z-index: 10;
   padding: 0 4px;
   color: #000000;
+  background-color: #25d366; /* Added green background on hover */
   border-radius: 8px 8px 0 0;
   font-size: 0.85rem;
   display: block;
@@ -54,9 +62,14 @@
   border-radius: 8px;
   max-width: 100%;
   word-wrap: break-word;
-  color: #fff; /* Changed to light text for light mode */
-  background-color: #000; /* Set default background for light mode */
-  transition: background-color 0.3s, color 0.3s;
+  color: #fff;
+  background-color: #000;
+  transition: background-color 0.3s, color 0.3s, transform 0.2s;
+}
+
+/* Hover effect for message bubble */
+.text:hover {
+  background-color: #333; /* Slightly lighter background on hover */
 }
 
 /* Hovered Text */
@@ -76,11 +89,12 @@
 
 /* --- Message-specific Styles --- */
 .userMessage .text {
+  color: #000;
   background-color: #dcf8c6; /* Light green for user messages */
 }
 
 .botMessage .text {
-  color: #fff; /* Light text for bot messages */
+  color: #fff;
   border-radius: 0 8px 8px 8px;
 }
 
@@ -98,11 +112,11 @@
 
 /* Links */
 .text a {
-  color: #34b7f1; /* Blue for links */
+  color: #34b7f1;
 }
 
 .text a:hover {
-  color: #34b7f1;
+  color: #53bdeb;
 }
 
 /* Headers */
@@ -127,7 +141,7 @@
 
 /* Code blocks */
 .text pre {
-  background-color: #f0f0f0; /* Light background for code blocks */
+  background-color: #f0f0f0;
   padding: 10px;
   border-radius: 5px;
   overflow-x: auto;
@@ -135,9 +149,8 @@
   margin: 0.5em 0;
 }
 
-/* Inline code */
 .text code {
-  background-color: #f0f0f0; /* Light background for inline code */
+  background-color: #f0f0f0;
   padding: 2px 4px;
   border-radius: 3px;
   font-family: 'Courier New', Courier, monospace;
@@ -145,9 +158,9 @@
 
 /* Blockquotes */
 .text blockquote {
-  border-left: 4px solid #25d366; /* Green left border */
+  border-left: 4px solid #25d366;
   padding-left: 10px;
-  color: #555; /* Dark gray text */
+  color: #555;
   margin: 0.5em 0;
 }
 
@@ -168,17 +181,17 @@
 
 .text th,
 .text td {
-  border: 1px solid #ccc; /* Light border for tables */
+  border: 1px solid #ccc;
   padding: 8px;
 }
 
 .text th {
-  background-color: #25d366; /* Green header background */
-  color: #fff; /* White text */
+  background-color: #25d366;
+  color: #fff;
 }
 
 .text td {
-  color: #fff; /* White text for table cells */
+  color: #fff;
 }
 
 /* Task Lists */
@@ -203,50 +216,51 @@
   left: 0;
   width: 93vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  background: rgba(0, 0, 0, 0.5);
   z-index: 999;
-  display: none; /* Hide modals by default */
-  justify-content: right;
-  align-items: top;
+  display: none;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Modal Active State */
 .modalBackdrop.active {
-  display: flex; /* Show modal only when active class is present */
+  display: flex;
 }
 
+/* Full-screen modal message */
 .fullScreenMessage {
   background-color: #000;
   border-radius: 8px;
-  max-width: 100vw;
-  max-height: 100vh;
-  overflow: auto; /* Enable scrolling if necessary */
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
   padding: 20px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  justify-content: left;
 }
 
+/* Sticky modal header */
 .modalHeader {
   display: flex;
   align-items: center;
   position: sticky;
   top: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
+  background: rgba(0, 0, 0, 0.8);
   z-index: 1001;
   padding: 8px;
-  justify-content: center;
+  justify-content: space-between;
 }
 
+/* Modal persona label */
 .modalPersonaLabel {
   margin-right: 10px;
   padding: 4px 8px;
   border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.7); /* Transparent background */
-  justify-content: left;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
+/* Modal close button */
 .modalCloseButton {
   padding: 4px 8px;
   background-color: #333;
@@ -254,177 +268,27 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: 8px;
-  justify-content: left;
 }
 
 .modalCloseButton:hover {
   background-color: #555;
-  justify-content: left;
 }
 
-/* Full Screen Mode Styles */
-.fullScreenMode .text {
-  max-width: none; /* Remove width limit */
-  justify-content: left;
-}
-
-/* Inverted Hover Styles */
-.textHovered strong {
-  font-weight: bold;
-}
-
-.textHovered em {
-  font-style: italic;
-}
-
-.textHovered a {
-  color: #53bdeb;
-}
-
-.textHovered a:hover {
-  text-decoration: underline;
-}
-
-.textHovered ul,
-.textHovered ol {
-  padding-left: 20px;
-  margin: 0.5em 0;
-}
-
-.textHovered pre {
-  padding: 10px;
-  border-radius: 5px;
-  overflow-x: auto;
-  font-family: 'Courier New', Courier, monospace;
-  margin: 0.5em 0;
-}
-
-.textHovered code {
-  color: #000;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: 'Courier New', Courier, monospace;
-}
-
-.textHovered blockquote {
-  border-left: 4px solid #25d366;
-  padding-left: 10px;
-  margin: 0.5em 0;
-}
-
-.textHovered img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 5px;
-  margin: 10px 0;
-}
-
-.textHovered table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 0.5em 0;
-}
-
-.textHovered th,
-.textHovered td {
-  border: 1px solid #666;
-  padding: 8px;
-}
-
-.textHovered th {
-  background-color: #25d366;
-  color: #000;
-}
-
-.textHovered td {
-}
-
-.textHovered ul.task-list {
-  list-style: none;
-  padding-left: 0;
-}
-
-.textHovered ul.task-list li {
-  display: flex;
-  align-items: center;
-}
-
-.textHovered ul.task-list li input[type='checkbox'] {
-  margin-right: 8px;
-}
-
-/* --- Tablets and Mobile Devices --- */
+/* Tablets and Mobile Devices */
 @media (max-width: 1023px) {
-  /* --- Full-Screen Modal Styles --- */
   .modalBackdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
     width: 100vw;
-    max-width: 50vw;
-    height: 112vh;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-    z-index: 999;
-    display: flex;
-    justify-content: left;
-    align-items: top;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
   }
 
   .fullScreenMessage {
-    background-color: #000;
-    border-radius: 8px;
-    max-width: 50vw;
-    max-height: 100vh;
-    overflow: auto; /* Enable scrolling if necessary */
-    padding: 20px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    justify-content: left;
+    max-width: 90vw;
+    max-height: 90vh;
   }
 
   .modalHeader {
-    display: flex;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    width: 50%;
-    max-width: 50vw;
-    background: rgba(0, 0, 0, 0.8); /* Slightly transparent background */
-    z-index: 1001;
-    padding: 8px;
-    justify-content: left;
-  }
-
-  .modalPersonaLabel {
-    max-width: 50vw;
-    margin-right: 10px;
-    padding: 4px 8px;
-    border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.7); /* Transparent background */
-    justify-content: left;
-  }
-
-  .modalCloseButton {
-    max-width: 50vw;
-    padding: 4px 8px;
-    background-color: #333;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 8px;
-    justify-content: left;
-  }
-
-  .modalCloseButton:hover {
-    max-width: 50vw;
-    background-color: #555;
-    justify-content: left;
-  }
-
-  /* Full Screen Mode Styles */
-  .fullScreenMode .text {
-    max-width: 50vw;
-    justify-content: left;
+    width: 100%;
   }
 }
