@@ -62,10 +62,13 @@ export interface BotFunction {
   // Function to generate a response based on the current context
 }
 
-export type Metric {
+/**
+ * Represents metrics collected during bot execution.
+ */
+export interface Metric {
   persona: string;
   duration: number;
   success: boolean;
   responseSize: number;
-  error?: string;  // Add the error property here
+  error?: string;  // Optional error message if the bot execution fails
 }

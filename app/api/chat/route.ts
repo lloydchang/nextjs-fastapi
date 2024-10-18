@@ -1,5 +1,3 @@
-// File: app/api/chat/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
@@ -233,21 +231,15 @@ export async function POST(request: NextRequest) {
 
           async function processBots() {
             const botProcessingStart = Date.now();
-            const botMetrics: Array<{
-              persona: string;
-              duration: number;
-              success: boolean;
-              error?: string;
-              responseSize?: number;
-            }> = [];
+            const botMetrics: BotMetric[] = [];
 
             const botPromises = botFunctions.map(async (bot) => {
               const singleBotStart = Date.now();
-              const metric = {
+              const metric: BotMetric = {
                 persona: bot.persona,
                 duration: 0,
                 success: false,
-                responseSize: 0,
+                responseSize: 0
               };
 
               try {
