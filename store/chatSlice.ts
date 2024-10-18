@@ -7,7 +7,7 @@ import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
-import { runModelPrediction } from './modelService'; // Import the TensorFlow.js prediction function
+import { processLocalQnA } from 'utils/tensorflowQnA'; // Import TensorFlow QnA
 
 interface ChatState {
   messages: Message[];
@@ -30,6 +30,7 @@ class ApiError extends Error {
 
 // Type guard to check if the input is of type Partial<Message>
 function isMessage(input: any): input is Partial<Message> {
+  console.debug('Checking if input is a valid message:', input);
   return typeof input === 'object' && input !== null && 'sender' in input;
 }
 
@@ -38,7 +39,7 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      console.debug('Adding message:', action.payload);
+      console.debug('Attempting to add message:', action.payload);
 
       if (
         state.messages.some(
@@ -47,57 +48,84 @@ const chatSlice = createSlice({
             msg.timestamp === action.payload.timestamp
         )
       ) {
-        console.debug('Duplicate message detected, skipping:', action.payload);
+        console.debug('Duplicate message detected. Skipping:', action.payload);
         return;
       }
 
       if (state.messages.length >= MAX_MESSAGES) {
-        console.debug('Reached max messages. Removing oldest message.');
+        console.debug('Max message limit reached. Removing oldest message:', state.messages[0]);
         state.messages.shift();
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
+      console.debug('Message added. Updated message list:', [...state.messages]);
     },
     clearMessages: (state) => {
-      console.debug('Clearing all messages');
+      console.debug('Clearing all messages.');
       state.messages = [];
     },
     setError: (state, action: PayloadAction<string>) => {
-      console.debug('Setting error:', action.payload);
+      console.debug(`Setting error: "${action.payload}"`);
       state.error = action.payload;
     },
     clearError: (state) => {
-      console.debug('Clearing error');
+      console.debug('Clearing error.');
       state.error = null;
     },
   },
 });
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const timeoutPromise = (ms: number) =>
   new Promise<Response>((_, reject) =>
-    setTimeout(() => reject(new Error('Timeout')), ms)
+    setTimeout(() => reject(new Error('Timeout occurred')), ms)
   );
 
 export const parseIncomingMessage = (jsonString: string) => {
+  console.debug('Parsing incoming message string:', jsonString);
   try {
-    if (jsonString === '[DONE]') return null;
+    if (jsonString === '[DONE]') {
+      console.debug('Received termination signal "[DONE]".');
+      return null;
+    }
 
     const sanitizedString = he.decode(jsonString);
+    console.debug('Sanitized message string:', sanitizedString);
+
     const parsedData = JSON.parse(sanitizedString);
+    console.debug('Parsed message data:', parsedData);
 
-    if (!parsedData.persona || !parsedData.message) return null;
+    if (!parsedData.persona || !parsedData.message) {
+      console.debug('Message data is incomplete. Skipping:', parsedData);
+      return null;
+    }
 
-    console.debug('Parsed incoming message:', parsedData);
     return parsedData;
   } catch (error) {
-    console.error('Error parsing message:', jsonString, error);
+    console.error('Error parsing message:', error);
     return null;
   }
 };
 
-// Debounced API Call with TensorFlow.js Integration
+// Add simultaneous processing of local QnA and API calls
+const simultaneousProcessing = async (
+  dispatch: AppDispatch,
+  getState: () => RootState,
+  input: string | Partial<Message>,
+  clientId: string
+) => {
+  const context = getState().chat.messages.map((msg) => msg.content).join('\n');
+
+  try {
+    const localMessages = await processLocalQnA(input.toString(), context);
+    localMessages.forEach((msg) => dispatch(addMessage(msg)));
+  } catch (error) {
+    console.error('Local QnA error:', error);
+    dispatch(setApiError('Error processing local QnA model.'));
+  }
+};
+
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -105,8 +133,13 @@ const debouncedApiCall = debounce(
     input: string | Partial<Message>,
     clientId: string
   ) => {
+    console.debug('Starting API call with input:', input);
+
     const state = getState();
-    if (state.api?.isLoading) return;
+    if (state.api?.isLoading) {
+      console.debug('API is currently loading. Aborting request.');
+      return;
+    }
 
     dispatch(setLoading(true));
     dispatch(clearApiError());
@@ -114,105 +147,71 @@ const debouncedApiCall = debounce(
     const messagesArray = [
       { role: 'user', content: typeof input === 'string' ? input : input.text },
     ];
+
     let retryCount = 0;
     const maxRetries = 3;
 
     while (retryCount < maxRetries) {
+      console.debug(`API call attempt ${retryCount + 1}.`);
+
       try {
-        // Run TensorFlow.js model prediction
-        const tfPrediction = await runModelPrediction(input.toString());
-
-        const botMessageFromTF: Message = {
-          id: uuidv4(),
-          sender: 'bot',
-          text: tfPrediction,
-          role: 'bot',
-          content: tfPrediction,
-          persona: 'tf-model',
-          timestamp: Date.now(),
-        };
-        dispatch(addMessage(botMessageFromTF));
-
-        // Perform API call to /api/chat
         const response = await Promise.race([
           fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
             body: JSON.stringify({ messages: messagesArray }),
           }),
-          timeoutPromise(10000),
+          timeoutPromise(3600000) // Timeout set to 1 hour which is 3600000 milliseconds
         ]);
-
-        if (!response.ok) {
-          if (response.status === 429) {
-            const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-            console.debug(`Rate limit hit, retrying after ${retryAfter} seconds...`);
-            await wait(retryAfter * 1000);
-            retryCount++;
-            continue; // Retry the API call
-          }
-          throw new ApiError(response.status, response.statusText);
-        }
 
         const reader = response.body?.getReader();
         if (reader) {
           const decoder = new TextDecoder();
           let textBuffer = '';
 
-          try {
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-              textBuffer += decoder.decode(value, { stream: true });
-              const messages = textBuffer.split('\n\n');
-              textBuffer = messages.pop() || '';
+            textBuffer += decoder.decode(value, { stream: true });
+            const messages = textBuffer.split('\n\n');
+            textBuffer = messages.pop() || '';
 
-              for (const message of messages) {
-                if (message.startsWith('data: ')) {
-                  const parsedData = parseIncomingMessage(
-                    message.substring(6).trim()
-                  );
-                  if (parsedData) {
-                    const botMessage: Message = {
-                      id: uuidv4(),
-                      sender: 'bot',
-                      text: parsedData.message,
-                      role: 'bot',
-                      content: parsedData.message,
-                      persona: parsedData.persona,
-                      timestamp: Date.now(),
-                    };
-                    dispatch(addMessage(botMessage));
-                  }
+            for (const message of messages) {
+              if (message.startsWith('data: ')) {
+                const parsedData = parseIncomingMessage(message.substring(6).trim());
+                if (parsedData) {
+                  const botMessage: Message = {
+                    id: uuidv4(),
+                    sender: 'bot',
+                    text: parsedData.message,
+                    role: 'bot',
+                    content: parsedData.message,
+                    persona: parsedData.persona,
+                    timestamp: Date.now(),
+                  };
+                  dispatch(addMessage(botMessage));
                 }
               }
             }
-          } finally {
-            reader.releaseLock();
           }
+          reader.releaseLock();
         }
 
         dispatch(setLoading(false));
-        return; // Exit the retry loop on success
+        return;
       } catch (error: any) {
         if (error instanceof ApiError && error.status === 429) {
+          const waitTime = Math.pow(2, retryCount) * 1000;
+          await wait(waitTime);
           retryCount++;
-          const retryDelay = Math.pow(2, retryCount) * 1000;
-          console.debug(`Retrying API call, attempt ${retryCount} after ${retryDelay}ms...`);
-          await wait(retryDelay); // Exponential backoff
           continue;
         }
-        console.error('Error during API or TensorFlow.js call:', error);
-        dispatch(setApiError(error.message || 'An unknown error occurred'));
+        dispatch(setApiError(error.message || 'Unknown error occurred'));
         dispatch(setLoading(false));
         return;
       }
     }
-
-    console.error('Max retries reached. Giving up.');
-    dispatch(setApiError('Failed to get a response after multiple attempts.'));
-    dispatch(setLoading(false));
   },
   1000
 );
@@ -220,30 +219,22 @@ const debouncedApiCall = debounce(
 export const sendMessage =
   (input: string | Partial<Message>) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
-    dispatch(clearError());
-
     const clientId = localStorage.getItem('clientId') || uuidv4();
     localStorage.setItem('clientId', clientId);
 
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
-      role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(), // Use toString() as fallback
-      hidden: isMessage(input) ? input.hidden || false : false,
-      persona: isMessage(input) ? input.persona || '' : '',
+      text: isMessage(input) ? input.text || '' : input.toString(),
+      role: 'user',
+      content: input.toString(),
       timestamp: Date.now(),
     };
 
-    console.debug('Dispatching user message:', userMessage);
     dispatch(addMessage(userMessage));
 
-    try {
-      await debouncedApiCall(dispatch, getState, input, clientId);
-    } catch (error) {
-      dispatch(setApiError('Failed to send message.'));
-    }
+    await simultaneousProcessing(dispatch, getState, input, clientId);
+    await debouncedApiCall(dispatch, getState, input, clientId);
   };
 
 export const { addMessage, clearMessages, setError, clearError } =
