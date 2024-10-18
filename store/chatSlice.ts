@@ -205,7 +205,7 @@ export const sendMessage =
       sender: isMessage(input) ? input.sender || 'user' : 'user',
       text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
       role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : '',
+      content: isMessage(input) ? input.text || '' : input.toString(), // Use toString() as fallback
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
