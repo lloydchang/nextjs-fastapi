@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
                         context.push({
                           role: 'bot',
                           content: botResponse,
-                          persona: botPersona, // Now allowed as UserPrompt includes 'persona'?
+                          persona: botPersona, // Now allowed as UserPrompt includes 'persona'
                         });
                         logger.silly(
                           `Added bot response to context. New context size: ${context.length}`
