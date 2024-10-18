@@ -29,7 +29,7 @@ const customSchema = {
     ...defaultSchema.attributes,
     iframe: ['src', 'title', 'width', 'height', 'allow', 'allowfullscreen'],
   },
-  tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'], // Ensure tagNames is iterable
+  tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'],
 };
 
 interface ChatMessageProps extends Message {
@@ -61,6 +61,13 @@ const convertPlainUrlsToMarkdownLinks = (text: string) => {
   });
 };
 
+// Render persona with Markdown support
+const renderPersonaLabel = (persona: string, personaColor: string) => (
+  <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
+    <ReactMarkdown remarkPlugins={[remarkGfm]}>{persona}</ReactMarkdown>
+  </div>
+);
+
 const ChatMessage: React.FC<ChatMessageProps> = ({
   sender,
   text,
@@ -69,27 +76,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   isFullScreen,
   role,
 }) => {
-  const { openModal, closeModal, activeModal } = useModal(); // Use modal context
-  const [showFullMessage, setShowFullMessage] = useState(false); // Control hover display
+  const { openModal, closeModal, activeModal } = useModal();
+  const [showFullMessage, setShowFullMessage] = useState(false);
 
-  const displayPersona = persona || sender; // Use sender if persona is missing
-  const personaColor = persona ? hashPersonaToColor(persona) : '#777777'; // Generate persona color
-  const isUser = role === 'user'; // Determine if message is from the user
+  const displayPersona = persona || sender;
+  const personaColor = persona ? hashPersonaToColor(persona) : '#777777';
+  const isUser = role === 'user';
 
-  const processedText = convertPlainUrlsToMarkdownLinks(text); // Process links in text
-  const shouldShorten = text.split(' ').length > 10 && !isFullScreen; // Check if text should be shortened
-  const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text; // Shorten text if needed
+  const processedText = convertPlainUrlsToMarkdownLinks(text);
+  const shouldShorten = text.split(' ').length > 10 && !isFullScreen;
+  const shortenedText = shouldShorten
+    ? `${text.split(' ').slice(0, 10).join(' ')}…`
+    : text;
 
-  const modalId = `modal-${text}`; // Unique ID for each message modal
-  const isModalOpen = activeModal === modalId; // Check if this modal is open
+  const modalId = `modal-${text}`;
+  const isModalOpen = activeModal === modalId;
 
-  // Open modal when the message is clicked
   const handleOpenModal = useCallback(() => {
-    openModal(modalId); // Open this modal via context
+    openModal(modalId);
     console.debug('Opening modal for message:', text);
   }, [modalId, openModal, text]);
 
-  // Render markdown with plugins
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -100,10 +107,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     </ReactMarkdown>
   );
 
-  // Close modal on Escape key press
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeModal(); // Close on Escape
+      if (event.key === 'Escape') closeModal();
     };
 
     if (isModalOpen) {
@@ -112,10 +118,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [isModalOpen, closeModal]);
 
-  // Handle keyboard interactions (Enter/Space to open modal)
   const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      handleOpenModal(); // Open modal on Enter or Space
+      handleOpenModal();
     }
   };
 
@@ -133,18 +138,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         >
           <div
             className={styles.fullScreenMessage}
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+            onClick={(e) => e.stopPropagation()}
             role="document"
           >
             <div className={styles.modalHeader}>
-              {persona && (
-                <div
-                  className={styles.modalPersonaLabel}
-                  style={{ color: personaColor }}
-                >
-                  <strong id="modal-title">{persona}</strong>
-                </div>
-              )}
+              {persona && renderPersonaLabel(persona, personaColor)}
               <button
                 className={styles.modalCloseButton}
                 onClick={closeModal}
@@ -153,7 +151,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 Close
               </button>
             </div>
-
             <div className={styles.text}>{renderMarkdown(processedText)}</div>
           </div>
         </div>
@@ -166,7 +163,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         onMouseEnter={() => !isFullScreen && setShowFullMessage(true)}
         onMouseLeave={() => setShowFullMessage(false)}
         onClick={handleOpenModal}
-        style={{ position: 'relative' }}
         role="button"
         tabIndex={0}
         onKeyPress={handleKeyPress}
@@ -179,7 +175,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             }`}
             style={{ color: personaColor }}
           >
-            <strong>{persona}</strong>
+            {renderPersonaLabel(persona, personaColor)}
           </div>
         )}
         {!isFullScreen && showFullMessage && (
