@@ -203,7 +203,7 @@ export const sendMessage =
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : '',
+      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
       role: isMessage(input) ? input.role || 'user' : 'user',
       content: isMessage(input) ? input.text || '' : '',
       hidden: isMessage(input) ? input.hidden || false : false,
