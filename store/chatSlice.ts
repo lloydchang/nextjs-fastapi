@@ -75,10 +75,11 @@ const chatSlice = createSlice({
   },
 });
 
-const wait = (ms: number) => new Promise((resolve) => {
-  console.debug(`[wait] Waiting for ${ms}ms`);
-  setTimeout(resolve, ms);
-});
+const wait = (ms: number) =>
+  new Promise((resolve) => {
+    console.debug(`[wait] Waiting for ${ms}ms`);
+    setTimeout(resolve, ms);
+  });
 
 const timeoutPromise = (ms: number) =>
   new Promise<Response>((_, reject) =>
@@ -113,12 +114,7 @@ export const parseIncomingMessage = (jsonString: string) => {
 };
 
 const debouncedApiCall = debounce(
-  async (
-    dispatch: AppDispatch,
-    getState: () => RootState,
-    input: string | Partial<Message>,
-    clientId: string
-  ) => {
+  async (dispatch: AppDispatch, getState: () => RootState, input: string | Partial<Message>, clientId: string) => {
     console.info('[debouncedApiCall] Initiating API call with input:', input);
 
     const state = getState();
@@ -132,9 +128,7 @@ const debouncedApiCall = debounce(
     dispatch(setLoading(true));
     dispatch(clearApiError());
 
-    const messagesArray = [
-      { role: 'user', content: typeof input === 'string' ? input : input.text },
-    ];
+    const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
     console.debug('[debouncedApiCall] Messages payload:', messagesArray);
 
     let retryCount = 0;
@@ -182,9 +176,7 @@ const debouncedApiCall = debounce(
 
               for (const message of messages) {
                 if (message.startsWith('data: ')) {
-                  const parsedData = parseIncomingMessage(
-                    message.substring(6).trim()
-                  );
+                  const parsedData = parseIncomingMessage(message.substring(6).trim());
                   if (parsedData) {
                     const botMessage: Message = {
                       id: uuidv4(),
