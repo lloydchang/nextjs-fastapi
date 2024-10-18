@@ -3,7 +3,7 @@
 import { AppConfig } from 'app/api/chat/utils/config';
 import { BotFunction } from 'types';
 import { extractValidMessages } from 'app/api/chat/utils/filterContext';
-import getMessageContent from 'app/api/chat/utils/messageUtils'; // Import getMessageContent
+import { getMessageContent } from 'app/api/chat/utils/messageUtils'; // Import getMessageContent
 import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
 import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
 import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';

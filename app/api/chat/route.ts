@@ -1,130 +1,257 @@
 // File: app/api/chat/route.ts
 
-import { NextRequest, NextResponse } from 'next/server';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { AppDispatch, RootState } from 'store/store';
+import he from 'he';
+import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
-import { getConfig, AppConfig } from 'app/api/chat/utils/config';
-import { checkRateLimit } from 'app/api/chat/utils/rateLimiter';
-import { extractValidMessages } from 'app/api/chat/utils/filterContext';
-import { UserPrompt, BotFunction } from 'types';
-import logger from 'app/api/chat/utils/logger';
-import { Mutex } from 'async-mutex';
-import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
-import getMessageContent from 'app/api/chat/utils/messageUtils'; // Default import
+import { setLoading, setApiError, clearApiError } from './apiSlice';
 
-const config: AppConfig = getConfig();
-const MAX_PROMPT_LENGTH = 128000;
-const sessionTimeout = 60 * 60 * 1000; // 1 hour session timeout
-const maxContextMessages = 100;
+interface ChatState {
+  messages: Message[];
+  error: string | null;
+}
 
-const clientMutexes = new Map<string, Mutex>();
-const lastInteractionTimes = new Map<string, number>();
-const clientContexts = new Map<string, UserPrompt[]>();
+const MAX_MESSAGES = 100;
 
-export async function POST(request: NextRequest) {
-  const requestId = uuidv4();
-  const clientId = request.headers.get('x-client-id') || `anon-${uuidv4()}`;
+const initialState: ChatState = {
+  messages: [],
+  error: null,
+};
 
-  logger.silly(`Received POST request [${requestId}] from clientId: ${clientId}`);
-
-  const { limited, retryAfter } = checkRateLimit(clientId);
-  if (limited) {
-    logger.warn(`Rate limit exceeded for clientId: ${clientId}, RequestId: ${requestId}`);
-    return NextResponse.json({ error: 'Too Many Requests' }, {
-      status: 429,
-      headers: { 'Retry-After': `${retryAfter}` },
-    });
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
   }
+}
 
-  let mutex = clientMutexes.get(clientId);
-  if (!mutex) {
-    mutex = new Mutex();
-    clientMutexes.set(clientId, mutex);
-    logger.silly(`Created new mutex for clientId: ${clientId}`);
-  }
+function isMessage(input: any): input is Partial<Message> {
+  const isValid = typeof input === 'object' && input !== null && 'sender' in input;
+  console.debug('[isMessage] Validation result:', isValid, 'Input:', input);
+  return isValid;
+}
 
-  return mutex.runExclusive(async () => {
-    lastInteractionTimes.set(clientId, Date.now());
-    logger.silly(`Updated last interaction time for clientId: ${clientId}`);
+const chatSlice = createSlice({
+  name: 'chat',
+  initialState,
+  reducers: {
+    addMessage: (state, action: PayloadAction<Message>) => {
+      console.debug('[addMessage] Incoming message:', action.payload);
+      console.debug('[addMessage] Current state:', state);
 
-    try {
-      const body = await request.json();
-      logger.debug(`Request body for RequestId: ${requestId}, clientId: ${clientId}: ${JSON.stringify(body)}`);
+      const isDuplicate = state.messages.some(
+        (msg) =>
+          msg.text === action.payload.text &&
+          msg.timestamp === action.payload.timestamp
+      );
 
-      const { messages } = body;
-      if (!Array.isArray(messages)) {
-        logger.warn(`Invalid format: messages must be an array. RequestId: ${requestId}`);
-        return NextResponse.json({ error: 'Invalid format' }, { status: 400 });
+      if (isDuplicate) {
+        console.warn('[addMessage] Duplicate message detected, skipping:', action.payload);
+        return;
       }
 
-      const validMessages = extractValidMessages(messages);
-      logger.silly(`Filtered ${validMessages.length} valid messages for clientId: ${clientId}`);
-
-      if (validMessages.length === 0) {
-        return NextResponse.json({ error: 'No valid messages provided' }, { status: 400 });
+      if (state.messages.length >= MAX_MESSAGES) {
+        console.debug('[addMessage] Max messages reached. Removing oldest message:', state.messages[0]);
+        state.messages.shift();
       }
 
-      let context = clientContexts.get(clientId) || [];
-      context = [...validMessages.reverse(), ...context].slice(-maxContextMessages);
-      clientContexts.set(clientId, context);
+      state.messages.push(action.payload);
+      console.debug('[addMessage] Updated messages:', [...state.messages]);
+    },
+    clearMessages: (state) => {
+      console.info('[clearMessages] Clearing all messages. Previous messages:', state.messages);
+      state.messages = [];
+    },
+    setError: (state, action: PayloadAction<string>) => {
+      console.error('[setError] Setting error:', action.payload);
+      state.error = action.payload;
+    },
+    clearError: (state) => {
+      console.info('[clearError] Clearing error. Previous error:', state.error);
+      state.error = null;
+    },
+  },
+});
 
-      logger.silly(`Updated context size for clientId: ${clientId}: ${context.length}`);
-
-      const botFunctions: BotFunction[] = [];
-      addBotFunctions(botFunctions, config);
-
-      const botResponses = await executeBotFunctions(botFunctions, context);
-
-      // Create a readable stream from the bot responses
-      const stream = new ReadableStream({
-        start(controller) {
-          botResponses.forEach((response) => {
-            controller.enqueue(new TextEncoder().encode(response));
-          });
-          controller.close();
-        },
-      });
-
-      logger.silly(`Stream prepared for clientId: ${clientId}, RequestId: ${requestId}`);
-      return new NextResponse(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-        },
-      });
-
-    } catch (error) {
-      logger.error(`Error handling POST request for clientId: ${clientId}, RequestId: ${requestId}: ${error}`);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
+const wait = (ms: number) =>
+  new Promise((resolve) => {
+    console.debug(`[wait] Waiting for ${ms}ms`);
+    setTimeout(resolve, ms);
   });
-}
 
-async function executeBotFunctions(
-  botFunctions: BotFunction[],
-  context: UserPrompt[]
-): Promise<string[]> {
-  const responses: string[] = [];
+const timeoutPromise = (ms: number) =>
+  new Promise<Response>((_, reject) =>
+    setTimeout(() => {
+      console.warn('[timeoutPromise] Timeout reached:', ms);
+      reject(new Error('Timeout'));
+    }, ms)
+  );
 
-  for (const bot of botFunctions) {
+export const parseIncomingMessage = (jsonString: string) => {
+  console.debug('[parseIncomingMessage] Raw JSON:', jsonString);
+  try {
+    if (jsonString.trim() === '[DONE]') {
+      console.debug('[parseIncomingMessage] Received [DONE] signal.');
+      return { type: 'DONE' };
+    }
+
+    const sanitizedString = he.decode(jsonString);
+    const parsedData = JSON.parse(sanitizedString);
+
+    console.debug('[parseIncomingMessage] Parsed data:', parsedData);
+    if (!parsedData.persona || !parsedData.message) {
+      console.warn('[parseIncomingMessage] Missing persona or message.');
+      return null;
+    }
+
+    return parsedData;
+  } catch (error) {
+    console.error('[parseIncomingMessage] Error parsing JSON:', jsonString, error);
+    return null;
+  }
+};
+
+const apiCall = async (dispatch: AppDispatch, getState: () => RootState, input: string | Partial<Message>, clientId: string) => {
+  console.info('[apiCall] Initiating API call with input:', input);
+
+  const state = getState();
+  console.debug('[apiCall] Current state:', state);
+
+  if (state.api?.isLoading) {
+    console.warn('[apiCall] API is already loading. Aborting.');
+    return;
+  }
+
+  dispatch(setLoading(true));
+  dispatch(clearApiError());
+
+  const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
+  console.debug('[apiCall] Messages payload:', messagesArray);
+
+  let retryCount = 0;
+  const maxRetries = 3;
+
+  while (retryCount < maxRetries) {
     try {
-      const botResponse = await bot.generate(context);
-      if (botResponse) {
-        const message = getMessageContent(botResponse);
-        console.log('Generated message:', message); // Debugging log
-        responses.push(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
-        logger.silly(`Stream data sent for bot ${bot.persona}.`);
-        context.push({ role: 'bot', content: message, persona: bot.persona });
+      console.info(`[apiCall] Attempt ${retryCount + 1} to send API request.`);
+
+      const response = await Promise.race([
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
+          body: JSON.stringify({ messages: messagesArray }),
+        }),
+        timeoutPromise(10000),
+      ]);
+
+      console.debug('[apiCall] API response:', response);
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+          console.warn('[apiCall] Rate limit reached. Retrying after', retryAfter, 'seconds.');
+          await wait(retryAfter * 1000);
+          retryCount++;
+          continue;
+        }
+        throw new ApiError(response.status, response.statusText);
       }
-    } catch (error) {
-      logger.error(`Error processing bot ${bot.persona}: ${error}`);
-      responses.push(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+
+      const reader = response.body?.getReader();
+      if (reader) {
+        const decoder = new TextDecoder();
+        let textBuffer = '';
+
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            console.debug('[apiCall] Chunk read:', value ? decoder.decode(value) : '(none)', 'Done:', done);
+
+            if (done) {
+              console.info('[apiCall] Stream completed.');
+              break;
+            }
+
+            textBuffer += decoder.decode(value, { stream: true });
+            const messages = textBuffer.split('\n\n');
+            textBuffer = messages.pop() || '';
+
+            for (const message of messages) {
+              if (message.startsWith('data: ')) {
+                const parsedData = parseIncomingMessage(message.substring(6).trim());
+                if (parsedData) {
+                  const botMessage: Message = {
+                    id: uuidv4(),
+                    sender: 'bot',
+                    text: parsedData.message,
+                    role: 'bot',
+                    content: parsedData.message,
+                    persona: parsedData.persona,
+                    timestamp: Date.now(),
+                  };
+                  console.info('[apiCall] Dispatching bot message:', botMessage);
+                  dispatch(addMessage(botMessage));
+                }
+              }
+            }
+          }
+        } finally {
+          console.debug('[apiCall] Releasing reader lock.');
+          reader.releaseLock();
+        }
+      }
+
+      dispatch(setLoading(false));
+      return;
+    } catch (error: any) {
+      console.error('[apiCall] Error during API call:', error);
+
+      if (error instanceof ApiError && error.status === 429) {
+        retryCount++;
+        await wait(Math.pow(2, retryCount) * 1000);
+        continue;
+      }
+      dispatch(setApiError(error.message || 'An unknown error occurred'));
+      dispatch(setLoading(false));
+      return;
     }
   }
+};
 
-  if (responses.length === 0) {
-    responses.push('data: [DONE]\n\n');
-  }
+export const sendMessage =
+  (input: string | Partial<Message>) =>
+  async (dispatch: AppDispatch, getState: () => RootState) => {
+    console.info('[sendMessage] Sending user message:', input);
 
-  return responses;
-}
+    dispatch(clearError());
+
+    const clientId = localStorage.getItem('clientId') || uuidv4();
+    localStorage.setItem('clientId', clientId);
+
+    console.debug('[sendMessage] Client ID:', clientId);
+
+    const userMessage: Message = {
+      id: uuidv4(),
+      sender: isMessage(input) ? input.sender || 'user' : 'user',
+      text: isMessage(input) ? input.text || '' : input.toString(),
+      role: isMessage(input) ? input.role || 'user' : 'user',
+      content: isMessage(input) ? input.text || '' : input.toString(),
+      hidden: isMessage(input) ? input.hidden || false : false,
+      persona: isMessage(input) ? input.persona || '' : '',
+      timestamp: Date.now(),
+    };
+
+    console.info('[sendMessage] Dispatching user message:', userMessage);
+    dispatch(addMessage(userMessage));
+
+    try {
+      await apiCall(dispatch, getState, input, clientId);
+    } catch (error) {
+      console.error('[sendMessage] Error sending message:', error);
+      dispatch(setApiError('Failed to send message.'));
+    }
+  };
+
+export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
+export default chatSlice.reducer;
