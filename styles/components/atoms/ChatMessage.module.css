@@ -398,7 +398,7 @@
     justify-content: left;
   }
 
-  .fullScreenMessage {
+  .modalMessage {
     background-color: #000;
     border-radius: 8px;
     max-width: 50vw;

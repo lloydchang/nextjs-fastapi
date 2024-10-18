@@ -137,7 +137,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           tabIndex={-1}
         >
           <div
-            className={styles.fullScreenMessage}
+            className={styles.modalMessage}
             onClick={(e) => e.stopPropagation()}
             role="document"
           >
