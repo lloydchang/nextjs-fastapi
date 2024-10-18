@@ -7,18 +7,7 @@ import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
-import { processLocalQnA } from '../utils/tensorflowQnA';
-import { getBrowserName } from '../utils/browserDetection';
-
-// Debug logger configuration
-const createLogger = (namespace: string) => ({
-  debug: (...args: any[]) => console.debug(`[${namespace}]`, ...args),
-  error: (...args: any[]) => console.error(`[${namespace}]`, ...args),
-  info: (...args: any[]) => console.info(`[${namespace}]`, ...args),
-  warn: (...args: any[]) => console.warn(`[${namespace}]`, ...args),
-});
-
-const logger = createLogger('ChatSlice');
+import { processLocalQnA } from 'utils/tensorflowQnA'; // Import TensorFlow QnA
 
 interface ChatState {
   messages: Message[];
@@ -36,14 +25,13 @@ class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'ApiError';
-    logger.debug('store/chatSlice.ts - ApiError created', { status, message });
   }
 }
 
+// Type guard to check if the input is of type Partial<Message>
 function isMessage(input: any): input is Partial<Message> {
-  const result = typeof input === 'object' && input !== null && 'sender' in input;
-  logger.debug('store/chatSlice.ts - Message type check', { input, isValid: result });
-  return result;
+  console.debug('Checking if input is a valid message:', input);
+  return typeof input === 'object' && input !== null && 'sender' in input;
 }
 
 const chatSlice = createSlice({
@@ -51,108 +39,90 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      const messageId = action.payload.id || '[no-id]';
-      logger.debug('store/chatSlice.ts - Adding message', {
-        id: messageId,
-        sender: action.payload.sender,
-        timestamp: action.payload.timestamp,
-        contentLength: action.payload.text?.length,
-      });
+      console.debug('Attempting to add message:', action.payload);
 
-      // Check for duplicates
-      const isDuplicate = state.messages.some(
-        (msg) =>
-          msg.text === action.payload.text &&
-          msg.timestamp === action.payload.timestamp
-      );
-
-      if (isDuplicate) {
-        logger.warn('store/chatSlice.ts - Duplicate message detected', {
-          id: messageId,
-          text: action.payload.text?.slice(0, 50) + '...',
-          timestamp: action.payload.timestamp,
-        });
+      if (
+        state.messages.some(
+          (msg) =>
+            msg.text === action.payload.text &&
+            msg.timestamp === action.payload.timestamp
+        )
+      ) {
+        console.debug('Duplicate message detected. Skipping:', action.payload);
         return;
       }
 
-      // Handle message limit
       if (state.messages.length >= MAX_MESSAGES) {
-        logger.info('store/chatSlice.ts - Message limit reached', {
-          maxMessages: MAX_MESSAGES,
-          removingMessage: state.messages[0],
-        });
+        console.debug('Max message limit reached. Removing oldest message:', state.messages[0]);
         state.messages.shift();
       }
 
       state.messages.push(action.payload);
-      logger.debug('store/chatSlice.ts - Message added successfully', {
-        totalMessages: state.messages.length,
-        lastMessageId: messageId,
-      });
+      console.debug('Message added. Updated message list:', [...state.messages]);
     },
     clearMessages: (state) => {
-      logger.debug('store/chatSlice.ts - Clearing messages', {
-        messageCount: state.messages.length,
-      });
+      console.debug('Clearing all messages.');
       state.messages = [];
     },
     setError: (state, action: PayloadAction<string>) => {
-      logger.warn('store/chatSlice.ts - Setting error state', { error: action.payload });
+      console.debug(`Setting error: "${action.payload}"`);
       state.error = action.payload;
     },
     clearError: (state) => {
-      logger.debug('store/chatSlice.ts - Clearing error state', { previousError: state.error });
+      console.debug('Clearing error.');
       state.error = null;
     },
   },
 });
 
-const wait = (ms: number) => {
-  logger.debug('store/chatSlice.ts - Waiting', { milliseconds: ms });
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const timeoutPromise = (ms: number) => {
-  logger.debug('store/chatSlice.ts - Setting timeout promise', { milliseconds: ms });
-  return new Promise<Response>((_, reject) =>
-    setTimeout(() => {
-      logger.warn('store/chatSlice.ts - Request timeout reached', { milliseconds: ms });
-      reject(new Error('Timeout'));
-    }, ms)
+const timeoutPromise = (ms: number) =>
+  new Promise<Response>((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout occurred')), ms)
   );
-};
 
 export const parseIncomingMessage = (jsonString: string) => {
-  logger.debug('store/chatSlice.ts - Parsing incoming message', {
-    messageLength: jsonString.length,
-    preview: jsonString.slice(0, 100) + '...',
-  });
-
+  console.debug('Parsing incoming message string:', jsonString);
   try {
     if (jsonString === '[DONE]') {
-      logger.debug('store/chatSlice.ts - Received DONE signal');
+      console.debug('Received termination signal "[DONE]".');
       return null;
     }
 
     const sanitizedString = he.decode(jsonString);
+    console.debug('Sanitized message string:', sanitizedString);
+
     const parsedData = JSON.parse(sanitizedString);
+    console.debug('Parsed message data:', parsedData);
 
     if (!parsedData.persona || !parsedData.message) {
-      logger.warn('store/chatSlice.ts - Invalid message format', { parsedData });
+      console.debug('Message data is incomplete. Skipping:', parsedData);
       return null;
     }
 
-    logger.debug('store/chatSlice.ts - Message parsed successfully', {
-      persona: parsedData.persona,
-      messageLength: parsedData.message.length,
-    });
     return parsedData;
   } catch (error) {
-    logger.error('store/chatSlice.ts - Message parsing failed', {
-      error,
-      jsonString,
-    });
+    console.error('Error parsing message:', error);
     return null;
+  }
+};
+
+// Add simultaneous processing of local QnA and API calls
+const simultaneousProcessing = async (
+  dispatch: AppDispatch,
+  getState: () => RootState,
+  input: string | Partial<Message>,
+  clientId: string
+) => {
+  const context = getState().chat.messages.map((msg) => msg.content).join('\n');
+
+  try {
+    const localMessages = await processLocalQnA(input.toString(), context);
+    localMessages.forEach((msg) => dispatch(addMessage(msg)));
+  } catch (error) {
+    console.error('Local QnA error:', error);
+    dispatch(setApiError('Error processing local QnA model.'));
   }
 };
 
@@ -163,215 +133,85 @@ const debouncedApiCall = debounce(
     input: string | Partial<Message>,
     clientId: string
   ) => {
-    const requestId = uuidv4();
-    logger.debug('store/chatSlice.ts - Starting debounced API call', {
-      requestId,
-      clientId,
-      inputType: typeof input,
-    });
+    console.debug('Starting API call with input:', input);
 
     const state = getState();
     if (state.api?.isLoading) {
-      logger.debug('store/chatSlice.ts - Skipping API call - already loading', { requestId });
+      console.debug('API is currently loading. Aborting request.');
       return;
     }
 
     dispatch(setLoading(true));
     dispatch(clearApiError());
 
-    const userMessageContent =
-      typeof input === 'string' ? input : input.text || '[No content provided]';
-
     const messagesArray = [
-      {
-        sender: 'user',
-        role: 'user',
-        content: userMessageContent,
-        timestamp: Date.now(),
-      },
+      { role: 'user', content: typeof input === 'string' ? input : input.text },
     ];
 
-    logger.debug('store/chatSlice.ts - Prepared request payload', {
-      requestId,
-      messageCount: messagesArray.length,
-      contentLength: userMessageContent.length,
-    });
-
     let retryCount = 0;
-    const maxRetries = 1;
+    const maxRetries = 3;
 
     while (retryCount < maxRetries) {
+      console.debug(`API call attempt ${retryCount + 1}.`);
+
       try {
-        logger.debug('store/chatSlice.ts - Processing TensorFlow prediction', {
-          requestId,
-          attempt: retryCount + 1,
-        });
-
-        const tfPredictionMessages = await processLocalQnA(input.toString(), '');
-        logger.debug('store/chatSlice.ts - TensorFlow prediction completed', {
-          requestId,
-          resultCount: tfPredictionMessages.length,
-        });
-
-        const tfPredictionText =
-          tfPredictionMessages.length > 0
-            ? tfPredictionMessages[0].text
-            : 'No answer found';
-
-        const browserName = getBrowserName();
-        
-        const botMessageFromTF: Message = {
-          id: uuidv4(),
-          sender: 'bot',
-          text: tfPredictionText,
-          role: 'bot',
-          content: tfPredictionText,
-          persona: `${browserName} TensorFlow-QnA`,
-          timestamp: Date.now(),
-        };
-        
-        logger.debug('store/chatSlice.ts - Dispatching TF prediction message', {
-          requestId,
-          messageId: botMessageFromTF.id,
-          contentLength: tfPredictionText.length,
-          browser: browserName,
-        });
-        
-        dispatch(addMessage(botMessageFromTF));
-
-        logger.debug('store/chatSlice.ts - Starting parallel API and TF processing', { requestId });
-
-        const [tfResult, apiResult] = await Promise.allSettled([
-          processLocalQnA(input.toString(), ''),
-          (async () => {
-            logger.debug('store/chatSlice.ts - Initiating API request', {
-              requestId,
-              clientId,
-              endpoint: '/api/chat',
-            });
-
-            const response = await fetch('/api/chat', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-client-id': clientId,
-              },
-              body: JSON.stringify({ messages: messagesArray }),
-            });
-
-            logger.debug('store/chatSlice.ts - API response received', {
-              requestId,
-              status: response.status,
-              headers: Object.fromEntries(response.headers),
-            });
-
-            const responseBody = await response.text();
-
-            if (!response.ok) {
-              if (response.status === 429) {
-                const retryAfter = parseInt(
-                  response.headers.get('Retry-After') || '1',
-                  10
-                );
-                logger.warn('store/chatSlice.ts - Rate limit encountered', {
-                  requestId,
-                  retryAfter,
-                  attempt: retryCount + 1,
-                });
-                await wait(retryAfter * 1000);
-                throw new ApiError(response.status, 'Retrying...');
-              }
-              throw new ApiError(response.status, responseBody);
-            }
-
-            return JSON.parse(responseBody);
-          })(),
+        const response = await Promise.race([
+          fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
+            body: JSON.stringify({ messages: messagesArray }),
+          }),
           timeoutPromise(3600000) // Timeout set to 1 hour which is 3600000 milliseconds
         ]);
 
-        logger.debug('store/chatSlice.ts - Parallel processing completed', {
-          requestId,
-          tfStatus: tfResult.status,
-          apiStatus: apiResult.status,
-        });
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          let textBuffer = '';
 
-        if (tfResult.status === 'fulfilled') {
-          const tfMessages = tfResult.value.map((answer: any) => ({
-            id: uuidv4(),
-            sender: 'bot' as 'bot',
-            text: answer.text,
-            role: 'bot' as 'bot',
-            content: answer.text,
-            persona: 'tensorflow-qna',
-            timestamp: Date.now(),
-          }));
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-          logger.debug('store/chatSlice.ts - Processing TF messages', {
-            requestId,
-            messageCount: tfMessages.length,
-          });
+            textBuffer += decoder.decode(value, { stream: true });
+            const messages = textBuffer.split('\n\n');
+            textBuffer = messages.pop() || '';
 
-          tfMessages.forEach((msg) => dispatch(addMessage(msg)));
+            for (const message of messages) {
+              if (message.startsWith('data: ')) {
+                const parsedData = parseIncomingMessage(message.substring(6).trim());
+                if (parsedData) {
+                  const botMessage: Message = {
+                    id: uuidv4(),
+                    sender: 'bot',
+                    text: parsedData.message,
+                    role: 'bot',
+                    content: parsedData.message,
+                    persona: parsedData.persona,
+                    timestamp: Date.now(),
+                  };
+                  dispatch(addMessage(botMessage));
+                }
+              }
+            }
+          }
+          reader.releaseLock();
         }
 
-        if (apiResult.status === 'fulfilled') {
-          const apiMessage: Message = {
-            id: uuidv4(),
-            sender: 'bot',
-            text: apiResult.value.answer,
-            role: 'bot',
-            content: apiResult.value.answer,
-            persona: 'api-bot',
-            timestamp: Date.now(),
-          };
-
-          logger.debug('store/chatSlice.ts - Processing API message', {
-            requestId,
-            messageId: apiMessage.id,
-            contentLength: apiMessage.text.length,
-          });
-
-          dispatch(addMessage(apiMessage));
-        }
-
-        logger.debug('store/chatSlice.ts - Request completed successfully', { requestId });
         dispatch(setLoading(false));
         return;
-
       } catch (error: any) {
-        logger.error('store/chatSlice.ts - Request error', {
-          requestId,
-          attempt: retryCount + 1,
-          error: error.message,
-          status: error instanceof ApiError ? error.status : undefined,
-          stack: error.stack,
-        });
-
         if (error instanceof ApiError && error.status === 429) {
+          const waitTime = Math.pow(2, retryCount) * 1000;
+          await wait(waitTime);
           retryCount++;
-          const retryDelay = Math.pow(2, retryCount) * 1000;
-          logger.info('store/chatSlice.ts - Scheduling retry', {
-            requestId,
-            attempt: retryCount,
-            delay: retryDelay,
-          });
-          await wait(retryDelay);
           continue;
         }
-
-        dispatch(setApiError(error.message || 'An unknown error occurred'));
+        dispatch(setApiError(error.message || 'Unknown error occurred'));
         dispatch(setLoading(false));
         return;
       }
     }
-
-    logger.error('store/chatSlice.ts - Max retries exceeded', {
-      requestId,
-      maxRetries,
-      totalAttempts: retryCount,
-    });
-    dispatch(setApiError('Failed to get a response after multiple attempts.'));
-    dispatch(setLoading(false));
   },
   1000
 );
@@ -379,14 +219,6 @@ const debouncedApiCall = debounce(
 export const sendMessage =
   (input: string | Partial<Message>) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
-    const messageId = uuidv4();
-    logger.debug('store/chatSlice.ts - Initiating message send', {
-      messageId,
-      inputType: typeof input,
-    });
-
-    dispatch(clearError());
-
     const clientId = localStorage.getItem('clientId') || uuidv4();
     localStorage.setItem('clientId', clientId);
 
@@ -394,34 +226,15 @@ export const sendMessage =
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
       text: isMessage(input) ? input.text || '' : input.toString(),
-      role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(),
-      hidden: isMessage(input) ? input.hidden || false : false,
-      persona: isMessage(input) ? input.persona || '' : '',
+      role: 'user',
+      content: input.toString(),
       timestamp: Date.now(),
     };
 
-    logger.debug('store/chatSlice.ts - Created user message', {
-      messageId: userMessage.id,
-      sender: userMessage.sender,
-      contentLength: userMessage.text.length,
-    });
-
     dispatch(addMessage(userMessage));
 
-    try {
-      logger.debug('store/chatSlice.ts - Calling debounced API', {
-        messageId,
-        clientId,
-      });
-      await debouncedApiCall(dispatch, getState, input, clientId);
-    } catch (error) {
-      logger.error('store/chatSlice.ts - Message send failed', {
-        messageId,
-        error,
-      });
-      dispatch(setApiError('Failed to send message.'));
-    }
+    await simultaneousProcessing(dispatch, getState, input, clientId);
+    await debouncedApiCall(dispatch, getState, input, clientId);
   };
 
 export const { addMessage, clearMessages, setError, clearError } =
