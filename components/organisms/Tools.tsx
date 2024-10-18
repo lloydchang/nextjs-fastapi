@@ -71,7 +71,7 @@ const Tools: React.FC = () => {
         console.debug(`Matching button found: ${matchingButton}`);
         setHighlightedButton(matchingButton);
 
-        const buttonText = `***${matchingButton || ''}***`;
+        const buttonText = `${matchingButton || ''}`;
         const blurbText = `${buttonBlurb[matchingButton].blurb || ''}`;
         const url = buttonBlurb[matchingButton].url || '';
 
