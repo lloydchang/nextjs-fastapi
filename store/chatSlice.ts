@@ -124,7 +124,7 @@ const debouncedApiCall = debounce(
 
         const botMessageFromTF: Message = {
           id: uuidv4(),
-          sender: 'bot-tf',
+          sender: 'bot',
           text: tfPrediction,
           role: 'bot',
           content: tfPrediction,
