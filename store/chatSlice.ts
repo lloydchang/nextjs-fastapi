@@ -39,13 +39,14 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       console.debug('Adding message:', action.payload);
 
-      if (
-        state.messages.some(
-          (msg) =>
-            msg.text === action.payload.text &&
-            msg.timestamp === action.payload.timestamp
-        )
-      ) {
+      const isDuplicate = state.messages.some(
+        (msg) =>
+          msg.id === action.payload.id ||
+          (msg.text === action.payload.text &&
+            msg.timestamp === action.payload.timestamp)
+      );
+
+      if (isDuplicate) {
         console.debug('Duplicate message detected, skipping:', action.payload);
         return;
       }
@@ -56,7 +57,7 @@ const chatSlice = createSlice({
       }
 
       state.messages.push(action.payload);
-      console.log('Messages in state:', [...state.messages]); // Added console.log to inspect messages
+      console.log('Messages in state:', [...state.messages]); // Inspect message list
     },
     clearMessages: (state) => {
       console.debug('Clearing all messages');
@@ -203,9 +204,9 @@ export const sendMessage =
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
+      text: isMessage(input) ? input.text || '' : input.toString(),
       role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(), // Use toString() as fallback
+      content: isMessage(input) ? input.text || '' : input.toString(),
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
