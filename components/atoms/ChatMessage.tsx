@@ -63,7 +63,7 @@ const convertPlainUrlsToMarkdownLinks = (text: string) => {
 
 // Render persona with Markdown support
 const renderPersonaLabel = (persona: string, personaColor: string) => (
-  <div className={styles.modalPersonaLabel} style={{ color: personaColor }}>
+  <div className={styles.modalPersonaLabel} style={{ color: personaColor, fontWeight: 'bold' }}>
     <ReactMarkdown remarkPlugins={[remarkGfm]}>{persona}</ReactMarkdown>
   </div>
 );
