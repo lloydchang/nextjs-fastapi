@@ -92,10 +92,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const modalId = `modal-${text}`;
   const isModalOpen = activeModal === modalId;
 
+  // Updated handleOpenModal to prevent opening modal in full-screen mode
   const handleOpenModal = useCallback(() => {
-    openModal(modalId);
-    console.debug('Opening modal for message:', { text, sender, role });
-  }, [modalId, openModal, text, sender, role]);
+    if (!isFullScreen) { // Prevent modal opening when in full-screen
+      openModal(modalId);
+      console.debug('Opening modal for message:', { text, sender, role });
+    }
+  }, [isFullScreen, modalId, openModal, text, sender, role]);
 
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
@@ -118,15 +121,17 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [isModalOpen, closeModal]);
 
+  // Updated handleKeyPress to prevent modal opening via keyboard in full-screen mode
   const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if ((e.key === 'Enter' || e.key === ' ') && !isFullScreen) {
       handleOpenModal();
     }
   };
 
   return (
     <>
-      {isModalOpen && (
+      {/* Conditional Rendering: Modal is not rendered in full-screen mode */}
+      {!isFullScreen && isModalOpen && (
         <div
           className={styles.modalBackdrop}
           onClick={closeModal}
@@ -160,12 +165,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
         } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => !isFullScreen && setShowFullMessage(true)}
-        onMouseLeave={() => setShowFullMessage(false)}
-        onClick={handleOpenModal}
+        onMouseEnter={() => !isFullScreen && setShowFullMessage(true)} // Prevent hover effect in full-screen
+        onMouseLeave={() => !isFullScreen && setShowFullMessage(false)} // Prevent hover effect in full-screen
+        onClick={handleOpenModal} // Handle click only if not in full-screen
         role="button"
         tabIndex={0}
-        onKeyPress={handleKeyPress}
+        onKeyPress={handleKeyPress} // Handle key press only if not in full-screen
         aria-expanded={isModalOpen}
       >
         {persona && (
@@ -178,6 +183,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {renderPersonaLabel(persona, personaColor)}
           </div>
         )}
+        {/* Conditionally render the hovered text only if not in full-screen */}
         {!isFullScreen && showFullMessage && (
           <div className={styles.textHovered}>
             {renderMarkdown(processedText)}
