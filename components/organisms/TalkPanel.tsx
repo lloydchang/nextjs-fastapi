@@ -40,8 +40,8 @@ const TalkPanel: React.FC = () => {
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Move talkRefs inside the component to comply with hook rules
-  const talkRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+  // Use a map to store refs for each talk
+  const talkRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
@@ -169,10 +169,13 @@ const TalkPanel: React.FC = () => {
     if (selectedTalk) {
       const selectedRef = talkRefs.current.get(selectedTalk.title);
       if (selectedRef) {
-        selectedRef.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
+        // Ensure scrolling only occurs after the DOM is ready
+        setTimeout(() => {
+          selectedRef.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }, 0);
       }
     }
   }, [selectedTalk]);
