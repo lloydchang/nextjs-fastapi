@@ -108,16 +108,6 @@ export const processLocalQnA = async (
         console.debug('[TensorFlowQnA] Running model inference...', { input, context });
         return model.findAnswers(input, context);
       })(),
-      fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: input, context }),
-      }).then(async (res) => {
-        if (!res.ok) {
-          throw new Error(`API Error: ${res.statusText}`);
-        }
-        return res.json();
-      }),
     ]);
 
     const messages: Message[] = [];
