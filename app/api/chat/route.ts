@@ -11,8 +11,9 @@ import { Mutex } from 'async-mutex';
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
 
 const config: AppConfig = getConfig();
+
 const MAX_PROMPT_LENGTH = 128000;
-const sessionTimeout = 60 * 60 * 1000;
+const sessionTimeout = 60 * 60 * 1000; // 1-hour timeout
 const maxContextMessages = 100;
 
 const clientMutexes = new Map<string, Mutex>();
@@ -28,10 +29,7 @@ export async function POST(request: NextRequest) {
   const { limited, retryAfter } = checkRateLimit(clientId);
   if (limited) {
     logger.warn(`Rate limit exceeded for clientId: ${clientId}, RequestId: ${requestId}`);
-    return NextResponse.json({ error: 'Too Many Requests' }, {
-      status: 429,
-      headers: { 'Retry-After': `${retryAfter}` },
-    });
+    return NextResponse.json({ error: 'Too Many Requests' }, { status: 429, headers: { 'Retry-After': `${retryAfter}` } });
   }
 
   let mutex = clientMutexes.get(clientId);
@@ -73,7 +71,6 @@ export async function POST(request: NextRequest) {
 
       const stream = new ReadableStream({
         async start(controller) {
-          logger.silly(`Stream started for clientId: ${clientId}, RequestId: ${requestId}`);
           const botFunctions: BotFunction[] = [];
           addBotFunctions(botFunctions, config);
 
@@ -85,10 +82,7 @@ export async function POST(request: NextRequest) {
                     try {
                       const botResponse = await bot.generate(context);
                       if (botResponse) {
-                        if (!streamClosed) {
-                          controller.enqueue(`data: ${JSON.stringify({ persona: bot.persona, message: botResponse })}\n\n`);
-                          logger.silly(`Stream data sent for bot ${bot.persona}.`);
-                        }
+                        controller.enqueue(`data: ${JSON.stringify({ persona: bot.persona, message: botResponse })}\n\n`);
                         context.push({ role: 'bot', content: botResponse, persona: bot.persona });
                         logger.silly(`Bot response added for ${bot.persona}`);
                         return true;
@@ -103,25 +97,22 @@ export async function POST(request: NextRequest) {
                   const responses = await Promise.all(botPromises);
                   const hasResponse = responses.includes(true);
 
-                  if (!hasResponse) {
-                    logger.silly(`No bot responded for clientId: ${clientId}`);
-                  }
+                  if (!hasResponse) logger.silly(`No bot responded for clientId: ${clientId}`);
 
                   if (!streamClosed) {
                     controller.enqueue('data: [DONE]\n\n');
-                    logger.silly(`Stream [DONE] sent for clientId: ${clientId}.`);
                     controller.close();
                     streamClosed = true;
+                    logger.silly(`Stream closed for clientId: ${clientId}`);
                   }
                 })(),
                 new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Timeout')), BOT_PROCESSING_TIMEOUT)),
               ]);
             } catch (error) {
-              logger.error(`Bot processing timeout or error: ${error}`);
+              logger.error(`Bot processing timeout: ${error}`);
               if (!streamClosed) {
                 controller.enqueue(`data: ${JSON.stringify({ error: 'Bot processing timed out.' })}\n\n`);
                 controller.enqueue('data: [DONE]\n\n');
-                logger.silly(`Stream [DONE] sent after timeout for clientId: ${clientId}.`);
                 controller.close();
                 streamClosed = true;
               }
@@ -130,42 +121,14 @@ export async function POST(request: NextRequest) {
 
           processBots().catch((error) => {
             logger.error(`Error streaming bot interaction: ${error}`);
-            if (!streamClosed) {
-              controller.error(error);
-            }
+            if (!streamClosed) controller.error(error);
           });
-
-          // Heartbeat to keep the stream alive
-          const heartbeatInterval = setInterval(() => {
-            if (!streamClosed) {
-              controller.enqueue('data: {"heartbeat": true}\n\n');
-              logger.silly('[Stream] Heartbeat sent.');
-            }
-          }, 5000);
-
-          controller.closed.then(() => {
-            clearInterval(heartbeatInterval);
-            logger.info('[Stream] Controller closed.');
-          }).catch((error) => {
-            logger.error('[Stream] Controller close error:', error);
-          });
-        },
-        cancel(reason) {
-          logger.warn(`Stream cancelled for clientId: ${clientId}, RequestId: ${requestId}. Reason: ${reason}`);
-          streamClosed = true;
         },
       });
 
-      logger.silly(`Stream prepared for clientId: ${clientId}, RequestId: ${requestId}`);
-      return new NextResponse(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-        },
-      });
+      return new NextResponse(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' } });
     } catch (error) {
-      logger.error(`Error handling POST request for clientId: ${clientId}, RequestId: ${requestId}: ${error}`);
+      logger.error(`Error handling POST request: ${error}`);
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   });

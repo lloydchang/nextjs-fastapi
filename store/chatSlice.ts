@@ -92,9 +92,9 @@ const timeoutPromise = (ms: number) =>
 export const parseIncomingMessage = (jsonString: string) => {
   console.debug('[parseIncomingMessage] Raw JSON:', jsonString);
   try {
-    if (jsonString.trim() === '[DONE]') {
+    if (jsonString === '[DONE]') {
       console.debug('[parseIncomingMessage] Received [DONE] signal.');
-      return { type: 'DONE' };
+      return null;
     }
 
     const sanitizedString = he.decode(jsonString);
@@ -168,12 +168,7 @@ const debouncedApiCall = debounce(
           try {
             while (true) {
               const { value, done } = await reader.read();
-              console.debug('[debouncedApiCall] Chunk read:', value ? decoder.decode(value) : '(none)', 'Done:', done);
-
-              if (done) {
-                console.info('[debouncedApiCall] Stream completed.');
-                break;
-              }
+              if (done) break;
 
               textBuffer += decoder.decode(value, { stream: true });
               const messages = textBuffer.split('\n\n');
