@@ -41,7 +41,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ isFullScreen }) => {
     <div className={styles.messagesContainer} ref={messagesContainerRef}>
       {messages
         .filter((msg) => msg.hidden === false || msg.hidden === undefined) // Show non-hidden or undefined messages
-        .map((msg: Message) => {
+        .map((msg: Message, index: number) => {
+          const isLastMessage = index === messages.length - 1; // Determine if this is the last message
           console.debug('Rendering message:', msg); // Log each message being rendered
           return (
             <ChatMessage
@@ -55,6 +56,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ isFullScreen }) => {
               content={msg.content} // Add the missing content property
               isFullScreen={isFullScreen} // Pass the isFullScreen prop to each ChatMessage
               timestamp={msg.timestamp} // Pass the timestamp prop to ChatMessage
+              isLastMessage={isLastMessage} // Add the missing isLastMessage prop
             />
           );
         })}
