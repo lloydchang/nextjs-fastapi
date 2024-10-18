@@ -115,7 +115,7 @@
   transform: translateY(-50%);
   width: 30px;
   height: 30px;
-  background-color: #0288d1;
+  background-color: #eb0028;
   clip-path: polygon(100% 50%, 0% 0%, 30% 50%, 0% 100%);
   animation: flash 2s infinite; /* Slower flash animation */
   transition: top 0.8s ease-in-out, left 0.8s ease-in-out; /* Smooth arrow movement */
