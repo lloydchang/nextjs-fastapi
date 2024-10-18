@@ -1,7 +1,7 @@
 # File: .gitignore
 
 wrangler.toml
-
+.worker-next
 .DS_Store
 
 # Ignore Google Cloud service account key files in any directory
