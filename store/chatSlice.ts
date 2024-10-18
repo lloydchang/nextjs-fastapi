@@ -9,6 +9,7 @@ import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
 import { processLocalQnA } from '../utils/tensorflowQnA';
 
+// ChatState interface definition
 interface ChatState {
   messages: Message[];
   error: string | null;
@@ -21,6 +22,7 @@ const initialState: ChatState = {
   error: null,
 };
 
+// Custom error class for API errors
 class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -28,11 +30,12 @@ class ApiError extends Error {
   }
 }
 
-// Type guard to check if the input is of type Partial<Message>
+// Type guard function to validate if input is Partial<Message>
 function isMessage(input: any): input is Partial<Message> {
   return typeof input === 'object' && input !== null && 'sender' in input;
 }
 
+// Redux slice definition
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
@@ -57,7 +60,7 @@ const chatSlice = createSlice({
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
+      console.debug('Updated message list:', [...state.messages]);
     },
     clearMessages: (state) => {
       console.debug('Clearing all messages');
@@ -97,7 +100,6 @@ export const parseIncomingMessage = (jsonString: string) => {
   }
 };
 
-// Debounced API Call with TensorFlow.js Integration
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -111,22 +113,31 @@ const debouncedApiCall = debounce(
     dispatch(setLoading(true));
     dispatch(clearApiError());
 
+    const userMessageContent =
+      typeof input === 'string' ? input : input.text || '[No content provided]';
+
     const messagesArray = [
-      { role: 'user', content: typeof input === 'string' ? input : input.text },
+      {
+        sender: 'user',
+        role: 'user',
+        content: userMessageContent,
+        timestamp: Date.now(),
+      },
     ];
+
+    console.debug('Prepared API request payload:', JSON.stringify({ messages: messagesArray }, null, 2));
+
     let retryCount = 0;
     const maxRetries = 3;
 
     while (retryCount < maxRetries) {
       try {
-        const context = '';
-        const tfPrediction = await processLocalQnA(input.toString(), context);
         const tfPredictionMessages = await processLocalQnA(input.toString(), '');
+        const tfPredictionText =
+          tfPredictionMessages.length > 0
+            ? tfPredictionMessages[0].text
+            : 'No answer found';
 
-        const tfPredictionText = tfPredictionMessages.length > 0 
-          ? tfPredictionMessages[0].text 
-          : 'No answer found';
-        
         const botMessageFromTF: Message = {
           id: uuidv4(),
           sender: 'bot',
@@ -136,7 +147,6 @@ const debouncedApiCall = debounce(
           persona: 'tf-model',
           timestamp: Date.now(),
         };
-        
         dispatch(addMessage(botMessageFromTF));
 
         const [tfResult, apiResult] = await Promise.allSettled([
@@ -144,67 +154,36 @@ const debouncedApiCall = debounce(
           (async () => {
             const response = await fetch('/api/chat', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
+              headers: {
+                'Content-Type': 'application/json',
+                'x-client-id': clientId,
+              },
               body: JSON.stringify({ messages: messagesArray }),
             });
 
+            console.debug('API Response Status:', response.status);
+
+            const responseBody = await response.text();
+            console.debug('API Response Body:', responseBody);
+
             if (!response.ok) {
               if (response.status === 429) {
-                const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+                const retryAfter = parseInt(
+                  response.headers.get('Retry-After') || '1',
+                  10
+                );
                 console.debug(`Rate limit hit, retrying after ${retryAfter} seconds...`);
                 await wait(retryAfter * 1000);
                 throw new ApiError(response.status, 'Retrying...');
               }
-              throw new ApiError(response.status, response.statusText);
+              throw new ApiError(response.status, responseBody);
             }
 
-            const reader = response.body?.getReader();
-            if (!reader) {
-              throw new Error('Response body is not readable');
-            }
-
-            const decoder = new TextDecoder();
-            let textBuffer = '';
-
-            try {
-              while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                textBuffer += decoder.decode(value, { stream: true });
-                const messages = textBuffer.split('\n\n');
-                textBuffer = messages.pop() || '';
-
-                for (const message of messages) {
-                  if (message.startsWith('data: ')) {
-                    const parsedData = parseIncomingMessage(
-                      message.substring(6).trim()
-                    );
-                    if (parsedData) {
-                      const botMessage: Message = {
-                        id: uuidv4(),
-                        sender: 'bot',
-                        text: parsedData.message,
-                        role: 'bot',
-                        content: parsedData.message,
-                        persona: parsedData.persona,
-                        timestamp: Date.now(),
-                      };
-                      dispatch(addMessage(botMessage));
-                    }
-                  }
-                }
-              }
-            } finally {
-              reader.releaseLock();
-            }
-
-            return response.json();
+            return JSON.parse(responseBody);
           })(),
           timeoutPromise(10000),
         ]);
 
-        // Handle TensorFlow QnA result if fulfilled
         if (tfResult.status === 'fulfilled') {
           const tfMessages = tfResult.value.map((answer: any) => ({
             id: uuidv4(),
@@ -218,7 +197,6 @@ const debouncedApiCall = debounce(
           tfMessages.forEach((msg) => dispatch(addMessage(msg)));
         }
 
-        // Handle API result if fulfilled
         if (apiResult.status === 'fulfilled') {
           const apiMessage: Message = {
             id: uuidv4(),
@@ -236,6 +214,7 @@ const debouncedApiCall = debounce(
         return;
 
       } catch (error: any) {
+        console.error('Error during API or TensorFlow.js call:', error);
         if (error instanceof ApiError && error.status === 429) {
           retryCount++;
           const retryDelay = Math.pow(2, retryCount) * 1000;
@@ -243,7 +222,6 @@ const debouncedApiCall = debounce(
           await wait(retryDelay);
           continue;
         }
-        console.error('Error during API or TensorFlow.js call:', error);
         dispatch(setApiError(error.message || 'An unknown error occurred'));
         dispatch(setLoading(false));
         return;
@@ -268,9 +246,9 @@ export const sendMessage =
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
+      text: isMessage(input) ? input.text || '' : input.toString(),
       role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(), // Use toString() as fallback
+      content: isMessage(input) ? input.text || '' : input.toString(),
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
