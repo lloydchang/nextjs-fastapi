@@ -10,13 +10,10 @@ import logger from 'app/api/chat/utils/logger';
 import { Mutex } from 'async-mutex';
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
 
-// Ensure all imports are correct
-import { getMessageContent } from 'app/api/chat/utils/messageUtils';
-
 const config: AppConfig = getConfig();
 const MAX_PROMPT_LENGTH = 128000;
-const sessionTimeout = 60 * 60 * 1000; // 1 hour session timeout
-const maxContextMessages = 100; // Maximum number of context messages to retain
+const sessionTimeout = 60 * 60 * 1000;
+const maxContextMessages = 100;
 
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
@@ -71,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       logger.silly(`Updated context size for clientId: ${clientId}: ${context.length}`);
 
-      const BOT_PROCESSING_TIMEOUT = 9500; // 9.5-second timeout for bot responses
+      const BOT_PROCESSING_TIMEOUT = 9500;
       let streamClosed = false;
 
       const stream = new ReadableStream({
@@ -83,17 +80,62 @@ export async function POST(request: NextRequest) {
           async function processBots() {
             try {
               await Promise.race([
-                executeBotFunctions(botFunctions, context, controller),
-                new Promise<void>((_, reject) =>
-                  setTimeout(() => reject(new Error('Timeout')), BOT_PROCESSING_TIMEOUT)
-                ),
+                (async () => {
+                  const botPromises = botFunctions.map(async (bot) => {
+                    try {
+                      const botResponse = await bot.generate(context);
+                      if (botResponse) {
+                        if (!streamClosed) {
+                          controller.enqueue(`data: ${JSON.stringify({ persona: bot.persona, message: botResponse })}\n\n`);
+                          logger.silly(`Stream data sent for bot ${bot.persona}.`);
+                        }
+                        context.push({ role: 'bot', content: botResponse, persona: bot.persona });
+                        logger.silly(`Bot response added for ${bot.persona}`);
+                        return true;
+                      }
+                      return false;
+                    } catch (error) {
+                      logger.error(`Error processing bot ${bot.persona}: ${error}`);
+                      return false;
+                    }
+                  });
+
+                  const responses = await Promise.all(botPromises);
+                  const hasResponse = responses.includes(true);
+
+                  if (!hasResponse) {
+                    logger.silly(`No bot responded for clientId: ${clientId}`);
+                  }
+
+                  if (!streamClosed) {
+                    controller.enqueue('data: [DONE]\n\n');
+                    logger.silly(`Stream [DONE] sent for clientId: ${clientId}.`);
+                    controller.close();
+                    streamClosed = true;
+                  }
+                })(),
+                new Promise<void>((_, reject) => setTimeout(() => reject(new Error('Timeout')), BOT_PROCESSING_TIMEOUT)),
               ]);
             } catch (error) {
-              handleStreamError(error, controller);
+              logger.error(`Bot processing timeout or error: ${error}`);
+              if (!streamClosed) {
+                controller.enqueue(`data: ${JSON.stringify({ error: 'Bot processing timed out.' })}\n\n`);
+                controller.enqueue('data: [DONE]\n\n');
+                logger.silly(`Stream [DONE] sent after timeout for clientId: ${clientId}.`);
+                controller.close();
+                streamClosed = true;
+              }
             }
           }
 
-          // Keep the stream alive with a heartbeat every 5 seconds
+          processBots().catch((error) => {
+            logger.error(`Error streaming bot interaction: ${error}`);
+            if (!streamClosed) {
+              controller.error(error);
+            }
+          });
+
+          // Heartbeat to keep the stream alive
           const heartbeatInterval = setInterval(() => {
             if (!streamClosed) {
               controller.enqueue('data: {"heartbeat": true}\n\n');
@@ -101,14 +143,12 @@ export async function POST(request: NextRequest) {
             }
           }, 5000);
 
-          controller.closed.finally(() => {
+          controller.closed.then(() => {
             clearInterval(heartbeatInterval);
             logger.info('[Stream] Controller closed.');
           }).catch((error) => {
             logger.error('[Stream] Controller close error:', error);
           });
-
-          processBots();
         },
         cancel(reason) {
           logger.warn(`Stream cancelled for clientId: ${clientId}, RequestId: ${requestId}. Reason: ${reason}`);
@@ -129,41 +169,4 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   });
-}
-
-async function executeBotFunctions(
-  botFunctions: BotFunction[],
-  context: UserPrompt[],
-  controller: ReadableStreamDefaultController
-) {
-  const responses = await Promise.all(
-    botFunctions.map(async (bot) => {
-      try {
-        const botResponse = await bot.generate(context);
-        if (botResponse) {
-          const message = getMessageContent(botResponse);
-          controller.enqueue(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
-          logger.silly(`Stream data sent for bot ${bot.persona}.`);
-          context.push({ role: 'bot', content: message, persona: bot.persona });
-          return true;
-        }
-      } catch (error) {
-        logger.error(`Error processing bot ${bot.persona}: ${error}`);
-      }
-      return false;
-    })
-  );
-
-  if (!responses.includes(true)) {
-    logger.silly('No bot responded.');
-    controller.enqueue('data: [DONE]\n\n');
-    controller.close();
-  }
-}
-
-function handleStreamError(error: any, controller: ReadableStreamDefaultController) {
-  logger.error(`Stream error: ${error}`);
-  controller.enqueue(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-  controller.enqueue('data: [DONE]\n\n');
-  controller.close();
 }
