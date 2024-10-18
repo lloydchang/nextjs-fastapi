@@ -1,6 +1,6 @@
 // File: components/organisms/Tools.tsx
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from 'store/store';
 import { addMessage } from 'store/chatSlice';
@@ -11,16 +11,16 @@ import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique ids
 const Tools: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [highlightedButton, setHighlightedButton] = useState<string>(
     Object.keys(buttonBlurb)[0]
   );
 
   const dragItem = useRef<HTMLDivElement | null>(null);
   const dragStartPosition = useRef({ x: 0, y: 0 });
+  const lastNudgeMessageRef = useRef<string | null>(null);
 
   const messages = useSelector((state: RootState) => state.chat.messages);
-  const lastAdMessageRef = useRef<string | null>(null); // Store the last ad message
 
   const openInNewTab = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -29,43 +29,40 @@ const Tools: React.FC = () => {
   const escapeRegExp = (string: string) =>
     string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const findMatchingButton = (message: string): string => {
-    message = message.toLowerCase();
+  const findMatchingButton = useCallback(
+    (message: string): string => {
+      const lowerMessage = message.toLowerCase();
 
-    const matchingButtonName = Object.keys(buttonBlurb).find((buttonName) => {
-      const regex = new RegExp(`\\b${escapeRegExp(buttonName.toLowerCase())}\\b`, 'i');
-      return regex.test(message);
-    });
+      const matchingButtonName = Object.keys(buttonBlurb).find((buttonName) => {
+        const regex = new RegExp(`\\b${escapeRegExp(buttonName.toLowerCase())}\\b`, 'i');
+        return regex.test(lowerMessage);
+      });
 
-    if (matchingButtonName) {
-      return matchingButtonName;
-    }
+      if (matchingButtonName) return matchingButtonName;
 
-    for (const [buttonName, { blurb }] of Object.entries(buttonBlurb)) {
-      const regex = new RegExp(`\\b${escapeRegExp(message)}\\b`, 'i');
-      if (regex.test(blurb.toLowerCase())) {
-        return buttonName;
+      for (const [buttonName, { blurb }] of Object.entries(buttonBlurb)) {
+        const regex = new RegExp(`\\b${escapeRegExp(lowerMessage)}\\b`, 'i');
+        if (regex.test(blurb.toLowerCase())) return buttonName;
       }
-    }
 
-    return Object.keys(buttonBlurb)[0];
-  };
+      return Object.keys(buttonBlurb)[0];
+    },
+    []
+  );
 
-  const getLatestMessage = () => {
+  const getLatestMessage = useMemo(() => {
     const botMessages = messages.filter((msg) => msg.sender === 'bot');
     const userMessages = messages.filter((msg) => msg.sender === 'user');
 
-    const latestBotMessage = botMessages.length > 0 ? botMessages[botMessages.length - 1].text : '';
-    const latestUserMessage = userMessages.length > 0 ? userMessages[userMessages.length - 1].text : '';
+    const latestBotMessage = botMessages.at(-1)?.text || '';
+    const latestUserMessage = userMessages.at(-1)?.text || '';
 
     return latestUserMessage || latestBotMessage;
-  };
+  }, [messages]);
 
   useEffect(() => {
-    const latestMessage = getLatestMessage();
-
-    if (latestMessage) {
-      const matchingButton = findMatchingButton(latestMessage);
+    if (getLatestMessage) {
+      const matchingButton = findMatchingButton(getLatestMessage);
 
       if (matchingButton !== highlightedButton) {
         console.debug(`Matching button found: ${matchingButton}`);
@@ -77,8 +74,7 @@ const Tools: React.FC = () => {
 
         const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
 
-        // Check if the new message is the same as the last ad message
-        if (lastAdMessageRef.current !== messageText) {
+        if (lastNudgeMessageRef.current !== messageText) {
           dispatch(
             addMessage({
               id: uuidv4(),
@@ -91,29 +87,35 @@ const Tools: React.FC = () => {
               hidden: false,
             })
           );
-          lastAdMessageRef.current = messageText; // Update the last ad message
+          lastNudgeMessageRef.current = messageText;
         }
       }
     }
-  }, [messages, dispatch, highlightedButton]);
+  }, [getLatestMessage, dispatch, highlightedButton, findMatchingButton]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    dragItem.current = e.currentTarget as HTMLDivElement;
-    dragStartPosition.current = { x: e.clientX - position.x, y: e.clientY - position.y };
-  };
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      setIsDragging(true);
+      dragItem.current = e.currentTarget as HTMLDivElement;
+      dragStartPosition.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+    },
+    [position]
+  );
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging) {
-      const newPosition = {
-        x: e.clientX - dragStartPosition.current.x,
-        y: e.clientY - dragStartPosition.current.y,
-      };
-      setPosition(newPosition);
-    }
-  };
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (isDragging) {
+        const newPosition = {
+          x: e.clientX - dragStartPosition.current.x,
+          y: e.clientY - dragStartPosition.current.y,
+        };
+        setPosition(newPosition);
+      }
+    },
+    [isDragging]
+  );
 
-  const handleMouseUp = () => setIsDragging(false);
+  const handleMouseUp = useCallback(() => setIsDragging(false), []);
 
   useEffect(() => {
     if (isDragging) {
@@ -123,11 +125,12 @@ const Tools: React.FC = () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     }
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   return (
     <div
