@@ -39,7 +39,7 @@ const clientContexts = new Map<string, any[]>();
 
 // Add monitoring for global state
 setInterval(() => {
-  logger.info('app/api/chat/route.ts - app/api/chat/route.tsGlobal state metrics', {
+  logger.info('app/api/chat/route.ts - Global state metrics', {
     activeMutexes: clientMutexes.size,
     activeContexts: clientContexts.size,
     activeInteractions: lastInteractionTimes.size,
