@@ -7,7 +7,6 @@ import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
-import { runModelPrediction } from './modelService'; // Import the TensorFlow.js prediction function
 
 interface ChatState {
   messages: Message[];
@@ -97,7 +96,6 @@ export const parseIncomingMessage = (jsonString: string) => {
   }
 };
 
-// Debounced API Call with TensorFlow.js Integration
 const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
@@ -119,21 +117,6 @@ const debouncedApiCall = debounce(
 
     while (retryCount < maxRetries) {
       try {
-        // Run TensorFlow.js model prediction
-        const tfPrediction = await runModelPrediction(input.toString());
-
-        const botMessageFromTF: Message = {
-          id: uuidv4(),
-          sender: 'bot',
-          text: tfPrediction,
-          role: 'bot',
-          content: tfPrediction,
-          persona: 'tf-model',
-          timestamp: Date.now(),
-        };
-        dispatch(addMessage(botMessageFromTF));
-
-        // Perform API call to /api/chat
         const response = await Promise.race([
           fetch('/api/chat', {
             method: 'POST',
@@ -146,10 +129,9 @@ const debouncedApiCall = debounce(
         if (!response.ok) {
           if (response.status === 429) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-            console.debug(`Rate limit hit, retrying after ${retryAfter} seconds...`);
             await wait(retryAfter * 1000);
             retryCount++;
-            continue; // Retry the API call
+            continue;
           }
           throw new ApiError(response.status, response.statusText);
         }
@@ -194,25 +176,18 @@ const debouncedApiCall = debounce(
         }
 
         dispatch(setLoading(false));
-        return; // Exit the retry loop on success
+        return;
       } catch (error: any) {
         if (error instanceof ApiError && error.status === 429) {
           retryCount++;
-          const retryDelay = Math.pow(2, retryCount) * 1000;
-          console.debug(`Retrying API call, attempt ${retryCount} after ${retryDelay}ms...`);
-          await wait(retryDelay); // Exponential backoff
+          await wait(Math.pow(2, retryCount) * 1000);
           continue;
         }
-        console.error('Error during API or TensorFlow.js call:', error);
         dispatch(setApiError(error.message || 'An unknown error occurred'));
         dispatch(setLoading(false));
         return;
       }
     }
-
-    console.error('Max retries reached. Giving up.');
-    dispatch(setApiError('Failed to get a response after multiple attempts.'));
-    dispatch(setLoading(false));
   },
   1000
 );
