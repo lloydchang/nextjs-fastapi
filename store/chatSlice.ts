@@ -56,7 +56,7 @@ const chatSlice = createSlice({
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', state.messages);
+      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
     },
     clearMessages: (state) => {
       console.debug('Clearing all messages');
@@ -75,7 +75,9 @@ const chatSlice = createSlice({
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const timeoutPromise = (ms: number) =>
-  new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
+  new Promise<Response>((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout')), ms)
+  );
 
 export const parseIncomingMessage = (jsonString: string) => {
   try {
@@ -107,7 +109,9 @@ const debouncedApiCall = debounce(
     dispatch(setLoading(true));
     dispatch(clearApiError());
 
-    const messagesArray = [{ role: 'user', content: typeof input === 'string' ? input : input.text }];
+    const messagesArray = [
+      { role: 'user', content: typeof input === 'string' ? input : input.text },
+    ];
     let retryCount = 0;
     const maxRetries = 3;
 
@@ -148,7 +152,9 @@ const debouncedApiCall = debounce(
 
               for (const message of messages) {
                 if (message.startsWith('data: ')) {
-                  const parsedData = parseIncomingMessage(message.substring(6).trim());
+                  const parsedData = parseIncomingMessage(
+                    message.substring(6).trim()
+                  );
                   if (parsedData) {
                     const botMessage: Message = {
                       id: uuidv4(),
@@ -157,7 +163,7 @@ const debouncedApiCall = debounce(
                       role: 'bot',
                       content: parsedData.message,
                       persona: parsedData.persona,
-                      timestamp: Date.now(), // Fixed: always a number
+                      timestamp: Date.now(),
                     };
                     dispatch(addMessage(botMessage));
                   }
@@ -186,33 +192,35 @@ const debouncedApiCall = debounce(
   1000
 );
 
-export const sendMessage = (
-  input: string | Partial<Message>
-) => async (dispatch: AppDispatch, getState: () => RootState) => {
-  dispatch(clearError());
+export const sendMessage =
+  (input: string | Partial<Message>) =>
+  async (dispatch: AppDispatch, getState: () => RootState) => {
+    dispatch(clearError());
 
-  const clientId = localStorage.getItem('clientId') || uuidv4();
-  localStorage.setItem('clientId', clientId);
+    const clientId = localStorage.getItem('clientId') || uuidv4();
+    localStorage.setItem('clientId', clientId);
 
-  const userMessage: Message = {
-    id: uuidv4() || '',
-    sender: isMessage(input) ? input.sender || 'user' : 'user', // Valid default sender
-    text: isMessage(input) ? input.text || '' : '',
-    role: isMessage(input) ? input.role || 'user' : 'user', // Valid default role
-    content: isMessage(input) ? input.text || '' : '',
-    hidden: isMessage(input) ? input.hidden || false : false,
-    persona: isMessage(input) ? input.persona || '' : '',
-    timestamp: Date.now(), // Fixed: always a number
+    const userMessage: Message = {
+      id: uuidv4(),
+      sender: isMessage(input) ? input.sender || 'user' : 'user',
+      text: isMessage(input) ? input.text || '' : '',
+      role: isMessage(input) ? input.role || 'user' : 'user',
+      content: isMessage(input) ? input.text || '' : '',
+      hidden: isMessage(input) ? input.hidden || false : false,
+      persona: isMessage(input) ? input.persona || '' : '',
+      timestamp: Date.now(),
+    };
+
+    console.debug('Dispatching user message:', userMessage);
+    dispatch(addMessage(userMessage));
+
+    try {
+      await debouncedApiCall(dispatch, getState, input, clientId);
+    } catch (error) {
+      dispatch(setApiError('Failed to send message.'));
+    }
   };
 
-  dispatch(addMessage(userMessage));
-
-  try {
-    await debouncedApiCall(dispatch, getState, input, clientId);
-  } catch (error) {
-    dispatch(setApiError('Failed to send message.'));
-  }
-};
-
-export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
+export const { addMessage, clearMessages, setError, clearError } =
+  chatSlice.actions;
 export default chatSlice.reducer;
