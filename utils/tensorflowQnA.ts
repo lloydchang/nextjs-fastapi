@@ -7,11 +7,17 @@ let qna: any;
 let modelPromise: Promise<any> | null = null;
 
 /**
- * Load a script dynamically.
+ * Load a script dynamically only if it hasn't been loaded yet.
  * @param url - The URL of the script to load.
  */
-const loadScript = (url: string) => {
+const loadScript = (url: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
+    if (document.querySelector(`script[src="${url}"]`)) {
+      console.info(`[TensorFlowQnA] Script already loaded: ${url}`);
+      resolve();
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = url;
     script.onload = () => resolve();
@@ -21,22 +27,27 @@ const loadScript = (url: string) => {
 };
 
 /**
- * Load TensorFlow QnA model from CDN.
+ * Load TensorFlow and QnA model from CDN.
  */
-const loadQnAModel = async () => {
+const loadQnAModel = async (): Promise<any> => {
   if (!qna) {
     try {
       console.info('[TensorFlowQnA] Loading TensorFlow modules from CDN...');
+      
       // Load TensorFlow and QnA from CDN
       await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest');
       await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@latest');
       
-      const tf = (window as any).tf; // Access TensorFlow from the window object
-      qna = (window as any).qna; // Access QnA from the window object
+      const tf = (window as any).tf;
+      qna = (window as any).qna;
 
       console.info('[TensorFlow] Initializing backend...');
-      await tf.ready();
-      console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
+      if (!tf.getBackend()) {
+        await tf.ready();
+        console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
+      } else {
+        console.info(`[TensorFlow] Backend already initialized: ${tf.getBackend()}`);
+      }
     } catch (error) {
       console.error('[TensorFlow] Backend or module initialization failed:', error);
       throw new Error('Failed to initialize TensorFlow backend.');
@@ -78,19 +89,15 @@ export const processLocalQnA = async (
     const answers = await model.findAnswers(input, context);
     console.debug('[TensorFlowQnA] Answers received:', answers);
 
-    const botMessages = answers.map((answer) => {
-      const message = {
-        id: uuidv4(),
-        sender: 'bot',
-        text: answer.text,
-        role: 'bot',
-        content: answer.text,
-        persona: 'tensorflow-qna',
-        timestamp: Date.now(),
-      };
-      console.debug('[TensorFlowQnA] Constructed message:', message);
-      return message;
-    });
+    const botMessages: Message[] = answers.map((answer) => ({
+      id: uuidv4(),
+      sender: 'bot',
+      text: answer.text,
+      role: 'bot',
+      content: answer.text,
+      persona: 'tensorflow-qna',
+      timestamp: Date.now(),
+    }));
 
     console.info('[TensorFlowQnA] Process completed successfully.');
     return botMessages;
