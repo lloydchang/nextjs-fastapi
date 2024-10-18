@@ -80,7 +80,7 @@ export async function generateFromCloudflareGemma(params: {
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
-    logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Response Headers Received: ${JSON.stringify(responseHeaders, null, 2)}`);
+    // logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Response Headers Received: ${JSON.stringify(responseHeaders, null, 2)}`);
 
     if (!response.ok) {
       logger.error(`app/api/chat/clients/CloudflareGemmaClient.ts - HTTP error! Status: ${response.status}`);
@@ -97,7 +97,7 @@ export async function generateFromCloudflareGemma(params: {
     const finalResponse = await parseStream(reader, { isSSE: true, doneSignal: 'done' });
 
     // Log the response body at 'silly' level
-    logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Response Body Received: ${finalResponse}`);
+    // logger.silly(`app/api/chat/clients/CloudflareGemmaClient.ts - Response Body Received: ${finalResponse}`);
 
     return finalResponse;
   } catch (error) {
