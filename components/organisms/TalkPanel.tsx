@@ -36,7 +36,7 @@ const TalkPanel: React.FC = () => {
   const isStrictMode = useRef(false); // Track if in Strict Mode
   const mountCounter = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const lastQueryRef = useRef<string>('');
+  // Removed lastQueryRef since it's no longer needed
   const isSearchInProgress = useRef(false);
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
@@ -58,8 +58,7 @@ const TalkPanel: React.FC = () => {
         debugLog('Subsequent mount detected; exiting strict mode.');
         performSearch(searchQuery);
       }
-    }
-    else {
+    } else {
       // Production code
       performSearch(searchQuery);
     }
@@ -77,15 +76,15 @@ const TalkPanel: React.FC = () => {
     const trimmedQuery = query.trim().toLowerCase();
     debugLog(`Performing search with query: "${trimmedQuery}"`);
 
-    if (isSearchInProgress.current || trimmedQuery === lastQueryRef.current) {
-      debugLog('Search already in progress or query has not changed. Exiting.');
+    if (isSearchInProgress.current) {
+      debugLog('Search already in progress. Exiting.');
       return;
     }
 
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
     isSearchInProgress.current = true;
-    lastQueryRef.current = trimmedQuery;
+    // Removed the line updating lastQueryRef
 
     debugLog('Dispatching loading state.');
     dispatch(setLoading(true));
