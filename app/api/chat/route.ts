@@ -73,12 +73,11 @@ export async function POST(request: NextRequest) {
   });
 
   // Rate limiting check with enhanced logging
-  const { limited, retryAfter, currentUsage } = checkRateLimit(clientId);
+  const { limited, retryAfter } = checkRateLimit(clientId);
   logger.debug(`app/api/chat/route.ts - [${requestId}] Rate limit check`, {
     clientId,
     limited,
     retryAfter,
-    currentUsage,
     timestamp: new Date().toISOString(),
   });
 
@@ -86,7 +85,6 @@ export async function POST(request: NextRequest) {
     logger.warn(`app/api/chat/route.ts - [${requestId}] Rate limit exceeded`, {
       clientId,
       retryAfter,
-      currentUsage,
       totalDuration: Date.now() - startTime,
     });
     return NextResponse.json(
