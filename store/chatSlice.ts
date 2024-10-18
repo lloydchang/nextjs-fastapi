@@ -142,7 +142,7 @@ const debouncedApiCall = debounce(
             headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
             body: JSON.stringify({ messages: messagesArray }),
           }),
-          timeoutPromise(10000),
+          timeoutPromise(600000) // Timeout set to 10 minutes which is 600000 milliseconds
         ]);
 
         console.debug('Received API response:', response);
