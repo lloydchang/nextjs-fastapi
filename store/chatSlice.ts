@@ -164,77 +164,49 @@ const debouncedApiCall = debounce(
           timeoutPromise(3600000) // Timeout set to 1 hour which is 3600000 milliseconds
         ]);
 
-        console.debug('Received API response:', response);
-
-        if (!response.ok) {
-          if (response.status === 429) {
-            const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-            console.debug(`Rate-limited. Retrying after ${retryAfter} seconds.`);
-            await wait(retryAfter * 1000);
-            retryCount++;
-            continue;
-          }
-          throw new ApiError(response.status, response.statusText);
-        }
-
         const reader = response.body?.getReader();
         if (reader) {
           const decoder = new TextDecoder();
           let textBuffer = '';
 
-          console.debug('Reading response stream...');
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-          try {
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
+            textBuffer += decoder.decode(value, { stream: true });
+            const messages = textBuffer.split('\n\n');
+            textBuffer = messages.pop() || '';
 
-              textBuffer += decoder.decode(value, { stream: true });
-              console.debug('Current buffer:', textBuffer);
-
-              const messages = textBuffer.split('\n\n');
-              textBuffer = messages.pop() || '';
-
-              for (const message of messages) {
-                if (message.startsWith('data: ')) {
-                  const parsedData = parseIncomingMessage(
-                    message.substring(6).trim()
-                  );
-                  if (parsedData) {
-                    const botMessage: Message = {
-                      id: uuidv4(),
-                      sender: 'bot',
-                      text: parsedData.message,
-                      role: 'bot',
-                      content: parsedData.message,
-                      persona: parsedData.persona,
-                      timestamp: Date.now(),
-                    };
-                    console.debug('Dispatching bot message:', botMessage);
-                    dispatch(addMessage(botMessage));
-                  }
+            for (const message of messages) {
+              if (message.startsWith('data: ')) {
+                const parsedData = parseIncomingMessage(message.substring(6).trim());
+                if (parsedData) {
+                  const botMessage: Message = {
+                    id: uuidv4(),
+                    sender: 'bot',
+                    text: parsedData.message,
+                    role: 'bot',
+                    content: parsedData.message,
+                    persona: parsedData.persona,
+                    timestamp: Date.now(),
+                  };
+                  dispatch(addMessage(botMessage));
                 }
               }
             }
-          } finally {
-            reader.releaseLock();
           }
+          reader.releaseLock();
         }
 
         dispatch(setLoading(false));
-        console.debug('API call completed successfully.');
         return;
       } catch (error: any) {
-        console.error('Error during API call:', error);
-
         if (error instanceof ApiError && error.status === 429) {
-          retryCount++;
           const waitTime = Math.pow(2, retryCount) * 1000;
-          console.debug(`Retrying in ${waitTime / 1000} seconds.`);
           await wait(waitTime);
+          retryCount++;
           continue;
         }
-
         dispatch(setApiError(error.message || 'Unknown error occurred'));
         dispatch(setLoading(false));
         return;
@@ -247,10 +219,6 @@ const debouncedApiCall = debounce(
 export const sendMessage =
   (input: string | Partial<Message>) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
-    console.debug('Sending message with input:', input);
-
-    dispatch(clearError());
-
     const clientId = localStorage.getItem('clientId') || uuidv4();
     localStorage.setItem('clientId', clientId);
 
@@ -258,23 +226,15 @@ export const sendMessage =
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
       text: isMessage(input) ? input.text || '' : input.toString(),
-      role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(),
-      hidden: isMessage(input) ? input.hidden || false : false,
-      persona: isMessage(input) ? input.persona || '' : '',
+      role: 'user',
+      content: input.toString(),
       timestamp: Date.now(),
     };
 
-    console.debug('Dispatching user message:', userMessage);
     dispatch(addMessage(userMessage));
 
-    try {
-      await simultaneousProcessing(dispatch, getState, input, clientId); // Add TensorFlow QnA processing
-      await debouncedApiCall(dispatch, getState, input, clientId); // Keep existing API call logic
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      dispatch(setApiError('Failed to send message.'));
-    }
+    await simultaneousProcessing(dispatch, getState, input, clientId);
+    await debouncedApiCall(dispatch, getState, input, clientId);
   };
 
 export const { addMessage, clearMessages, setError, clearError } =
