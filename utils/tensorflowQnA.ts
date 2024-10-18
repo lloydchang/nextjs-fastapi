@@ -3,73 +3,101 @@
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 
-let qna: any;
-let modelPromise: Promise<any> | null = null;
+interface Answer {
+    text: string;
+    startIndex: number;
+    endIndex: number;
+    score: number;
+}
+
+interface QnAModel {
+    findAnswers(question: string, context: string): Promise<Answer[]>;
+}
+
+let qnaModel: QnAModel | null = null;
+let modelPromise: Promise<QnAModel> | null = null;
 
 /**
  * Load a script dynamically only if it hasn't been loaded yet.
- * @param url - The URL of the script to load.
  */
 const loadScript = (url: string): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    if (document.querySelector(`script[src="${url}"]`)) {
-      console.info(`[TensorFlowQnA] Script already loaded: ${url}`);
-      resolve();
-      return;
-    }
+    return new Promise<void>((resolve, reject) => {
+        console.debug(`[TensorFlowQnA] Attempting to load script: ${url}`);
 
-    const script = document.createElement('script');
-    script.src = url;
-    script.async = true; // Ensure non-blocking load
-    script.onload = () => {
-      console.info(`[TensorFlowQnA] Script loaded: ${url}`);
-      resolve();
-    };
-    script.onerror = (err) => {
-      console.error(`Failed to load script: ${url}`, err);
-      reject(new Error(`Failed to load script: ${url}`));
-    };
-    document.body.appendChild(script);
-  });
+        if (document.querySelector(`script[src="${url}"]`)) {
+            console.info(`[TensorFlowQnA] Script already loaded: ${url}`);
+            resolve();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = true;
+        script.onload = () => {
+            console.info(`[TensorFlowQnA] Script loaded: ${url}`);
+            resolve();
+        };
+        script.onerror = (err) => {
+            console.error(`Failed to load script: ${url}`, err);
+            reject(new Error(`Failed to load script: ${url}`));
+        };
+        document.body.appendChild(script);
+    });
 };
 
 /**
- * Load TensorFlow.js and QnA model from CDN (client-side only).
+ * Initialize TensorFlow backend and load required modules.
  */
-const loadQnAModel = async (): Promise<any> => {
-  if (typeof window === 'undefined') {
-    throw new Error('TensorFlow can only be used in the browser.');
-  }
-
-  // Avoid redundant loads by caching the model
-  if (modelPromise) return modelPromise;
-
-  if (!qna) {
+const initializeTensorFlow = async (): Promise<void> => {
     try {
-      console.info('[TensorFlowQnA] Loading TensorFlow modules from CDN...');
-      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest');
-      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@latest');
+        console.info('[TensorFlowQnA] Loading TensorFlow modules...');
+        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest');
+        await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@latest');
 
-      const tf = (window as any).tf;
-      qna = (window as any).qna;
-
-      console.info('[TensorFlow] Initializing backend...');
-      await tf.ready();
-      console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
+        const tf = (window as any).tf;
+        console.info('[TensorFlow] Initializing backend...');
+        await tf.ready();
+        console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
     } catch (error) {
-      console.error('[TensorFlow] Backend or module initialization failed:', error);
-      throw new Error('Failed to initialize TensorFlow backend.');
+        console.error('[TensorFlow] Initialization failed:', error);
+        throw new Error('Failed to initialize TensorFlow backend.');
     }
-  }
+};
 
-  try {
-    console.info('[TensorFlowQnA] Loading QnA model...');
-    modelPromise = qna.load();
-    return await modelPromise;
-  } catch (error) {
-    console.error('[TensorFlowQnA] Failed to load QnA model:', error);
-    throw new Error('Failed to load QnA model.');
-  }
+/**
+ * Load the QnA model with proper error handling and caching.
+ */
+const loadQnAModel = async (): Promise<QnAModel> => {
+    if (typeof window === 'undefined') {
+        throw new Error('TensorFlow QnA can only be used in browser environments.');
+    }
+
+    if (qnaModel) return qnaModel;
+    if (modelPromise) return modelPromise;
+
+    try {
+        await initializeTensorFlow();
+        const qna = (window as any).qna;
+
+        console.info('[TensorFlowQnA] Loading QnA model...');
+        modelPromise = qna.load().then((model: QnAModel) => {
+            qnaModel = model;
+            return model;
+        });
+
+        return modelPromise;
+    } catch (error) {
+        console.error('[TensorFlowQnA] Model loading failed:', error);
+        throw new Error('Failed to load QnA model.');
+    }
+};
+
+/**
+ * Exported utilities to ensure proper function initialization.
+ */
+export const utils = {
+    loadQnAModel: async () => await loadQnAModel(),
+    initializeTensorFlow: async () => await initializeTensorFlow()
 };
 
 /**
@@ -79,32 +107,47 @@ const loadQnAModel = async (): Promise<any> => {
  * @returns A promise that resolves to an array of bot messages.
  */
 export const processLocalQnA = async (
-  input: string,
-  context: string
+    input: string,
+    context: string
 ): Promise<Message[]> => {
-  console.debug('[TensorFlowQnA] processLocalQnA called with:', { input, context });
+    console.debug('[TensorFlowQnA] processLocalQnA called with:', { input, context });
 
-  try {
-    const model = await loadQnAModel();
-    console.debug('[TensorFlowQnA] Model loaded. Running findAnswers...', { input, context });
+    try {
+        const [tfResult] = await Promise.allSettled([
+            (async () => {
+                const model = await loadQnAModel();
+                console.debug('[TensorFlowQnA] Running model inference...', { input, context });
+                return model.findAnswers(input, context);
+            })(),
+        ]);
 
-    const answers = await model.findAnswers(input, context);
-    console.debug('[TensorFlowQnA] Answers received:', answers);
+        const messages: Message[] = [];
 
-    const botMessages: Message[] = answers.map((answer) => ({
-      id: uuidv4(),
-      sender: 'bot',
-      text: answer.text,
-      role: 'bot',
-      content: answer.text,
-      persona: 'tensorflow-qna',
-      timestamp: Date.now(),
-    }));
+        if (tfResult.status === 'fulfilled') {
+            console.debug('[TensorFlowQnA] TensorFlow answers:', tfResult.value);
+            const tfMessages = tfResult.value
+                .filter((answer: Answer) => answer.score > 0)
+                .map((answer: Answer) => ({
+                    id: uuidv4(),
+                    sender: 'bot',
+                    text: answer.text,
+                    role: 'bot',
+                    content: answer.text,
+                    persona: 'tensorflow-qna',
+                    timestamp: Date.now(),
+                    confidence: answer.score,
+                    startIndex: answer.startIndex,
+                    endIndex: answer.endIndex
+                }));
+            messages.push(...tfMessages);
+        } else {
+            console.warn('[TensorFlowQnA] TensorFlow processing failed:', tfResult.reason);
+        }
 
-    console.info('[TensorFlowQnA] Process completed successfully.');
-    return botMessages;
-  } catch (error) {
-    console.error('[TensorFlowQnA] Error processing QnA:', error);
-    throw new Error('Failed to process local QnA.');
-  }
+        console.info('[TensorFlowQnA] Processing completed successfully');
+        return messages;
+    } catch (error) {
+        console.error('[TensorFlowQnA] Error during processing:', error);
+        throw new Error('Failed to process question using QnA model.');
+    }
 };

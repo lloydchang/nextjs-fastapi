@@ -286,7 +286,7 @@ const debouncedApiCall = debounce(
 
             return JSON.parse(responseBody);
           })(),
-          timeoutPromise(10000),
+          timeoutPromise(3600000) // Timeout set to 1 hour which is 3600000 milliseconds
         ]);
 
         logger.debug('store/chatSlice.ts - Parallel processing completed', {
