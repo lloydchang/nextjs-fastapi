@@ -13,16 +13,16 @@ import { Talk } from 'types';
 import { determineInitialKeyword, shuffleArray } from 'components/utils/talkPanelUtils';
 import { localStorageUtil } from 'components/utils/localStorage';
 import TalkItem from './TalkItem';
-import LoadingSpinner from './LoadingSpinner'; // Your existing loading spinner
+import LoadingSpinner from './LoadingSpinner';
 import { debounce } from 'lodash';
 import styles from 'styles/components/organisms/TalkPanel.module.css';
 import { sdgTitleMap } from 'components/constants/sdgTitles';
 
-const isDevelopment = process.env.NODE_ENV === 'development'; // Check if in development
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Helper function to convert SDG tags to their full titles
+// Helper function to convert SDG tags to full titles
 const getSdgTitles = (sdgTags: string[]): string[] =>
-  sdgTags.map(tag => sdgTitleMap[tag] || tag); // Fallback to raw tag if not found
+  sdgTags.map(tag => sdgTitleMap[tag] || tag);
 
 // Helper function for debug logging
 const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
@@ -30,13 +30,12 @@ const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
-  const { isLoading, error } = useSelector((state: RootState) => state.api); // Updated to isLoading
+  const { isLoading, error } = useSelector((state: RootState) => state.api);
 
   const [searchQuery, setSearchQuery] = useState(determineInitialKeyword());
-  const isStrictMode = useRef(false); // Track if in Strict Mode
+  const isStrictMode = useRef(false);
   const mountCounter = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
-  // Removed lastQueryRef since it's no longer needed
   const isSearchInProgress = useRef(false);
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
@@ -51,15 +50,14 @@ const TalkPanel: React.FC = () => {
       mountCounter.current += 1;
 
       if (mountCounter.current === 1) {
-        isStrictMode.current = true; // Initial mount in Strict Mode
+        isStrictMode.current = true;
         debugLog('Initial mount detected; entering strict mode.');
       } else {
-        isStrictMode.current = false; // Subsequent mounts are normal
+        isStrictMode.current = false;
         debugLog('Subsequent mount detected; exiting strict mode.');
         performSearch(searchQuery);
       }
     } else {
-      // Production code
       performSearch(searchQuery);
     }
 
@@ -84,21 +82,18 @@ const TalkPanel: React.FC = () => {
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
     isSearchInProgress.current = true;
-    // Removed the line updating lastQueryRef
 
-    debugLog('Dispatching loading state.');
     dispatch(setLoading(true));
     dispatch(setApiError(null));
 
     try {
-      debugLog(`Making API request to fetch talks with query: "${trimmedQuery}"`);
+      debugLog(`Making API request with query: "${trimmedQuery}"`);
       const response = await axios.get(
         `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
         { signal: abortControllerRef.current.signal }
       );
 
       if (response.status !== 200) throw new Error(response.statusText);
-      debugLog(`Search successful: ${response.data.results.length} results received.`);
 
       const data: Talk[] = response.data.results.map((result: any) => ({
         presenterDisplayName: result.document.presenterDisplayName || '',
@@ -108,24 +103,21 @@ const TalkPanel: React.FC = () => {
         transcript: result.document.transcript || '',
       }));
 
-      if (!isStrictMode.current) {
-        handleSearchResults(data);
-      }
+      if (!isStrictMode.current) handleSearchResults(data);
     } catch (error) {
       if (!axios.isCancel(error)) {
-        console.error('[performSearch] Error fetching talks:', error);
+        console.error('[performSearch] Error:', error);
         dispatch(setApiError('Error fetching talks.'));
       }
     } finally {
-      debugLog('Setting loading to false.');
       dispatch(setLoading(false));
       isSearchInProgress.current = false;
     }
   };
 
   const handleSearchResults = (data: Talk[]) => {
-    debugLog(`Handling search results: ${data.length} talks received.`);
-    dispatch(setTalks(data)); // Directly set talks without deduplication logic
+    debugLog(`Handling ${data.length} search results.`);
+    dispatch(setTalks(data));
 
     if (data.length > 0) {
       const firstTalk = data[0];
@@ -138,27 +130,23 @@ const TalkPanel: React.FC = () => {
 
   const sendTranscriptAsMessage = async (talk: Talk) => {
     if (sentMessagesRef.current.has(talk.title)) {
-      debugLog(`Message for talk "${talk.title}" already sent, skipping.`);
+      debugLog(`Message for "${talk.title}" already sent.`);
       return;
     }
 
     sentMessagesRef.current.add(talk.title);
-    debugLog(`Sending transcript for talk: ${talk.title}`);
- 
-    const messageParts = [
-      `${talk.transcript} —— ${talk.title}\n\n${getSdgTitles(talk.sdg_tags).join(', ')}`,
-    ];
+    const message = `${talk.transcript} —— ${talk.title}\n\n${getSdgTitles(talk.sdg_tags).join(', ')}`;
 
-    for (const part of messageParts) {
-      dispatch(sendMessage({
-        persona: `${talk.presenterDisplayName}`,
+    dispatch(
+      sendMessage({
+        persona: talk.presenterDisplayName,
         role: 'bot',
         sender: 'bot',
-        text: part,
+        text: message,
         hidden: false,
-      }));
-      debugLog(`Sent message part: ${part}`);
-    }
+      })
+    );
+    debugLog(`Sent transcript for "${talk.title}".`);
   };
 
   const openTranscriptInNewTab = () => {
@@ -196,16 +184,8 @@ const TalkPanel: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              debugLog(`Search query updated: "${e.target.value}"`);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                debugLog(`Search initiated via Enter key with query: "${searchQuery}"`);
-                performSearch(searchQuery);
-              }
-            }}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && performSearch(searchQuery)}
             className={styles.searchInput}
             placeholder="Search for talks..."
           />
@@ -235,7 +215,11 @@ const TalkPanel: React.FC = () => {
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
         {talks.map((talk, index) => (
-          <TalkItem key={`${talk.url}-${index}`} talk={talk} selected={selectedTalk?.title === talk.title} />
+          <TalkItem
+            key={`${talk.url}-${index}`}
+            talk={talk}
+            selected={selectedTalk?.title === talk.title}
+          />
         ))}
       </div>
     </div>
