@@ -56,7 +56,7 @@ const chatSlice = createSlice({
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', [...state.messages]); // Avoid state mutation
+      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
     },
     clearMessages: (state) => {
       console.debug('Clearing all messages');
@@ -203,9 +203,9 @@ export const sendMessage =
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
-      role: 'user', // Explicitly set role to 'user'
-      content: input.toString(), // Use toString() as fallback
+      text: isMessage(input) ? input.text || '' : '',
+      role: isMessage(input) ? input.role || 'user' : 'user',
+      content: isMessage(input) ? input.text || '' : '',
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
