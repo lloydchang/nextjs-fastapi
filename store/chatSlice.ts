@@ -7,7 +7,7 @@ import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
-import { runModelPrediction } from './modelService'; // Import the TensorFlow.js prediction function
+import { processLocalQnA } from '../utils/tensorflowQnA';
 
 interface ChatState {
   messages: Message[];
@@ -119,29 +119,79 @@ const debouncedApiCall = debounce(
 
     while (retryCount < maxRetries) {
       try {
-        // Run TensorFlow.js model prediction
-        const tfPrediction = await runModelPrediction(input.toString());
+        const context = ''; // Set context appropriately; can be '' if no context is needed
+        const tfPrediction = await processLocalQnA(input.toString(), context);
+        const tfPredictionMessages = await processLocalQnA(input.toString(), ''); // Assign correctly
 
+        // If you only need the first message's text, extract it:
+        const tfPredictionText = tfPredictionMessages.length > 0 
+          ? tfPredictionMessages[0].text 
+          : 'No answer found';
+        
         const botMessageFromTF: Message = {
           id: uuidv4(),
           sender: 'bot',
-          text: tfPrediction,
+          text: tfPredictionText, // Use the extracted text
           role: 'bot',
-          content: tfPrediction,
+          content: tfPredictionText, // Use the extracted text
           persona: 'tf-model',
           timestamp: Date.now(),
         };
+        
         dispatch(addMessage(botMessageFromTF));
 
-        // Perform API call to /api/chat
-        const response = await Promise.race([
-          fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
-            body: JSON.stringify({ messages: messagesArray }),
-          }),
+        // First Promise.allSettled call
+        const [tfResult, apiResult] = await Promise.allSettled([
+          processLocalQnA(input.toString(), ''), // TensorFlow QnA call
+          (async () => {
+            const response = await fetch('/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
+              body: JSON.stringify({ messages: messagesArray }),
+            });
+
+            if (!response.ok) {
+              if (response.status === 429) {
+                const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+                console.debug(`Rate limit hit, retrying after ${retryAfter} seconds...`);
+                await wait(retryAfter * 1000);
+                throw new ApiError(response.status, 'Retrying...');
+              }
+              throw new ApiError(response.status, response.statusText);
+            }
+
+            return response.json(); // Return JSON if the response is OK
+          })(), // Wrapped API call in an async function
           timeoutPromise(10000),
         ]);
+
+        // Handle TensorFlow QnA result if fulfilled
+        if (tfResult.status === 'fulfilled') {
+          const tfMessages = tfResult.value.map((answer: any) => ({
+            id: uuidv4(),
+            sender: 'bot' as 'bot', // Assert as valid sender type
+            text: answer.text,
+            role: 'bot' as 'bot', // Assert as valid role type
+            content: answer.text,
+            persona: 'tensorflow-qna',
+            timestamp: Date.now(),
+          }));
+          tfMessages.forEach((msg) => dispatch(addMessage(msg))); // Dispatch each message
+        }
+
+        // Handle API result if fulfilled
+        if (apiResult.status === 'fulfilled') {
+          const apiMessage: Message = {
+            id: uuidv4(),
+            sender: 'bot',
+            text: apiResult.value.answer,
+            role: 'bot',
+            content: apiResult.value.answer,
+            persona: 'api-bot',
+            timestamp: Date.now(),
+          };
+          dispatch(addMessage(apiMessage));
+        }
 
         if (!response.ok) {
           if (response.status === 429) {
