@@ -6,6 +6,7 @@
 export interface UserPrompt {
   role: 'system' | 'user' | 'bot' | 'nudge'; // Includes 'nudge' as a valid role
   content: string; // The text content of the prompt
+  persona?: string; // Optional persona to attribute messages
 }
 
 /**
