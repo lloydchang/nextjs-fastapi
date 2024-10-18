@@ -72,19 +72,27 @@ export async function POST(request: NextRequest) {
       const botFunctions: BotFunction[] = [];
       addBotFunctions(botFunctions, config);
 
-      const botResponses = await executeBotFunctions(botFunctions, context);
-
-      // Create a readable stream from the bot responses
       const stream = new ReadableStream({
-        start(controller) {
-          botResponses.forEach((response) => {
-            controller.enqueue(new TextEncoder().encode(response));
-          });
-          controller.close();
+        async start(controller) {
+          try {
+            const botResponses = await executeBotFunctions(botFunctions, context);
+
+            for (const response of botResponses) {
+              controller.enqueue(new TextEncoder().encode(response));
+              logger.silly(`Sent response chunk: ${response}`);
+            }
+
+            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ error: errorMessage })}\n\n`));
+            logger.error(`Error in SSE stream: ${errorMessage}`);
+          } finally {
+            controller.close();
+          }
         },
       });
 
-      logger.silly(`Stream prepared for clientId: ${clientId}, RequestId: ${requestId}`);
       return new NextResponse(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -112,20 +120,15 @@ async function executeBotFunctions(
       const botResponse = await bot.generate(context);
       if (botResponse) {
         const message = getMessageContent(botResponse);
-        // console.log('Generated message:', message); // Debugging log
         responses.push(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
-        logger.silly(`Stream data sent for bot ${bot.persona}.`);
+        logger.silly(`Generated response from bot ${bot.persona}.`);
         context.push({ role: 'bot', content: message, persona: bot.persona });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      logger.error(`Error processing bot ${bot.persona}: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       responses.push(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+      logger.error(`Error in bot ${bot.persona}: ${errorMessage}`);
     }
-  }
-
-  if (responses.length === 0) {
-    responses.push('data: [DONE]\n\n');
   }
 
   return responses;
