@@ -27,9 +27,10 @@ class ApiError extends Error {
   }
 }
 
-// Type guard to check if the input is of type Partial<Message>
 function isMessage(input: any): input is Partial<Message> {
-  return typeof input === 'object' && input !== null && 'sender' in input;
+  const isValid = typeof input === 'object' && input !== null && 'sender' in input;
+  console.debug('[isMessage] Validation result:', isValid, 'Input:', input);
+  return isValid;
 }
 
 const chatSlice = createSlice({
@@ -37,61 +38,76 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<Message>) => {
-      console.debug('Adding message:', action.payload);
+      console.debug('[addMessage] Incoming message:', action.payload);
+      console.debug('[addMessage] Current state:', state);
 
-      if (
-        state.messages.some(
-          (msg) =>
-            msg.text === action.payload.text &&
-            msg.timestamp === action.payload.timestamp
-        )
-      ) {
-        console.debug('Duplicate message detected, skipping:', action.payload);
+      const isDuplicate = state.messages.some(
+        (msg) =>
+          msg.text === action.payload.text &&
+          msg.timestamp === action.payload.timestamp
+      );
+
+      if (isDuplicate) {
+        console.warn('[addMessage] Duplicate message detected, skipping:', action.payload);
         return;
       }
 
       if (state.messages.length >= MAX_MESSAGES) {
-        console.debug('Reached max messages. Removing oldest message.');
+        console.debug('[addMessage] Max messages reached. Removing oldest message:', state.messages[0]);
         state.messages.shift();
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
+      console.debug('[addMessage] Updated messages:', [...state.messages]);
     },
     clearMessages: (state) => {
-      console.debug('Clearing all messages');
+      console.info('[clearMessages] Clearing all messages. Previous messages:', state.messages);
       state.messages = [];
     },
     setError: (state, action: PayloadAction<string>) => {
-      console.debug('Setting error:', action.payload);
+      console.error('[setError] Setting error:', action.payload);
       state.error = action.payload;
     },
     clearError: (state) => {
-      console.debug('Clearing error');
+      console.info('[clearError] Clearing error. Previous error:', state.error);
       state.error = null;
     },
   },
 });
 
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms: number) => new Promise((resolve) => {
+  console.debug(`[wait] Waiting for ${ms}ms`);
+  setTimeout(resolve, ms);
+});
+
 const timeoutPromise = (ms: number) =>
   new Promise<Response>((_, reject) =>
-    setTimeout(() => reject(new Error('Timeout')), ms)
+    setTimeout(() => {
+      console.warn('[timeoutPromise] Timeout reached:', ms);
+      reject(new Error('Timeout'));
+    }, ms)
   );
 
 export const parseIncomingMessage = (jsonString: string) => {
+  console.debug('[parseIncomingMessage] Raw JSON:', jsonString);
   try {
-    if (jsonString === '[DONE]') return null;
+    if (jsonString === '[DONE]') {
+      console.debug('[parseIncomingMessage] Received [DONE] signal.');
+      return null;
+    }
 
     const sanitizedString = he.decode(jsonString);
     const parsedData = JSON.parse(sanitizedString);
 
-    if (!parsedData.persona || !parsedData.message) return null;
+    console.debug('[parseIncomingMessage] Parsed data:', parsedData);
+    if (!parsedData.persona || !parsedData.message) {
+      console.warn('[parseIncomingMessage] Missing persona or message.');
+      return null;
+    }
 
-    console.debug('Parsed incoming message:', parsedData);
     return parsedData;
   } catch (error) {
-    console.error('Error parsing message:', jsonString, error);
+    console.error('[parseIncomingMessage] Error parsing JSON:', jsonString, error);
     return null;
   }
 };
@@ -103,8 +119,15 @@ const debouncedApiCall = debounce(
     input: string | Partial<Message>,
     clientId: string
   ) => {
+    console.info('[debouncedApiCall] Initiating API call with input:', input);
+
     const state = getState();
-    if (state.api?.isLoading) return;
+    console.debug('[debouncedApiCall] Current state:', state);
+
+    if (state.api?.isLoading) {
+      console.warn('[debouncedApiCall] API is already loading. Aborting.');
+      return;
+    }
 
     dispatch(setLoading(true));
     dispatch(clearApiError());
@@ -112,11 +135,15 @@ const debouncedApiCall = debounce(
     const messagesArray = [
       { role: 'user', content: typeof input === 'string' ? input : input.text },
     ];
+    console.debug('[debouncedApiCall] Messages payload:', messagesArray);
+
     let retryCount = 0;
     const maxRetries = 3;
 
     while (retryCount < maxRetries) {
       try {
+        console.info(`[debouncedApiCall] Attempt ${retryCount + 1} to send API request.`);
+
         const response = await Promise.race([
           fetch('/api/chat', {
             method: 'POST',
@@ -126,9 +153,12 @@ const debouncedApiCall = debounce(
           timeoutPromise(10000),
         ]);
 
+        console.debug('[debouncedApiCall] API response:', response);
+
         if (!response.ok) {
           if (response.status === 429) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+            console.warn('[debouncedApiCall] Rate limit reached. Retrying after', retryAfter, 'seconds.');
             await wait(retryAfter * 1000);
             retryCount++;
             continue;
@@ -165,12 +195,14 @@ const debouncedApiCall = debounce(
                       persona: parsedData.persona,
                       timestamp: Date.now(),
                     };
+                    console.info('[debouncedApiCall] Dispatching bot message:', botMessage);
                     dispatch(addMessage(botMessage));
                   }
                 }
               }
             }
           } finally {
+            console.debug('[debouncedApiCall] Releasing reader lock.');
             reader.releaseLock();
           }
         }
@@ -178,6 +210,8 @@ const debouncedApiCall = debounce(
         dispatch(setLoading(false));
         return;
       } catch (error: any) {
+        console.error('[debouncedApiCall] Error during API call:', error);
+
         if (error instanceof ApiError && error.status === 429) {
           retryCount++;
           await wait(Math.pow(2, retryCount) * 1000);
@@ -195,32 +229,36 @@ const debouncedApiCall = debounce(
 export const sendMessage =
   (input: string | Partial<Message>) =>
   async (dispatch: AppDispatch, getState: () => RootState) => {
+    console.info('[sendMessage] Sending user message:', input);
+
     dispatch(clearError());
 
     const clientId = localStorage.getItem('clientId') || uuidv4();
     localStorage.setItem('clientId', clientId);
 
+    console.debug('[sendMessage] Client ID:', clientId);
+
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
+      text: isMessage(input) ? input.text || '' : input.toString(),
       role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(), // Use toString() as fallback
+      content: isMessage(input) ? input.text || '' : input.toString(),
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
     };
 
-    console.debug('Dispatching user message:', userMessage);
+    console.info('[sendMessage] Dispatching user message:', userMessage);
     dispatch(addMessage(userMessage));
 
     try {
       await debouncedApiCall(dispatch, getState, input, clientId);
     } catch (error) {
+      console.error('[sendMessage] Error sending message:', error);
       dispatch(setApiError('Failed to send message.'));
     }
   };
 
-export const { addMessage, clearMessages, setError, clearError } =
-  chatSlice.actions;
+export const { addMessage, clearMessages, setError, clearError } = chatSlice.actions;
 export default chatSlice.reducer;
