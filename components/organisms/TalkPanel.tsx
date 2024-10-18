@@ -40,9 +40,6 @@ const TalkPanel: React.FC = () => {
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Use a map to store refs for each talk
-  const talkRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
     []
@@ -125,6 +122,14 @@ const TalkPanel: React.FC = () => {
     if (data.length > 0) {
       const randomIndex = Math.floor(Math.random() * data.length); // Random selection
       const randomTalk = data[randomIndex];
+
+      // Move the selected talk to the top of the list
+      const reorderedTalks = [
+        randomTalk,
+        ...data.filter((talk) => talk.title !== randomTalk.title),
+      ];
+
+      dispatch(setTalks(reorderedTalks)); // Update the state with reordered talks
       dispatch(setSelectedTalk(randomTalk));
       sendTranscriptAsMessage(randomTalk);
     }
@@ -164,21 +169,6 @@ const TalkPanel: React.FC = () => {
     debugLog('Shuffling talks.');
     dispatch(setTalks(shuffleArray(talks)));
   };
-
-  useEffect(() => {
-    if (selectedTalk) {
-      const selectedRef = talkRefs.current.get(selectedTalk.title);
-      if (selectedRef) {
-        // Ensure scrolling only occurs after the DOM is ready
-        setTimeout(() => {
-          selectedRef.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          });
-        }, 0);
-      }
-    }
-  }, [selectedTalk]);
 
   return (
     <div className={styles.TalkPanel}>
@@ -233,19 +223,13 @@ const TalkPanel: React.FC = () => {
       {error && <div className={styles.errorContainer}>{error}</div>}
 
       <div className={styles.scrollableContainer} ref={scrollableContainerRef}>
-        {talks.map((talk, index) => {
-          const talkRef = createRef<HTMLDivElement>();
-          talkRefs.current.set(talk.title, talkRef.current);
-
-          return (
-            <TalkItem
-              key={`${talk.url}-${index}`}
-              talk={talk}
-              selected={selectedTalk?.title === talk.title}
-              ref={talkRef}
-            />
-          );
-        })}
+        {talks.map((talk, index) => (
+          <TalkItem
+            key={`${talk.url}-${index}`}
+            talk={talk}
+            selected={selectedTalk?.title === talk.title}
+          />
+        ))}
       </div>
     </div>
   );
