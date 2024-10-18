@@ -22,7 +22,7 @@ export async function generateFromCloudflareLlama(params: {
   const combinedPrompt = `${prompt}`;
 
   // Log the initiation of the request
-  logger.silly(`app/api/chat/clients/CloudflareLlamaClient.ts - Initiating request to Cloudflare Llama API at ${endpoint} with model ${model}`);
+  // logger.silly(`app/api/chat/clients/CloudflareLlamaClient.ts - Initiating request to Cloudflare Llama API at ${endpoint} with model ${model}`);
 
   // Retrieve configuration for temperature and streaming
   const { stream = true, temperature = 0.0 } = getConfig(); // Default values for stream and temperature

@@ -125,7 +125,7 @@ async function executeBotFunctions(
       if (botResponse) {
         const message = getMessageContent(botResponse);
         responses.push(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
-        logger.silly(`Stream data sent for bot ${bot.persona}: ${message}`);
+        // logger.silly(`Stream data sent for bot ${bot.persona}: ${message}`);
         context.push({ role: 'bot', content: message, persona: bot.persona });
         logger.silly(`Added bot response to context. New context size: ${context.length}`);
       }
