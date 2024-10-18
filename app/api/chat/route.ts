@@ -9,7 +9,7 @@ import { UserPrompt, BotFunction } from 'types';
 import logger from 'app/api/chat/utils/logger';
 import { Mutex } from 'async-mutex';
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
-import getMessageContent from 'app/api/chat/utils/messageUtils'; // Default import
+import { getMessageContent } from 'app/api/chat/utils/messageUtils';
 
 const config: AppConfig = getConfig();
 const MAX_PROMPT_LENGTH = 128000;
@@ -102,7 +102,6 @@ async function executeBotFunctions(
       const botResponse = await bot.generate(context);
       if (botResponse) {
         const message = getMessageContent(botResponse);
-        console.log('Generated message:', message); // Debugging log
         responses.push(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
         logger.silly(`Stream data sent for bot ${bot.persona}.`);
         context.push({ role: 'bot', content: message, persona: bot.persona });
