@@ -49,7 +49,7 @@ const nextConfig = {
 
 module.exports = {
   webpack: (config) => {
-    config.resolve.symlinks = false; // Ensure correct module resolution
+    config.resolve.symlinks = false;
     return config;
   },
 };
