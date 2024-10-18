@@ -76,7 +76,7 @@ const buttonBlurb: { [key: string]: { blurb: string; url: string } } = {
   },
   Grant: {
     blurb: "Find SDG funding opportunities!",
-    url: 'https://globalaffairs.ucdavis.edu/sdgs-grants',
+    url: 'https://www.google.com/search?q=Grants+for+Advancing+the+United+Nations+Sustainable+Development+Goals+(SDGs)',
   },
   Fund: {
     blurb: "Discover joint SDG funds!",
