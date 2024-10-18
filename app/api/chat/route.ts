@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Acquire or create a mutex for the client
   let mutex = clientMutexes.get(clientId);
   if (!mutex) {
     mutex = new Mutex();
@@ -76,9 +75,7 @@ export async function POST(request: NextRequest) {
     logger.silly(`Created new mutex for clientId: ${clientId}`);
   }
 
-  // Run the critical section exclusively
   return mutex.runExclusive(async () => {
-    // Update the last interaction time
     lastInteractionTimes.set(clientId, Date.now());
     logger.silly(
       `Updated last interaction time for clientId: ${clientId} at ${new Date().toISOString()}`
@@ -110,7 +107,12 @@ export async function POST(request: NextRequest) {
       );
 
       // Filter out invalid messages (e.g., empty content)
-      const validMessages = extractValidMessages(messages);
+      const validMessages = messages.filter(
+        (msg: any) =>
+          msg.content &&
+          typeof msg.content === 'string' &&
+          msg.content.trim() !== ''
+      );
 
       logger.silly(
         `Filtered to ${validMessages.length} valid messages for clientId: ${clientId}, RequestId: ${requestId}`
@@ -140,10 +142,6 @@ export async function POST(request: NextRequest) {
         `Updated context for clientId: ${clientId}. Current context size: ${context.length}`
       );
 
-      // Define a timeout for bot processing to ensure we stay within Vercel's limit
-      const BOT_PROCESSING_TIMEOUT = 9500; // 9.5 seconds
-
-      // Create a ReadableStream to handle streaming responses
       const stream = new ReadableStream({
         async start(controller) {
           const botFunctions: BotFunction[] = [];
@@ -159,106 +157,83 @@ export async function POST(request: NextRequest) {
               `Processing ${botFunctions.length} bot functions for clientId: ${clientId}, RequestId: ${requestId}`
             );
 
-            // Wrap the bot processing in a timeout using Promise.race
-            try {
-              await Promise.race([
-                (async () => {
-                  // Process all bots concurrently
-                  const botPromises = botFunctions.map(async (bot) => {
-                    try {
-                      const botResponse = await bot.generate(context);
-                      const botPersona = bot.persona;
+            // Process all bots concurrently
+            const botPromises = botFunctions.map(async (bot) => {
+              try {
+                const botResponse = await bot.generate(context);
+                const botPersona = bot.persona;
 
-                      if (botResponse && typeof botResponse === 'string') {
-                        logger.debug(
-                          `Response from ${botPersona}: ${botResponse}`
-                        );
-
-                        // Stream the response
-                        controller.enqueue(
-                          `data: ${JSON.stringify({
-                            persona: botPersona,
-                            message: botResponse,
-                          })}\n\n`
-                        );
-
-                        // Update context with bot response
-                        context.push({
-                          role: 'bot',
-                          content: botResponse,
-                          persona: botPersona,
-                        });
-                        logger.silly(
-                          `Added bot response to context. New context size: ${context.length}`
-                        );
-                        return true;
-                      }
-                      return false;
-                    } catch (error) {
-                      logger.error(
-                        `Error in bot ${bot.persona} processing: ${error}`
-                      );
-                      return false;
-                    }
-                  });
-
-                  // Await all bot responses
-                  const responses = await Promise.all(botPromises);
-                  const hasResponse = responses.includes(true);
-
-                  context = context.slice(-maxContextMessages);
-                  clientContexts.set(clientId, context);
-
-                  logger.silly(
-                    `Final context size after bot processing for clientId: ${clientId}: ${context.length}`
+                if (botResponse && typeof botResponse === 'string') {
+                  logger.debug(
+                    `Response from ${botPersona}: ${botResponse}`
                   );
 
-                  // Handle session timeout
-                  const lastInteraction = lastInteractionTimes.get(clientId) || 0;
-                  if (Date.now() - lastInteraction > sessionTimeout) {
-                    clientContexts.delete(clientId);
-                    lastInteractionTimes.delete(clientId);
-                    logger.silly(
-                      `Session timed out for clientId: ${clientId}. Context reset.`
-                    );
-                    context = []; // Reset context after timeout
-                  }
+                  // Stream the response
+                  controller.enqueue(
+                    `data: ${JSON.stringify({
+                      persona: botPersona,
+                      message: botResponse,
+                    })}\n\n`
+                  );
 
-                  if (!hasResponse) {
-                    logger.silly(
-                      `No bot responded for clientId: ${clientId}, RequestId: ${requestId}. Ending interaction.`
-                    );
-                  }
+                  // Update context with bot response
+                  context.push({
+                    role: 'bot',
+                    content: botResponse,
+                    persona: botPersona,
+                  });
+                  logger.silly(
+                    `Added bot response to context. New context size: ${context.length}`
+                  );
+                  return true;
+                }
+                return false;
+              } catch (error) {
+                logger.error(
+                  `Error in bot ${bot.persona} processing: ${error}`
+                );
+                return false;
+              }
+            });
 
-                  // Signal the end of the stream
-                  try {
-                    controller.enqueue('data: [DONE]\n\n');
-                    controller.close();
-                    logger.silly(
-                      `Stream closed successfully for clientId: ${clientId}, RequestId: ${requestId}`
-                    );
-                  } catch (enqueueError) {
-                    logger.error(
-                      `Error finalizing stream: ${enqueueError} for clientId: ${clientId}, RequestId: ${requestId}`
-                    );
-                  }
-                })(),
-                // Timeout promise
-                new Promise<void>((_, reject) =>
-                  setTimeout(() => reject(new Error('Bot processing timed out')), BOT_PROCESSING_TIMEOUT)
-                ),
-              ]);
-            } catch (timeoutError) {
-              logger.error(
-                `Bot processing timed out for clientId: ${clientId}, RequestId: ${requestId}`
+            // Await all bot responses
+            const responses = await Promise.all(botPromises);
+            const hasResponse = responses.includes(true);
+
+            context = context.slice(-maxContextMessages);
+            clientContexts.set(clientId, context);
+
+            logger.silly(
+              `Final context size after bot processing for clientId: ${clientId}: ${context.length}`
+            );
+
+            // Handle session timeout
+            const lastInteraction = lastInteractionTimes.get(clientId) || 0;
+            if (Date.now() - lastInteraction > sessionTimeout) {
+              clientContexts.delete(clientId);
+              lastInteractionTimes.delete(clientId);
+              logger.silly(
+                `Session timed out for clientId: ${clientId}. Context reset.`
               );
-              controller.enqueue(
-                `data: ${JSON.stringify({
-                  error: 'Bot processing timed out. Please try again.',
-                })}\n\n`
+              context = []; // Reset context after timeout
+            }
+
+            if (!hasResponse) {
+              logger.silly(
+                `No bot responded for clientId: ${clientId}, RequestId: ${requestId}. Ending interaction.`
               );
+            }
+
+            try {
               controller.enqueue('data: [DONE]\n\n');
               controller.close();
+              logger.silly(
+                `Stream closed successfully for clientId: ${clientId}, RequestId: ${requestId}`
+              );
+            } catch (enqueueError) {
+              logger.error(
+                `Error finalizing stream: ${enqueueError} for clientId: ${clientId}, RequestId: ${requestId}`
+              );
             }
           }
 
