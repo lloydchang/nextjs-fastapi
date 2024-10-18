@@ -85,8 +85,8 @@ const Tools: React.FC = () => {
               content: messageText,
               timestamp: Date.now(),
               persona: buttonText,
-              role: 'ad',
-              sender: 'ad',
+              role: 'nudge',
+              sender: 'nudge',
               text: messageText,
               hidden: false,
             })

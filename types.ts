@@ -1,10 +1,10 @@
 // File: types.ts
 
 /**
- * Represents a user, system, bot, or ad prompt in the conversation.
+ * Represents a user, system, bot, or nudge prompt in the conversation.
  */
 export interface UserPrompt {
-  role: 'system' | 'user' | 'bot' | 'ad'; // Includes 'ad' as a valid role
+  role: 'system' | 'user' | 'bot' | 'nudge'; // Includes 'nudge' as a valid role
   content: string; // The text content of the prompt
 }
 
@@ -13,12 +13,12 @@ export interface UserPrompt {
  */
 export interface Message {
   id: string; // Unique identifier for the message
-  sender: 'system' | 'user' | 'bot' | 'ad'; // Includes 'ad' as a valid sender
+  sender: 'system' | 'user' | 'bot' | 'nudge'; // Includes 'nudge' as a valid sender
   text: string; // Always a string representing the message text
   persona?: string; // Optional persona to attribute messages
   hidden?: boolean; // If true, the message is hidden from the UI
   isInterim?: boolean; // Optional, indicates if the message is in progress
-  role: 'system' | 'user' | 'bot' | 'ad'; // Role of the message, including 'ad'
+  role: 'system' | 'user' | 'bot' | 'nudge'; // Role of the message, including 'nudge'
   content: string; // Same as `text`, kept for structural consistency
   timestamp: number; // Timestamp of when the message was sent
 }
@@ -28,7 +28,7 @@ export interface Message {
  */
 export interface ChatbotRequestBody {
   model: string; // AI model to use (e.g., GPT-3.5)
-  prompt: UserPrompt[]; // Array of user, system, bot, or ad prompts
+  prompt: UserPrompt[]; // Array of user, system, bot, or nudge prompts
   temperature: number; // Controls randomness of responses
 }
 
