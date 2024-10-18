@@ -196,60 +196,6 @@
   margin-right: 8px;
 }
 
-/* --- Dark Mode Adjustments --- */
-@media (prefers-color-scheme: dark) {
-  .text {
-    color: #fff; /* Light text for dark mode */
-  }
-
-  .userMessage .text {
-    background-color: #005c4b; /* Dark green for user messages */
-    color: #fff;
-  }
-
-  .botMessage .text {
-    color: #fff;
-  }
-
-  .personaLabel {
-    color: #8696a0; /* Adjusted gray for persona labels */
-    background-color: #000;
-  }
-
-  /* Hovered Persona Label Styling */
-  .personaLabelHovered {
-    background-color: #000000;
-  }
-
-  .text a {
-    color: #53bdeb; /* Lighter blue for links */
-  }
-
-  .text a:hover {
-    color: #53bdeb;
-  }
-
-  .text pre,
-  .text code {
-    background-color: #2a3942; /* Darker background for code */
-    color: #fff;
-  }
-
-  .text blockquote {
-    border-left-color: #00a884; /* Adjusted green for blockquotes */
-    color: #8696a0; /* Grayish text */
-  }
-
-  .text th {
-    background-color: #00a884; /* Green for table headers */
-    color: #fff;
-  }
-
-  .text td {
-    color: #fff; /* Light text for table cells */
-  }
-}
-
 /* --- Full-Screen Modal Styles --- */
 .modalBackdrop {
   position: fixed;
