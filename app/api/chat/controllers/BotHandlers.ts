@@ -2,33 +2,9 @@
 
 import { AppConfig } from 'app/api/chat/utils/config';
 import { BotFunction } from 'types';
-import { extractValidMessages } from 'app/api/chat/utils/filterContext';
-import { handleTextWithOllamaGemmaTextModel } from 'app/api/chat/controllers/OllamaGemmaController';
-import { handleTextWithCloudflareGemmaTextModel } from 'app/api/chat/controllers/CloudflareGemmaController';
-import { handleTextWithGoogleVertexGemmaTextModel } from 'app/api/chat/controllers/GoogleVertexGemmaController';
-import { handleTextWithOllamaLlamaTextModel } from 'app/api/chat/controllers/OllamaLlamaController';
-import { handleTextWithCloudflareLlamaTextModel } from 'app/api/chat/controllers/CloudflareLlamaController';
-import { handleTextWithGoogleVertexLlamaTextModel } from 'app/api/chat/controllers/GoogleVertexLlamaController';
-import { validateEnvVars } from 'app/api/chat/utils/validate';
-import logger from 'app/api/chat/utils/logger';
-import { isValidConfig } from 'app/api/chat/utils/validation'; // Import the shared utility
+import { extractValidMessages, getMessageContent } from 'app/api/chat/utils/filterContext';
+// ... other imports remain the same ...
 
-/**
- * Union type for text model configuration keys.
- */
-type TextModelConfigKey =
-  | 'ollamaGemmaTextModel'
-  | 'ollamaLlamaTextModel'
-  | 'cloudflareGemmaTextModel'
-  | 'cloudflareLlamaTextModel'
-  | 'googleVertexGemmaTextModel'
-  | 'googleVertexLlamaTextModel';
-
-/**
- * Adds bot functions to the provided array based on the configuration.
- * @param botFunctions - The array to populate with bot functions.
- * @param config - The application configuration.
- */
 export function addBotFunctions(botFunctions: BotFunction[], config: AppConfig) {
   const handlers: Array<{
     persona: string;
@@ -83,15 +59,19 @@ export function addBotFunctions(botFunctions: BotFunction[], config: AppConfig) 
       botFunctions.push({
         persona: `${persona} ${model}`,
         generate: async (context) => {
-          const prompt = extractValidMessages(context);
+          const validMessages = extractValidMessages(context);
+          const prompt = getMessageContent(validMessages);
+          
           if (!prompt.trim()) {
             logger.warn(`Empty prompt for persona: ${persona} ${model}`);
             return null;
           }
           return await handler({ userPrompt: prompt, textModel: model }, config);
         },
-        valid: true, // Added 'valid' property
+        valid: true,
       });
     }
   });
 }
+
+
