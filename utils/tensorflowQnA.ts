@@ -1,29 +1,17 @@
 // File: utils/tensorflowQnA.ts
 
-import { Message } from '../types';
+import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 
-interface Answer {
-  text: string;
-  startIndex: number;
-  endIndex: number;
-  score: number;
-}
-
-interface QnAModel {
-  findAnswers(question: string, context: string): Promise<Answer[]>;
-}
-
-let qnaModel: QnAModel | null = null;
-let modelPromise: Promise<QnAModel> | null = null;
+let qna: any;
+let modelPromise: Promise<any> | null = null;
 
 /**
  * Load a script dynamically only if it hasn't been loaded yet.
+ * @param url - The URL of the script to load.
  */
 const loadScript = (url: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
-    console.debug(`[TensorFlowQnA] Attempting to load script: ${url}`);
-
     if (document.querySelector(`script[src="${url}"]`)) {
       console.info(`[TensorFlowQnA] Script already loaded: ${url}`);
       resolve();
@@ -32,7 +20,7 @@ const loadScript = (url: string): Promise<void> => {
 
     const script = document.createElement('script');
     script.src = url;
-    script.async = true;
+    script.async = true; // Ensure non-blocking load
     script.onload = () => {
       console.info(`[TensorFlowQnA] Script loaded: ${url}`);
       resolve();
@@ -46,120 +34,77 @@ const loadScript = (url: string): Promise<void> => {
 };
 
 /**
- * Initialize TensorFlow backend and load required modules
+ * Load TensorFlow.js and QnA model from CDN (client-side only).
  */
-const initializeTensorFlow = async (): Promise<void> => {
-  try {
-    console.info('[TensorFlowQnA] Loading TensorFlow modules...');
-    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest');
-    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@latest');
-
-    const tf = (window as any).tf;
-    console.info('[TensorFlow] Initializing backend...');
-    await tf.ready();
-    console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
-  } catch (error) {
-    console.error('[TensorFlow] Initialization failed:', error);
-    throw new Error('Failed to initialize TensorFlow backend.');
-  }
-};
-
-/**
- * Load the QnA model with proper error handling and caching
- */
-const loadQnAModel = async (): Promise<QnAModel> => {
+const loadQnAModel = async (): Promise<any> => {
   if (typeof window === 'undefined') {
-    throw new Error('TensorFlow QnA can only be used in browser environments.');
+    throw new Error('TensorFlow can only be used in the browser.');
   }
 
-  if (qnaModel) return qnaModel;
+  // Avoid redundant loads by caching the model
   if (modelPromise) return modelPromise;
 
+  if (!qna) {
+    try {
+      console.info('[TensorFlowQnA] Loading TensorFlow modules from CDN...');
+      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest');
+      await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/qna@latest');
+
+      const tf = (window as any).tf;
+      qna = (window as any).qna;
+
+      console.info('[TensorFlow] Initializing backend...');
+      await tf.ready();
+      console.info(`[TensorFlow] Backend initialized: ${tf.getBackend()}`);
+    } catch (error) {
+      console.error('[TensorFlow] Backend or module initialization failed:', error);
+      throw new Error('Failed to initialize TensorFlow backend.');
+    }
+  }
+
   try {
-    await initializeTensorFlow();
-    const qna = (window as any).qna;
-
     console.info('[TensorFlowQnA] Loading QnA model...');
-    modelPromise = qna.load().then((model: QnAModel) => {
-      qnaModel = model;
-      return model;
-    });
-
-    return modelPromise;
+    modelPromise = qna.load();
+    return await modelPromise;
   } catch (error) {
-    console.error('[TensorFlowQnA] Model loading failed:', error);
+    console.error('[TensorFlowQnA] Failed to load QnA model:', error);
     throw new Error('Failed to load QnA model.');
   }
 };
 
 /**
- * Process input text using both TensorFlow QnA and API
+ * Process input using TensorFlow QnA and return bot messages.
+ * @param input - User's question.
+ * @param context - The conversation context or additional text.
+ * @returns A promise that resolves to an array of bot messages.
  */
 export const processLocalQnA = async (
   input: string,
   context: string
 ): Promise<Message[]> => {
-  console.debug('[TensorFlowQnA] Processing input:', { input, context });
+  console.debug('[TensorFlowQnA] processLocalQnA called with:', { input, context });
 
   try {
-    const [tfResult, apiResult] = await Promise.allSettled([
-      (async () => {
-        const model = await loadQnAModel();
-        console.debug('[TensorFlowQnA] Running model inference...', { input, context });
-        return model.findAnswers(input, context);
-      })(),
-    ]);
+    const model = await loadQnAModel();
+    console.debug('[TensorFlowQnA] Model loaded. Running findAnswers...', { input, context });
 
-    const messages: Message[] = [];
+    const answers = await model.findAnswers(input, context);
+    console.debug('[TensorFlowQnA] Answers received:', answers);
 
-    // Process TensorFlow results
-    if (tfResult.status === 'fulfilled') {
-      console.debug('[TensorFlowQnA] TensorFlow answers:', tfResult.value);
-      const tfMessages = tfResult.value
-        .filter((answer: Answer) => answer.score > 0.5) // Filter low confidence answers
-        .map((answer: Answer) => ({
-          id: uuidv4(),
-          sender: 'bot',
-          text: answer.text,
-          role: 'bot',
-          content: answer.text,
-          persona: 'tensorflow-qna',
-          timestamp: Date.now(),
-          confidence: answer.score,
-          startIndex: answer.startIndex,
-          endIndex: answer.endIndex
-        }));
-      messages.push(...tfMessages);
-    } else {
-      console.warn('[TensorFlowQnA] TensorFlow processing failed:', tfResult.reason);
-    }
+    const botMessages: Message[] = answers.map((answer) => ({
+      id: uuidv4(),
+      sender: 'bot',
+      text: answer.text,
+      role: 'bot',
+      content: answer.text,
+      persona: 'tensorflow-qna',
+      timestamp: Date.now(),
+    }));
 
-    // Process API results
-    if (apiResult.status === 'fulfilled') {
-      console.debug('[API] Response received:', apiResult.value);
-      messages.push({
-        id: uuidv4(),
-        sender: 'bot',
-        text: apiResult.value.answer,
-        role: 'bot',
-        content: apiResult.value.answer,
-        persona: 'api-bot',
-        timestamp: Date.now()
-      });
-    } else {
-      console.warn('[API] Request failed:', apiResult.reason);
-    }
-
-    console.info('[TensorFlowQnA] Processing completed successfully');
-    return messages;
+    console.info('[TensorFlowQnA] Process completed successfully.');
+    return botMessages;
   } catch (error) {
-    console.error('[TensorFlowQnA] Error during processing:', error);
-    throw new Error('Failed to process question using QnA model and API.');
+    console.error('[TensorFlowQnA] Error processing QnA:', error);
+    throw new Error('Failed to process local QnA.');
   }
-};
-
-// Export additional utilities if needed
-export const utils = {
-  loadQnAModel,
-  initializeTensorFlow
 };
