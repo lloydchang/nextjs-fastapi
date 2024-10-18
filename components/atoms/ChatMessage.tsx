@@ -11,6 +11,7 @@ import styles from 'styles/components/atoms/ChatMessage.module.css';
 import { Message } from 'types';
 import { useModal } from '../state/context/ModalContext';
 
+// Custom Link Renderer to ensure links open safely in a new tab
 const LinkRenderer = ({
   href,
   children,
@@ -21,6 +22,7 @@ const LinkRenderer = ({
   </a>
 );
 
+// Custom schema to allow specific attributes and tag names
 const customSchema = {
   ...defaultSchema,
   attributes: {
@@ -30,6 +32,7 @@ const customSchema = {
   tagNames: [...(defaultSchema.tagNames ?? []), 'iframe'],
 };
 
+// Props interface extending Message with additional flags
 interface ChatMessageProps extends Message {
   isFullScreen: boolean;
   isLastMessage: boolean;
@@ -41,6 +44,7 @@ const palette = [
   '#BCBD22', '#17BECF',
 ];
 
+// Function to consistently hash persona names to colors
 const hashPersonaToColor = (persona: string): string => {
   let hash = 0;
   for (let i = 0; i < persona.length; i++) {
@@ -50,6 +54,7 @@ const hashPersonaToColor = (persona: string): string => {
   return palette[index];
 };
 
+// Function to convert plain URLs in text to Markdown links
 const convertPlainUrlsToMarkdownLinks = (text: string) => {
   const urlPattern = /(?<!\S)(https?:\/\/[\w.-]+\.[\w]{2,}|www\.[\w.-]+\.[\w]{2,})(\/\S*)?(?!\S)/g;
   return text.replace(urlPattern, (match) => {
@@ -58,6 +63,7 @@ const convertPlainUrlsToMarkdownLinks = (text: string) => {
   });
 };
 
+// Function to render persona labels with Markdown support
 const renderPersonaLabel = (persona: string, personaColor: string) => (
   <div className={styles.modalPersonaLabel} style={{ color: personaColor, fontWeight: 'bold' }}>
     <ReactMarkdown remarkPlugins={[remarkGfm]}>{persona}</ReactMarkdown>
@@ -82,12 +88,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const processedText = convertPlainUrlsToMarkdownLinks(text);
 
-  const shouldShorten = text.split(' ').length > 10 && !isFullScreen && !isLastMessage;
+  // Updated shortening logic to exclude user messages
+  const shouldShorten = text.split(' ').length > 10 && !isFullScreen && !isLastMessage && !isUser;
   const shortenedText = shouldShorten ? `${text.split(' ').slice(0, 10).join(' ')}…` : text;
 
   const modalId = `modal-${text}`;
   const isModalOpen = activeModal === modalId;
 
+  // Updated handleOpenModal to prevent opening modal for user messages
   const handleOpenModal = useCallback(() => {
     if (!isFullScreen && !isUser) { // Prevent modal for user messages
       openModal(modalId);
@@ -95,6 +103,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [isFullScreen, isUser, modalId, openModal, text, sender, role]);
 
+  // Markdown renderer with plugins and custom link handling
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -105,6 +114,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     </ReactMarkdown>
   );
 
+  // Effect to handle Escape key for closing modals
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeModal();
@@ -116,6 +126,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [isModalOpen, closeModal]);
 
+  // Handle key presses for accessibility (Enter and Space)
   const handleKeyPress = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if ((e.key === 'Enter' || e.key === ' ') && !isFullScreen && !isUser) {
       handleOpenModal();
@@ -124,6 +135,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <>
+      {/* Conditional Rendering: Modal is not rendered for user messages or in full-screen mode */}
       {!isUser && !isFullScreen && isModalOpen && (
         <div
           className={styles.modalBackdrop}
@@ -158,12 +170,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         className={`${styles.messageContainer} ${
           isUser ? styles.userMessage : styles.botMessage
         } ${isInterim ? styles.interim : ''}`}
-        onMouseEnter={() => !isFullScreen && setShowFullMessage(true)}
-        onMouseLeave={() => !isFullScreen && setShowFullMessage(false)}
-        onClick={handleOpenModal}
+        onMouseEnter={() => !isFullScreen && !isUser && setShowFullMessage(true)} // Disable hover for user messages
+        onMouseLeave={() => !isFullScreen && !isUser && setShowFullMessage(false)} // Disable hover for user messages
+        onClick={handleOpenModal} // Handle click only if not in full-screen and not user
         role="button"
         tabIndex={0}
-        onKeyPress={handleKeyPress}
+        onKeyPress={handleKeyPress} // Handle key press only if not in full-screen and not user
         aria-expanded={isModalOpen}
       >
         {persona && (
@@ -176,7 +188,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {renderPersonaLabel(persona, personaColor)}
           </div>
         )}
-        {!isFullScreen && showFullMessage && (
+        {/* Conditionally render the hovered text only if not in full-screen and not user */}
+        {!isFullScreen && !isUser && showFullMessage && (
           <div className={styles.textHovered}>
             {renderMarkdown(processedText)}
           </div>
