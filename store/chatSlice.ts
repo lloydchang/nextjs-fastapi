@@ -119,11 +119,10 @@ const debouncedApiCall = debounce(
 
     while (retryCount < maxRetries) {
       try {
-        const context = ''; // Set context appropriately; can be '' if no context is needed
+        const context = '';
         const tfPrediction = await processLocalQnA(input.toString(), context);
-        const tfPredictionMessages = await processLocalQnA(input.toString(), ''); // Assign correctly
+        const tfPredictionMessages = await processLocalQnA(input.toString(), '');
 
-        // If you only need the first message's text, extract it:
         const tfPredictionText = tfPredictionMessages.length > 0 
           ? tfPredictionMessages[0].text 
           : 'No answer found';
@@ -131,18 +130,17 @@ const debouncedApiCall = debounce(
         const botMessageFromTF: Message = {
           id: uuidv4(),
           sender: 'bot',
-          text: tfPredictionText, // Use the extracted text
+          text: tfPredictionText,
           role: 'bot',
-          content: tfPredictionText, // Use the extracted text
+          content: tfPredictionText,
           persona: 'tf-model',
           timestamp: Date.now(),
         };
         
         dispatch(addMessage(botMessageFromTF));
 
-        // First Promise.allSettled call
         const [tfResult, apiResult] = await Promise.allSettled([
-          processLocalQnA(input.toString(), ''), // TensorFlow QnA call
+          processLocalQnA(input.toString(), ''),
           (async () => {
             const response = await fetch('/api/chat', {
               method: 'POST',
@@ -160,8 +158,49 @@ const debouncedApiCall = debounce(
               throw new ApiError(response.status, response.statusText);
             }
 
-            return response.json(); // Return JSON if the response is OK
-          })(), // Wrapped API call in an async function
+            const reader = response.body?.getReader();
+            if (!reader) {
+              throw new Error('Response body is not readable');
+            }
+
+            const decoder = new TextDecoder();
+            let textBuffer = '';
+
+            try {
+              while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                textBuffer += decoder.decode(value, { stream: true });
+                const messages = textBuffer.split('\n\n');
+                textBuffer = messages.pop() || '';
+
+                for (const message of messages) {
+                  if (message.startsWith('data: ')) {
+                    const parsedData = parseIncomingMessage(
+                      message.substring(6).trim()
+                    );
+                    if (parsedData) {
+                      const botMessage: Message = {
+                        id: uuidv4(),
+                        sender: 'bot',
+                        text: parsedData.message,
+                        role: 'bot',
+                        content: parsedData.message,
+                        persona: parsedData.persona,
+                        timestamp: Date.now(),
+                      };
+                      dispatch(addMessage(botMessage));
+                    }
+                  }
+                }
+              }
+            } finally {
+              reader.releaseLock();
+            }
+
+            return response.json();
+          })(),
           timeoutPromise(10000),
         ]);
 
@@ -169,14 +208,14 @@ const debouncedApiCall = debounce(
         if (tfResult.status === 'fulfilled') {
           const tfMessages = tfResult.value.map((answer: any) => ({
             id: uuidv4(),
-            sender: 'bot' as 'bot', // Assert as valid sender type
+            sender: 'bot' as 'bot',
             text: answer.text,
-            role: 'bot' as 'bot', // Assert as valid role type
+            role: 'bot' as 'bot',
             content: answer.text,
             persona: 'tensorflow-qna',
             timestamp: Date.now(),
           }));
-          tfMessages.forEach((msg) => dispatch(addMessage(msg))); // Dispatch each message
+          tfMessages.forEach((msg) => dispatch(addMessage(msg)));
         }
 
         // Handle API result if fulfilled
@@ -193,64 +232,15 @@ const debouncedApiCall = debounce(
           dispatch(addMessage(apiMessage));
         }
 
-        if (!response.ok) {
-          if (response.status === 429) {
-            const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-            console.debug(`Rate limit hit, retrying after ${retryAfter} seconds...`);
-            await wait(retryAfter * 1000);
-            retryCount++;
-            continue; // Retry the API call
-          }
-          throw new ApiError(response.status, response.statusText);
-        }
-
-        const reader = response.body?.getReader();
-        if (reader) {
-          const decoder = new TextDecoder();
-          let textBuffer = '';
-
-          try {
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) break;
-
-              textBuffer += decoder.decode(value, { stream: true });
-              const messages = textBuffer.split('\n\n');
-              textBuffer = messages.pop() || '';
-
-              for (const message of messages) {
-                if (message.startsWith('data: ')) {
-                  const parsedData = parseIncomingMessage(
-                    message.substring(6).trim()
-                  );
-                  if (parsedData) {
-                    const botMessage: Message = {
-                      id: uuidv4(),
-                      sender: 'bot',
-                      text: parsedData.message,
-                      role: 'bot',
-                      content: parsedData.message,
-                      persona: parsedData.persona,
-                      timestamp: Date.now(),
-                    };
-                    dispatch(addMessage(botMessage));
-                  }
-                }
-              }
-            }
-          } finally {
-            reader.releaseLock();
-          }
-        }
-
         dispatch(setLoading(false));
-        return; // Exit the retry loop on success
+        return;
+
       } catch (error: any) {
         if (error instanceof ApiError && error.status === 429) {
           retryCount++;
           const retryDelay = Math.pow(2, retryCount) * 1000;
           console.debug(`Retrying API call, attempt ${retryCount} after ${retryDelay}ms...`);
-          await wait(retryDelay); // Exponential backoff
+          await wait(retryDelay);
           continue;
         }
         console.error('Error during API or TensorFlow.js call:', error);
