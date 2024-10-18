@@ -94,8 +94,7 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      logger.error(`Error handling POST request for clientId: ${clientId}, RequestId: ${requestId}: ${errorMessage}`);
+      logger.error(`Error handling POST request for clientId: ${clientId}, RequestId: ${requestId}: ${error}`);
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
   });
@@ -118,9 +117,8 @@ async function executeBotFunctions(
         context.push({ role: 'bot', content: message, persona: bot.persona });
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      logger.error(`Error processing bot ${bot.persona}: ${errorMessage}`);
-      responses.push(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+      logger.error(`Error processing bot ${bot.persona}: ${error}`);
+      responses.push(`data: ${JSON.stringify({ error: error.message })}\n\n`);
     }
   }
 
