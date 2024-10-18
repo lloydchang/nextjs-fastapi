@@ -59,6 +59,9 @@ const TalkPanel: React.FC = () => {
         performSearch(searchQuery);
       }
     }
+    else {
+      performSearch(searchQuery);
+    }
 
     return () => {
       if (isDevelopment && !isStrictMode.current) {
