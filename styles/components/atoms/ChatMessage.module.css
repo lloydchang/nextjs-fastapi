@@ -251,8 +251,8 @@
   justify-content: left;
 }
 
-/* Full Screen Mode Styles */
-.fullScreenMode .text {
+/* Modal Mode Styles */
+.modalMode .text {
   max-width: none; /* Remove width limit */
   justify-content: left;
 }
@@ -410,8 +410,8 @@
     justify-content: left;
   }
 
-  /* Full Screen Mode Styles */
-  .fullScreenMode .text {
+  /* Modal Mode Styles */
+  .modalMode .text {
     max-width: 50vw;
     justify-content: left;
   }
