@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
 import { processLocalQnA } from '../utils/tensorflowQnA';
+import { getBrowserName } from '../utils/browserDetection';
 
 // Debug logger configuration
 const createLogger = (namespace: string) => ({
@@ -197,7 +198,7 @@ const debouncedApiCall = debounce(
     });
 
     let retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = 1;
 
     while (retryCount < maxRetries) {
       try {
@@ -217,22 +218,25 @@ const debouncedApiCall = debounce(
             ? tfPredictionMessages[0].text
             : 'No answer found';
 
+        const browserName = getBrowserName();
+        
         const botMessageFromTF: Message = {
           id: uuidv4(),
           sender: 'bot',
           text: tfPredictionText,
           role: 'bot',
           content: tfPredictionText,
-          persona: 'tf-model',
+          persona: `${browserName} TensorFlow-QnA`,
           timestamp: Date.now(),
         };
-
+        
         logger.debug('store/chatSlice.ts - Dispatching TF prediction message', {
           requestId,
           messageId: botMessageFromTF.id,
           contentLength: tfPredictionText.length,
+          browser: browserName,
         });
-
+        
         dispatch(addMessage(botMessageFromTF));
 
         logger.debug('store/chatSlice.ts - Starting parallel API and TF processing', { requestId });
