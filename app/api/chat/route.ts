@@ -12,6 +12,15 @@ import { BotFunction, Metric } from 'types';
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
 import { isValidConfig } from 'app/api/chat/utils/validation';
 
+// Add interface for bot metrics
+interface BotMetric {
+  persona: string;
+  duration: number;
+  success: boolean;
+  responseSize: number;
+  error?: string;  // Added error property as optional
+}
+
 type TextModelConfigKey =
   | 'ollamaGemmaTextModel'
   | 'ollamaLlamaTextModel'
@@ -239,7 +248,6 @@ export async function POST(request: NextRequest) {
                 duration: 0,
                 success: false,
                 responseSize: 0,
-                error?: string;
               };
 
               try {

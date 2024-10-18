@@ -3,7 +3,7 @@
 .tools-container {
   padding: 0px 30px;
   position: absolute;       /* Use absolute positioning */
-  bottom: -650px;           /* Greater negative numbers move container further down */
+  bottom: -680px;           /* Greater negative numbers move container further down */
   right: -48px;             /* Align container slightly to the left for aesthetics */
   display: flex;
   flex-direction: column;   /* Arrange buttons vertically */
@@ -117,7 +117,7 @@
   height: 30px;
   background-color: #eb0028;
   clip-path: polygon(100% 50%, 0% 0%, 30% 50%, 0% 100%);
-  animation: flash 2s infinite; /* Slower flash animation */
+  animation: flash 0.5s infinite; /* Speed of flash animation */
   transition: top 0.8s ease-in-out, left 0.8s ease-in-out; /* Smooth arrow movement */
 }
 

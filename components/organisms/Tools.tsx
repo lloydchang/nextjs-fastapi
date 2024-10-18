@@ -6,15 +6,13 @@ import { RootState, AppDispatch } from 'store/store';
 import { addMessage } from 'store/chatSlice';
 import buttonBlurb from 'components/organisms/buttonBlurb';
 import styles from 'styles/components/organisms/Tools.module.css';
-import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique ids
+import { v4 as uuidv4 } from 'uuid';
 
 const Tools: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [highlightedButton, setHighlightedButton] = useState<string>(
-    Object.keys(buttonBlurb)[0]
-  );
+  const [highlightedButton, setHighlightedButton] = useState<string>(buttonBlurb[0].key);
 
   const dragItem = useRef<HTMLDivElement | null>(null);
   const dragStartPosition = useRef({ x: 0, y: 0 });
@@ -33,19 +31,23 @@ const Tools: React.FC = () => {
     (message: string): string => {
       const lowerMessage = message.toLowerCase();
 
-      const matchingButtonName = Object.keys(buttonBlurb).find((buttonName) => {
-        const regex = new RegExp(`\\b${escapeRegExp(buttonName.toLowerCase())}\\b`, 'i');
+      // First try to match button keys
+      const matchingButtonEntry = buttonBlurb.find((entry) => {
+        const regex = new RegExp(`\\b${escapeRegExp(entry.key.toLowerCase())}\\b`, 'i');
         return regex.test(lowerMessage);
       });
 
-      if (matchingButtonName) return matchingButtonName;
+      if (matchingButtonEntry) return matchingButtonEntry.key;
 
-      for (const [buttonName, { blurb }] of Object.entries(buttonBlurb)) {
+      // Then try to match blurbs
+      const matchingBlurbEntry = buttonBlurb.find((entry) => {
         const regex = new RegExp(`\\b${escapeRegExp(lowerMessage)}\\b`, 'i');
-        if (regex.test(blurb.toLowerCase())) return buttonName;
-      }
+        return regex.test(entry.blurb.toLowerCase());
+      });
 
-      return Object.keys(buttonBlurb)[0];
+      if (matchingBlurbEntry) return matchingBlurbEntry.key;
+
+      return buttonBlurb[0].key;
     },
     []
   );
@@ -68,26 +70,27 @@ const Tools: React.FC = () => {
         console.debug(`Matching button found: ${matchingButton}`);
         setHighlightedButton(matchingButton);
 
-        const buttonText = `***${matchingButton || ''}?***`;
-        const blurbText = `**${buttonBlurb[matchingButton].blurb || ''}**`;
-        const url = buttonBlurb[matchingButton].url || '';
+        const matchingEntry = buttonBlurb.find(entry => entry.key === matchingButton);
+        if (matchingEntry) {
+          const buttonText = `***${matchingButton || ''}?***`;
+          const blurbText = `**${matchingEntry.blurb}**`;
+          const messageText = `<a href="${matchingEntry.url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
 
-        const messageText = `<a href="${url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
-
-        if (lastNudgeMessageRef.current !== messageText) {
-          dispatch(
-            addMessage({
-              id: uuidv4(),
-              content: messageText,
-              timestamp: Date.now(),
-              persona: buttonText,
-              role: 'nudge',
-              sender: 'nudge',
-              text: messageText,
-              hidden: false,
-            })
-          );
-          lastNudgeMessageRef.current = messageText;
+          if (lastNudgeMessageRef.current !== messageText) {
+            dispatch(
+              addMessage({
+                id: uuidv4(),
+                content: messageText,
+                timestamp: Date.now(),
+                persona: buttonText,
+                role: 'nudge',
+                sender: 'nudge',
+                text: messageText,
+                hidden: false,
+              })
+            );
+            lastNudgeMessageRef.current = messageText;
+          }
         }
       }
     }
@@ -139,17 +142,17 @@ const Tools: React.FC = () => {
       onMouseDown={handleMouseDown}
     >
       <div className={styles['button-group']}>
-        {Object.keys(buttonBlurb).map((buttonName) => (
-          <div key={buttonName} className={styles['lazy-arrow-container']}>
+        {buttonBlurb.map((entry) => (
+          <div key={entry.key} className={styles['lazy-arrow-container']}>
             <button
               className={`${styles['right-edge-button']} ${
-                highlightedButton === buttonName ? styles['highlight'] : ''
+                highlightedButton === entry.key ? styles['highlight'] : ''
               }`}
-              onClick={() => openInNewTab(buttonBlurb[buttonName].url)}
+              onClick={() => openInNewTab(entry.url)}
             >
-              {buttonName}
+              {entry.key}
             </button>
-            {highlightedButton === buttonName && (
+            {highlightedButton === entry.key && (
               <div className={styles['flashing-arrow']} />
             )}
           </div>
