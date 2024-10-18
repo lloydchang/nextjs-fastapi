@@ -27,9 +27,6 @@ const getSdgTitles = (sdgTags: string[]): string[] =>
 // Helper function for debug logging
 const debugLog = (message: string) => console.debug(`[TalkPanel] ${message}`);
 
-// Map to store refs for each talk item
-const talkRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
-
 const TalkPanel: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const { talks, selectedTalk } = useSelector((state: RootState) => state.talk);
@@ -42,6 +39,9 @@ const TalkPanel: React.FC = () => {
   const isSearchInProgress = useRef(false);
   const sentMessagesRef = useRef<Set<string>>(new Set());
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Move talkRefs inside the component to comply with hook rules
+  const talkRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
 
   const debouncedPerformSearch = useCallback(
     debounce((query: string) => performSearch(query), 500),
