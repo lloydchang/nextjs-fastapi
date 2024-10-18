@@ -1,8 +1,12 @@
-export function getMessageContent(messages: any[]): string {
-  if (!Array.isArray(messages)) {
-    console.warn('getMessageContent: messages is not an array', messages);
-    return '';
-  }  
+export function getMessageContent(messages: string | any[]): string {
+  if (typeof messages === 'string') {
+    return messages; // Directly return the string
+  }
 
-  return messages.map((message) => message.content || '').join('\n');
+  if (Array.isArray(messages)) {
+    return messages.map((message) => message.content || '').join('\n');
+  }
+
+  console.warn('getMessageContent: Invalid input', messages);
+  return '';
 }
