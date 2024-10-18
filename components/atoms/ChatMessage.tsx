@@ -34,6 +34,7 @@ const customSchema = {
 
 interface ChatMessageProps extends Message {
   isFullScreen: boolean;
+  isLastMessage: boolean; // Added prop to indicate if this is the last message
 }
 
 const palette = [
@@ -75,6 +76,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   persona,
   isFullScreen,
   role,
+  isLastMessage, // Destructure the new prop
 }) => {
   const { openModal, closeModal, activeModal } = useModal();
   const [showFullMessage, setShowFullMessage] = useState(false);
@@ -84,7 +86,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const isUser = role === 'user';
 
   const processedText = convertPlainUrlsToMarkdownLinks(text);
-  const shouldShorten = text.split(' ').length > 10 && !isFullScreen;
+
+  // Updated shortening logic to exclude the last message
+  const shouldShorten = text.split(' ').length > 10 && !isFullScreen && !isLastMessage;
+
   const shortenedText = shouldShorten
     ? `${text.split(' ').slice(0, 10).join(' ')}…`
     : text;
