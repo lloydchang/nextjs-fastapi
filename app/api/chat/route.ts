@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
 import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
-import { extractValidMessages } from 'app/api/chat/utils/filterContext'; // Import extractValidMessages
-import { Message } from 'types'; // Import Message type from centralized types
+import { extractValidMessages, Message } from 'app/api/chat/utils/filterContext'; // Import Message type
 import logger from 'app/api/chat/utils/logger';
 import { Mutex } from 'async-mutex';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
