@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
 import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
 import { extractValidMessages } from 'app/api/chat/utils/filterContext'; // Import extractValidMessages
-import { Message } from 'types'; // Import Message type from centralized types
+import { UserPrompt } from 'types'; // Import UserPrompt type from centralized types
 import logger from 'app/api/chat/utils/logger';
 import { Mutex } from 'async-mutex';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
@@ -32,7 +32,7 @@ const maxContextMessages = 100; // Keep only the last 100 messages (adjust based
 // Maps to track client-specific data
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
-const clientContexts = new Map<string, Message[]>();
+const clientContexts = new Map<string, UserPrompt[]>(); // Changed to UserPrompt[]>
 
 /**
  * Handles POST requests to the chat API.
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Filter out invalid messages (e.g., empty content)
-      const validMessages: Message[] = extractValidMessages(messages);
+      const validMessages: UserPrompt[] = extractValidMessages(messages);
 
       logger.silly(
         `Filtered to ${validMessages.length} valid messages for clientId: ${clientId}, RequestId: ${requestId}`
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
                         context.push({
                           role: 'bot',
                           content: botResponse,
-                          persona: botPersona,
+                          persona: botPersona, // Ensure UserPrompt includes 'persona' as optional
                         });
                         logger.silly(
                           `Added bot response to context. New context size: ${context.length}`
