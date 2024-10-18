@@ -5,6 +5,7 @@ import { AppDispatch, RootState } from 'store/store';
 import he from 'he';
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
+import debounce from 'lodash/debounce';
 import { setLoading, setApiError, clearApiError } from './apiSlice';
 
 interface ChatState {
@@ -38,14 +39,13 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       console.debug('Adding message:', action.payload);
 
-      const isDuplicate = state.messages.some(
-        (msg) =>
-          msg.id === action.payload.id ||
-          (msg.text === action.payload.text &&
-            msg.timestamp === action.payload.timestamp)
-      );
-
-      if (isDuplicate) {
+      if (
+        state.messages.some(
+          (msg) =>
+            msg.text === action.payload.text &&
+            msg.timestamp === action.payload.timestamp
+        )
+      ) {
         console.debug('Duplicate message detected, skipping:', action.payload);
         return;
       }
@@ -56,7 +56,7 @@ const chatSlice = createSlice({
       }
 
       state.messages.push(action.payload);
-      console.log('Messages in state:', [...state.messages]); // Inspect message list
+      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
     },
     clearMessages: (state) => {
       console.debug('Clearing all messages');
@@ -96,101 +96,101 @@ export const parseIncomingMessage = (jsonString: string) => {
   }
 };
 
-async function callApi(
-  dispatch: AppDispatch,
-  getState: () => RootState,
-  input: string | Partial<Message>,
-  clientId: string
-) {
-  const state = getState();
-  if (state.api?.isLoading) return;
+const debouncedApiCall = debounce(
+  async (
+    dispatch: AppDispatch,
+    getState: () => RootState,
+    input: string | Partial<Message>,
+    clientId: string
+  ) => {
+    const state = getState();
+    if (state.api?.isLoading) return;
 
-  dispatch(setLoading(true));
-  dispatch(clearApiError());
+    dispatch(setLoading(true));
+    dispatch(clearApiError());
 
-  const messagesArray = [
-    { role: 'user', content: typeof input === 'string' ? input : input.text },
-  ];
+    const messagesArray = [
+      { role: 'user', content: typeof input === 'string' ? input : input.text },
+    ];
+    let retryCount = 0;
+    const maxRetries = 3;
 
-  let retryCount = 0;
-  const maxRetries = 3;
-
-  while (retryCount < maxRetries) {
-    try {
-      const response = await Promise.race([
-        fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
-          body: JSON.stringify({ messages: messagesArray }),
-        }),
-        timeoutPromise(10000),
-      ]);
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-          await wait(retryAfter * 1000);
-          retryCount++;
-          continue;
-        }
-        throw new ApiError(response.status, response.statusText);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('Failed to read response stream');
-
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-
+    while (retryCount < maxRetries) {
       try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
+        const response = await Promise.race([
+          fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-client-id': clientId },
+            body: JSON.stringify({ messages: messagesArray }),
+          }),
+          timeoutPromise(10000),
+        ]);
 
-          textBuffer += decoder.decode(value, { stream: true });
+        if (!response.ok) {
+          if (response.status === 429) {
+            const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+            await wait(retryAfter * 1000);
+            retryCount++;
+            continue;
+          }
+          throw new ApiError(response.status, response.statusText);
+        }
 
-          let splitIndex;
-          while ((splitIndex = textBuffer.indexOf('\n\n')) !== -1) {
-            const message = textBuffer.slice(0, splitIndex).trim();
-            textBuffer = textBuffer.slice(splitIndex + 2);
+        const reader = response.body?.getReader();
+        if (reader) {
+          const decoder = new TextDecoder();
+          let textBuffer = '';
 
-            if (message.startsWith('data: ')) {
-              const parsedData = parseIncomingMessage(
-                message.substring(6).trim()
-              );
-              if (parsedData) {
-                const botMessage: Message = {
-                  id: uuidv4(),
-                  sender: 'bot',
-                  text: parsedData.message,
-                  role: 'bot',
-                  content: parsedData.message,
-                  persona: parsedData.persona,
-                  timestamp: Date.now(),
-                };
-                dispatch(addMessage(botMessage));
+          try {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+
+              textBuffer += decoder.decode(value, { stream: true });
+              const messages = textBuffer.split('\n\n');
+              textBuffer = messages.pop() || '';
+
+              for (const message of messages) {
+                if (message.startsWith('data: ')) {
+                  const parsedData = parseIncomingMessage(
+                    message.substring(6).trim()
+                  );
+                  if (parsedData) {
+                    const botMessage: Message = {
+                      id: uuidv4(),
+                      sender: 'bot',
+                      text: parsedData.message,
+                      role: 'bot',
+                      content: parsedData.message,
+                      persona: parsedData.persona,
+                      timestamp: Date.now(),
+                    };
+                    dispatch(addMessage(botMessage));
+                  }
+                }
               }
             }
+          } finally {
+            reader.releaseLock();
           }
         }
-      } finally {
-        reader.releaseLock();
-      }
 
-      dispatch(setLoading(false));
-      return;
-    } catch (error: any) {
-      if (error instanceof ApiError && error.status === 429) {
-        retryCount++;
-        await wait(Math.pow(2, retryCount) * 1000);
-        continue;
+        dispatch(setLoading(false));
+        return;
+      } catch (error: any) {
+        if (error instanceof ApiError && error.status === 429) {
+          retryCount++;
+          await wait(Math.pow(2, retryCount) * 1000);
+          continue;
+        }
+        dispatch(setApiError(error.message || 'An unknown error occurred'));
+        dispatch(setLoading(false));
+        return;
       }
-      dispatch(setApiError(error.message || 'An unknown error occurred'));
-      dispatch(setLoading(false));
-      return;
     }
-  }
-}
+  },
+  1000
+);
 
 export const sendMessage =
   (input: string | Partial<Message>) =>
@@ -203,9 +203,9 @@ export const sendMessage =
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(),
+      text: isMessage(input) ? input.text || '' : input.toString(), // Ensure text is not empty
       role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(),
+      content: isMessage(input) ? input.text || '' : input.toString(), // Use toString() as fallback
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
@@ -215,7 +215,7 @@ export const sendMessage =
     dispatch(addMessage(userMessage));
 
     try {
-      await callApi(dispatch, getState, input, clientId);
+      await debouncedApiCall(dispatch, getState, input, clientId);
     } catch (error) {
       dispatch(setApiError('Failed to send message.'));
     }
