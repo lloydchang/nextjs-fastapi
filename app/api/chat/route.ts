@@ -9,7 +9,7 @@ import { UserPrompt, BotFunction } from 'types';
 import logger from 'app/api/chat/utils/logger';
 import { Mutex } from 'async-mutex';
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers';
-import getMessageContent from 'app/api/chat/utils/messageUtils'; // Default import
+import { getMessageContent } from 'app/api/chat/utils/messageUtils';
 
 const config: AppConfig = getConfig();
 const MAX_PROMPT_LENGTH = 128000;
