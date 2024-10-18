@@ -93,7 +93,7 @@ export async function generateFromCloudflareGemma(params: {
       return null;
     }
 
-    logger.silly('app/api/chat/clients/CloudflareGemmaClient.ts - Processing response stream...');
+    // logger.silly('app/api/chat/clients/CloudflareGemmaClient.ts - Processing response stream...');
     const finalResponse = await parseStream(reader, { isSSE: true, doneSignal: 'done' });
 
     // Log the response body at 'silly' level

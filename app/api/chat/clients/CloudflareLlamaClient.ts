@@ -93,7 +93,7 @@ export async function generateFromCloudflareLlama(params: {
       return null;
     }
 
-    logger.silly('app/api/chat/clients/CloudflareLlamaClient.ts - Processing response stream...');
+    // logger.silly('app/api/chat/clients/CloudflareLlamaClient.ts - Processing response stream...');
     const finalResponse = await parseStream(reader, { isSSE: true, doneSignal: 'done' });
 
     // Log the response body at 'silly' level

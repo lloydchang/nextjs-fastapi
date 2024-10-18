@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         start(controller) {
           logger.silly(`app/api/chat/route.ts - Starting to stream data for clientId: ${clientId}, RequestId: ${requestId}`);
           botResponses.forEach((response) => {
-            logger.silly(`app/api/chat/route.ts - Enqueuing response data for clientId: ${clientId}, RequestId: ${requestId}: ${response}`);
+            logger.debug(`app/api/chat/route.ts - Enqueuing response data for clientId: ${clientId}, RequestId: ${requestId}: ${response}`);
             controller.enqueue(new TextEncoder().encode(response));
           });
           controller.close();
@@ -127,7 +127,7 @@ async function executeBotFunctions(
         responses.push(`data: ${JSON.stringify({ persona: bot.persona, message })}\n\n`);
         // logger.silly(`app/api/chat/route.ts - Stream data sent for bot ${bot.persona}: ${message}`);
         context.push({ role: 'bot', content: message, persona: bot.persona });
-        logger.silly(`app/api/chat/route.ts - Added bot response to context. New context size: ${context.length}`);
+        logger.silly(`app/api/chat/route.ts - Added bot ${bot.persona} response to context. New context size: ${context.length}`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
