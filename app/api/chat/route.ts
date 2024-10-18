@@ -4,8 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getConfig, AppConfig } from 'app/api/chat/utils/config';
 import { checkRateLimit } from 'app/api/chat/utils/rateLimiter'; // Import rate limiter
-import { extractValidMessages, Message } from 'app/api/chat/utils/filterContext'; // Import Message type
+import { extractValidMessages } from 'app/api/chat/utils/filterContext';
 import logger from 'app/api/chat/utils/logger';
+import { validateEnvVars } from 'app/api/chat/utils/validate';
 import { Mutex } from 'async-mutex';
 import { BotFunction } from 'types'; // Ensure this is correctly exported in 'types'
 import { addBotFunctions } from 'app/api/chat/controllers/BotHandlers'; // Import the centralized handler
@@ -31,7 +32,7 @@ const maxContextMessages = 100; // Keep only the last 100 messages (adjust based
 // Maps to track client-specific data
 const clientMutexes = new Map<string, Mutex>();
 const lastInteractionTimes = new Map<string, number>();
-const clientContexts = new Map<string, Message[]>();
+const clientContexts = new Map<string, any[]>();
 
 /**
  * Handles POST requests to the chat API.
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Filter out invalid messages (e.g., empty content)
-      const validMessages: Message[] = extractValidMessages(messages);
+      const validMessages = extractValidMessages(messages);
 
       logger.silly(
         `Filtered to ${validMessages.length} valid messages for clientId: ${clientId}, RequestId: ${requestId}`
@@ -244,10 +245,7 @@ export async function POST(request: NextRequest) {
                 })(),
                 // Timeout promise
                 new Promise<void>((_, reject) =>
-                  setTimeout(
-                    () => reject(new Error('Bot processing timed out')),
-                    BOT_PROCESSING_TIMEOUT
-                  )
+                  setTimeout(() => reject(new Error('Bot processing timed out')), BOT_PROCESSING_TIMEOUT)
                 ),
               ]);
             } catch (timeoutError) {
