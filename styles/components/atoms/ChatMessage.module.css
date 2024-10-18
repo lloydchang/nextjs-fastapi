@@ -197,7 +197,7 @@
   margin-right: 8px;
 }
 
-/* --- Full-Screen Modal Styles --- */
+/* --- Modal Styles --- */
 .modalBackdrop {
   position: fixed;
   top: 0;
@@ -357,7 +357,7 @@
 
 /* --- Tablets and Mobile Devices --- */
 @media (max-width: 1023px) {
-  /* --- Full-Screen Modal Styles --- */
+  /* --- Modal Styles --- */
   .modalBackdrop {
     position: fixed;
     top: 0;
