@@ -56,7 +56,7 @@ const chatSlice = createSlice({
       }
 
       state.messages.push(action.payload);
-      console.debug('Updated message list:', [...state.messages]); // Spread to avoid mutating state directly
+      console.log('Messages in state:', [...state.messages]); // Added console.log to inspect messages
     },
     clearMessages: (state) => {
       console.debug('Clearing all messages');
