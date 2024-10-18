@@ -1,5 +1,3 @@
-// File: utils/tensorflowQnA.ts
-
 import { Message } from 'types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -73,7 +71,7 @@ const loadQnAModel = async (): Promise<any> => {
 };
 
 /**
- * Process input using TensorFlow QnA and return bot messages.
+ * Process input using TensorFlow QnA and perform simultaneous API call.
  * @param input - User's question.
  * @param context - The conversation context or additional text.
  * @returns A promise that resolves to an array of bot messages.
@@ -85,26 +83,61 @@ export const processLocalQnA = async (
   console.debug('[TensorFlowQnA] processLocalQnA called with:', { input, context });
 
   try {
-    const model = await loadQnAModel();
-    console.debug('[TensorFlowQnA] Model loaded. Running findAnswers...', { input, context });
+    const [tfResult, apiResult] = await Promise.allSettled([
+      (async () => {
+        const model = await loadQnAModel();
+        console.debug('[TensorFlowQnA] Model loaded. Running findAnswers...', {
+          input,
+          context,
+        });
+        return model.findAnswers(input, context);
+      })(),
+      fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: input, context }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`API Error: ${res.statusText}`);
+        }
+        return res.json();
+      }),
+    ]);
 
-    const answers = await model.findAnswers(input, context);
-    console.debug('[TensorFlowQnA] Answers received:', answers);
+    const messages: Message[] = [];
 
-    const botMessages: Message[] = answers.map((answer) => ({
-      id: uuidv4(),
-      sender: 'bot',
-      text: answer.text,
-      role: 'bot',
-      content: answer.text,
-      persona: 'tensorflow-qna',
-      timestamp: Date.now(),
-    }));
+    if (tfResult.status === 'fulfilled') {
+      console.debug('[TensorFlowQnA] Answers received from TensorFlow:', tfResult.value);
+      const tfMessages = tfResult.value.map((answer: any) => ({
+        id: uuidv4(),
+        sender: 'bot',
+        text: answer.text,
+        role: 'bot',
+        content: answer.text,
+        persona: 'tensorflow-qna',
+        timestamp: Date.now(),
+      }));
+      messages.push(...tfMessages);
+    }
+
+    if (apiResult.status === 'fulfilled') {
+      console.debug('[API] Response received:', apiResult.value);
+      const apiMessage: Message = {
+        id: uuidv4(),
+        sender: 'bot',
+        text: apiResult.value.answer,
+        role: 'bot',
+        content: apiResult.value.answer,
+        persona: 'api-bot',
+        timestamp: Date.now(),
+      };
+      messages.push(apiMessage);
+    }
 
     console.info('[TensorFlowQnA] Process completed successfully.');
-    return botMessages;
+    return messages;
   } catch (error) {
-    console.error('[TensorFlowQnA] Error processing QnA:', error);
-    throw new Error('Failed to process local QnA.');
+    console.error('[TensorFlowQnA] Error processing QnA or API:', error);
+    throw new Error('Failed to process QnA or API response.');
   }
 };
