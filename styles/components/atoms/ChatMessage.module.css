@@ -76,6 +76,7 @@
 
 /* --- Message-specific Styles --- */
 .userMessage .text {
+  color: #000; /* Light text for bot messages */
   background-color: #dcf8c6; /* Light green for user messages */
 }
 
