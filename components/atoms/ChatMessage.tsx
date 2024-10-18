@@ -9,7 +9,7 @@ import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'; // Added for sa
 import 'highlight.js/styles/github-dark.css';
 import styles from 'styles/components/atoms/ChatMessage.module.css';
 import { Message } from 'types';
-import { useModal } from '../state/context/ModalContext'; // Import useModal
+import { useModal } from '../state/context/ModalContext';
 
 // Inline anchor renderer with correct typing
 const LinkRenderer = ({
@@ -94,8 +94,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const handleOpenModal = useCallback(() => {
     openModal(modalId);
-    console.debug('Opening modal for message:', text);
-  }, [modalId, openModal, text]);
+    console.debug('Opening modal for message:', { text, sender, role });
+  }, [modalId, openModal, text, sender, role]);
 
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
@@ -132,8 +132,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           onClick={closeModal}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="modal-title"
-          id="chat-message-modal"
+          aria-labelledby={`modal-title-${modalId}`}
+          id={modalId}
           tabIndex={-1}
         >
           <div
