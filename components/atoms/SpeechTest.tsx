@@ -26,7 +26,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const [isListening, setIsListening] = useState<boolean>(isMicOn); // Start listening if mic is on by default
+  const [isListening, setIsListening] = useState<boolean>(false); // Initialize to false
 
   const interimRef = useRef<HTMLTextAreaElement>(null);
   const finalRef = useRef<HTMLTextAreaElement>(null);
@@ -59,13 +59,14 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     },
   });
 
-  // Automatically start listening if `isMicOn` is true on load
+  // Use effect to start listening by default if `isMicOn` is true on the first render
   useEffect(() => {
-    if (isMicOn && !isListening) {
+    if (isMicOn) {
+      console.log('Starting listening on load.');
       startListening();
       setIsListening(true);
     }
-  }, [isMicOn, isListening, startListening]);
+  }, [isMicOn, startListening]); // Run once on mount
 
   useEffect(() => {
     if (interimRef.current) {
