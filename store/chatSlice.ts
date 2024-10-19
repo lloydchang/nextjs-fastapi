@@ -43,6 +43,31 @@ function isMessage(input: any): input is Partial<Message> {
   return result;
 }
 
+const ensureStringContent = (input: string | Partial<Message>): string => {
+  if (typeof input === 'string') {
+    return input.trim();
+  }
+  
+  // Handle message object
+  if (typeof input === 'object' && input !== null) {
+    // If text property exists and is a string
+    if (typeof input.text === 'string') {
+      return input.text.trim();
+    }
+    // If text is an object, stringify it
+    if (input.text && typeof input.text === 'object') {
+      return JSON.stringify(input.text);
+    }
+    // If content property exists and is a string
+    if (typeof input.content === 'string') {
+      return input.content.trim();
+    }
+  }
+  
+  // Fallback for any other case
+  return String(input).trim();
+};
+
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
@@ -138,7 +163,7 @@ export const parseIncomingMessage = (jsonString: string) => {
 const simultaneousProcessing = async (
   dispatch: AppDispatch,
   getState: () => RootState,
-  input: string | Partial<Message>,
+  input: string,
   clientId: string
 ) => {
   debugLog('LocalQnA', 'Starting simultaneous processing with input:', { input, clientId });
@@ -164,7 +189,7 @@ const debouncedApiCall = debounce(
   async (
     dispatch: AppDispatch,
     getState: () => RootState,
-    input: string | Partial<Message>,
+    input: string,
     clientId: string
   ) => {
     debugLog('API', 'Starting debounced API call:', { input, clientId });
@@ -179,7 +204,7 @@ const debouncedApiCall = debounce(
     dispatch(clearApiError());
 
     const messagesArray = [
-      { role: 'user', content: typeof input === 'string' ? input : input.text },
+      { role: 'user', content: input },
     ];
     debugLog('API', 'Prepared messages array:', messagesArray);
 
@@ -300,14 +325,17 @@ export const sendMessage =
 
     const clientId = localStorage.getItem('clientId') || uuidv4();
     localStorage.setItem('clientId', clientId);
-    debugLog('SendMessage', 'Using client ID:', clientId);
-
+    
+    // Ensure content is properly stringified
+    const messageContent = ensureStringContent(input);
+    
+    // Create user message with sanitized content
     const userMessage: Message = {
       id: uuidv4(),
       sender: isMessage(input) ? input.sender || 'user' : 'user',
-      text: isMessage(input) ? input.text || '' : input.toString(),
+      text: messageContent,
       role: isMessage(input) ? input.role || 'user' : 'user',
-      content: isMessage(input) ? input.text || '' : input.toString(),
+      content: messageContent,
       hidden: isMessage(input) ? input.hidden || false : false,
       persona: isMessage(input) ? input.persona || '' : '',
       timestamp: Date.now(),
@@ -318,8 +346,8 @@ export const sendMessage =
 
     try {
       debugLog('SendMessage', 'Starting parallel processing');
-      await simultaneousProcessing(dispatch, getState, input, clientId);
-      await debouncedApiCall(dispatch, getState, input, clientId);
+      await simultaneousProcessing(dispatch, getState, messageContent, clientId);
+      await debouncedApiCall(dispatch, getState, messageContent, clientId);
       debugLog('SendMessage', 'Message processing completed successfully');
     } catch (error) {
       debugLog('SendMessage', 'Error in message processing:', error);
