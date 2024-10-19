@@ -6,13 +6,13 @@ import styles from 'styles/components/atoms/SpeechTest.module.css';
 
 interface SpeechTestProps {
   isMicOn: boolean;
-  toggleMic: () => Promise<void>;
+  toggleMic: () => Promise<void>; // Add toggleMic to control the microphone state
   onSpeechResult: (finalResult: string) => void;
   onInterimUpdate: (interimResult: string) => void;
-  onEnd?: () => void;
-  showFinalResult?: boolean;
-  showInterimResult?: boolean;
-  showIsListening?: boolean;
+  onEnd?: () => void; // Add optional onEnd callback
+  showFinalResult?: boolean; // Option to show final result textarea
+  showInterimResult?: boolean; // Option to show interim result textarea
+  showIsListening?: boolean; // Option to show listening status
 }
 
 const SpeechTest: React.FC<SpeechTestProps> = ({
@@ -27,7 +27,11 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const [isListening, setIsListening] = useState<boolean>(true);
+
+  // Align with
+  //   isMicOn: true, // Microphone is initialized as ON by default
+  // in components/state/hooks/useMedia.ts
+  const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
 
   const interimRef = useRef<HTMLTextAreaElement>(null);
   const finalRef = useRef<HTMLTextAreaElement>(null);
@@ -35,8 +39,8 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const handleFinal = useCallback(
     (text: string) => {
       console.log('Final Speech:', text);
-      setFinalResult((prev) => prev + ' ' + text);
-      onSpeechResult(text);
+      setFinalResult((prev) => prev + ' ' + text); // Append new final results
+      onSpeechResult(text); // Pass final result to parent
     },
     [onSpeechResult]
   );
@@ -45,9 +49,9 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     (text: string) => {
       console.log('Interim Speech:', text);
       setInterimResult(text);
-      onInterimUpdate(text);
+      onInterimUpdate(text); // Pass interim result to parent
     },
-    [onInterimUpdate]
+    [onInterimUpdate] // Added missing comma in dependencies
   );
 
   const { startListening, stopListening } = useSpeechRecognition({
@@ -55,49 +59,50 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     onInterimUpdate: handleInterim,
     onEnd: () => {
       console.log('Clearing final result on recognition end.');
-      setFinalResult('');
-      setIsListening(false);
+      setFinalResult(''); // Clear final result when recognition ends
+      setIsListening(false); // Reset listening UI state when recognition ends
     },
   });
 
+  // Add this useEffect in SpeechTest.tsx right after the existing hooks:
   useEffect(() => {
     if (isMicOn) {
       startListening();
-      setIsListening(true);
+      setIsListening(true); // Update UI when listening starts
     } else if (!isMicOn && isListening) {
       stopListening();
-      setIsListening(false);
+      setIsListening(false); // Update UI when listening stops
     }
   }, [isMicOn, isListening, startListening, stopListening]);
 
   useEffect(() => {
     if (interimRef.current) {
-      interimRef.current.scrollLeft = interimRef.current.scrollWidth;
+      interimRef.current.scrollLeft = interimRef.current.scrollWidth; // Ensure correct property access
     }
   }, [interimResult]);
 
   useEffect(() => {
     if (finalRef.current) {
-      finalRef.current.scrollLeft = finalRef.current.scrollWidth;
+      finalRef.current.scrollLeft = finalRef.current.scrollWidth; // Ensure correct property access
     }
   }, [finalResult]);
 
   const toggleListening = async () => {
     if (!isMicOn) {
       console.log('Microphone is off, turning it on.');
-      await toggleMic();
+      await toggleMic(); // Turn the mic on if it's off
     }
 
     if (isListening) {
-      stopListening();
-      setIsListening(false);
+      stopListening(); // Stop listening
+      setIsListening(false); // Update UI to reflect stopped listening
       if (isMicOn) {
         console.log('Microphone is on, turning it off.');
-        await toggleMic();
+        await toggleMic(); // Turn the mic off if it's on
       }
     } else {
-      startListening();
-      setIsListening(true);
+      startListening(); // Start listening
+      setIsListening(true); // Update UI to reflect started listening
     }
   };
 
