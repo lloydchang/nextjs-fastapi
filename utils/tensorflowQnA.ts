@@ -133,7 +133,7 @@ export const processLocalQnA = async (
                 .filter((answer: Answer) => answer.score > 0)
                 .map((answer: Answer) => ({
                     id: uuidv4(),
-                    sender: 'bot',
+                    sender: 'bot' as const,  // Ensure the type is correctly inferred
                     text: answer.text,
                     role: 'bot',
                     content: answer.text,
