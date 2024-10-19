@@ -70,6 +70,12 @@ const TalkPanel: React.FC = () => {
     };
   }, []);
 
+  const searchApiUrl = process.env.NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT;
+
+  if (!searchApiUrl) {
+    console.error('Error: NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT is not defined.');
+  }
+  
   const performSearch = async (query: string) => {
     const trimmedQuery = query.trim().toLowerCase();
     debugLog(`Performing search with query: "${trimmedQuery}"`);

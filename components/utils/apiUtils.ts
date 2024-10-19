@@ -5,6 +5,12 @@ import { setTalks, setSelectedTalk, addSearchHistory } from 'store/talkSlice';
 import { setLoading, setApiError, clearApiError } from 'store/apiSlice';
 import { AppDispatch } from 'store/store';
 
+const searchApiUrl = process.env.NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT;
+
+if (!searchApiUrl) {
+  console.error('Error: NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT is not defined.');
+}
+
 /**
  * Perform an API search for talks with proper error handling.
  */

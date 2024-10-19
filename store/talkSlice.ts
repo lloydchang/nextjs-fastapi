@@ -39,6 +39,12 @@ const talkSlice = createSlice({
 export const { setTalks, setSelectedTalk, addSearchHistory } = talkSlice.actions;
 export default talkSlice.reducer;
 
+const searchApiUrl = process.env.NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT;
+
+if (!searchApiUrl) {
+  console.error('Error: NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT is not defined.');
+}
+
 /**
  * Thunk to fetch talks from an API with centralized loading and error handling.
  * This ensures consistent state management across the app.

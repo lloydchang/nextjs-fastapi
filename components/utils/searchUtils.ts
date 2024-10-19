@@ -66,6 +66,12 @@ export const sendFirstAvailableTranscript = async (
   dispatch(setApiError('Failed to send transcripts for all talks.')); // Centralized error handling
 };
 
+const searchApiUrl = process.env.NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT;
+
+if (!searchApiUrl) {
+  console.error('Error: NEXT_PUBLIC_TEDXSDG_SEARCH_BACKEND_ENDPOINT is not defined.');
+}
+
 // Function to perform a search with exponential backoff
 export const performSearchWithExponentialBackoff = async (
   query: string,
