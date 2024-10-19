@@ -22,6 +22,10 @@ interface UseMediaReturn {
 export const useMedia = (): UseMediaReturn => {
   const [mediaState, setMediaState] = useState<MediaState>({
     isCamOn: false,
+  // Align with
+  //   const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
+  // in components/atoms/SpeechTest.tsx
+  const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
     isMicOn: true, // Microphone is initialized as ON by default
     isPipOn: false,
     isMemOn: true,

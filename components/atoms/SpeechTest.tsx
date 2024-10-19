@@ -26,6 +26,9 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  // Align with
+  //   isMicOn: true, // Microphone is initialized as ON by default
+  // in components/state/hooks/useMedia.ts
   const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
 
   const interimRef = useRef<HTMLTextAreaElement>(null);
