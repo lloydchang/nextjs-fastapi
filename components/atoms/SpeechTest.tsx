@@ -50,29 +50,25 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     [onInterimUpdate]
   );
 
-  const { startListening, stopListening, isRecognitionActive, initializeRecognition } =
-    useSpeechRecognition({
-      onSpeechResult: handleFinal,
-      onInterimUpdate: handleInterim,
-      onEnd: () => {
-        console.log('Recognition ended, resetting state.');
-        setFinalResult(''); // Clear final result on end
-        setIsListening(false); // Update UI state
-      },
-    });
+  const { startListening, stopListening } = useSpeechRecognition({
+    onSpeechResult: handleFinal,
+    onInterimUpdate: handleInterim,
+    onEnd: () => {
+      console.log('Recognition ended, resetting state.');
+      setFinalResult(''); // Clear final result on end
+      setIsListening(false); // Update UI state
+    },
+  });
 
-  // Ensure recognition is initialized and listening starts only once
+  // Start listening by default if `isMicOn` is true on mount
   useEffect(() => {
-    console.log('Initializing speech recognition.');
-    initializeRecognition(); // Ensure recognition instance is ready
-
     if (isMicOn && !hasStarted.current) {
-      console.log('Starting listening by default.');
-      startListening(); // Start listening
+      console.log('Starting listening by default on load.');
+      startListening();
       setIsListening(true);
       hasStarted.current = true; // Prevent multiple starts
     }
-  }, [isMicOn, initializeRecognition, startListening]);
+  }, [isMicOn, startListening]);
 
   useEffect(() => {
     if (interimRef.current) {
