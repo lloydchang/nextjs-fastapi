@@ -135,7 +135,7 @@ export const processLocalQnA = async (
                     id: uuidv4(),
                     sender: 'bot' as const,  // Ensure the type is correctly inferred
                     text: answer.text,
-                    role: 'bot',
+                    role: 'bot' as const,    // Ensure role matches allowed values
                     content: answer.text,
                     persona: 'tensorflow-qna',
                     timestamp: Date.now(),
