@@ -52,49 +52,49 @@ const Tools: React.FC = () => {
     []
   );
 
-  // const getLatestMessage = useMemo(() => {
-  //   const botMessages = messages.filter((msg) => msg.sender === 'bot');
-  //   const userMessages = messages.filter((msg) => msg.sender === 'user');
+  const getLatestMessage = useMemo(() => {
+    const botMessages = messages.filter((msg) => msg.sender === 'bot');
+    const userMessages = messages.filter((msg) => msg.sender === 'user');
 
-  //   const latestBotMessage = botMessages.at(-1)?.text || '';
-  //   const latestUserMessage = userMessages.at(-1)?.text || '';
+    const latestBotMessage = botMessages.at(-1)?.text || '';
+    const latestUserMessage = userMessages.at(-1)?.text || '';
 
-  //   return latestUserMessage || latestBotMessage;
-  // }, [messages]);
+    return latestUserMessage || latestBotMessage;
+  }, [messages]);
 
-  // useEffect(() => {
-  //   if (getLatestMessage) {
-  //     const matchingButton = findMatchingButton(getLatestMessage);
+  useEffect(() => {
+    if (getLatestMessage) {
+      const matchingButton = findMatchingButton(getLatestMessage);
 
-  //     if (matchingButton !== highlightedButton) {
-  //       console.debug(`Matching button found: ${matchingButton}`);
-  //       setHighlightedButton(matchingButton);
+      if (matchingButton !== highlightedButton) {
+        console.debug(`Matching button found: ${matchingButton}`);
+        setHighlightedButton(matchingButton);
 
-  //       const matchingEntry = buttonBlurb.find(entry => entry.key === matchingButton);
-  //       if (matchingEntry) {
-  //         const buttonText = `***${matchingButton || ''}?***`;
-  //         const blurbText = `**${matchingEntry.blurb}**`;
-  //         const messageText = `<a href="${matchingEntry.url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
+        const matchingEntry = buttonBlurb.find(entry => entry.key === matchingButton);
+        if (matchingEntry) {
+          const buttonText = `***${matchingButton || ''}?***`;
+          const blurbText = `**${matchingEntry.blurb}**`;
+          const messageText = `<a href="${matchingEntry.url}" target="_blank" rel="noopener noreferrer">${blurbText}</a>`;
 
-  //         if (lastNudgeMessageRef.current !== messageText) {
-  //           dispatch(
-  //             addMessage({
-  //               id: uuidv4(),
-  //               content: messageText,
-  //               timestamp: Date.now(),
-  //               persona: buttonText,
-  //               role: 'nudge',
-  //               sender: 'nudge',
-  //               text: messageText,
-  //               hidden: false,
-  //             })
-  //           );
-  //           lastNudgeMessageRef.current = messageText;
-  //         }
-  //       }
-  //     }
-  //   }
-  // }, [getLatestMessage, dispatch, highlightedButton, findMatchingButton]);
+          // if (lastNudgeMessageRef.current !== messageText) {
+          //   dispatch(
+          //     addMessage({
+          //       id: uuidv4(),
+          //       content: messageText,
+          //       timestamp: Date.now(),
+          //       persona: buttonText,
+          //       role: 'nudge',
+          //       sender: 'nudge',
+          //       text: messageText,
+          //       hidden: false,
+          //     })
+          //   );
+          //   lastNudgeMessageRef.current = messageText;
+          // }
+        }
+      }
+    }
+  }, [getLatestMessage, dispatch, highlightedButton, findMatchingButton]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
