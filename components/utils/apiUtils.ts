@@ -14,7 +14,7 @@ export const performSearch = (query: string) => async (dispatch: AppDispatch) =>
 
   try {
     const response = await axios.get(
-      `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`
+      `${searchApiUrl}?query=${encodeURIComponent(query)}`
     );
 
     if (response.status !== 200) throw new Error(response.statusText);

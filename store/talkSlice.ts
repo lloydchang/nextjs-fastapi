@@ -49,7 +49,7 @@ export const fetchTalks = (query: string) => async (dispatch: AppDispatch) => {
 
   try {
     const response = await fetch(
-      `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(query)}`
+      `${searchApiUrl}?query=${encodeURIComponent(query)}`
     );
 
     if (!response.ok) {

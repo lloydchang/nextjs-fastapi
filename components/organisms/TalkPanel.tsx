@@ -89,7 +89,7 @@ const TalkPanel: React.FC = () => {
     try {
       debugLog(`Making API request with query: "${trimmedQuery}"`);
       const response = await axios.get(
-        `https://fastapi-search.vercel.app/api/search?query=${encodeURIComponent(trimmedQuery)}`,
+        `${searchApiUrl}?query=${encodeURIComponent(trimmedQuery)}`,
         { signal: abortControllerRef.current.signal }
       );
 
