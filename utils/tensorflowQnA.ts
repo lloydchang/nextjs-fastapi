@@ -85,7 +85,11 @@ const loadQnAModel = async (): Promise<QnAModel> => {
             return model;
         });
 
+        if (!modelPromise) {
+            throw new Error('Failed to create model promise.');
+        }
         return modelPromise;
+
     } catch (error) {
         console.error('[TensorFlowQnA] Model loading failed:', error);
         throw new Error('Failed to load QnA model.');
