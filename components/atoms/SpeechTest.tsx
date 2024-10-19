@@ -15,7 +15,7 @@ interface SpeechTestProps {
 }
 
 const SpeechTest: React.FC<SpeechTestProps> = ({
-  isMicOn = true, // Ensure the mic is always on by default
+  isMicOn,
   toggleMic,
   onSpeechResult,
   onInterimUpdate,
@@ -26,11 +26,11 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const [isListening, setIsListening] = useState<boolean>(true); // Start listening by default
+  const [isListening, setIsListening] = useState<boolean>(false);
 
   const interimRef = useRef<HTMLTextAreaElement>(null);
   const finalRef = useRef<HTMLTextAreaElement>(null);
-  const hasStarted = useRef<boolean>(false); // Prevent multiple starts
+  const hasStarted = useRef<boolean>(false); // Guard to prevent multiple starts
 
   const handleFinal = useCallback(
     (text: string) => {
@@ -50,32 +50,29 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     [onInterimUpdate]
   );
 
-  const { startListening, stopListening, initializeRecognition } = useSpeechRecognition({
-    onSpeechResult: handleFinal,
-    onInterimUpdate: handleInterim,
-    onEnd: () => {
-      console.log('Recognition ended, resetting state.');
-      setFinalResult(''); // Clear final result on end
-      setIsListening(false); // Update UI state
-    },
-  });
+  const { startListening, stopListening, isRecognitionActive, initializeRecognition } =
+    useSpeechRecognition({
+      onSpeechResult: handleFinal,
+      onInterimUpdate: handleInterim,
+      onEnd: () => {
+        console.log('Recognition ended, resetting state.');
+        setFinalResult(''); // Clear final result on end
+        setIsListening(false); // Update UI state
+      },
+    });
 
-  // Force microphone and listening to start immediately on mount
+  // Ensure recognition is initialized and listening starts only once
   useEffect(() => {
-    const initializeMicAndStartListening = async () => {
-      console.log('Requesting microphone permissions and starting listening.');
-      await toggleMic(); // Ensure the microphone is on
+    console.log('Initializing speech recognition.');
+    initializeRecognition(); // Ensure recognition instance is ready
 
-      initializeRecognition(); // Initialize recognition instance
-      startListening(); // Start listening immediately
-      setIsListening(true); // Update state
+    if (isMicOn && !hasStarted.current) {
+      console.log('Starting listening by default.');
+      startListening(); // Start listening
+      setIsListening(true);
       hasStarted.current = true; // Prevent multiple starts
-    };
-
-    if (!hasStarted.current) {
-      initializeMicAndStartListening();
     }
-  }, [initializeRecognition, startListening, toggleMic]);
+  }, [isMicOn, initializeRecognition, startListening]);
 
   useEffect(() => {
     if (interimRef.current) {
@@ -90,15 +87,21 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   }, [finalResult]);
 
   const toggleListening = async () => {
+    if (!isMicOn) {
+      console.log('Microphone is off, turning it on.');
+      await toggleMic();
+    }
+
     if (isListening) {
       stopListening();
       setIsListening(false);
-      console.log('Stopped listening.');
+      if (isMicOn) {
+        console.log('Turning off microphone.');
+        await toggleMic();
+      }
     } else {
-      await toggleMic(); // Turn on the mic if not already on
       startListening();
       setIsListening(true);
-      console.log('Started listening.');
     }
   };
 
