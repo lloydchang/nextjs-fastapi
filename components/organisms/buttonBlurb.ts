@@ -9,7 +9,7 @@ type ButtonBlurbEntry = {
 
 const buttonBlurb: ButtonBlurbEntry[] = [
   {
-    key: 'Lazy',
+    key: 'Start',
     blurb: "Start your sustainability journey today!",
     url: 'https://www.un.org/sustainabledevelopment/takeaction/',
   },
