@@ -1,6 +1,6 @@
 // File: components/state/hooks/useSpeechRecognition.ts
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
@@ -13,19 +13,8 @@ const useSpeechRecognition = ({
   onInterimUpdate,
   onEnd,
 }: UseSpeechRecognitionProps) => {
-  const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const requestMicrophonePermission = useCallback(async () => {
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log('Microphone permission granted.');
-    } catch (err) {
-      setError('Microphone permission denied.');
-      console.error('Microphone permission denied:', err);
-    }
-  }, []);
 
   const initializeRecognition = useCallback(() => {
     const SpeechRecognitionConstructor =
@@ -33,7 +22,7 @@ const useSpeechRecognition = ({
 
     if (!SpeechRecognitionConstructor) {
       setError('Speech recognition not supported in this browser.');
-      return null;
+      return;
     }
 
     const recognitionInstance = new SpeechRecognitionConstructor();
@@ -57,46 +46,32 @@ const useSpeechRecognition = ({
 
     recognitionInstance.onend = () => {
       console.log('Speech recognition ended.');
-      setIsListening(false); // Ensure the state is properly set
-      onEnd?.(); // Call onEnd if provided
+      onEnd?.();
     };
 
     recognitionInstance.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setError(event.error);
-      if (event.error !== 'no-speech') stopListening();
     };
 
     setRecognition(recognitionInstance);
-    return recognitionInstance;
   }, [onSpeechResult, onInterimUpdate, onEnd]);
 
   const startListening = useCallback(() => {
-    if (!recognition) return;
-
-    try {
+    if (recognition) {
       recognition.start();
-      setIsListening(true);
-      setError(null);
-    } catch (error) {
-      console.error('Failed to start recognition:', error);
-      setError('Failed to start recognition.');
+      console.log('Listening started.');
     }
   }, [recognition]);
 
   const stopListening = useCallback(() => {
-    if (!recognition) return;
-
-    recognition.stop();
+    if (recognition) {
+      recognition.stop();
+      console.log('Listening stopped.');
+    }
   }, [recognition]);
 
-  useEffect(() => {
-    requestMicrophonePermission();
-    const recognitionInstance = initializeRecognition();
-    return () => recognitionInstance?.stop();
-  }, [initializeRecognition, requestMicrophonePermission]);
-
-  return { isListening, startListening, stopListening, error };
+  return { startListening, stopListening, initializeRecognition };
 };
 
 export default useSpeechRecognition;
