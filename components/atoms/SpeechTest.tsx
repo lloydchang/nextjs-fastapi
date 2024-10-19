@@ -50,7 +50,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     [onInterimUpdate]
   );
 
-  const { startListening, stopListening, initializeRecognition } = useSpeechRecognition({
+  const { startListening, stopListening, initializeRecognition, error } = useSpeechRecognition({
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
     onEnd: () => {
@@ -132,6 +132,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
           {isListening ? 'Stop Listening 🙉' : 'Listen 👂'}
         </button>
       )}
+      {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 };
