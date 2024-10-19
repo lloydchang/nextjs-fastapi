@@ -1,6 +1,6 @@
 // File: components/atoms/SpeechTest.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import useSpeechRecognition from 'components/state/hooks/useSpeechRecognition';
 import styles from 'styles/components/atoms/SpeechTest.module.css';
 
@@ -26,47 +26,78 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const [isListening, setIsListening] = useState<boolean>(false); // Use state only
+  const [isListening, setIsListening] = useState<boolean>(false);
 
-  const { startListening, stopListening, isRecognitionActive } = useSpeechRecognition({
-    onSpeechResult: (text) => {
+  const interimRef = useRef<HTMLTextAreaElement>(null);
+  const finalRef = useRef<HTMLTextAreaElement>(null);
+  const hasStarted = useRef<boolean>(false); // Guard to prevent multiple starts
+
+  const handleFinal = useCallback(
+    (text: string) => {
       console.log('Final Speech:', text);
       setFinalResult((prev) => prev + ' ' + text);
       onSpeechResult(text);
     },
-    onInterimUpdate: (text) => {
+    [onSpeechResult]
+  );
+
+  const handleInterim = useCallback(
+    (text: string) => {
       console.log('Interim Speech:', text);
       setInterimResult(text);
       onInterimUpdate(text);
     },
+    [onInterimUpdate]
+  );
+
+  const { startListening, stopListening } = useSpeechRecognition({
+    onSpeechResult: handleFinal,
+    onInterimUpdate: handleInterim,
     onEnd: () => {
-      console.log('Recognition ended.');
-      setFinalResult(''); // Clear the final result on recognition end
-      setIsListening(false); // Reflect the stopped listening state in the UI
+      console.log('Recognition ended, resetting state.');
+      setFinalResult(''); // Clear final result on end
+      setIsListening(false); // Update UI state
     },
   });
 
-  // Use effect to start listening by default only once if `isMicOn` is true
+  // Start listening by default if `isMicOn` is true on mount
   useEffect(() => {
-    if (isMicOn && !isListening) {
-      console.log('Starting listening by default.');
+    if (isMicOn && !hasStarted.current) {
+      console.log('Starting listening by default on load.');
       startListening();
-      setIsListening(true); // Update listening state
+      setIsListening(true);
+      hasStarted.current = true; // Prevent multiple starts
     }
-  }, [isMicOn, isListening, startListening]); // Ensure effect runs only when necessary
+  }, [isMicOn, startListening]);
+
+  useEffect(() => {
+    if (interimRef.current) {
+      interimRef.current.scrollLeft = interimRef.current.scrollWidth;
+    }
+  }, [interimResult]);
+
+  useEffect(() => {
+    if (finalRef.current) {
+      finalRef.current.scrollLeft = finalRef.current.scrollWidth;
+    }
+  }, [finalResult]);
 
   const toggleListening = async () => {
     if (!isMicOn) {
-      console.log('Turning on microphone.');
+      console.log('Microphone is off, turning it on.');
       await toggleMic();
     }
 
     if (isListening) {
       stopListening();
-      setIsListening(false); // Stop listening
+      setIsListening(false);
+      if (isMicOn) {
+        console.log('Turning off microphone.');
+        await toggleMic();
+      }
     } else {
       startListening();
-      setIsListening(true); // Start listening
+      setIsListening(true);
     }
   };
 
@@ -77,6 +108,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
           value={interimResult}
           readOnly
           rows={1}
+          ref={interimRef}
           className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
           style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         />
@@ -86,6 +118,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
           value={finalResult}
           readOnly
           rows={1}
+          ref={finalRef}
           className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
           style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         />
