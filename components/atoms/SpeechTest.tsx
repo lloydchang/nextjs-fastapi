@@ -26,7 +26,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const [interimResult, setInterimResult] = useState<string>('');
   const [finalResult, setFinalResult] = useState<string>('');
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const [isListening, setIsListening] = useState<boolean>(false);
+  const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
 
   const interimRef = useRef<HTMLTextAreaElement>(null);
   const finalRef = useRef<HTMLTextAreaElement>(null);
