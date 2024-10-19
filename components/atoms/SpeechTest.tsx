@@ -52,7 +52,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   );
 
   const { startListening, stopListening } = useSpeechRecognition({
-    isMicOn,
+    // isMicOn,
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
     onEnd: () => {
