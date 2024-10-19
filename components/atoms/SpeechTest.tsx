@@ -52,6 +52,11 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
   const { startListening, stopListening } = useSpeechRecognition({
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
+    onEnd: () => {
+      console.log('Recognition ended, resetting state.');
+      setFinalResult(''); // Clear final result on end
+      setIsListening(false); // Ensure UI reflects stopped state
+    },
   });
 
   useEffect(() => {

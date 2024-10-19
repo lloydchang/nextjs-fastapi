@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
+  onEnd?: () => void; // Optional onEnd callback
 }
 
 const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
+  onEnd,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
@@ -53,6 +55,12 @@ const useSpeechRecognition = ({
       if (interim) onInterimUpdate(interim.trim());
     };
 
+    recognitionInstance.onend = () => {
+      console.log('Speech recognition ended.');
+      setIsListening(false); // Ensure the state is properly set
+      onEnd?.(); // Call onEnd if provided
+    };
+
     recognitionInstance.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       setError(event.error);
@@ -61,7 +69,7 @@ const useSpeechRecognition = ({
 
     setRecognition(recognitionInstance);
     return recognitionInstance;
-  }, [onSpeechResult, onInterimUpdate]);
+  }, [onSpeechResult, onInterimUpdate, onEnd]);
 
   const startListening = useCallback(() => {
     if (!recognition) return;
@@ -80,8 +88,7 @@ const useSpeechRecognition = ({
     if (!recognition) return;
 
     recognition.stop();
-    setIsListening(false);
-  }, [recognition]);
+  }, [recognition]); // Only stop without changing `isListening` directly
 
   useEffect(() => {
     requestMicrophonePermission();
