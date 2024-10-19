@@ -67,7 +67,7 @@ const ControlButtons: React.FC<ControlButtonsProps> = ({
         className={`${styles.button} ${isMicOn ? styles.stopButton : styles.startButton}`}
         aria-pressed={isMicOn}
         aria-label="Toggle Microphone"
-        disabled={isListening} // Disable button while listening
+        disabled={false} // Changed from disabled={isListening} to always enable the button
       >
         {micButtonText}
       </button>
