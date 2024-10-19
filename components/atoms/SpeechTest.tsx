@@ -62,8 +62,9 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     },
   });
 
+  // Add this useEffect in SpeechTest.tsx right after the existing hooks:
   useEffect(() => {
-    if (isMicOn && !isListening) {
+   if (isMicOn) {
       startListening();
       setIsListening(true); // Update UI when listening starts
     } else if (!isMicOn && isListening) {
