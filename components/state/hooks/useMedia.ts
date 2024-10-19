@@ -25,7 +25,6 @@ export const useMedia = (): UseMediaReturn => {
   // Align with
   //   const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
   // in components/atoms/SpeechTest.tsx
-  const [isListening, setIsListening] = useState<boolean>(true); // Changed from false to true
     isMicOn: true, // Microphone is initialized as ON by default
     isPipOn: false,
     isMemOn: true,
