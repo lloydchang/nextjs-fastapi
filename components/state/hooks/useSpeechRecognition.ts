@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
-  onEnd?: () => void; // Optional onEnd callback
+  onEnd?: () => void;
 }
 
 const useSpeechRecognition = ({
@@ -88,7 +88,7 @@ const useSpeechRecognition = ({
     if (!recognition) return;
 
     recognition.stop();
-  }, [recognition]); // Only stop without changing `isListening` directly
+  }, [recognition]);
 
   useEffect(() => {
     requestMicrophonePermission();
