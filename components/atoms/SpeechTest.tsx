@@ -35,9 +35,7 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     (text: string) => {
       console.log('Final Speech:', text);
       setFinalResult((prev) => prev + ' ' + text); // Append new final results
-
-      // Send the result to parent (e.g., as a chat message)
-      onSpeechResult(text);
+      onSpeechResult(text); // Pass final result to parent
     },
     [onSpeechResult]
   );
@@ -46,13 +44,12 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
     (text: string) => {
       console.log('Interim Speech:', text);
       setInterimResult(text);
-      onInterimUpdate(text); // Pass the interim result to the parent
+      onInterimUpdate(text); // Pass interim result to parent
     },
     [onInterimUpdate]
   );
 
   const { startListening, stopListening } = useSpeechRecognition({
-    // isMicOn,
     onSpeechResult: handleFinal,
     onInterimUpdate: handleInterim,
     onEnd: () => {
@@ -74,13 +71,13 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
 
   useEffect(() => {
     if (interimRef.current) {
-      interimRef.current.scrollLeft = interimRef.current.scrollWidth; // Scroll to the right (end)
+      interimRef.current.scrollLeft = interimRef.current.scrollWidth; // Ensure correct property access
     }
   }, [interimResult]);
 
   useEffect(() => {
     if (finalRef.current) {
-      finalRef.current.scrollLeft = finalRef.current.scrollWidth; // Scroll to the right (end)
+      finalRef.current.scrollLeft = finalRef.current.scrollWidth; // Ensure correct property access
     }
   }, [finalResult]);
 
@@ -105,40 +102,26 @@ const SpeechTest: React.FC<SpeechTestProps> = ({
 
   return (
     <div className={`${styles.speechTest} ${isDarkMode ? styles.dark : styles.light}`}>
-
-      {/* Conditionally render interim result based on showInterimResult and isListening */}
       {showInterimResult && isListening && (
         <textarea
           value={interimResult}
           readOnly
-          placeholder=""
           rows={1}
           ref={interimRef}
           className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
           style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         />
       )}
-
-      {/* Conditionally render Final Result based on showFinalResult prop */}
       {showFinalResult && (
         <textarea
           value={finalResult}
           readOnly
-          placeholder=""
           rows={1}
           ref={finalRef}
           className={`${styles.textarea} ${isDarkMode ? styles.dark : styles.light}`}
           style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         />
       )}
-
-      {/* Conditionally render the listening status */}
-      {/* {showIsListening && (
-        <div className={`${styles.listeningStatus} ${isListening ? styles.listening : styles.notListening}`}>
-          {isListening ? 'Currently Listening...' : 'Not Listening'}
-        </div>
-      )} */}
-
       {showIsListening && (
         <button
           onClick={toggleListening}

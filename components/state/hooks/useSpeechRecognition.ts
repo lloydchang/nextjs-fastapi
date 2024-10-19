@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 interface UseSpeechRecognitionProps {
   onSpeechResult: (finalResults: string) => void;
   onInterimUpdate: (interimResult: string) => void;
+  onEnd?: () => void; // Optional onEnd callback to handle recognition end
 }
 
 const useSpeechRecognition = ({
   onSpeechResult,
   onInterimUpdate,
+  onEnd,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
@@ -55,6 +57,7 @@ const useSpeechRecognition = ({
 
     recognitionInstance.onend = () => {
       setIsListening(false);
+      if (onEnd) onEnd(); // Call onEnd callback if provided
     };
 
     recognitionInstance.onerror = (event) => {
@@ -65,7 +68,7 @@ const useSpeechRecognition = ({
 
     setRecognition(recognitionInstance);
     return recognitionInstance;
-  }, [onSpeechResult, onInterimUpdate]);
+  }, [onSpeechResult, onInterimUpdate, onEnd]);
 
   const startListening = useCallback(() => {
     if (!recognition) return;
@@ -82,7 +85,6 @@ const useSpeechRecognition = ({
 
   const stopListening = useCallback(() => {
     if (!recognition) return;
-
     recognition.stop();
     setIsListening(false);
   }, [recognition]);
